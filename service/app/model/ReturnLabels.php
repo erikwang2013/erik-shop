@@ -6,6 +6,5 @@
 namespace app\model;
 
 class ReturnLabels extends BaseModel
-{
-    protected $table = "erik_return_labels";
+{    protected $table = "erik_return_labels";
 }

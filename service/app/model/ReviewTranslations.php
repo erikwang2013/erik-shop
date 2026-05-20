@@ -6,6 +6,5 @@
 namespace app\model;
 
 class ReviewTranslations extends BaseModel
-{
-    protected $table = "erik_review_translations";
+{    protected $table = "erik_review_translations";
 }

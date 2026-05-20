@@ -6,6 +6,5 @@
 namespace app\model;
 
 class SizeChartValues extends BaseModel
-{
-    protected $table = "erik_size_chart_values";
+{    protected $table = "erik_size_chart_values";
 }

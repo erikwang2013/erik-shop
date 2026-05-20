@@ -1,25 +1,14 @@
 <?php
-/**
- * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
- */
-
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
 use app\common\HashidsHelper;
 use app\model\Users;
+use app\common\Jwt;
 use Webman\Http\Request;
 
-/**
- * 认证控制器
- * 注册、登录、刷新Token、登出
- */
 class AuthController extends \app\controller\BaseApiController
 {
-    /**
-     * 注册
-     * POST /api/auth/register
-     */
     public function register(Request $request): \support\Response
     {
         $email = $request->input('email');
@@ -44,23 +33,15 @@ class AuthController extends \app\controller\BaseApiController
             'status' => 1,
         ]);
 
-        // TODO: 集成 erikwang2013/jwt-webman 生成token
-        $token = $this->generateToken($user);
-
         return ApiResponse::success([
             'user_id' => HashidsHelper::encode($user->id),
             'nickname' => $user->nickname,
             'email' => $user->email,
-            'access_token' => $token['access_token'],
-            'refresh_token' => $token['refresh_token'],
-            'expires_in' => config('jwt.access_ttl', 7200),
+            'access_token' => JWT::encode(['sub' => (string) $user->id, 'email' => $user->email, 'level' => $user->level]),
+            'expires_in' => config('jwt.default_expire', 7200),
         ], '注册成功');
     }
 
-    /**
-     * 登录
-     * POST /api/auth/login
-     */
     public function login(Request $request): \support\Response
     {
         $email = $request->input('email');
@@ -79,49 +60,34 @@ class AuthController extends \app\controller\BaseApiController
         $user->last_login_ip = $request->getRealIp();
         $user->save();
 
-        $token = $this->generateToken($user);
-
         return ApiResponse::success([
             'user_id' => HashidsHelper::encode($user->id),
             'nickname' => $user->nickname,
             'email' => $user->email,
             'level' => $user->level,
-            'access_token' => $token['access_token'],
-            'refresh_token' => $token['refresh_token'],
-            'expires_in' => config('jwt.access_ttl', 7200),
+            'access_token' => JWT::encode(['sub' => (string) $user->id, 'email' => $user->email, 'level' => $user->level]),
+            'expires_in' => config('jwt.default_expire', 7200),
         ], '登录成功');
     }
 
-    /**
-     * 刷新Token
-     * POST /api/auth/refresh
-     */
     public function refresh(Request $request): \support\Response
     {
         $refreshToken = $request->input('refresh_token');
+        if (empty($refreshToken)) return ApiResponse::fail('refresh_token不能为空', 422);
 
-        if (empty($refreshToken)) {
-            return ApiResponse::fail('refresh_token不能为空', 422);
+        try {
+            $payload = JWT::decode($refreshToken);
+            $newToken = JWT::encode([
+                'sub' => $payload['sub'] ?? '',
+                'email' => $payload['email'] ?? '',
+                'level' => $payload['level'] ?? 0,
+            ]);
+            return ApiResponse::success([
+                'access_token' => $newToken,
+                'expires_in' => config('jwt.default_expire', 7200),
+            ], 'Token已刷新');
+        } catch (\Throwable $e) {
+            return ApiResponse::fail('Token无效或已过期', 401);
         }
-
-        // TODO: JWT refresh逻辑
-        // $payload = Jwt::refresh($refreshToken);
-
-        return ApiResponse::success([
-            'access_token' => 'new_token_placeholder',
-            'expires_in' => config('jwt.access_ttl', 7200),
-        ], 'Token已刷新');
-    }
-
-    /**
-     * 生成JWT Token
-     */
-    private function generateToken($user): array
-    {
-        // TODO: 集成 erikwang2013/jwt-webman
-        return [
-            'access_token' => 'access_token_' . $user->id . '_' . time(),
-            'refresh_token' => 'refresh_token_' . $user->id . '_' . time(),
-        ];
     }
 }

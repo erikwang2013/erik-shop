@@ -6,6 +6,5 @@
 namespace app\model;
 
 class CmsPages extends BaseModel
-{
-    protected $table = "erik_cms_pages";
+{    protected $table = "erik_cms_pages";
 }

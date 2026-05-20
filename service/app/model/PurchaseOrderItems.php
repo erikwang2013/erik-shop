@@ -6,6 +6,5 @@
 namespace app\model;
 
 class PurchaseOrderItems extends BaseModel
-{
-    protected $table = "erik_purchase_order_items";
+{    protected $table = "erik_purchase_order_items";
 }

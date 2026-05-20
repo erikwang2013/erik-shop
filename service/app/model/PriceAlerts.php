@@ -5,7 +5,14 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class PriceAlerts extends BaseModel
-{
-    protected $table = "erik_price_alerts";
+{    protected $table = "erik_price_alerts";
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(Users::class, "user_id");
+    }
+
 }

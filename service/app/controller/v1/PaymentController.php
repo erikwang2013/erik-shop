@@ -10,6 +10,8 @@ use app\model\Payments;
 use app\model\Orders;
 use app\model\PaymentGateways;
 use app\model\PaymentGatewayMethods;
+use app\model\PlatformSettlements;
+use app\common\PaymentGateway as Gateway;
 use Webman\Http\Request;
 
 class PaymentController extends \app\controller\BaseApiController
@@ -73,9 +75,19 @@ class PaymentController extends \app\controller\BaseApiController
             'status' => 0,  // 待支付
         ]);
 
-        // TODO: 调用真实支付网关
-        // $gateway = PaymentGateway::make($gateway);
-        // $result = $gateway->createPayment([...]);
+        // 调用真实支付网关
+        $gatewayObj = Gateway::make($gateway);
+        $result = $gatewayObj->createPayment([
+            'amount' => $order->pay_amount,
+            'currency' => $order->currency_code,
+            'order_id' => $order->id,
+            'order_no' => $order->order_no,
+            'methods' => [$method],
+        ]);
+
+        // 记录网关交易号
+        $payment->transaction_no = $result['txn_id'];
+        $payment->save();
 
         return ApiResponse::success([
             'payment_id' => $payment->id,
@@ -84,8 +96,8 @@ class PaymentController extends \app\controller\BaseApiController
             'currency' => $order->currency_code,
             'gateway' => $gateway,
             'method' => $method,
-            // 'client_secret' => $result['client_secret'],
-            'client_secret' => 'pi_placeholder_secret',
+            'client_secret' => $result['client_secret'] ?? '',
+            'txn_id' => $result['txn_id'],
         ], '支付创建成功');
     }
 
@@ -115,12 +127,56 @@ class PaymentController extends \app\controller\BaseApiController
      */
     public function webhook(Request $request, string $gateway): \support\Response
     {
-        $payload = $request->all();
+        $payload = $request->rawBody();
+        $signature = $request->header('Stripe-Signature', '');
 
-        // TODO: 验签 + 更新支付状态 + 更新订单状态
-        // $verified = PaymentGateway::make($gateway)->verifyWebhook($payload);
+        $gatewayObj = Gateway::make($gateway);
+        $verified = $gatewayObj->verifyWebhook($payload, $signature);
+        if (!$verified) {
+            return ApiResponse::fail('签名验证失败', 403);
+        }
 
-        // 占位：模拟支付成功
+        // 解析事件
+        $event = json_decode($payload, true);
+        $eventType = $event['type'] ?? '';
+
+        if ($eventType === 'payment_intent.succeeded') {
+            $txnId = $event['data']['object']['id'] ?? '';
+
+            // 更新支付记录
+            $payment = Payments::where('transaction_no', $txnId)->first();
+            if ($payment) {
+                $payment->status = 1;
+                $payment->paid_at = date('Y-m-d H:i:s');
+                $payment->save();
+
+                // 更新订单状态
+                $order = Orders::find($payment->order_id);
+                if ($order && $order->status === 0) {
+                    $order->status = 1;
+                    $order->pay_at = date('Y-m-d H:i:s');
+                    $order->pay_method = $payment->gateway;
+                    $order->save();
+
+                    // 创建分账记录
+                    $platformRate = config('payment.platform_rate', 5.0);
+                    $gatewayFeeRate = config("payment.gateway_fee.{$gateway}.rate", 2.9);
+                    $gatewayFixedFee = config("payment.gateway_fee.{$gateway}.fixed", 0.30);
+
+                    PlatformSettlements::create([
+                        'order_id' => $order->id,
+                        'payment_id' => $payment->id,
+                        'total_amount' => $order->pay_amount,
+                        'platform_fee' => round($order->pay_amount * $platformRate / 100, 2),
+                        'platform_fee_rate' => $platformRate,
+                        'payment_gateway_fee' => round($order->pay_amount * $gatewayFeeRate / 100 + $gatewayFixedFee, 2),
+                        'currency_code' => $order->currency_code,
+                        'status' => 0,
+                    ]);
+                }
+            }
+        }
+
         return ApiResponse::success(null, 'ok');
     }
 

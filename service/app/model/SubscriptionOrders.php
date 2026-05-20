@@ -5,7 +5,19 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class SubscriptionOrders extends BaseModel
-{
-    protected $table = "erik_subscription_orders";
+{    protected $table = "erik_subscription_orders";
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscriptions::class, "subscription_id");
+    }
+
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Orders::class, "order_id");
+    }
+
 }

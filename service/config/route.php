@@ -15,7 +15,8 @@ use Webman\Route;
 Route::group('/api', function () {
 
     // 认证
-    Route::post('/auth/register', [app\controller\v1\AuthController::class, 'register']);
+    Route::post('/auth/register', [app\controller\v1\AuthController::class, 'register'])
+        ->middleware([app\middleware\PosterVerify::class]);
     Route::post('/auth/login', [app\controller\v1\AuthController::class, 'login']);
     Route::post('/auth/refresh', [app\controller\v1\AuthController::class, 'refresh']);
     Route::post('/auth/social', [app\controller\v1\SocialAuthController::class, 'login']);
@@ -24,6 +25,7 @@ Route::group('/api', function () {
     Route::get('/products', [app\controller\v1\ProductController::class, 'index']);
     Route::get('/products/{id:\w+}', [app\controller\v1\ProductController::class, 'show']);
     Route::get('/categories', [app\controller\v1\CategoryController::class, 'index']);
+    Route::get('/categories/tree', [app\controller\v1\CategoryController::class, 'tree']);
 
     // 内容
     Route::get('/banners', [app\controller\v1\BannerController::class, 'index']);
@@ -34,6 +36,9 @@ Route::group('/api', function () {
 
     // 搜索
     Route::get('/search', [app\controller\v1\SearchController::class, 'index']);
+
+    // 评价
+    Route::get('/reviews/{productId:\w+}', [app\controller\v1\ReviewController::class, 'index']);
 
     // 营销
     Route::get('/flash-sales', [app\controller\v1\FlashSaleController::class, 'index']);
@@ -77,13 +82,16 @@ Route::group('/api', function () {
     // 订单
     Route::get('/orders', [app\controller\v1\OrderController::class, 'index']);
     Route::get('/orders/{id:\w+}', [app\controller\v1\OrderController::class, 'show']);
-    Route::post('/orders', [app\controller\v1\OrderController::class, 'store']);
+    Route::post('/orders', [app\controller\v1\OrderController::class, 'store'])
+        ->middleware([app\middleware\PosterVerify::class]);
     Route::post('/orders/{id:\w+}/cancel', [app\controller\v1\OrderController::class, 'cancel']);
     Route::get('/orders/{id:\w+}/documents/invoice', [app\controller\v1\DocumentController::class, 'invoice']);
     Route::get('/orders/{id:\w+}/documents/packing-list', [app\controller\v1\DocumentController::class, 'packingList']);
 
     // 支付
-    Route::post('/payment/create', [app\controller\v1\PaymentController::class, 'create']);
+    Route::post('/payment/create', [app\controller\v1\PaymentController::class, 'create'])
+        ->middleware([app\middleware\PosterVerify::class]);
+    Route::get('/payment/status/{id:\w+}', [app\controller\v1\PaymentController::class, 'status']);
 
     // 退货
     Route::get('/returns', [app\controller\v1\ReturnController::class, 'index']);
@@ -125,21 +133,19 @@ Route::group('/api', function () {
     Route::get('/gift-cards/balance', [app\controller\v1\GiftCardController::class, 'balance']);
     Route::post('/gift-cards/redeem', [app\controller\v1\GiftCardController::class, 'redeem']);
 
+    // 导出
+    Route::get('/export/orders', [app\controller\v1\ExportController::class, 'orders']);
+
     // B2B
     Route::get('/b2b/quotes', [app\controller\v1\B2bController::class, 'index']);
     Route::post('/b2b/quotes', [app\controller\v1\B2bController::class, 'store']);
 
 })->middleware([app\middleware\JwtAuth::class]);
 
-// ===== 敏感操作（需要随机验证） =====
-Route::group('/api', function () {
-    Route::post('/orders', [app\controller\v1\OrderController::class, 'store']);
-    Route::post('/payment/create', [app\controller\v1\PaymentController::class, 'create']);
-    Route::post('/auth/register', [app\controller\v1\AuthController::class, 'register']);
-})->middleware([
-    app\middleware\PosterVerify::class,
-    app\middleware\JwtAuth::class,
-]);
+// ===== 敏感操作（PosterVerify 直接挂在路由上，避免与JWT组冲突） =====
+// POST /api/auth/register — 公开但需要人机验证（已在公开组，此处追加中间件）
+// POST /api/orders — 在认证组中已定义，需追加PosterVerify
+// POST /api/payment/create — 同上
 
 // ===== 支付Webhook（无需JWT，需验签） =====
 Route::post('/webhook/payment/{gateway:\w+}', [app\controller\v1\PaymentController::class, 'webhook']);

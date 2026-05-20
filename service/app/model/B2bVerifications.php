@@ -5,7 +5,18 @@
 
 namespace app\model;
 
+use Erik\Encryptable\Encryptable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class B2bVerifications extends BaseModel
-{
+{    use Encryptable;
     protected $table = "erik_b2b_verifications";
+    protected $encryptable = ["company_name"];
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(Users::class, "user_id");
+    }
+
 }

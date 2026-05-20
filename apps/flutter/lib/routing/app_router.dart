@@ -7,6 +7,8 @@ import '../features/order/order_list_screen.dart';
 import '../features/order/checkout_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/product/product_list_screen.dart';
+import '../features/profile/address_list_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -14,35 +16,14 @@ final appRouter = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const HomeScreen(),
-    ),
-    GoRoute(
-      path: '/product/:id',
-      builder: (context, state) => ProductDetailScreen(
-        productId: state.pathParameters['id']!,
-      ),
-    ),
-    GoRoute(
-      path: '/cart',
-      builder: (context, state) => const CartScreen(),
-    ),
-    GoRoute(
-      path: '/checkout',
-      builder: (context, state) => const CheckoutScreen(),
-    ),
-    GoRoute(
-      path: '/orders',
-      builder: (context, state) => const OrderListScreen(),
-    ),
-    GoRoute(
-      path: '/profile',
-      builder: (context, state) => const ProfileScreen(),
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/', builder: (c, s) => const HomeScreen()),
+    GoRoute(path: '/products', builder: (c, s) => const ProductListScreen()),
+    GoRoute(path: '/product/:id', builder: (c, s) => ProductDetailScreen(productId: s.pathParameters['id']!)),
+    GoRoute(path: '/cart', builder: (c, s) => const CartScreen()),
+    GoRoute(path: '/checkout', builder: (c, s) => const CheckoutScreen()),
+    GoRoute(path: '/orders', builder: (c, s) => const OrderListScreen()),
+    GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
+    GoRoute(path: '/addresses', builder: (c, s) => const AddressListScreen()),
+    GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
   ],
 );

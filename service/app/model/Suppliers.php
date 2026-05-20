@@ -5,7 +5,23 @@
 
 namespace app\model;
 
+use Erik\Encryptable\Encryptable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class Suppliers extends BaseModel
-{
+{    use Encryptable;
     protected $table = "erik_suppliers";
+    protected $encryptable = ["name", "email", "phone"];
+
+    public function supplierSettlements(): HasMany
+    {
+        return $this->hasMany(SupplierSettlements::class, "supplier_id");
+    }
+
+    public function purchaseOrders(): HasMany
+    {
+        return $this->hasMany(PurchaseOrders::class, "supplier_id");
+    }
+
 }

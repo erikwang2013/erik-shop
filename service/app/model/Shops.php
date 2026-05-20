@@ -5,7 +5,28 @@
 
 namespace app\model;
 
+use Erik\Encryptable\Encryptable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class Shops extends BaseModel
-{
+{    use Encryptable;
     protected $table = "erik_shops";
+    protected $encryptable = ["name"];
+
+    public function platformAccounts(): HasMany
+    {
+        return $this->hasMany(PlatformAccounts::class, "shop_id");
+    }
+
+    public function platformOrders(): HasMany
+    {
+        return $this->hasMany(PlatformOrders::class, "shop_id");
+    }
+
+    public function merchants(): HasMany
+    {
+        return $this->hasMany(Merchants::class, "shop_id");
+    }
+
 }

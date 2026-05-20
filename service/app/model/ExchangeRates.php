@@ -6,6 +6,5 @@
 namespace app\model;
 
 class ExchangeRates extends BaseModel
-{
-    protected $table = "erik_exchange_rates";
+{    protected $table = "erik_exchange_rates";
 }

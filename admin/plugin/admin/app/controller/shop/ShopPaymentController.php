@@ -1,14 +1,14 @@
 <?php
-/**
- * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
- */
-
 namespace plugin\admin\app\controller\shop;
-
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Payments;
+use support\Request;
 
 class ShopPaymentController extends Crud
 {
     protected $model = Payments::class;
+
+    public function insert(Request $request) { return $this->json(1, "支付记录只读，不允许新增"); }
+    public function update(Request $request) { return $this->json(1, "支付记录只读，不允许修改"); }
+    public function delete(Request $request) { return $this->json(1, "支付记录只读，不允许删除"); }
 }

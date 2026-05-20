@@ -6,6 +6,5 @@
 namespace app\model;
 
 class ProductSkuPrices extends BaseModel
-{
-    protected $table = "erik_product_sku_prices";
+{    protected $table = "erik_product_sku_prices";
 }

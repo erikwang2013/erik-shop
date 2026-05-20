@@ -6,6 +6,5 @@
 namespace app\model;
 
 class CountryComplianceRules extends BaseModel
-{
-    protected $table = "erik_country_compliance_rules";
+{    protected $table = "erik_country_compliance_rules";
 }

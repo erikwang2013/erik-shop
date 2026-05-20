@@ -5,7 +5,11 @@
 
 namespace app\model;
 
+use Erik\Encryptable\Encryptable;
+
 class ProductFeeds extends BaseModel
-{
+{    use Encryptable;
     protected $table = "erik_product_feeds";
+    protected $encryptable = ["name"];
+
 }

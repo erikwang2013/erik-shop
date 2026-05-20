@@ -5,7 +5,14 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class AbTestResults extends BaseModel
-{
-    protected $table = "erik_ab_test_results";
+{    protected $table = "erik_ab_test_results";
+    public function abTest(): BelongsTo
+    {
+        return $this->belongsTo(AbTests::class, "ab_test_id");
+    }
+
 }

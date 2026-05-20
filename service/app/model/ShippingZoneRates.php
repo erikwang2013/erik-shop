@@ -6,6 +6,5 @@
 namespace app\model;
 
 class ShippingZoneRates extends BaseModel
-{
-    protected $table = "erik_shipping_zone_rates";
+{    protected $table = "erik_shipping_zone_rates";
 }

@@ -6,6 +6,5 @@
 namespace app\model;
 
 class ProductAttrValues extends BaseModel
-{
-    protected $table = "erik_product_attr_values";
+{    protected $table = "erik_product_attr_values";
 }

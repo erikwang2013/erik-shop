@@ -19,22 +19,21 @@ class SearchController extends \app\controller\BaseApiController
             return ApiResponse::fail('请输入搜索关键词', 422);
         }
 
-        // TODO: 集成 Elasticsearch via webman-scout
-        // $results = Products::search($keyword)->where('status', 2)->paginate($perPage);
-
-        // 降级：MySQL LIKE 搜索
-        $query = Products::where('status', 2)
-            ->where(function ($q) use ($keyword) {
-                $q->where('title', 'like', "%{$keyword}%")
-                  ->orWhere('description', 'like', "%{$keyword}%")
-                  ->orWhere('brand', 'like', "%{$keyword}%");
-            });
-
-        if ($categoryId) {
-            $query->where('category_id', $categoryId);
+        // ES 搜索（erikwang2013/webman-scout），降级到 MySQL LIKE
+        try {
+            $esResults = Products::search($keyword)->where('status', 2);
+            if ($categoryId) $esResults->where('category_id', (int) $categoryId);
+            $paginator = $esResults->paginate($perPage, 'page', $page);
+        } catch (\Throwable $e) {
+            $query = Products::where('status', 2)
+                ->where(function ($q) use ($keyword) {
+                    $q->where('title', 'like', "%{$keyword}%")
+                      ->orWhere('description', 'like', "%{$keyword}%")
+                      ->orWhere('brand', 'like', "%{$keyword}%");
+                });
+            if ($categoryId) $query->where('category_id', (int) $categoryId);
+            $paginator = $query->orderBy('sales_count', 'desc')->paginate($perPage, ['*'], 'page', $page);
         }
-
-        $paginator = $query->orderBy('sales_count', 'desc')->paginate($perPage, ['*'], 'page', $page);
 
         // 记录搜索日志
         SearchLogs::create([

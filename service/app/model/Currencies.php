@@ -5,7 +5,11 @@
 
 namespace app\model;
 
+use Erik\Encryptable\Encryptable;
+
 class Currencies extends BaseModel
-{
+{    use Encryptable;
     protected $table = "erik_currencies";
+    protected $encryptable = ["name"];
+
 }

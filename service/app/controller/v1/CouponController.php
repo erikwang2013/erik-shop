@@ -2,6 +2,7 @@
 namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\Coupons;
+use app\model\Orders;
 use app\model\UserCoupons;
 use Webman\Http\Request;
 

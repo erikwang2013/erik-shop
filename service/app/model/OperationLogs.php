@@ -6,6 +6,5 @@
 namespace app\model;
 
 class OperationLogs extends BaseModel
-{
-    protected $table = "erik_operation_logs";
+{    protected $table = "erik_operation_logs";
 }

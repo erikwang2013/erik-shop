@@ -38,7 +38,8 @@
     "barryvdh/laravel-dompdf": "^3.0",
     "guzzlehttp/guzzle": "^7.0",
     "stripe/stripe-php": "^15.0",
-    "maxmind-db/reader": "^1.0"
+    "maxmind-db/reader": "^1.0",
+    "firebase/php-jwt": "^6.0"
   },
   "suggest": {
     "ext-event": "For better performance."
@@ -69,5 +70,15 @@
     ]
   },
   "minimum-stability": "dev",
-  "prefer-stable": true
+  "prefer-stable": true,
+  "config": {
+    "allow-plugins": {
+      "erikwang2013/encryptable": true,
+      "erikwang2013/webman-scout": true,
+      "erikwang2013/jwt-webman": true,
+      "erikwang2013/poster-php": true,
+      "erikwang2013/season": true,
+      "webman/event": true
+    }
+  }
 }

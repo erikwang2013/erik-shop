@@ -132,6 +132,99 @@ return [
             ],
         ]
     ],
+
+    // ===== Erik Shop 商城管理菜单 =====
+    [
+        'title' => '数据分析',
+        'key' => 'shop-data',
+        'icon' => 'layui-icon-chart-screen',
+        'weight' => 900,
+        'type' => 0,
+        'children' => [
+            ['title' => '跨境面板', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopDashboardController', 'href' => '/app/admin/shop/ShopDashboard/index', 'type' => 1, 'weight' => 100],
+            ['title' => '数据导出', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopExportController', 'href' => '/app/admin/shop/ShopExport/index', 'type' => 1, 'weight' => 90],
+        ],
+    ],
+    [
+        'title' => '商城管理',
+        'key' => 'shop-product',
+        'icon' => 'layui-icon-cart-simple',
+        'weight' => 750,
+        'type' => 0,
+        'children' => [
+            ['title' => '商品管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopProductController', 'href' => '/app/admin/shop/ShopProduct/index', 'type' => 1, 'weight' => 100],
+            ['title' => '分类管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopCategoryController', 'href' => '/app/admin/shop/ShopCategory/index', 'type' => 1, 'weight' => 90],
+            ['title' => 'SKU管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopProductSkuController', 'href' => '/app/admin/shop/ShopProductSku/index', 'type' => 1, 'weight' => 85],
+            ['title' => '评价管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopReviewController', 'href' => '/app/admin/shop/ShopReview/index', 'type' => 1, 'weight' => 75],
+        ],
+    ],
+    [
+        'title' => '订单管理',
+        'key' => 'shop-order',
+        'icon' => 'layui-icon-file',
+        'weight' => 700,
+        'type' => 0,
+        'children' => [
+            ['title' => '订单列表', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopOrderController', 'href' => '/app/admin/shop/ShopOrder/index', 'type' => 1, 'weight' => 100],
+            ['title' => '支付记录', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopPaymentController', 'href' => '/app/admin/shop/ShopPayment/index', 'type' => 1, 'weight' => 90],
+            ['title' => '退款审批', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopRefundController', 'href' => '/app/admin/shop/ShopRefund/index', 'type' => 1, 'weight' => 80],
+            ['title' => '退货管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopReturnController', 'href' => '/app/admin/shop/ShopReturn/index', 'type' => 1, 'weight' => 70],
+        ],
+    ],
+    [
+        'title' => '海关税务',
+        'key' => 'shop-customs',
+        'icon' => 'layui-icon-auz',
+        'weight' => 650,
+        'type' => 0,
+        'children' => [
+            ['title' => 'HS Code编码库', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopHsCodeController', 'href' => '/app/admin/shop/ShopHsCode/index', 'type' => 1, 'weight' => 100],
+            ['title' => '关税规则', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopTariffRuleController', 'href' => '/app/admin/shop/ShopTariffRule/index', 'type' => 1, 'weight' => 80],
+            ['title' => 'VAT/IOSS设置', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopVatSettingController', 'href' => '/app/admin/shop/ShopVatSetting/index', 'type' => 1, 'weight' => 70],
+        ],
+    ],
+    [
+        'title' => '物流管理',
+        'key' => 'shop-logistics',
+        'icon' => 'layui-icon-logistics',
+        'weight' => 600,
+        'type' => 0,
+        'children' => [
+            ['title' => '国际物流商', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopLogisticsController', 'href' => '/app/admin/shop/ShopLogistics/index', 'type' => 1, 'weight' => 100],
+            ['title' => '物流分区', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopShippingZoneController', 'href' => '/app/admin/shop/ShopShippingZone/index', 'type' => 1, 'weight' => 90],
+            ['title' => '分区费率', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopShippingZoneRateController', 'href' => '/app/admin/shop/ShopShippingZoneRate/index', 'type' => 1, 'weight' => 80],
+            ['title' => '海外仓管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopWarehouseController', 'href' => '/app/admin/shop/ShopWarehouse/index', 'type' => 1, 'weight' => 70],
+            ['title' => '发货管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopShipmentController', 'href' => '/app/admin/shop/ShopShipment/index', 'type' => 1, 'weight' => 60],
+        ],
+    ],
+    [
+        'title' => '营销管理',
+        'key' => 'shop-marketing',
+        'icon' => 'layui-icon-rmb',
+        'weight' => 550,
+        'type' => 0,
+        'children' => [
+            ['title' => '优惠券', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopCouponController', 'href' => '/app/admin/shop/ShopCoupon/index', 'type' => 1, 'weight' => 100],
+            ['title' => '轮播图', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopBannerController', 'href' => '/app/admin/shop/ShopBanner/index', 'type' => 1, 'weight' => 90],
+            ['title' => '秒杀活动', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopFlashSaleController', 'href' => '/app/admin/shop/ShopFlashSale/index', 'type' => 1, 'weight' => 80],
+            ['title' => '拼团活动', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopGroupBuyController', 'href' => '/app/admin/shop/ShopGroupBuy/index', 'type' => 1, 'weight' => 70],
+            ['title' => '分销链接', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopAffiliateController', 'href' => '/app/admin/shop/ShopAffiliate/index', 'type' => 1, 'weight' => 60],
+        ],
+    ],
+    [
+        'title' => '供应链管理',
+        'key' => 'shop-supply',
+        'icon' => 'layui-icon-component',
+        'weight' => 500,
+        'type' => 0,
+        'children' => [
+            ['title' => '供应商', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopSupplierController', 'href' => '/app/admin/shop/ShopSupplier/index', 'type' => 1, 'weight' => 100],
+            ['title' => '采购单', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopPurchaseOrderController', 'href' => '/app/admin/shop/ShopPurchaseOrder/index', 'type' => 1, 'weight' => 90],
+            ['title' => '质检管理', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopQualityInspectionController', 'href' => '/app/admin/shop/ShopQualityInspection/index', 'type' => 1, 'weight' => 80],
+            ['title' => '库存流水', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopInventoryLogController', 'href' => '/app/admin/shop/ShopInventoryLog/index', 'type' => 1, 'weight' => 70],
+        ],
+    ],
+
     [
         'title' => '示例页面',
         'key' => 'demos',

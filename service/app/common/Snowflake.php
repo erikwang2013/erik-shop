@@ -5,33 +5,29 @@
 
 namespace app\common;
 
-use Erik\Snowflake\Snowflake as SnowflakeSDK;
+use Erikwang2013\Snowflake\Snowflake as SnowflakeSDK;
 
-/**
- * Snowflake 分布式ID生成器封装
- * 64位bigint，非自增，Worker启动时初始化单例
- */
 class Snowflake
 {
     private static ?SnowflakeSDK $instance = null;
 
-    /**
-     * Worker启动时调用，初始化Snowflake实例
-     */
-    public static function init(int $workerId, int $datacenterId): void
+    public static function init(): void
     {
-        self::$instance = new SnowflakeSDK(
-            $workerId,
-            $datacenterId,
-            config('snowflake.start_timestamp')
-        );
+        if (self::$instance === null) {
+            $startTimestamp = config('snowflake.start_timestamp', 1700000000000);
+            $workerId = config('snowflake.worker_id', 1);
+            $datacenterId = config('snowflake.datacenter_id', 1);
+            self::$instance = new SnowflakeSDK($workerId, $datacenterId, $startTimestamp);
+        }
     }
 
-    /**
-     * 获取下一个ID（强制string类型，防止PHP int溢出）
-     */
     public static function nextId(): string
     {
         return (string) self::$instance->id();
+    }
+
+    public static function parse(string $id): array
+    {
+        return self::$instance->parseId((int) $id);
     }
 }

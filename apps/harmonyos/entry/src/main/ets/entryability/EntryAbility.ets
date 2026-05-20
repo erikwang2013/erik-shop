@@ -3,6 +3,7 @@
  */
 import UIAbility from '@ohos.app.ability.UIAbility';
 import window from '@ohos.window';
+import { AppState } from '../store/AppState';
 
 export default class EntryAbility extends UIAbility {
   onCreate(want, launchParam) {

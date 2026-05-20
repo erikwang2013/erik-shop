@@ -5,7 +5,11 @@
 
 namespace app\model;
 
+use Erik\Encryptable\Encryptable;
+
 class ProductAttrs extends BaseModel
-{
+{    use Encryptable;
     protected $table = "erik_product_attrs";
+    protected $encryptable = ["name"];
+
 }

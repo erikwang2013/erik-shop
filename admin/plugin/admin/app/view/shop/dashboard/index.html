@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?=$title ?? '跨境数据面板'?></title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,system-ui,sans-serif;background:#f5f7fa;color:#333}
+.header{background:#fff;padding:16px 24px;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;justify-content:space-between;align-items:center}
+.header h2{font-size:20px}
+.kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;padding:24px}
+.kpi-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.06);text-align:center}
+.kpi-card .value{font-size:32px;font-weight:700;margin:8px 0}
+.kpi-card .label{font-size:13px;color:#888}
+.kpi-card .trend{font-size:12px;margin-top:4px}.trend.up{color:#22c55e}.trend.down{color:#ef4444}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:0 24px 24px}
+.chart-box{background:#fff;border-radius:12px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.06);height:360px}
+.chart-box h4{font-size:14px;color:#666;margin-bottom:8px}
+.full-row{grid-column:1/-1}
+@media(max-width:768px){.charts-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="header"><h2>📊 跨境数据面板</h2><span style="font-size:12px;color:#888"><?=date('Y-m-d H:i')?> · 实时更新</span></div>
+
+<div class="kpi-row" id="kpi-row">
+  <div class="kpi-card"><div class="label">今日订单</div><div class="value" id="kpi-orders">-</div><div class="trend" id="trend-orders"></div></div>
+  <div class="kpi-card"><div class="label">今日营收</div><div class="value" id="kpi-revenue">-</div><div class="trend" id="trend-revenue"></div></div>
+  <div class="kpi-card"><div class="label">总用户</div><div class="value" id="kpi-users">-</div></div>
+  <div class="kpi-card"><div class="label">总商品</div><div class="value" id="kpi-products">-</div></div>
+  <div class="kpi-card"><div class="label">待处理退货</div><div class="value" id="kpi-returns">-</div></div>
+  <div class="kpi-card"><div class="label">风控预警</div><div class="value" id="kpi-risk">-</div><div class="trend" id="trend-risk"></div></div>
+</div>
+
+<div class="charts-row">
+  <div class="chart-box"><h4>📈 近7天销售趋势</h4><div id="chart-trend" style="height:300px"></div></div>
+  <div class="chart-box"><h4>🥧 订单状态分布</h4><div id="chart-status" style="height:300px"></div></div>
+  <div class="chart-box"><h4>🌍 区域销售分布</h4><div id="chart-region" style="height:300px"></div></div>
+  <div class="chart-box"><h4>💱 币种收入占比</h4><div id="chart-currency" style="height:300px"></div></div>
+</div>
+
+<script>
+const colors = ['#667eea','#764ba2','#f093fb','#f5576c','#4facfe','#00f2fe','#43e97b','#fa709a'];
+
+// KPI 数据
+fetch('/app/admin/shop/shop-dashboard/kpi').then(r=>r.json()).then(res=>{
+  if(res.code!==0)return;
+  const d=res.data;
+  document.getElementById('kpi-orders').textContent=d.today_orders||0;
+  document.getElementById('kpi-revenue').textContent='$'+(d.today_revenue||0).toLocaleString();
+  document.getElementById('kpi-users').textContent=(d.total_users||0).toLocaleString();
+  document.getElementById('kpi-products').textContent=(d.total_products||0).toLocaleString();
+  document.getElementById('kpi-returns').textContent=d.pending_returns||0;
+  document.getElementById('kpi-risk').textContent=d.pending_risk||0;
+});
+
+// 趋势图
+fetch('/app/admin/shop/shop-dashboard/chartData?days=7').then(r=>r.json()).then(res=>{
+  if(res.code!==0)return;
+  const data=res.data;
+  const chart=echarts.init(document.getElementById('chart-trend'));
+  chart.setOption({
+    tooltip:{trigger:'axis'},
+    legend:{data:['营收','订单'],bottom:0},
+    grid:{left:50,right:20,top:10,bottom:30},
+    xAxis:{type:'category',data:data.map(d=>d.date.slice(5))},
+    yAxis:[
+      {type:'value',name:'USD'},
+      {type:'value',name:'单'}
+    ],
+    series:[
+      {name:'营收',type:'bar',data:data.map(d=>d.revenue||0),itemStyle:{color:colors[0]},barMaxWidth:32},
+      {name:'订单',type:'line',yAxisIndex:1,data:data.map(d=>d.orders||0),itemStyle:{color:colors[3]},smooth:true}
+    ]
+  });
+});
+
+// 订单状态分布 (示例数据)
+echarts.init(document.getElementById('chart-status')).setOption({
+  tooltip:{trigger:'item'},
+  series:[{type:'pie',radius:['45%','75%'],center:['50%','50%'],roseType:'area',itemStyle:{borderRadius:6},
+    data:[
+      {value:35,name:'待付款'},{value:28,name:'已付款'},{value:18,name:'已发货'},{value:12,name:'已完成'},{value:5,name:'退款中'},{value:2,name:'已取消'}
+    ]
+  }]
+});
+
+// 区域分布
+echarts.init(document.getElementById('chart-region')).setOption({
+  tooltip:{trigger:'axis'},
+  xAxis:{type:'category',data:['北美','西欧','亚太','东南亚','其他']},
+  yAxis:{type:'value',name:'USD'},
+  series:[{type:'bar',data:[58000,42000,35000,18000,9000],itemStyle:{color:new echarts.graphic.LinearGradient(0,0,0,1,[
+    {offset:0,color:colors[0]},{offset:1,color:colors[1]}
+  ])},barMaxWidth:40}]
+});
+
+// 币种占比
+echarts.init(document.getElementById('chart-currency')).setOption({
+  tooltip:{trigger:'item'},
+  series:[{type:'pie',radius:'65%',center:['50%','50%'],emphasis:{itemStyle:{shadowBlur:10,shadowOffsetX:0,shadowColor:'rgba(0,0,0,.3)'}},
+    data:[
+      {value:45,name:'USD'},{value:25,name:'EUR'},{value:12,name:'GBP'},{value:8,name:'JPY'},{value:6,name:'KRW'},{value:4,name:'其他'}
+    ],
+    itemStyle:{borderRadius:4,borderColor:'#fff',borderWidth:2}
+  }]
+});
+</script>
+</body>
+</html>

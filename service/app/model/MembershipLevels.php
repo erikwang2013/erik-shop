@@ -5,7 +5,11 @@
 
 namespace app\model;
 
+use Erik\Encryptable\Encryptable;
+
 class MembershipLevels extends BaseModel
-{
+{    use Encryptable;
     protected $table = "erik_membership_levels";
+    protected $encryptable = ["name"];
+
 }

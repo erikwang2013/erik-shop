@@ -6,6 +6,5 @@
 namespace app\model;
 
 class ChatMessages extends BaseModel
-{
-    protected $table = "erik_chat_messages";
+{    protected $table = "erik_chat_messages";
 }

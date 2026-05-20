@@ -6,6 +6,5 @@
 namespace app\model;
 
 class VatSettings extends BaseModel
-{
-    protected $table = "erik_vat_settings";
+{    protected $table = "erik_vat_settings";
 }

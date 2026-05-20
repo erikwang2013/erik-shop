@@ -5,7 +5,19 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class ProductHsCodes extends BaseModel
-{
-    protected $table = "erik_product_hs_codes";
+{    protected $table = "erik_product_hs_codes";
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Products::class, "product_id");
+    }
+
+    public function hsCode(): BelongsTo
+    {
+        return $this->belongsTo(HsCodes::class, "hs_code_id");
+    }
+
 }

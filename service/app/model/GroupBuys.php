@@ -6,6 +6,5 @@
 namespace app\model;
 
 class GroupBuys extends BaseModel
-{
-    protected $table = "erik_group_buys";
+{    protected $table = "erik_group_buys";
 }

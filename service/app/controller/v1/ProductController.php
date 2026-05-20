@@ -10,8 +10,10 @@ use app\model\Products;
 use app\model\ProductSkus;
 use app\model\ProductTranslations;
 use app\model\ProductSkuPrices;
+use app\model\Categories;
 use app\model\Countries;
 use app\model\ExchangeRates;
+use app\model\VatSettings;
 use Webman\Http\Request;
 
 /**
@@ -113,7 +115,7 @@ class ProductController extends \app\controller\BaseApiController
                 ? $currencyPrice->price
                 : $this->convertPrice($sku->default_price, 'CNY', $currencyCode);
 
-            $vatRate = $destCountry->vatSettings->vat_rate ?? 0;
+            $vatRate = VatSettings::where('country_id', $destCountry->id)->value('vat_rate') ?? 0;
             $sku->display_price = [
                 'tax_exclusive' => round($basePrice, 2),
                 'tax_inclusive' => round($basePrice * (1 + $vatRate / 100), 2),

@@ -5,42 +5,43 @@
 支持 iPadOS、macOS、Windows、Linux 的 Flutter 应用。
 iPadOS 使用平板布局，macOS/Windows/Linux 使用 PC 风格布局。
 
-### 项目结构
+### 项目结构（实际）
 ```
 apps/flutter/
   lib/
-    main.dart                   # 入口，主题，路由
+    main.dart                     # 入口，主题，Riverpod+GoRouter
     core/
-      api/        api_client.dart, api_urls.dart, api_response.dart
-      auth/       auth_service.dart
-      constants/  app_constants.dart, app_theme.dart
-      utils/      currency_formatter.dart, validators.dart
-      widgets/    通用组件
+      api/          api_client.dart, api_response.dart
+      auth/         auth_service.dart (Token安全存储)
+      constants/    app_constants.dart, app_theme.dart
+      i18n/         app_localizations.dart (5语言硬编码), locale_provider.dart
+      utils/        currency_formatter.dart
     data/
-      models/     数据模型（fromJson/toJson）
-      repositories/ 数据仓库层
+      models/       product.dart, order.dart
     features/
-      home/       首页
-      product/    商品列表/详情
-      cart/       购物车
-      order/      订单/结算
-      profile/    用户中心
-      auth/       登录/注册
-    routing/      GoRouter 路由
+      home/         home_screen.dart (PC侧边栏+平板Tab)
+      product/      product_detail_screen.dart, product_list_screen.dart
+                    widgets/product_card.dart
+      cart/         cart_screen.dart
+      order/        order_list_screen.dart, checkout_screen.dart
+      profile/      profile_screen.dart, address_list_screen.dart
+      auth/         login_screen.dart
+    routing/        app_router.dart (10条路由)
 ```
 
 ### 平台布局
 | 平台 | 模式 | 导航 |
 |------|------|------|
-| macOS/Windows/Linux | PC风格，侧边栏+主从 | 持久侧边Rail |
-| iPadOS | 平板自适应，Split View | 顶部Tab |
+| macOS/Windows/Linux | PC风格，侧边Rail+主从 | NavigationRail |
+| iPadOS | 平板自适应 | NavigationBar(底部Tab) |
 
 ### 国际化
-- ARB 文件：zh_CN、zh_HK、en、ja、ko
-- API 携带 `Accept-Language` + `API-Version` header
+- `app_localizations.dart` 硬编码 5 语言翻译 (zh_CN/zh_HK/en/ja/ko)
+- `locale_provider.dart` Riverpod StateNotifier 持久化到 SharedPreferences
+- API 拦截器动态注入 `Accept-Language` + `API-Version` header
 
 ### 技术栈
-flutter_riverpod / go_router / dio / responsive_framework / cached_network_image / flutter_secure_storage / fl_chart / window_manager / google_sign_in / sign_in_with_apple
+flutter_riverpod / go_router / dio / responsive_framework / cached_network_image / flutter_secure_storage / shared_preferences / fl_chart / window_manager
 
 ---
 
@@ -48,36 +49,30 @@ flutter_riverpod / go_router / dio / responsive_framework / cached_network_image
 
 基于 HarmonyOS NEXT (API 12+) 的 ArkTS + ArkUI 客户端。
 
-### 项目结构
+### 项目结构（实际）
 ```
 apps/harmonyos/
   entry/
     src/main/
       ets/
-        entryability/   EntryAbility.ets
-        pages/          页面
-          Index.ets, ProductList.ets, ProductDetail.ets,
-          Cart.ets, OrderList.ets, OrderDetail.ets,
-          Checkout.ets, Profile.ets, Login.ets
-        common/         公共
-          api/           ApiClient.ets, ApiResponse.ets
-          utils/         CurrencyFormatter.ets, Validators.ets
-          components/    ProductCard.ets, LoadingView.ets
-        model/           Product.ets, Order.ets, User.ets, CartItem.ets
-        store/           AppState.ets, UserStore.ets, CartStore.ets
-        i18n/            strings_en.json, strings_zh.json
-      resources/        图片/资源
-  oh-package.json5
+        entryability/   EntryAbility.ets (应用入口+AppState初始化)
+        pages/          8个页面
+          Index.ets, ProductDetail.ets, Cart.ets, OrderList.ets,
+          Checkout.ets, Profile.ets, Login.ets, Search.ets
+        common/
+          api/           ApiClient.ets (HTTP客户端+ApiResponse接口)
+          components/    ProductCard.ets (可复用商品卡片)
+        store/           AppState.ets (Token/语言/币种/购物车全局状态)
   build-profile.json5
+  oh-package.json5
+  entry/build-profile.json5
 ```
 
 ### 技术栈
 - ArkTS + ArkUI (声明式UI)
-- @ohos.net.http (HTTP)
-- @ohos.data.preferences (本地存储)
-- @ohos.data.rdb (SQLite)
-- @ohos.i18n (国际化)
-- @ohos.geoLocationManager (GeoIP定位)
+- @ohos.net.http (HTTP，封装在ApiClient)
+- @ohos.data.preferences (本地存储，封装在AppState)
+- @ohos.window (窗口管理)
 
 ### 命令
 ```bash

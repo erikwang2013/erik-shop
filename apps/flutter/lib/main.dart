@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import 'core/constants/app_theme.dart';
 import 'core/auth/auth_service.dart';
+import 'core/i18n/app_localizations.dart';
+import 'core/i18n/locale_provider.dart';
 import 'routing/app_router.dart';
 
 void main() async {
@@ -17,13 +19,21 @@ class ShopApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(localeProvider);
+
     return MaterialApp.router(
       title: 'Erik Shop',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      supportedLocales: AppTheme.supportedLocales,
-      localizationsDelegates: AppTheme.localizationsDelegates,
+      locale: locale,
+      supportedLocales: supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       routerConfig: appRouter,
       builder: (context, child) => ResponsiveBreakpoints.builder(
         child: child!,

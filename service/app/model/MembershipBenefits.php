@@ -6,6 +6,5 @@
 namespace app\model;
 
 class MembershipBenefits extends BaseModel
-{
-    protected $table = "erik_membership_benefits";
+{    protected $table = "erik_membership_benefits";
 }

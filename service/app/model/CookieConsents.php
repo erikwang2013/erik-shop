@@ -5,7 +5,14 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class CookieConsents extends BaseModel
-{
-    protected $table = "erik_cookie_consents";
+{    protected $table = "erik_cookie_consents";
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(Users::class, "user_id");
+    }
+
 }

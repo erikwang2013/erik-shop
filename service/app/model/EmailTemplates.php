@@ -6,6 +6,5 @@
 namespace app\model;
 
 class EmailTemplates extends BaseModel
-{
-    protected $table = "erik_email_templates";
+{    protected $table = "erik_email_templates";
 }

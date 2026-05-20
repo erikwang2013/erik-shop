@@ -6,6 +6,5 @@
 namespace app\model;
 
 class Banners extends BaseModel
-{
-    protected $table = "erik_banners";
+{    protected $table = "erik_banners";
 }

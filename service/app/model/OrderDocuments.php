@@ -5,7 +5,14 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class OrderDocuments extends BaseModel
-{
-    protected $table = "erik_order_documents";
+{    protected $table = "erik_order_documents";
+    public function order(): BelongsTo
+    {
+        return $this->belongsTo(Orders::class, "order_id");
+    }
+
 }

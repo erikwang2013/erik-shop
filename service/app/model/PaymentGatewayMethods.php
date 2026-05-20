@@ -6,6 +6,5 @@
 namespace app\model;
 
 class PaymentGatewayMethods extends BaseModel
-{
-    protected $table = "erik_payment_gateway_methods";
+{    protected $table = "erik_payment_gateway_methods";
 }

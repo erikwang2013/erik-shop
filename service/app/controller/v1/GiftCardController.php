@@ -2,6 +2,7 @@
 namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\GiftCards;
+use app\model\Users;
 use Webman\Http\Request;
 
 class GiftCardController extends \app\controller\BaseApiController

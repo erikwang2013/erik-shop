@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
 import 'api_response.dart';
 
@@ -82,8 +83,11 @@ class _AuthInterceptor extends Interceptor {
 
 class _LocaleInterceptor extends Interceptor {
   @override
-  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    options.headers['Accept-Language'] = 'en';  // 可从SharedPreferences读取
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) async {
+    final prefs = await SharedPreferences.getInstance();
+    final localeStr = prefs.getString('app_locale') ?? 'en';
+    options.headers['Accept-Language'] = localeStr.split('_').first;
+    options.headers['API-Version'] = prefs.getString('api_version') ?? AppConstants.apiVersion;
     handler.next(options);
   }
 }

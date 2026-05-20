@@ -5,7 +5,19 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class PurchaseOrders extends BaseModel
-{
-    protected $table = "erik_purchase_orders";
+{    protected $table = "erik_purchase_orders";
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Suppliers::class, "supplier_id");
+    }
+
+    public function warehouse(): BelongsTo
+    {
+        return $this->belongsTo(Warehouses::class, "warehouse_id");
+    }
+
 }

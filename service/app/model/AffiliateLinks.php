@@ -5,7 +5,19 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class AffiliateLinks extends BaseModel
-{
-    protected $table = "erik_affiliate_links";
+{    protected $table = "erik_affiliate_links";
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(Users::class, "user_id");
+    }
+
+    public function affiliateCommissions(): HasMany
+    {
+        return $this->hasMany(AffiliateCommissions::class, "affiliate_link_id");
+    }
+
 }

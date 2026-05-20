@@ -6,6 +6,5 @@
 namespace app\model;
 
 class QualityInspectionItems extends BaseModel
-{
-    protected $table = "erik_quality_inspection_items";
+{    protected $table = "erik_quality_inspection_items";
 }

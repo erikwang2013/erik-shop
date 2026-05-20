@@ -6,6 +6,5 @@
 namespace app\model;
 
 class PrivacyPolicyVersions extends BaseModel
-{
-    protected $table = "erik_privacy_policy_versions";
+{    protected $table = "erik_privacy_policy_versions";
 }

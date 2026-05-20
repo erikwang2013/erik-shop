@@ -4,119 +4,51 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
-
-## 7. 安全防护
-
-### 7.1 中间件攻击检测
-
-| 攻击类型 | Service 端 | Admin 端 | 检测正则 | 错误码 |
-|---------|-----------|---------|---------|--------|
-| XSS跨站脚本 | ✅ | ✅ (排除富文本) | script/iframe/on事件/javascript: | 40001 |
-| SQL注入 | ✅ | ✅ | UNION SELECT/DROP/EXEC | 40002 |
-| CRLF注入 | ✅ | ✅ | Header中\\r\\n | 40003 |
-| 路径遍历 | ✅ | ✅ | ../ .env .git /etc/ | 40004 |
-| 请求体过大 | ✅ 10MB | ✅ 20MB | Content-Length | 40005 |
-| Content-Type | ✅ | ✅ | 仅JSON/form-data | 40006 |
-
-### 7.2 操作来源端追踪
-
-| 平台 | 识别方式 | X-Platform 值 |
-|------|---------|-------------|
-| iOS | Flutter Platform.isIOS | ios |
-| iPadOS | Flutter TargetPlatform | ipados |
-| macOS | Flutter Platform.isMacOS | macos |
-| Windows | Flutter Platform.isWindows | windows |
-| Linux | Flutter Platform.isLinux | linux |
-| Android | Flutter Platform.isAndroid | android |
-| HarmonyOS | ArkTS 硬编码 | harmonyos |
-| Web | UA 降级 / 默认 | web |
-
-### 7.3 测试验证
-
-```bash
-cd service && php vendor/bin/phpunit tests/
-# SecurityTest: 7 tests — XSS + SQLi + path traversal
-# JwtTest: 4 tests — encode/decode validation
-# ApiResponseTest: 3 tests — success/fail/paginate
-# Total: 14 tests, 44 assertions — ALL PASS
-```
-
-
 ## 1. 功能总览
 
 ### 1.1 模块矩阵
 
 | 一级模块 | 二级模块 | 优先级 | 状态 |
 |---------|---------|--------|------|
-| 用户系统 | 注册/登录/社交登录/KYC实名 | P0 | ✅ |
-| | 地址管理/收藏夹/浏览历史/商品对比 | P1 | ✅ |
-| | 会员等级/积分/礼品卡 | P2 | ✅ |
-| 商品系统 | 分类管理(树形)/商品CRUD/SKU变体 | P0 | ✅ |
-| | 多语言内容/分币种定价/商品图片 | P0 | ✅ |
-| | 属性管理/品牌/合规标签/HS Code关联 | P0 | ✅ |
-| | 商品Feed(Google/Meta)/ES多语言搜索 | P1 | ✅ |
-| 交易系统 | 购物车/订单创建/订单状态流转 | P0 | ✅ |
-| | 支付(Stripe/PayPal/Klarna)/退款/3DS | P0 | ✅ |
-| | 退货(双通道)/商业发票/装箱单 | P0 | ✅ |
-| 物流系统 | 国际物流商/物流分区/分区费率 | P0 | ✅ |
-| | 海外仓(发货仓+退货仓)/库存流水 | P1 | ✅ |
-| | 发货(HS申报)/物流轨迹/物流保险 | P1 | ✅ |
-| 海关税务 | HS Code编码库/商品HS关联 | P0 | ✅ |
-| | 关税规则/增值税VAT/IOSS | P0 | ✅ |
-| | 各国合规限制(禁售/限售/允许) | P0 | ✅ |
-| 营销系统 | 优惠券(分区+新老客)/轮播图(区域可见) | P1 | ✅ |
-| | 秒杀/拼团/分销(链接+佣金+提现) | P2 | ✅ |
-| 供应链 | 供应商管理/采购单/质检(入库+出库) | P1 | ✅ |
-| | 库存流水(不可变账本)/库存调拨 | P1 | ✅ |
-| 风控合规 | 风控规则引擎/风控日志(旁路打分) | P1 | ✅ |
-| | GDPR/CCPA数据请求/Cookie Consent | P1 | ✅ |
-| 多平台 | Amazon/eBay/Shopee刊登/订单聚合 | P2 | ✅ |
-| | 多店铺管理/多商家入驻(第三方卖家) | P2 | ✅ |
-| 内容管理 | CMS页面(多语言)/FAQ/知识库 | P2 | ✅ |
-| | 邮件模板/系统通知/降价提醒 | P2 | ✅ |
-| | 尺码对照表/评价翻译 | P2 | ✅ |
-| 增长工具 | B2B批发(阶梯定价/企业认证/询价) | P2 | ✅ |
-| | 订阅周期购/AB测试 | P3 | ✅ |
+| 用户系统 | 注册/登录/社交登录/KYC实名/地址/收藏/会员/积分/礼品卡 | P0-P2 | ✅ |
+| 商品系统 | 分类/SKU/多语言/多币种/图片/属性/合规/HS Code/ES搜索/Feed | P0-P1 | ✅ |
+| 交易系统 | 购物车/订单/支付(Stripe+PayPal+Klarna)/退款/退货/发票 | P0 | ✅ |
+| 物流系统 | 国际物流商/分区运费/海外仓/发货(HS申报)/物流保险 | P0-P1 | ✅ |
+| 海关税务 | HS Code库/关税规则/VAT/IOSS/各国合规限制 | P0 | ✅ |
+| 营销系统 | 优惠券/轮播图/秒杀/拼团/分销 | P1-P2 | ✅ |
+| 供应链 | 供应商/采购单/质检/库存流水 | P1 | ✅ |
+| 风控合规 | 规则引擎/GDPR/CCPA/Cookie Consent/平台追踪 | P1 | ✅ |
+| 安全防护 | XSS/SQL注入/CRLF/路径遍历/Content-Type/请求体 | P0 | ✅ |
+| 多平台 | Amazon/eBay/Shopee刊登+订单聚合/多商家入驻 | P2 | ✅ |
+| 内容管理 | CMS/FAQ/知识库/邮件模板/通知/尺码表 | P2 | ✅ |
+| 增长工具 | B2B批发/订阅周期购/AB测试 | P2-P3 | ✅ |
 | 客服 | WebSocket实时IM/知识库 | P3 | ✅ |
-| 基础设施 | Snowflake ID/JWT认证/Hashids编解码 | P0 | ✅ |
-| | Encryption(接口+数据库)/Poster人机验证 | P0 | ✅ |
-| | API版本控制/国际化/GeoIP识别 | P0 | ✅ |
-| | API限流/OpenAPI文档/操作日志 | P2 | ✅ |
+| 基础设施 | Snowflake ID/JWT/Hashids/Encryption/Poster/API版本/GeoIP | P0 | ✅ |
 
 ---
 
-### 2.0 流程图
+## 2. 核心业务流程图
 
-#### 订单状态机
+### 2.1 订单状态机
 
 ```mermaid
 stateDiagram-v2
-    [*] --> pending_pay: 用户下单
-    pending_pay: 待付款
-    pending_pay --> paid: 支付成功
-    pending_pay --> cancelled: 取消/超时
-    pending_pay --> review: 风控高分
-    paid: 已付款
-    paid --> shipped: 发货
-    paid --> refunding: 申请退款
-    shipped: 已发货
-    shipped --> received: 用户收货
-    received: 已收货
-    received --> completed: 确认完成
-    received --> returning: 申请退货
-    refunding: 退款中
-    refunding --> refunded: 退款完成
-    returning: 退货中
-    returning --> refunded: 退货完成
-    review: 待审核
-    review --> paid: 审核通过
-    review --> cancelled: 审核驳回
-    completed: 已完成
-    refunded: 已退款
-    cancelled: 已取消
+    [*] --> 待付款: 用户下单
+    待付款 --> 已付款: 支付成功
+    待付款 --> 已取消: 取消/超时
+    待付款 --> 待审核: 风控高分
+    已付款 --> 已发货: 发货
+    已付款 --> 退款中: 申请退款
+    已发货 --> 已收货: 用户收货
+    已收货 --> 已完成: 确认完成
+    已收货 --> 退货中: 申请退货
+    退款中 --> 已退款: 退款完成
+    退货中 --> 已退款: 退货完成
+    待审核 --> 已付款: 审核通过
+    待审核 --> 已取消: 审核驳回
 ```
 
-#### 支付时序
+### 2.2 支付时序
 
 ```mermaid
 sequenceDiagram
@@ -128,36 +60,34 @@ sequenceDiagram
 
     U->>C: 点击支付
     C->>S: GET /api/payment/methods
-    S-->>C: 可用支付方式
-    U->>C: 选择方式
+    S-->>C: 可用方式列表
     C->>S: POST /api/payment/create
-    S->>P: 创建PaymentIntent
-    P-->>S: client_secret
+    S->>P: createPayment()
+    P-->>S: txn_id + client_secret
     S-->>C: client_secret
-    C->>P: SDK完成支付+3DS
+    C->>P: SDK支付 + 3DS验证
     P-->>C: 支付结果
-    P->>W: Webhook通知
-    W->>S: 验签+更新订单+分账
-    S-->>C: 订单状态更新
+    P->>W: 异步通知
+    W->>S: 验签→更新支付→更新订单→分账
 ```
 
-#### 安全检测管道
+### 2.3 安全检测管道
 
 ```mermaid
 graph TD
-    A[HTTP Request] --> B{Content-Type OK?}
-    B -->|No| R1[403]
-    B -->|Yes| C{Size < 10MB?}
-    C -->|No| R2[413]
-    C -->|Yes| D{XSS Pattern?}
-    D -->|Hit| R3[40001]
-    D -->|Pass| E{SQLi Pattern?}
-    E -->|Hit| R4[40002]
-    E -->|Pass| F{CRLF in Header?}
-    F -->|Hit| R5[40003]
-    F -->|Pass| G{Path Traversal?}
-    G -->|Hit| R6[40004]
-    G -->|Pass| H[Next Middleware]
+    A[HTTP Request] --> B{Content-Type}
+    B -->|invalid| R1[403]
+    B -->|valid| C{Body Size}
+    C -->|too large| R2[413]
+    C -->|ok| D{XSS Check}
+    D -->|hit| R3[40001]
+    D -->|pass| E{SQLi Check}
+    E -->|hit| R4[40002]
+    E -->|pass| F{CRLF Check}
+    F -->|hit| R5[40003]
+    F -->|pass| G{Path Check}
+    G -->|hit| R6[40004]
+    G -->|pass| H[Pass to Next MW]
     style R1 fill:#fcc
     style R2 fill:#fcc
     style R3 fill:#fcc
@@ -167,281 +97,206 @@ graph TD
     style H fill:#cfc
 ```
 
-## 2. 核心业务流程
+---
 
-### 2.1 用户注册登录
+## 3. 核心业务流程
 
-```
-注册流程:
-  EMAIL注册: 输入email+password → Poster验证 → bcrypt(password+salt)
-           → Snowflake生成ID → JWT签发(access+refresh) → 返回token
-  社交登录: Google/Apple/Facebook OAuth → 获取id_token
-          → 验证id_token → 查erik_user_social_accounts
-          → 已绑定: 直接登录 / 未绑定: 自动创建用户+绑定
-          → JWT签发 → 返回token
-
-登录流程:
-  email+password → 查erik_users(email) → password_verify(password+salt)
-  → 更新last_login_at/last_login_ip → JWT签发 → 返回token
-
-Token刷新:
-  refresh_token → Jwt::decode验证 → 签发新access_token → 返回
-```
-
-### 2.2 商品浏览与搜索
+### 3.1 用户注册登录
 
 ```
-商品列表:
-  GET /api/products
-  → 筛选: category_id(含子分类)/status/keyword/price_range
+EMAIL注册: email+password → PosterVerify人机验证 → bcrypt(password+salt)
+          → Snowflake生成ID → 返回 JWT {access_token, expires_in}
+
+社交登录: Google/Apple/Facebook OAuth → 验证id_token
+        → erik_user_social_accounts 查绑定
+        → 已绑定:登录 / 未绑定:自动创建用户+绑定 → 返回JWT
+
+登录: email+password → password_verify(password+salt)
+    → 更新last_login_at/ip/platform → 签发JWT
+
+Token刷新: refresh_token → Jwt::decode → 新access_token
+```
+
+### 3.2 商品浏览与搜索
+
+```
+列表: GET /api/products
+  → 筛选: category_id/status/keyword/price_range
   → 排序: default/price_asc/price_desc/sales/newest
-  → 多语言: ProductTranslations按Accept-Language locale过滤
-  → 分币种: ProductSkuPrices按currency_code匹配
-  → 分页返回(20条/页)
+  → 多语言: ProductTranslations 按 locale 过滤
+  → 分币种: ProductSkuPrices 按 currency_code 匹配
+  → 分页: 20条/页
 
-ES搜索:
-  GET /api/search?keyword=xxx
-  → Erikwang2013\WebmanScout\Searchable
-  → 多语言分析器(中文/英文/日文/韩文)
-  → 聚合: category_id/price_range/brand
-  → 降级: ES不可用时自动切换MySQL LIKE
+ES搜索: GET /api/search?keyword=xxx
+  → Erikwang2013\WebmanScout\Searchable → ES多语言分析器
+  → 聚合: category/price/brand
+  → 降级: ES不可用时MySQL LIKE
 
-商品详情:
-  GET /api/products/{hashid}
-  → HashidsDecode中间件解码
-  → Eager Load: skus.prices, images, translations, compliance, hsCodes
-  → 多语言匹配 + 分币种价格计算 + VAT含/不含税
-  → 合规信息 + HS Code + 尺码转换
-  → view_count +1
+详情: GET /api/products/{hashid}
+  → HashidsDecode中间件解码 → Eager Load
+  → 多语言+分币种+合规+HS Code+尺码转换+含/不含税+VAT
 ```
 
-### 2.3 购物车与下单
+### 3.3 购物车与下单
 
 ```
-购物车:
-  POST /api/cart {sku_id, quantity}
+购物车: POST /api/cart {sku_id, quantity}
   → 校验SKU存在|上架|库存充足
-  → 已存在同SKU: 累加数量 / 不存在: 创建
-  → 返回最新购物车列表(含价格/图片/库存)
+  → 同SKU累加 / 不存在则创建
 
-下单流程:
-  POST /api/orders {address_id, coupon_id, currency_code}
-  → 1. 校验收货地址存在且属于当前用户
-  → 2. 获取购物车已选中商品(Carts.where(selected=1))
-  → 3. 逐商品校验:
-       - SKU存在且已上架
-       - 库存充足(>=quantity)
-       - 合规检查(Compliance::check → 禁售商品阻止下单)
-  → 4. 计算价格:
-       - 按currency_code查ProductSkuPrices
-       - 无独立定价时降级汇率换算
-       - 应用优惠券(满减/折扣/固定金额)
-  → 5. 生成订单号 ORD20260521XXXXXX
-  → 6. 创建Order → 创建OrderItems(价格/属性快照)
-  → 7. 扣减库存(InventoryManager::outbound)
-  → 8. 写OrderLog(创建)
-  → 9. 风控打分(RiskEngine::score) — 旁路不阻塞
-  → 10. 清除购物车已购商品
-  → 返回order_id + order_no + total_amount
+下单: POST /api/orders {address_id, coupon_id, currency_code}
+  → 1.校验收货地址 → 2.获取购物车已选 → 3.逐商品校验(库存+合规)
+  → 4.计算价格(分币种+优惠券) → 5.生成订单号
+  → 6.创建Order+OrderItems → 7.扣减库存 → 8.写OrderLog
+  → 9.风控打分(RiskEngine::score) → 10.清除已购购物车
 
-取消订单:
-  POST /api/orders/{id}/cancel
-  → 校验订单属于当前用户且状态=0(待付款)
-  → 恢复库存(InventoryManager::inbound)
-  → 更新status=5(已取消) + canceled_at
-  → 写OrderLog(取消)
+取消: POST /api/orders/{id}/cancel
+  → 校验状态=0(待付款) → 恢复库存 → status=5(已取消)
 ```
 
-### 2.4 支付流程
+### 3.4 支付流程
 
 ```
-可用支付方式:
-  GET /api/payment/methods?country=DE&currency=EUR
-  → 查PaymentGatewayMethods表(按country+currency过滤)
-  → 返回: card, ideal, sofort, paypal, klarna_paylater, afterpay...
+可用方式: GET /api/payment/methods?country=DE&currency=EUR
+  → PaymentGatewayMethods(按country+currency过滤)
 
-创建支付:
-  POST /api/payment/create {order_id, gateway, method}
-  → 校验订单状态=0(待付款)
-  → 创建Payment记录(状态=待支付)
+创建支付: POST /api/payment/create
   → PaymentGateway::make(gateway)→createPayment()
-  → Stripe: 创建PaymentIntent → 返回client_secret
-  → 前端: 调用Stripe SDK完成支付(+3DS)
+  → Stripe: PaymentIntent → client_secret → 前端SDK(+3DS)
 
-Webhook回调:
-  POST /webhook/payment/stripe
-  → 验签(PaymentGateway::verifyWebhook)
-  → payment_intent.succeeded:
-     → 更新Payment.status=已支付, paid_at=now
-     → 更新Order.status=已付款, pay_at=now
-     → 创建PlatformSettlement(平台佣金+支付手续费+供应商金额+分销佣金)
-  → 返回200
-
-BNPL分期(Klarna/Afterpay):
-  → Klarna创建订单 → 前端渲染分期选择器 → 用户选分期方案
-  → Klarna回调 → 更新支付状态 → 后续自动扣款由Klarna处理
+Webhook: POST /webhook/payment/stripe
+  → 验签 → payment_intent.succeeded:
+     → Payment.status=已支付 → Order.status=已付款
+     → PlatformSettlement(平台佣金+网关费+供应商+分销)
 ```
 
-### 2.5 订单状态机
+### 3.5 退货流程
 
 ```
-                  ┌──────────────┐
-                  │  0: 待付款   │
-                  └──┬───┬───┬──┘
-           支付成功  │   │   │  用户取消
-                    │   │   └──────────────┐
-                    ▼   │                  ▼
-            ┌──────────┐│          ┌──────────┐
-            │ 1: 已付款 ││          │ 5: 已取消 │
-            └────┬─────┘│          └──────────┘
-           发货  │      │退款申请
-                 ▼      ▼
-         ┌──────────┐ ┌──────────┐
-         │ 2: 已发货 │ │ 6: 退款中 │
-         └────┬─────┘ └────┬─────┘
-       收货   │        退款│
-              ▼            ▼
-      ┌──────────┐  ┌──────────┐
-      │ 3: 已收货 │  │ 7: 已退款 │
-      └────┬─────┘  └──────────┘
-    完成   │
-           ▼
-    ┌──────────┐      ┌──────────┐
-    │ 4: 已完成 │      │ 8: 待审核 │ ← 风控高分订单
-    └──────────┘      └──────────┘
+申请: POST /api/returns {order_id, reason_id}
+  → 判断退货通道: 当地仓(type=1)/退回国内(type=2)/仅退款(type=3)
+
+审核: Admin审核 → 通过:生成ReturnLabel / 驳回:写原因
+
+寄回: 下载面单→寄回→物流更新→仓库收货→status=已收货
+
+退款: status=已完成 → 关联Refund → PaymentGateway::refund→原路退回
 ```
 
-### 2.6 退货流程
-
-```
-用户申请退货:
-  POST /api/returns {order_id, reason_id}
-  → 校验订单状态(已发货/已收货/已完成可退)
-  → 判断退货通道:
-     1. 目的国有退货仓 → type=1(当地仓), 生成return_warehouse_id
-     2. 无当地退货仓 → type=2(退回国内)
-     3. 货值<阈值 → 建议仅退款不退货
-  → 创建ReturnOrder(status=待审)
-
-管理员审核:
-  → 通过: status=已通过 → 生成ReturnLabel(物流面单)
-  → 驳回: status=已驳回 + 驳回原因
-
-用户退货寄回:
-  → 下载退货面单 → 寄回 → 物流更新
-  → 仓库收货 → status=已收货
-
-退款处理:
-  → status=已完成 → 关联Refund创建退款
-  → PaymentGateway::refundPayment → 原路退回
-```
-
-### 2.7 关税估算
+### 3.6 关税估算
 
 ```
 GET /api/tariff/estimate?product_id=xxx&dest_country_id=xxx&declared_value=100
 
-估算逻辑:
-  1. 查商品HS Code: ProductHsCodes → HsCode
-  2. 查关税规则: TariffRules(dest_country_id + hs_code_id)
-     → duty_rate: 关税率%
-     → duty_free_threshold: 关税起征点
-  3. 查VAT设置: VatSettings(country_id)
-     → vat_rate: 增值税率%
-     → vat_free_threshold: 增值税起征点
-  4. 计算:
-     duty = declared_value >= duty_free_threshold
-            ? declared_value * duty_rate / 100
-            : 0
-     vat  = (declared_value + duty) >= vat_free_threshold
-            ? (declared_value + duty) * vat_rate / 100
-            : 0
-  5. 返回: {duty_rate, vat_rate, estimated_duty, estimated_vat, estimated_total,
-            hs_code, is_estimate: true,
-            disclaimer: "仅供参考，实际以海关核定为准"}
+1. ProductHsCodes → HsCode
+2. TariffRules(dest_country_id + hs_code_id) → duty_rate + duty_free_threshold
+3. VatSettings(country_id) → vat_rate + vat_free_threshold
+4. duty = value>=threshold ? value*duty_rate/100 : 0
+   vat = (value+duty)>=threshold ? (value+duty)*vat_rate/100 : 0
+5. return {duty_rate, vat_rate, estimated_duty, estimated_vat, estimated_total, hs_code, disclaimer}
 ```
 
 ---
 
-## 3. 数据表关系图
+## 4. 安全防护
+
+### 4.1 攻击检测规则
+
+| 攻击类型 | 检测正则 | 错误码 | Service | Admin |
+|---------|---------|--------|---------|-------|
+| XSS script标签 | `/<script\b[^>]*>/i` | 40001 | ✅ | ✅ |
+| XSS iframe标签 | `/<iframe\b[^>]*>/i` | 40001 | ✅ | ✅ |
+| XSS object/embed | `/<object\b[^>]*>/i` `/<embed\b[^>]*>/i` | 40001 | ✅ | ✅ |
+| XSS 事件注入 | `/on\w+\s*=\s*["\']?[^"\'>]*["\']?/i` | 40001 | ✅ | ✅ |
+| XSS javascript协议 | `/javascript\s*:/i` | 40001 | ✅ | ✅ |
+| XSS SVG/IMG注入 | `/<svg\b[^>]*>/i` `/<img[^>]+on\w+\s*=/i` | 40001 | ✅ | ✅ |
+| XSS expression() | `/expression\s*\(/i` | 40001 | ✅ | ✅ |
+| SQLi UNION SELECT | `/(\%27|\')\s*(union|select)\b/i` `/\b(union\s+(all\s+)?select)\b/i` | 40002 | ✅ | ✅ |
+| SQLi DROP/DELETE | `/;\s*DROP\s+/i` `/;\s*DELETE\s+FROM\s+/i` | 40002 | ✅ | ✅ |
+| SQLi EXEC执行 | `/\bexec\s*\(/i` `/\bexecute\s*\(/i` | 40002 | ✅ | ✅ |
+| SQLi OR注入 | `/(\%27|\')\s*or\s+(\'[^\']*\'=\'[^\']*\'|\d+=\d+)/i` | 40002 | ✅ | ✅ |
+| SQLi xp_cmdshell | `/\bxp_cmdshell\b/i` | 40002 | ✅ | ✅ |
+| CRLF Header注入 | `/[\r\n]/` | 40003 | ✅ | ✅ |
+| 路径遍历 | `..` + `.env` `apt-get` `.git` `/etc/` `phpmyadmin` `wp-admin` | 40004 | ✅ | ✅ |
+| 请求体过大 | Content-Length > 10MB(Service) / 20MB(Admin) | 40005 | ✅ | ✅ |
+| Content-Type限制 | 仅JSON/Form-data/Form-urlencoded | 40006 | ✅ | ✅ |
+
+### 4.2 中间件管道
 
 ```
-erik_users ──┬── erik_user_addresses (user_id)
-             ├── erik_user_social_accounts (user_id)
-             ├── erik_user_wishlists (user_id)
-             ├── erik_user_kyc (user_id)
-             ├── erik_carts (user_id)
-             ├── erik_orders (user_id)
-             ├── erik_product_reviews (user_id)
-             ├── erik_coupons (via erik_user_coupons)
-             ├── erik_notifications (user_id)
-             ├── erik_subscriptions (user_id)
-             ├── erik_point_logs (user_id)
-             ├── erik_affiliate_links (user_id)
-             ├── erik_chat_sessions (user_id)
-             ├── erik_b2b_verifications (user_id)
-             └── erik_privacy_requests (user_id)
+Service: Cors → Security → Platform → GeoIp → Locale → HashidsDecode
+        → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode
 
-erik_products ──┬── erik_product_translations (product_id, locale)
-                ├── erik_product_skus (product_id)
-                │      └── erik_product_sku_prices (sku_id, currency_code)
-                ├── erik_product_images (product_id)
-                ├── erik_product_reviews (product_id)
-                ├── erik_product_compliance (product_id)
-                │      └── erik_compliance_categories (compliance_category_id)
-                ├── erik_product_hs_codes (product_id)
-                │      └── erik_hs_codes (hs_code_id)
-                ├── erik_product_recommendations (product_id)
-                ├── erik_b2b_prices (sku_id)
-                └── erik_platform_listings (product_id)
+Admin: Security → Platform → HashidsDecode → AccessControl → HashidsEncode
+```
 
-erik_orders ──┬── erik_order_items (order_id)
-              ├── erik_order_logs (order_id)
-              ├── erik_payments (order_id)
-              ├── erik_refunds (order_id)
-              ├── erik_return_orders (order_id)
-              │      └── erik_return_labels (return_id)
-              ├── erik_order_documents (order_id)
-              ├── erik_shipments (order_id)
-              ├── erik_platform_settlements (order_id)
-              ├── erik_subscription_orders (order_id)
-              └── erik_risk_logs (order_id)
+### 4.3 平台来源追踪
 
-erik_countries ──┬── erik_vat_settings (country_id)
-                 ├── erik_tariff_rules (dest_country_id)
-                 ├── erik_country_compliance_rules (country_id)
-                 ├── erik_shipping_zones (via JSON countries)
-                 └── erik_warehouses (country_id)
+| 平台 | Header值 | 识别方式 |
+|------|---------|---------|
+| iOS | `ios` | Flutter `Platform.isIOS` |
+| iPadOS | `ipados` | Flutter `TargetPlatform.iOS` 判断 |
+| macOS | `macos` | Flutter `Platform.isMacOS` |
+| Windows | `windows` | Flutter `Platform.isWindows` |
+| Linux | `linux` | Flutter `Platform.isLinux` |
+| Android | `android` | Flutter `Platform.isAndroid` |
+| HarmonyOS | `harmonyos` | ArkTS 硬编码 |
+| Web | `web` | UA 降级 / 默认 |
 
-erik_suppliers ──┬── erik_purchase_orders (supplier_id)
+---
 
-erik_purchase_orders ──┬── erik_purchase_order_items (po_id)
-                       └── erik_quality_inspections (po_id)
+## 5. 数据表关系图
+
+```
+erik_users ──┬── addresses, social_accounts, wishlists, kyc
+             ├── carts, orders → order_items → payments
+             ├── reviews, coupons(through user_coupons)
+             ├── notifications, subscriptions, point_logs
+             ├── affiliate_links, chat_sessions, b2b_verifications
+             └── privacy_requests
+
+erik_products ──┬── translations(product_id, locale)
+                ├── skus → sku_prices(sku_id, currency_code)
+                ├── images, reviews, compliance → compliance_categories
+                ├── hs_codes → hs_codes, recommendations
+                ├── b2b_prices, platform_listings
+                └── product_comparisons
+
+erik_orders ──┬── order_items, order_logs
+              ├── payments, refunds, return_orders → return_labels
+              ├── order_documents, shipments
+              ├── platform_settlements, risk_logs
+              └── subscription_orders
+
+erik_countries ──┬── vat_settings, tariff_rules(dest_country_id)
+                 ├── country_compliance_rules
+                 ├── shipping_zones(JSON countries)
+                 └── warehouses(country_id)
 ```
 
 ---
 
-## 4. API端点设计
+## 6. API端点设计
 
-### 4.1 公开接口 (25端点)
+### 6.1 公开接口 (25端点)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | /api/auth/register | 注册 (PosterVerify) |
+| POST | /api/auth/register | 注册(PosterVerify) |
 | POST | /api/auth/login | 登录 |
 | POST | /api/auth/refresh | 刷新Token |
 | POST | /api/auth/social | 社交登录 |
-| GET | /api/products | 商品列表 (分页+筛选+排序) |
-| GET | /api/products/{id} | 商品详情 (多语言+多币种+合规+HS) |
+| GET | /api/products | 商品列表(分页+筛选+排序) |
+| GET | /api/products/{id} | 商品详情(多语言+多币种+合规+HS) |
 | GET | /api/categories | 分类列表 |
 | GET | /api/categories/tree | 分类树 |
-| GET | /api/banners | 轮播图 (按位置+区域) |
-| GET | /api/countries | 国家/货币/汇率 |
+| GET | /api/banners | 轮播图(按位置+区域) |
+| GET | /api/countries | 国家/货币/汇率列表 |
 | GET | /api/search | ES多语言搜索 |
 | GET | /api/reviews/{productId} | 商品评价列表 |
 | GET | /api/flash-sales | 当前秒杀 |
 | GET | /api/group-buys | 当前拼团 |
-| GET | /api/faq | FAQ (按语言+分类) |
+| GET | /api/faq | FAQ(按语言+分类) |
 | GET | /api/cms/{slug} | CMS页面 |
 | GET | /api/settings | 公开配置 |
 | GET | /api/size-charts | 尺码对照表 |
@@ -451,30 +306,29 @@ erik_purchase_orders ──┬── erik_purchase_order_items (po_id)
 | GET | /api/geoip/detect | GeoIP检测 |
 | GET | /api/compliance/check | 合规检查 |
 
-### 4.2 认证接口 (45端点)
+### 6.2 认证接口 (45端点)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET/PUT | /api/user/profile | 个人信息 |
-| GET | /api/user/addresses | 地址列表 |
-| POST/PUT/DELETE | /api/user/addresses/{id} | 地址CRUD |
+| GET/POST/PUT/DELETE | /api/user/addresses[/{id}] | 地址CRUD |
 | PUT | /api/user/locale | 更新语言/币种 |
-| GET/POST | /api/wishlist | 收藏夹 |
+| GET/POST | /api/wishlist[/{id}] | 收藏夹 |
 | GET/POST | /api/price-alerts | 降价提醒 |
-| GET/POST/PUT/DELETE | /api/cart | 购物车 |
-| GET/POST | /api/orders | 订单列表/创建 (PosterVerify) |
+| GET/POST/PUT/DELETE | /api/cart[/{id}] | 购物车 |
+| GET/POST | /api/orders | 订单列表/创建(PosterVerify) |
 | GET | /api/orders/{id} | 订单详情 |
 | POST | /api/orders/{id}/cancel | 取消订单 |
 | GET | /api/orders/{id}/documents/invoice | 商业发票 |
 | GET | /api/orders/{id}/documents/packing-list | 装箱单 |
-| POST | /api/payment/create | 创建支付 (PosterVerify) |
+| POST | /api/payment/create | 创建支付(PosterVerify) |
 | GET | /api/payment/status/{id} | 支付状态 |
-| GET/POST | /api/returns | 退货 |
+| GET/POST | /api/returns[/{id}] | 退货 |
 | GET | /api/returns/{id}/label | 退货面单 |
 | POST | /api/reviews | 发表评价 |
-| GET/POST | /api/coupons | 优惠券 |
-| GET | /api/notifications | 通知 |
-| GET/POST | /api/comparisons | 商品对比 |
+| GET/POST | /api/coupons[/{id}/claim] | 优惠券 |
+| GET/PUT | /api/notifications[/{id}/read] | 通知 |
+| GET/POST/DELETE | /api/comparisons[/{id}] | 商品对比 |
 | GET | /api/recommendations | 个性化推荐 |
 | GET | /api/affiliate/links | 分销链接 |
 | GET | /api/affiliate/commissions | 分销佣金 |
@@ -485,8 +339,23 @@ erik_purchase_orders ──┬── erik_purchase_order_items (po_id)
 | GET/POST | /api/privacy/request | GDPR请求 |
 | GET | /api/export/orders | 导出订单 |
 
-### 4.3 Webhook (1端点)
+### 6.3 Webhook (1端点)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | /webhook/payment/{gateway} | 支付异步通知 |
+| POST | /webhook/payment/{gateway} | 支付异步通知(验签) |
+
+---
+
+## 7. 测试验证
+
+```bash
+cd service && php vendor/bin/phpunit tests/
+```
+
+| 测试类 | Tests | 覆盖 |
+|--------|-------|------|
+| SecurityTest | 7 | XSS脚本/事件/html注入 + SQL注入UNION/DROP + 正常输入无误报 + 路径遍历 |
+| JwtTest | 4 | encode三段式JWT + decode往返 + 无效token→null + 空token→null |
+| ApiResponseTest | 3 | success(code=0) + fail(error code) + paginate(list+meta分页) |
+| **Total** | **14** | **44 assertions — ALL PASS** |

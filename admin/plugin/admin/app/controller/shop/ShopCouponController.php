@@ -3,7 +3,7 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Coupons;
 use support\Request;
-use supportxception\BusinessException;
+use support\exception\BusinessException;
 
 class ShopCouponController extends Crud
 {

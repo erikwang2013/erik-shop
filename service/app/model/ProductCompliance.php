@@ -9,10 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductCompliance extends BaseModel
-{    protected $table = "erik_product_compliance";
+{
+    protected $table = "erik_product_compliance";
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Products::class, "product_id");
+    }
+
+    public function complianceCategory(): BelongsTo
+    {
+        return $this->belongsTo(ComplianceCategories::class, "compliance_category_id");
     }
 
 }

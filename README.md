@@ -87,9 +87,13 @@ shop-php/
 
 ## 文档
 
-- [设计文档](docs/design.md) — 完整功能规划和数据表设计
-- [架构文档](docs/architecture.md) — 系统架构和中间件管道
-- [部署文档](docs/deployment.md) — Docker生产部署指南
+| 文档 | 说明 |
+|------|------|
+| [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、API端点设计、状态机 |
+| [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
+| [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
+| [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |
+| [部署文档](docs/deployment.md) | Docker/手动部署、环境变量、运维命令 |
 
 ## License
 

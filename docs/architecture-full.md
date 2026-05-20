@@ -111,7 +111,30 @@ webman Master Process
 
 ---
 
-## 3. 中间件管道设计
+### 3.1 中间件管道流程图
+
+```mermaid
+graph LR
+    A[HTTP Request] --> B[Cors 跨域]
+    B --> C[Security 攻击检测]
+    C --> D[Platform 来源识别]
+    D --> E[GeoIp 区域识别]
+    E --> F[Locale 语言设置]
+    F --> G[HashidsDecode ID解码]
+    G --> H[VersionRoute 版本路由]
+    H --> I{敏感操作?}
+    I -->|Yes| J[PosterVerify 人机验证]
+    I -->|No| K{JWT保护?}
+    J --> K
+    K -->|Yes| L[JwtAuth Token验证]
+    K -->|No| M[HashidsEncode ID编码]
+    L --> M
+    M --> N[Controller]
+    N --> O[HTTP Response]
+```
+
+### 3.2 Service 中间件详情
+
 
 ### 3.1 管道架构
 
@@ -121,6 +144,27 @@ HTTP请求
    ▼
 ┌───────────────────────────────────────────────────────┐
 │ 1. Cors 中间件                                         │
+│    - 添加 Access-Control-* 响应头                       │
+│    - OPTIONS 预检请求直接返回200                         │
+│    - 允许 Headers: Authorization, API-Version,          │
+│      Accept-Language, X-Device-Fingerprint, X-Platform  │
+├───────────────────────────────────────────────────────┤
+│ 2. SecurityMiddleware (安全攻击检测)                     │
+│    - XSS: 检测 script/iframe/on事件/javascript:        │
+│    - SQL注入: 检测 UNION SELECT/DROP/EXEC 等           │
+│    - CRLF: 检测 Header 中 
+                       │
+│    - 路径遍历: 检测 ../ 及敏感路径                       │
+│    - Content-Type: 仅允许 JSON/form-data/form-urlencoded│
+│    - 请求体大小: 限制 10MB                              │
+├───────────────────────────────────────────────────────┤
+│ 3. PlatformMiddleware (操作来源端识别)                    │
+│    - 读取 X-Platform header (8个有效平台)                │
+│    - 降级: User-Agent 解析                              │
+│    - 注入 request->platform                             │
+│    - 已登录用户不覆盖手动选择                             │
+├───────────────────────────────────────────────────────┤
+│ 4. Cors 中间件 (原 1)                                         │
 │    - 添加 Access-Control-* 响应头                       │
 │    - OPTIONS 预检请求直接返回200                         │
 │    - 允许 Headers: Authorization, API-Version,          │
@@ -201,6 +245,29 @@ HTTP响应 (JSON)
 - PosterVerify是路由级中间件，可以独立应用于注册路由
 
 ---
+
+
+### 3.3 Admin 中间件管道
+
+
+
+---
+
+
+### 3.3 Admin 中间件管道
+
+```
+Admin HTTP 请求 → SecurityMiddleware(XSS/SQL/CRLF/Path) 
+  → PlatformMiddleware(来源识别) → HashidsDecode(hashid解码) 
+  → webman-admin AccessControl(权限) → HashidsEncode(hashid编码) → 控制器
+```
+
+| Admin 中间件 | 功能 |
+|-------------|------|
+| SecurityMiddleware | XSS/SQL注入/CRLF/路径遍历/请求体20MB/Content-Type |
+| PlatformMiddleware | X-Platform header + UA 8平台识别 |
+| HashidsDecode | 请求参数 hashid→snowflake ID |
+| HashidsEncode | 响应 snowflake ID→hashid |
 
 ## 4. 数据架构
 
@@ -383,6 +450,39 @@ Webhook 回调处理:
 
 ---
 
+### 7.1 部署拓扑
+
+```mermaid
+graph TD
+    subgraph Clients[客户端层]
+        F[Flutter: iOS Android macOS Win Linux]
+        H[HarmonyOS: ArkTS]
+        W[Web Browser: Admin]
+    end
+    subgraph Gateway[接入层]
+        N[Nginx :80/:443]
+    end
+    subgraph Apps[应用层]
+        S[Service API webman :8787<br/>32 workers]
+        A[Admin webman :8787<br/>separate instance]
+    end
+    subgraph Data[数据层]
+        M[(MySQL 8.0 :3306<br/>erik_shop)]
+        R[(Redis 7 :6379<br/>cache/session)]
+        E[(Elasticsearch 8 :9200<br/>search)]
+    end
+    F --> N
+    H --> N
+    W --> N
+    N -->|api.erik.xyz| S
+    N -->|admin.erik.xyz| A
+    S --> M
+    S --> R
+    S --> E
+    A --> M
+    A --> R
+```
+
 ## 8. 部署架构
 
 ### 8.1 Docker Compose 拓扑
@@ -517,9 +617,11 @@ PaymentGatewayInterface 定义标准接口
 | ArkTS源文件 (HarmonyOS) | 12 |
 | 数据库表 | 110 |
 | API端点 | 71 |
-| 中间件 | 9 |
+| 中间件 | 11 (service:9 + admin:5) |
 | 工具类 | 6 |
 | 定时任务 | 12 |
-| 配置项 | 31 |
-| 文档 | 8 |
-| **总计** | **~620** |
+| 配置项 | 35+ (service:31 + admin:4) |
+| 文档 | 6 |
+| 测试 | 14 tests, 44 assertions |
+| 测试 | 14 tests, 44 assertions |
+| **总计** | **~650** |

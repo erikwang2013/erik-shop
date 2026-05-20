@@ -4,6 +4,44 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+
+## 7. 安全防护
+
+### 7.1 中间件攻击检测
+
+| 攻击类型 | Service 端 | Admin 端 | 检测正则 | 错误码 |
+|---------|-----------|---------|---------|--------|
+| XSS跨站脚本 | ✅ | ✅ (排除富文本) | script/iframe/on事件/javascript: | 40001 |
+| SQL注入 | ✅ | ✅ | UNION SELECT/DROP/EXEC | 40002 |
+| CRLF注入 | ✅ | ✅ | Header中\\r\\n | 40003 |
+| 路径遍历 | ✅ | ✅ | ../ .env .git /etc/ | 40004 |
+| 请求体过大 | ✅ 10MB | ✅ 20MB | Content-Length | 40005 |
+| Content-Type | ✅ | ✅ | 仅JSON/form-data | 40006 |
+
+### 7.2 操作来源端追踪
+
+| 平台 | 识别方式 | X-Platform 值 |
+|------|---------|-------------|
+| iOS | Flutter Platform.isIOS | ios |
+| iPadOS | Flutter TargetPlatform | ipados |
+| macOS | Flutter Platform.isMacOS | macos |
+| Windows | Flutter Platform.isWindows | windows |
+| Linux | Flutter Platform.isLinux | linux |
+| Android | Flutter Platform.isAndroid | android |
+| HarmonyOS | ArkTS 硬编码 | harmonyos |
+| Web | UA 降级 / 默认 | web |
+
+### 7.3 测试验证
+
+```bash
+cd service && php vendor/bin/phpunit tests/
+# SecurityTest: 7 tests — XSS + SQLi + path traversal
+# JwtTest: 4 tests — encode/decode validation
+# ApiResponseTest: 3 tests — success/fail/paginate
+# Total: 14 tests, 44 assertions — ALL PASS
+```
+
+
 ## 1. 功能总览
 
 ### 1.1 模块矩阵
@@ -46,6 +84,88 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | | API限流/OpenAPI文档/操作日志 | P2 | ✅ |
 
 ---
+
+### 2.0 流程图
+
+#### 订单状态机
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending_pay: 用户下单
+    pending_pay: 待付款
+    pending_pay --> paid: 支付成功
+    pending_pay --> cancelled: 取消/超时
+    pending_pay --> review: 风控高分
+    paid: 已付款
+    paid --> shipped: 发货
+    paid --> refunding: 申请退款
+    shipped: 已发货
+    shipped --> received: 用户收货
+    received: 已收货
+    received --> completed: 确认完成
+    received --> returning: 申请退货
+    refunding: 退款中
+    refunding --> refunded: 退款完成
+    returning: 退货中
+    returning --> refunded: 退货完成
+    review: 待审核
+    review --> paid: 审核通过
+    review --> cancelled: 审核驳回
+    completed: 已完成
+    refunded: 已退款
+    cancelled: 已取消
+```
+
+#### 支付时序
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant C as 客户端
+    participant S as Service API
+    participant P as 支付网关
+    participant W as Webhook
+
+    U->>C: 点击支付
+    C->>S: GET /api/payment/methods
+    S-->>C: 可用支付方式
+    U->>C: 选择方式
+    C->>S: POST /api/payment/create
+    S->>P: 创建PaymentIntent
+    P-->>S: client_secret
+    S-->>C: client_secret
+    C->>P: SDK完成支付+3DS
+    P-->>C: 支付结果
+    P->>W: Webhook通知
+    W->>S: 验签+更新订单+分账
+    S-->>C: 订单状态更新
+```
+
+#### 安全检测管道
+
+```mermaid
+graph TD
+    A[HTTP Request] --> B{Content-Type OK?}
+    B -->|No| R1[403]
+    B -->|Yes| C{Size < 10MB?}
+    C -->|No| R2[413]
+    C -->|Yes| D{XSS Pattern?}
+    D -->|Hit| R3[40001]
+    D -->|Pass| E{SQLi Pattern?}
+    E -->|Hit| R4[40002]
+    E -->|Pass| F{CRLF in Header?}
+    F -->|Hit| R5[40003]
+    F -->|Pass| G{Path Traversal?}
+    G -->|Hit| R6[40004]
+    G -->|Pass| H[Next Middleware]
+    style R1 fill:#fcc
+    style R2 fill:#fcc
+    style R3 fill:#fcc
+    style R4 fill:#fcc
+    style R5 fill:#fcc
+    style R6 fill:#fcc
+    style H fill:#cfc
+```
 
 ## 2. 核心业务流程
 

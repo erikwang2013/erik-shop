@@ -46,7 +46,7 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 24),
               SizedBox(width: double.infinity, child: FilledButton(onPressed: _loading ? null : _login, child: _loading ? const CircularProgressIndicator() : const Text('Sign In'))),
               const SizedBox(height: 12),
-              TextButton(onPressed: () {}, child: const Text('Create Account')),
+              TextButton(onPressed: () => context.push('/register'), child: const Text('Create Account')),
             ],
           ),
         ),

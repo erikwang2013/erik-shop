@@ -9,19 +9,53 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  final _formKey = GlobalKey<FormState>();
-  bool _submitting = false;
+  List<Map<String, dynamic>> _cartItems = [];
+  List<Map<String, dynamic>> _shippingOptions = [];
+  List<Map<String, dynamic>> _paymentMethods = [];
+  String _selectedShipping = '';
+  String _selectedPayment = 'card';
+  double _total = 0;
+  double _shippingFee = 0;
+  bool _loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _loading = true);
+
+    final cartRes = await ApiClient.instance.get('/cart');
+    if (cartRes.isSuccess && cartRes.data != null) {
+      _cartItems = List<Map<String, dynamic>>.from(cartRes.data as List);
+      _total = _cartItems.fold(0, (sum, item) => sum + ((item['price'] as num?)?.toDouble() ?? 0) * ((item['quantity'] as num?)?.toInt() ?? 1));
+    }
+
+    final shipRes = await ApiClient.instance.get('/shipping/calculate', params: {'dest_country_id': 1, 'weight': 500});
+    if (shipRes.isSuccess && shipRes.data != null) {
+      final d = shipRes.data as Map<String, dynamic>;
+      _shippingOptions = List<Map<String, dynamic>>.from(d['options'] ?? []);
+      if (_shippingOptions.isNotEmpty) {
+        _selectedShipping = _shippingOptions.first['logistics_code'] ?? '';
+        _shippingFee = (_shippingOptions.first['fee'] as num?)?.toDouble() ?? 0;
+      }
+    }
+
+    final payRes = await ApiClient.instance.get('/payment/methods', params: {'country': 'US', 'currency': 'USD'});
+    if (payRes.isSuccess && payRes.data != null) {
+      _paymentMethods = List<Map<String, dynamic>>.from(payRes.data as List);
+    }
+
+    if (mounted) setState(() => _loading = false);
+  }
 
   Future<void> _placeOrder() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _submitting = true);
-
-    final res = await ApiClient.instance.post('/orders', data: {
-      'currency_code': 'USD',
-    });
-
+    setState(() => _loading = true);
+    final res = await ApiClient.instance.post('/orders', data: {'currency_code': 'USD'});
     if (mounted) {
-      setState(() => _submitting = false);
+      setState(() => _loading = false);
       if (res.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order placed!')));
         context.go('/orders');
@@ -32,33 +66,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
-      body: Form(
-        key: _formKey,
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            const Text('Shipping Method', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...['Standard (7-15 days)', 'Express (3-5 days)'].map((m) => RadioListTile<String>(
-              title: Text(m), value: m, groupValue: 'Standard (7-15 days)', onChanged: (_) {},
+  Widget build(BuildContext context) => Scaffold(
+    appBar: AppBar(title: const Text('Checkout')),
+    body: _loading
+        ? const Center(child: CircularProgressIndicator())
+        : ListView(padding: const EdgeInsets.all(16), children: [
+            const Text('Items', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ..._cartItems.map((item) => ListTile(
+              leading: ClipRRect(borderRadius: BorderRadius.circular(4), child: Image.network(item['image'] ?? '', width: 40, height: 40, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image))),
+              title: Text(item['title'] ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+              trailing: Text('\$${((item['price'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)} x${item['quantity']}'),
             )),
             const Divider(),
-            const Text('Payment Method', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            ...['Credit Card', 'PayPal'].map((m) => RadioListTile<String>(
-              title: Text(m), value: m, groupValue: 'Credit Card', onChanged: (_) {},
+            const Text('Shipping', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ..._shippingOptions.map((opt) => RadioListTile<String>(
+              title: Text('${opt['logistics_name'] ?? ''} (\$${((opt['fee'] as num?)?.toDouble() ?? 0).toStringAsFixed(2)})'),
+              subtitle: Text(opt['estimated_days'] ?? ''),
+              value: opt['logistics_code'] ?? '', groupValue: _selectedShipping,
+              onChanged: (v) { setState(() { _selectedShipping = v!; _shippingFee = (opt['fee'] as num?)?.toDouble() ?? 0; }); },
             )),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: _submitting ? null : _placeOrder,
-              child: _submitting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('Place Order'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+            const Divider(),
+            const Text('Payment', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            ..._paymentMethods.map((m) => RadioListTile<String>(
+              title: Text(m['method_name'] ?? m['method_code'] ?? ''),
+              value: m['method_code'] ?? '', groupValue: _selectedPayment,
+              onChanged: (v) { setState(() => _selectedPayment = v!); },
+            )),
+            const SizedBox(height: 16),
+            Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text('Subtotal: \$${_total.toStringAsFixed(2)}', style: const TextStyle(fontSize: 13)),
+                Text('Shipping: \$${_shippingFee.toStringAsFixed(2)}', style: const TextStyle(fontSize: 13)),
+                Text('Total: \$${(_total + _shippingFee).toStringAsFixed(2)}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              ]),
+              FilledButton(onPressed: _placeOrder, child: const Text('Place Order')),
+            ]),
+          ]),
+  );
 }

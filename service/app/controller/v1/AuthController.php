@@ -37,7 +37,7 @@ class AuthController extends \app\controller\BaseApiController
             'user_id' => HashidsHelper::encode($user->id),
             'nickname' => $user->nickname,
             'email' => $user->email,
-            'access_token' => JWT::encode(['sub' => (string) $user->id, 'email' => $user->email, 'level' => $user->level]),
+            'access_token' => Jwt::encode(['sub' => (string) $user->id, 'email' => $user->email, 'level' => $user->level]),
             'expires_in' => config('jwt.default_expire', 7200),
         ], '注册成功');
     }
@@ -65,7 +65,7 @@ class AuthController extends \app\controller\BaseApiController
             'nickname' => $user->nickname,
             'email' => $user->email,
             'level' => $user->level,
-            'access_token' => JWT::encode(['sub' => (string) $user->id, 'email' => $user->email, 'level' => $user->level]),
+            'access_token' => Jwt::encode(['sub' => (string) $user->id, 'email' => $user->email, 'level' => $user->level]),
             'expires_in' => config('jwt.default_expire', 7200),
         ], '登录成功');
     }
@@ -76,8 +76,8 @@ class AuthController extends \app\controller\BaseApiController
         if (empty($refreshToken)) return ApiResponse::fail('refresh_token不能为空', 422);
 
         try {
-            $payload = JWT::decode($refreshToken);
-            $newToken = JWT::encode([
+            $payload = Jwt::decode($refreshToken);
+            $newToken = Jwt::encode([
                 'sub' => $payload['sub'] ?? '',
                 'email' => $payload['email'] ?? '',
                 'level' => $payload['level'] ?? 0,

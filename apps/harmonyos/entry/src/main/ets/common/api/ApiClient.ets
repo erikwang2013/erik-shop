@@ -34,6 +34,7 @@ export class ApiClient {
       'Accept': 'application/json',
       'API-Version': API_VERSION,
       'Accept-Language': this.locale,
+      'X-Platform': 'harmonyos',
     };
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
@@ -57,6 +58,7 @@ export class ApiClient {
       'Accept': 'application/json',
       'API-Version': API_VERSION,
       'Accept-Language': this.locale,
+      'X-Platform': 'harmonyos',
     };
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
@@ -80,3 +82,21 @@ export interface ApiResponse {
   msg: string;
   data: Object | null;
 }
+  async delete(path: string): Promise<ApiResponse> {
+    const url = BASE_URL + path;
+    const request = http.createHttp();
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      "API-Version": API_VERSION,
+      "Accept-Language": this.locale,
+    };
+    if (this.token) {
+      headers["Authorization"] = `Bearer ${this.token}`;
+    }
+    const response = await request.request(url, {
+      method: http.RequestMethod.DELETE,
+      header: headers,
+    });
+    return JSON.parse(response.result as string) as ApiResponse;
+  }

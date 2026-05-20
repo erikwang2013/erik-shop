@@ -1,4 +1,6 @@
+import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../constants/app_constants.dart';
@@ -21,6 +23,7 @@ class ApiClient {
     ));
 
     dio.interceptors.addAll([
+      _PlatformInterceptor(),
       _AuthInterceptor(),
       _LocaleInterceptor(),
       LogInterceptor(requestBody: true, responseBody: true),
@@ -88,6 +91,28 @@ class _LocaleInterceptor extends Interceptor {
     final localeStr = prefs.getString('app_locale') ?? 'en';
     options.headers['Accept-Language'] = localeStr.split('_').first;
     options.headers['API-Version'] = prefs.getString('api_version') ?? AppConstants.apiVersion;
+    handler.next(options);
+  }
+}
+
+/// 操作来源端识别拦截器
+class _PlatformInterceptor extends Interceptor {
+  static String get platform {
+    if (kIsWeb) return 'web';
+    if (Platform.isAndroid) return 'android';
+    if (Platform.isIOS) {
+      // iPadOS 也报告为 iOS，通过 defaultTargetPlatform 区分
+      return defaultTargetPlatform == TargetPlatform.iOS ? 'ios' : 'ipados';
+    }
+    if (Platform.isMacOS) return 'macos';
+    if (Platform.isWindows) return 'windows';
+    if (Platform.isLinux) return 'linux';
+    return 'web';
+  }
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    options.headers['X-Platform'] = platform;
     handler.next(options);
   }
 }

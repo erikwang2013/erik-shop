@@ -7,8 +7,10 @@ import '../features/order/order_list_screen.dart';
 import '../features/order/checkout_screen.dart';
 import '../features/profile/profile_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/auth/register_screen.dart';
 import '../features/product/product_list_screen.dart';
 import '../features/profile/address_list_screen.dart';
+import '../features/order/order_detail_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -25,5 +27,7 @@ final appRouter = GoRouter(
     GoRoute(path: '/profile', builder: (c, s) => const ProfileScreen()),
     GoRoute(path: '/addresses', builder: (c, s) => const AddressListScreen()),
     GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
+    GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
+    GoRoute(path: '/order/:id', builder: (c, s) => OrderDetailScreen(orderId: s.pathParameters['id']!)),
   ],
 );

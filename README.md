@@ -95,6 +95,15 @@ shop-php/
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |
 | [部署文档](docs/deployment.md) | Docker/手动部署、环境变量、运维命令 |
 
+
+## 开源不易，欢迎支持
+
+| 微信 | 支付宝 |
+|:---:|:---:|
+| ![微信](./docs/weixinpay.png "微信") | ![支付宝](./docs/alipay.png "支付宝") |
+
+---
+
 ## License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz

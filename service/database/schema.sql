@@ -1756,3 +1756,15 @@ CREATE TABLE `erik_settings` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置(Key-Value)';
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- =============================================================
+-- 操作来源端平台字段 (追加)
+-- =============================================================
+
+ALTER TABLE `erik_orders` ADD COLUMN `platform` VARCHAR(16) NOT NULL DEFAULT 'web' COMMENT '操作来源端' AFTER `risk_result`;
+ALTER TABLE `erik_payments` ADD COLUMN `platform` VARCHAR(16) NOT NULL DEFAULT 'web' COMMENT '支付来源端' AFTER `gateway_data`;
+ALTER TABLE `erik_operation_logs` ADD COLUMN `platform` VARCHAR(16) NOT NULL DEFAULT 'web' COMMENT '操作来源端' AFTER `user_agent`;
+ALTER TABLE `erik_users` ADD COLUMN `last_login_platform` VARCHAR(16) NOT NULL DEFAULT '' COMMENT '最后登录平台' AFTER `last_login_ip`;
+ALTER TABLE `erik_search_logs` ADD COLUMN `platform` VARCHAR(16) NOT NULL DEFAULT 'web' COMMENT '搜索来源端' AFTER `locale`;
+ALTER TABLE `erik_chat_messages` ADD COLUMN `platform` VARCHAR(16) NOT NULL DEFAULT 'web' COMMENT '消息来源端' AFTER `sender_id`;
+

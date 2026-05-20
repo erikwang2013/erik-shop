@@ -97,7 +97,7 @@ class Products extends BaseModel
         return $this->hasMany(ProductImages::class, 'product_id');
     }
 
-    public function translations(): HasMany
+    public function translation(): HasMany
     {
         return $this->hasMany(ProductTranslations::class, 'product_id');
     }

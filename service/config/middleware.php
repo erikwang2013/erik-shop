@@ -7,14 +7,17 @@
  * 全局中间件配置
  * 按顺序执行，顺序不可变
  *
- * 请求 → Cors → GeoIpMiddleware → LocaleMiddleware → HashidsDecode
+ * 请求 → Cors → Security → Platform → GeoIp → Locale → HashidsDecode
  *      → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode → 控制器
  */
 
 return [
     app\middleware\Cors::class,            // CORS跨域处理
+    app\middleware\SecurityMiddleware::class, // 安全攻击检测拦截
+    app\middleware\PlatformMiddleware::class, // 操作来源端识别
     app\middleware\GeoIpMiddleware::class,  // GeoIP区域识别（未登录用户）
     app\middleware\LocaleMiddleware::class, // Accept-Language解析
     app\middleware\HashidsDecode::class,    // 请求hashid→snowflake ID
+    app\middleware\VersionRoute::class,     // API版本路由(API-Version header)
     app\middleware\HashidsEncode::class,    // 响应snowflake ID→hashid
 ];

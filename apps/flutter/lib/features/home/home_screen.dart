@@ -44,7 +44,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           if (isDesktop)
             NavigationRail(
               selectedIndex: _selectedNav,
-              onDestinationSelected: (i) => setState(() => _selectedNav = i),
+              onDestinationSelected: (i) {
+                setState(() => _selectedNav = i);
+                if (i == 1) context.push('/products');
+                if (i == 2) context.push('/cart');
+                if (i == 3) context.push('/profile');
+              },
               labelType: NavigationRailLabelType.all,
               destinations: const [
                 NavigationRailDestination(icon: Icon(Icons.home), label: Text('Home')),

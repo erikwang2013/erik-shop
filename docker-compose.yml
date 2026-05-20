@@ -1,0 +1,141 @@
+# =============================================================
+# Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+# 跨境电商平台 - Docker 生产部署配置
+# =============================================================
+
+version: '3.8'
+
+services:
+  # ===== Nginx 反向代理 =====
+  nginx:
+    image: nginx:alpine
+    container_name: erik-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./service/public:/var/www/static:ro
+    depends_on:
+      - service
+      - admin
+    networks:
+      - erik-net
+
+  # ===== Service API =====
+  service:
+    build:
+      context: ./service
+      dockerfile: Dockerfile
+    container_name: erik-service
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=erik_shop
+      - DB_USER=erik
+      - DB_PASS=${DB_PASS:-change_me}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ES_HOST=elasticsearch
+      - ES_PORT=9200
+      - JWT_SECRET=${JWT_SECRET:-change_me_256bit}
+      - HASHIDS_SALT=${HASHIDS_SALT:-change_me}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-change_me_32byte_key}
+    volumes:
+      - ./service:/app
+      - /app/runtime
+    depends_on:
+      - mysql
+      - redis
+      - elasticsearch
+    networks:
+      - erik-net
+
+  # ===== Admin 管理后台 =====
+  admin:
+    build:
+      context: ./admin
+      dockerfile: Dockerfile
+    container_name: erik-admin
+    restart: unless-stopped
+    environment:
+      - APP_ENV=production
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=erik_shop
+      - DB_USER=erik
+      - DB_PASS=${DB_PASS:-change_me}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    volumes:
+      - ./admin:/app
+      - /app/runtime
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - erik-net
+
+  # ===== MySQL 8.0 =====
+  mysql:
+    image: mysql:8.0
+    container_name: erik-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASS:-change_me}
+      MYSQL_DATABASE: erik_shop
+      MYSQL_USER: erik
+      MYSQL_PASSWORD: ${DB_PASS:-change_me}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./service/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    networks:
+      - erik-net
+
+  # ===== Redis 7 =====
+  redis:
+    image: redis:7-alpine
+    container_name: erik-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASS:-}
+    networks:
+      - erik-net
+
+  # ===== Elasticsearch 8 =====
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.11.0
+    container_name: erik-es
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - erik-net
+
+volumes:
+  mysql_data:
+  redis_data:
+  es_data:
+
+networks:
+  erik-net:
+    driver: bridge

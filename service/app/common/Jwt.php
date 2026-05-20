@@ -16,7 +16,11 @@ class Jwt
     private static function instance(): ErikJwtInstance
     {
         if (self::$instance === null) {
-            self::$instance = new ErikJwtInstance(config('jwt'));
+            $config = config('jwt') ?: (require base_path() . '/config/jwt.php');
+            if (empty($config['secret_key'])) {
+                $config['secret_key'] = getenv('JWT_SECRET') ?: 'erik-test-secret-key-do-not-use-in-production';
+            }
+            self::$instance = new ErikJwtInstance($config);
         }
         return self::$instance;
     }

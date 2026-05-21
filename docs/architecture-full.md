@@ -66,7 +66,93 @@ graph TD
     A --> R
 ```
 
-### 2.1 进程模型
+### 2.1 完整设计流程图
+
+```mermaid
+graph TB
+    subgraph Clients["1. 客户端层"]
+        FL[Flutter: iOS Android macOS Win Linux]
+        HM[HarmonyOS: ArkTS]
+        WB[Web Browser: Admin]
+    end
+    subgraph Gateway["2. 接入层 Nginx :80"]
+        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
+    end
+    subgraph Security["3. 安全层 SecurityMiddleware 6道检测"]
+        CT{Content-Type?} -->|Y| BS{Body Size?}
+        BS -->|Y| XS{XSS?}
+        XS -->|pass| SQ{SQLi?}
+        SQ -->|pass| CR{CRLF?}
+        CR -->|pass| PT{Path?}
+        PT -->|pass| PASS[Pass]
+    end
+    subgraph Pipeline["4. 中间件管道 8全局+2路由"]
+        CORS[Cors] --> PLAT[Platform]
+        PLAT --> GEO[GeoIp]
+        GEO --> LOC[Locale]
+        LOC --> HDEC[HashidsDecode]
+        HDEC --> VER[VersionRoute]
+        VER --> POSTV[PosterVerify 路由级]
+        POSTV --> JWT[JwtAuth 路由级]
+        JWT --> HENC[HashidsEncode]
+    end
+    subgraph Controllers["5. 控制器 36个"]
+        AUTH[Auth] & PROD[Product] & CART[Cart]
+        ORD[Order] & PAY[Payment] & SHIP[Shipping]
+        TARI[Tariff] & USER[User] & COUP[Coupon]
+        RET[Return] & NOTI[Notify] & EXPORT[Export]
+    end
+    subgraph Models["6. 模型层 112 Models"]
+        BM[BaseModel: Snowflake+Encryptable+SoftDelete]
+        REL[Relations: hasMany/belongsTo 68FK]
+        SRCH[Searchable: ES同步 多语言分词]
+    end
+    subgraph Data["7. 数据层"]
+        MySQL[(MySQL 8.0<br/>110 tables<br/>erik_ prefix)]
+        Redis[(Redis 7<br/>cache/session<br/>limit/poster)]
+        ES[(ES 8<br/>multilingual<br/>search)]
+    end
+    subgraph Response["8. 响应返回"]
+        JSON[JSON: code msg data]
+        OUTENC[HashidsEncode: ID编码]
+        HEADERS[Headers: CORS X-Platform]
+    end
+
+    FL & HM & WB --> NG
+    NG --> CORS
+    PASS --> PLAT
+    HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
+    AUTH & PROD & ORD --> BM
+    ORD --> REL
+    PROD --> SRCH
+    BM --> MySQL & Redis
+    SRCH --> ES
+    MySQL & Redis & ES --> JSON
+    JSON --> OUTENC --> HEADERS
+    HEADERS --> FL & HM & WB
+
+    style Security fill:#fff0f0
+    style Pipeline fill:#f0f0ff
+    style Controllers fill:#f0fff0
+    style Models fill:#fffff0
+    style Data fill:#f5f5f5
+    style Response fill:#f0ffff
+```
+
+**流程图说明:**
+
+| 层 | 说明 |
+|----|------|
+| 1.客户端层 | Flutter 5平台 + HarmonyOS + Web Admin, 全部通过 HTTP/JSON 通信 |
+| 2.接入层 | Nginx 按域名分流: api→service, admin→admin |
+| 3.安全层 | SecurityMiddleware 6道检测门, 任一道命中即返回错误码 |
+| 4.中间件管道 | 8个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
+| 5.控制器层 | 36个API控制器按功能分组, 处理全部业务逻辑 |
+| 6.模型层 | 112个Eloquent模型, BaseModel提供Snowflake ID/Encryptable/SoftDelete, 68表外键关联 |
+| 7.数据层 | MySQL(110表erik_前缀/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
+| 8.响应返回 | JSON统一格式 → HashidsEncode编码ID → CORS/X-Platform Headers → 返回客户端 |
+
+### 2.2 进程模型
 
 ```
 webman Master (:8787)

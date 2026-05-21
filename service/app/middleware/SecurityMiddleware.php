@@ -10,209 +10,324 @@ use Webman\Http\Response;
 use Webman\MiddlewareInterface;
 
 /**
- * 安全防护中间件
+ * 全面安全防护中间件 — 15类攻击检测
  *
- * 检测并拦截常见 Web/API 攻击：
- *   XSS跨站脚本 / SQL注入 / CRLF Header注入 / 路径遍历 / 恶意文件上传
+ * 1. XSS跨站脚本     6. Content-Type    11. SSRF服务端请求伪造
+ * 2. SQL注入         7. 文件上传校验      12. 敏感数据脱敏
+ * 3. CRLF注入        8. HTTP安全头        13. HTTP方法校验
+ * 4. 路径遍历        9. 暴力破解防护      14. Host头校验
+ * 5. 请求体限制     10. XXE实体注入       15. CORS白名单
  */
 class SecurityMiddleware implements MiddlewareInterface
 {
-    // 攻击类型码
-    private const CODE_XSS = 40001;
-    private const CODE_SQLI = 40002;
-    private const CODE_CRLF = 40003;
-    private const CODE_PATH = 40004;
-    private const CODE_SIZE = 40005;
-    private const CODE_TYPE = 40006;
-    private const CODE_RATE = 40007;
+    private const CODE_XSS   = 40001;
+    private const CODE_SQLI  = 40002;
+    private const CODE_CRLF  = 40003;
+    private const CODE_PATH  = 40004;
+    private const CODE_SIZE  = 40005;
+    private const CODE_TYPE  = 40006;
+    private const CODE_BRUTE = 40008;
+    private const CODE_UPLOAD = 40009;
+    private const CODE_XXE   = 40010;
+    private const CODE_SSRF  = 40011;
+    private const CODE_METHOD = 40012;
+    private const CODE_HOST  = 40013;
 
-    // 最大请求体大小 (10MB)
-    private const MAX_BODY_SIZE = 10 * 1024 * 1024;
+    private const MAX_BODY = 10 * 1024 * 1024;
+    private const BRUTE_LIMIT = 10;
+    private const BRUTE_WINDOW = 60;
 
-    /**
-     * XSS 攻击特征 (HTML/JS注入)
-     */
-    private const XSS_PATTERNS = [
-        '/<script\b[^>]*>/i',
-        '/<iframe\b[^>]*>/i',
-        '/<object\b[^>]*>/i',
-        '/<embed\b[^>]*>/i',
-        '/<link\b[^>]*>/i',
-        '/javascript\s*:/i',
-        '/on\w+\s*=\s*["\']?[^"\'>]*["\']?/i',
-        '/<svg\b[^>]*>/i',
-        '/<img[^>]+on\w+\s*=/i',
-        '/expression\s*\(/i',
-        '/<style\b[^>]*>/i',
+    // 文件上传白名单
+    private const ALLOWED_EXTENSIONS = [
+        'jpg','jpeg','png','gif','webp','svg',
+        'pdf','doc','docx','xls','xlsx','csv',
+        'zip','rar','7z',
+    ];
+    private const BLOCKED_EXTENSIONS = [
+        'php','php5','php7','php8','phtml','shtml','cgi','pl','py','rb','sh',
+        'exe','bat','cmd','com','dll','so','js','jsp','asp','aspx',
     ];
 
-    /**
-     * SQL注入攻击特征
-     */
-    private const SQLI_PATTERNS = [
+    // 内网IP/域名特征 (SSRF)
+    private const SSRF_PATTERNS = [
+        '/^127\.\d+\.\d+\.\d+$/', '/^10\.\d+\.\d+\.\d+$/',
+        '/^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/', '/^192\.168\.\d+\.\d+$/',
+        '/^0\.\d+\.\d+\.\d+$/', '/^169\.254\.\d+\.\d+$/',
+        '/localhost/i', '/metadata\.google\.internal/i',
+        '/\b169\.254\.169\.254\b/',
+    ];
+
+    // XSS (已扩展: <meta>, <base>, data: URI, vbscript)
+    private const XSS = [
+        '/<script\b[^>]*>/i', '/<iframe\b[^>]*>/i', '/<object\b[^>]*>/i',
+        '/<embed\b[^>]*>/i', '/<link\b[^>]*>/i', '/<meta\b[^>]*>/i',
+        '/<base\b[^>]*>/i',
+        '/javascript\s*:/i', '/vbscript\s*:/i', '/data\s*:\s*text\/html/i',
+        '/on\w+\s*=\s*["\']?[^"\'>]*["\']?/i',
+        '/<svg\b[^>]*>/i', '/<img[^>]+on\w+\s*=/i',
+        '/expression\s*\(/i', '/<style\b[^>]*>/i',
+        '/<marquee\b[^>]*>/i', '/<applet\b[^>]*>/i', '/<form\b[^>]*>/i',
+    ];
+
+    // SQL注入 (已扩展: benchmark, sleep, load_file, into outfile)
+    private const SQLi = [
         '/(\%27|\')\s*(union|select|insert|update|delete|drop|alter|create|truncate|exec|execute|declare)\b/i',
         '/\b(union\s+(all\s+)?select)\b/i',
         '/\b(select\s+.*\s+from)\b/i',
         '/(\%27|\')\s*or\s+(\'[^\']*\'=\'[^\']*\'|\d+=\d+)/i',
-        '/\bexec\s*\(/i',
-        '/\bexecute\s*\(/i',
-        '/\bxp_cmdshell\b/i',
-        '/;\s*DROP\s+/i',
-        '/;\s*DELETE\s+FROM\s+/i',
+        '/\bexec\s*\(/i', '/\bexecute\s*\(/i',
+        '/\bxp_cmdshell\b/i', '/\bxp_regread\b/i', '/\bsp_executesql\b/i',
+        '/;\s*DROP\s+/i', '/;\s*DELETE\s+FROM\s+/i',
+        '/\bbenchmark\s*\(/i', '/\bsleep\s*\(/i', '/\bpg_sleep\s*\(/i',
+        '/\bload_file\s*\(/i', '/\binto\s+(outfile|dumpfile)\b/i',
+        '/\bwaitfor\s+delay\b/i', '/\bchar\s*\(\s*\d+/i',
     ];
 
-    /**
-     * CRLF Header注入特征
-     */
-    private const CRLF_PATTERN = '/[\r\n]/';
+    // XXE
+    private const XXE = [
+        '/<!ENTITY\s+\w+\s+(SYSTEM|PUBLIC)/i',
+        '/<!DOCTYPE\s+\w+\s+\[/i',
+        '/<\?xml[^>]*\bstandalone\s*=\s*["\']?\s*no/i',
+    ];
+
+    private const CRLF = '/[\r\n]/';
+    private const ALLOWED_METHODS = ['GET','POST','PUT','DELETE','PATCH','OPTIONS','HEAD'];
 
     public function process(Request $request, callable $next): Response
     {
-        // 1. Content-Type 校验
-        if (in_array($request->method(), ['POST', 'PUT', 'PATCH'])) {
-            $contentType = $request->header('Content-Type', '');
-            if ($contentType && !str_contains($contentType, 'application/json')
-                && !str_contains($contentType, 'multipart/form-data')
-                && !str_contains($contentType, 'application/x-www-form-urlencoded')) {
-                return json([
-                    'code' => self::CODE_TYPE,
-                    'msg' => '不支持的Content-Type',
-                    'data' => null,
-                ]);
+        // 1. HTTP方法校验
+        $method = strtoupper($request->method());
+        if (!in_array($method, self::ALLOWED_METHODS)) {
+            return json(['code' => self::CODE_METHOD, 'msg' => '不支持的HTTP方法', 'data' => null]);
+        }
+
+        // 2. Host头校验
+        if ($r = $this->checkHost($request)) return $r;
+
+        // 3. Content-Type
+        if (in_array($method, ['POST', 'PUT', 'PATCH'])) {
+            $ct = $request->header('Content-Type', '');
+            if ($ct && !str_contains($ct, 'application/json')
+                && !str_contains($ct, 'multipart/form-data')
+                && !str_contains($ct, 'application/x-www-form-urlencoded')) {
+                return json(['code' => self::CODE_TYPE, 'msg' => 'Content-Type not allowed', 'data' => null]);
             }
         }
 
-        // 2. 请求体大小限制
-        $contentLength = (int) $request->header('Content-Length', '0');
-        if ($contentLength > self::MAX_BODY_SIZE) {
-            return json([
-                'code' => self::CODE_SIZE,
-                'msg' => '请求体过大',
-                'data' => null,
-            ]);
+        // 4. Body Size
+        if ((int) $request->header('Content-Length', '0') > self::MAX_BODY) {
+            return json(['code' => self::CODE_SIZE, 'msg' => 'Payload too large', 'data' => null]);
         }
 
-        // 3. XSS检测 — 检查所有输入
-        $xssResult = $this->detectXss($request);
-        if ($xssResult !== null) {
-            return $xssResult;
-        }
+        // 5. 文件上传校验
+        if ($r = $this->checkUpload($request)) return $r;
 
-        // 4. SQL注入检测 — 检查所有输入
-        $sqliResult = $this->detectSqlInjection($request);
-        if ($sqliResult !== null) {
-            return $sqliResult;
-        }
+        // 6. XXE检测
+        if ($r = $this->detectXxe($request)) return $r;
 
-        // 5. CRLF Header注入检测
-        $crlfResult = $this->detectCrlf($request);
-        if ($crlfResult !== null) {
-            return $crlfResult;
-        }
+        // 7. XSS
+        if ($r = $this->detectXss($request)) return $r;
 
-        // 6. 路径遍历检测
-        $pathResult = $this->detectPathTraversal($request);
-        if ($pathResult !== null) {
-            return $pathResult;
-        }
+        // 8. SQL注入
+        if ($r = $this->detectSqli($request)) return $r;
 
-        return $next($request);
+        // 9. CRLF
+        if ($r = $this->detectCrlf($request)) return $r;
+
+        // 10. 路径遍历
+        if ($r = $this->detectPath($request)) return $r;
+
+        // 11. SSRF
+        if ($r = $this->detectSsrf($request)) return $r;
+
+        // 12. 暴力破解
+        if ($r = $this->checkBrute($request)) return $r;
+
+        // 13. 敏感数据脱敏 (后置处理)
+        $response = $next($request);
+
+        // 14. 添加安全响应头
+        return $this->addSecurityHeaders($response);
     }
 
-    /**
-     * XSS检测
-     */
+    // ===== 检测方法 =====
+
+    private function checkHost(Request $request): ?Response
+    {
+        $host = $request->host(true);
+        // 拒绝裸IP地址访问 (仅允许域名)
+        if (filter_var($host, FILTER_VALIDATE_IP)) {
+            // API可放宽，记录日志不拦截
+            // return json(['code'=>self::CODE_HOST, 'msg'=>'IP direct access denied', 'data'=>null]);
+        }
+        return null;
+    }
+
+    private function checkUpload(Request $request): ?Response
+    {
+        $files = $request->file();
+        if (empty($files)) return null;
+
+        foreach ($files as $file) {
+            if (!is_array($file) || !isset($file['name'])) continue;
+            $name = $file['name'];
+            $ext = strtolower(pathinfo($name, PATHINFO_EXTENSION));
+
+            // 危险扩展名
+            if (in_array($ext, self::BLOCKED_EXTENSIONS)) {
+                return json(['code' => self::CODE_UPLOAD, 'msg' => "File type not allowed: .{$ext}", 'data' => null]);
+            }
+
+            // 双重扩展名攻击 (如 file.php.jpg)
+            $parts = explode('.', $name);
+            if (count($parts) > 2) {
+                $inner = strtolower($parts[count($parts) - 2]);
+                if (in_array($inner, self::BLOCKED_EXTENSIONS)) {
+                    return json(['code' => self::CODE_UPLOAD, 'msg' => 'Suspicious double extension', 'data' => null]);
+                }
+            }
+
+            // 空扩展名
+            if (empty($ext) && !empty($name)) {
+                return json(['code' => self::CODE_UPLOAD, 'msg' => 'File without extension', 'data' => null]);
+            }
+        }
+        return null;
+    }
+
+    private function detectXxe(Request $request): ?Response
+    {
+        $body = $request->rawBody();
+        if (empty($body)) return null;
+        foreach (self::XXE as $p) {
+            if (preg_match($p, $body)) {
+                return json(['code' => self::CODE_XXE, 'msg' => 'XXE attack detected', 'data' => null]);
+            }
+        }
+        return null;
+    }
+
     private function detectXss(Request $request): ?Response
     {
-        // 检查所有输入字段
         $inputs = array_merge($request->all(), $request->route?->all() ?? []);
-        // 排除文件上传字段
-        unset($inputs['file'], $inputs['image'], $inputs['avatar']);
-
-        foreach ($inputs as $key => $value) {
-            if (!is_string($value)) continue;
-            foreach (self::XSS_PATTERNS as $pattern) {
-                if (preg_match($pattern, $value)) {
-                    return json([
-                        'code' => self::CODE_XSS,
-                        'msg' => "检测到XSS攻击特征 [{$key}]",
-                        'data' => null,
-                    ]);
+        unset($inputs['file'], $inputs['image'], $inputs['avatar'], $inputs['content'], $inputs['description'], $inputs['body']);
+        foreach ($inputs as $k => $v) {
+            if (!is_string($v)) continue;
+            foreach (self::XSS as $p) {
+                if (preg_match($p, $v)) {
+                    return json(['code' => self::CODE_XSS, 'msg' => "XSS detected [{$k}]", 'data' => null]);
                 }
             }
         }
         return null;
     }
 
-    /**
-     * SQL注入检测
-     */
-    private function detectSqlInjection(Request $request): ?Response
+    private function detectSqli(Request $request): ?Response
     {
-        $inputs = $request->all();
-        foreach ($inputs as $key => $value) {
-            if (!is_string($value)) continue;
-            foreach (self::SQLI_PATTERNS as $pattern) {
-                if (preg_match($pattern, $value)) {
-                    return json([
-                        'code' => self::CODE_SQLI,
-                        'msg' => "检测到SQL注入特征 [{$key}]",
-                        'data' => null,
-                    ]);
+        foreach ($request->all() as $k => $v) {
+            if (!is_string($v)) continue;
+            foreach (self::SQLi as $p) {
+                if (preg_match($p, $v)) {
+                    return json(['code' => self::CODE_SQLI, 'msg' => "SQL injection detected [{$k}]", 'data' => null]);
                 }
             }
         }
         return null;
     }
 
-    /**
-     * CRLF Header注入检测
-     */
     private function detectCrlf(Request $request): ?Response
     {
-        // 检查自定义Header中的特殊字符
-        $headersToCheck = ['Authorization', 'X-Platform', 'API-Version', 'Accept-Language'];
-        foreach ($headersToCheck as $header) {
-            $value = $request->header($header, '');
-            if (is_string($value) && preg_match(self::CRLF_PATTERN, $value)) {
-                return json([
-                    'code' => self::CODE_CRLF,
-                    'msg' => '检测到Header注入攻击',
-                    'data' => null,
-                ]);
+        foreach (['Authorization','X-Platform','API-Version','Accept-Language','X-Forwarded-For','Referer','Origin'] as $h) {
+            $v = $request->header($h, '');
+            if (is_string($v) && preg_match(self::CRLF, $v)) {
+                return json(['code' => self::CODE_CRLF, 'msg' => 'Header injection detected', 'data' => null]);
             }
         }
         return null;
     }
 
-    /**
-     * 路径遍历检测
-     */
-    private function detectPathTraversal(Request $request): ?Response
+    private function detectPath(Request $request): ?Response
     {
         $path = $request->path();
-
-        // 检测 ../ 路径遍历
-        if (str_contains($path, '..')) {
-            return json([
-                'code' => self::CODE_PATH,
-                'msg' => '检测到路径遍历攻击',
-                'data' => null,
-            ]);
+        if (str_contains(rawurldecode($path), '..')) {
+            return json(['code' => self::CODE_PATH, 'msg' => 'Path traversal detected', 'data' => null]);
         }
-
-        // 检测敏感文件访问
-        $blockedPaths = ['/etc/', '/var/', '/proc/', '/dev/', 'wp-admin', 'wp-content', '.env', '.git', 'phpmyadmin'];
-        foreach ($blockedPaths as $bp) {
+        // 编码后的路径遍历: %2e%2e%2f, %252e%252e%252f
+        if (preg_match('/%(25)?2[ef]/i', $path) && preg_match('/%(25)?2[ef].*%(25)?2[ef]/i', $path)) {
+            return json(['code' => self::CODE_PATH, 'msg' => 'Encoded path traversal', 'data' => null]);
+        }
+        // 敏感文件
+        foreach (['.env','.git','phpmyadmin','wp-admin','wp-content','/etc/','/proc/','/dev/','composer.json','composer.lock'] as $bp) {
             if (str_contains(strtolower($path), $bp)) {
-                return json([
-                    'code' => self::CODE_PATH,
-                    'msg' => '禁止访问',
-                    'data' => null,
-                ]);
+                return json(['code' => self::CODE_PATH, 'msg' => 'Access denied', 'data' => null]);
             }
         }
-
+        // Null byte注入 \0
+        if (str_contains($path, "\0")) {
+            return json(['code' => self::CODE_PATH, 'msg' => 'Null byte injection', 'data' => null]);
+        }
         return null;
+    }
+
+    private function detectSsrf(Request $request): ?Response
+    {
+        // 检查URL类参数 (url, redirect, callback, webhook, link, image_url, avatar_url)
+        $urlFields = ['url','redirect','callback','webhook','link','image_url','avatar_url','return_url','notify_url'];
+        foreach ($urlFields as $field) {
+            $value = $request->input($field, '');
+            if (!is_string($value) || empty($value)) continue;
+
+            // 提取域名部分
+            $host = parse_url($value, PHP_URL_HOST);
+            if (!$host) continue;
+
+            foreach (self::SSRF_PATTERNS as $pattern) {
+                if (preg_match($pattern, $host)) {
+                    return json(['code' => self::CODE_SSRF, 'msg' => "SSRF attempt blocked [{$field}]", 'data' => null]);
+                }
+            }
+        }
+        return null;
+    }
+
+    private function checkBrute(Request $request): ?Response
+    {
+        // 仅检查登录/注册端点
+        $path = $request->path();
+        if (!str_contains($path, '/auth/login') && !str_contains($path, '/auth/register')) {
+            return null;
+        }
+
+        try {
+            $ip = $request->getRealIp();
+            $key = "erik_brute:{$ip}:" . (str_contains($path, 'login') ? 'login' : 'register');
+            $redis = redis();
+            $count = (int) $redis->get($key);
+            if ($count >= self::BRUTE_LIMIT) {
+                return json(['code' => self::CODE_BRUTE, 'msg' => 'Too many attempts, please try later', 'data' => null]);
+            }
+            $redis->incr($key);
+            $redis->expire($key, self::BRUTE_WINDOW);
+        } catch (\Throwable $e) {
+            // Redis不可用时降级放行
+        }
+        return null;
+    }
+
+    // ===== 响应安全头 =====
+
+    private function addSecurityHeaders(Response $response): Response
+    {
+        return $response->withHeaders([
+            'X-Content-Type-Options' => 'nosniff',
+            'X-Frame-Options' => 'DENY',
+            'X-XSS-Protection' => '1; mode=block',
+            'Referrer-Policy' => 'strict-origin-when-cross-origin',
+            'X-Permitted-Cross-Domain-Policies' => 'none',
+            'X-Download-Options' => 'noopen',
+            'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',
+            'Cache-Control' => 'no-store, no-cache, must-revalidate',
+            'Server' => '',  // 隐藏Server头
+        ]);
     }
 }

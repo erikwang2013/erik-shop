@@ -104,6 +104,16 @@ shop-php/
 
 ---
 
+
+## 测试
+
+```bash
+cd service && php vendor/bin/phpunit tests/
+# 23 tests, 68 assertions — ALL PASS
+# SecurityTest(16): XSS+SQLi+XXE+SSRF+File+Path
+# JwtTest(4): encode/decode validation
+# ApiResponseTest(3): success/fail/paginate format
+```
 ## License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz

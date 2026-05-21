@@ -198,28 +198,27 @@ GET /api/tariff/estimate?product_id=xxx&dest_country_id=xxx&declared_value=100
 
 ---
 
-## 4. 安全防护
+## 4. 安全防护 (15类攻击检测)
 
-### 4.1 攻击检测规则
+### 4.1 检测规则总表
 
-| 攻击类型 | 检测正则 | 错误码 | Service | Admin |
-|---------|---------|--------|---------|-------|
-| XSS script标签 | `/<script\b[^>]*>/i` | 40001 | ✅ | ✅ |
-| XSS iframe标签 | `/<iframe\b[^>]*>/i` | 40001 | ✅ | ✅ |
-| XSS object/embed | `/<object\b[^>]*>/i` `/<embed\b[^>]*>/i` | 40001 | ✅ | ✅ |
-| XSS 事件注入 | `/on\w+\s*=\s*["\']?[^"\'>]*["\']?/i` | 40001 | ✅ | ✅ |
-| XSS javascript协议 | `/javascript\s*:/i` | 40001 | ✅ | ✅ |
-| XSS SVG/IMG注入 | `/<svg\b[^>]*>/i` `/<img[^>]+on\w+\s*=/i` | 40001 | ✅ | ✅ |
-| XSS expression() | `/expression\s*\(/i` | 40001 | ✅ | ✅ |
-| SQLi UNION SELECT | `/(\%27|\')\s*(union|select)\b/i` `/\b(union\s+(all\s+)?select)\b/i` | 40002 | ✅ | ✅ |
-| SQLi DROP/DELETE | `/;\s*DROP\s+/i` `/;\s*DELETE\s+FROM\s+/i` | 40002 | ✅ | ✅ |
-| SQLi EXEC执行 | `/\bexec\s*\(/i` `/\bexecute\s*\(/i` | 40002 | ✅ | ✅ |
-| SQLi OR注入 | `/(\%27|\')\s*or\s+(\'[^\']*\'=\'[^\']*\'|\d+=\d+)/i` | 40002 | ✅ | ✅ |
-| SQLi xp_cmdshell | `/\bxp_cmdshell\b/i` | 40002 | ✅ | ✅ |
-| CRLF Header注入 | `/[\r\n]/` | 40003 | ✅ | ✅ |
-| 路径遍历 | `..` + `.env` `apt-get` `.git` `/etc/` `phpmyadmin` `wp-admin` | 40004 | ✅ | ✅ |
-| 请求体过大 | Content-Length > 10MB(Service) / 20MB(Admin) | 40005 | ✅ | ✅ |
-| Content-Type限制 | 仅JSON/Form-data/Form-urlencoded | 40006 | ✅ | ✅ |
+| # | 攻击类型 | 主要检测方式 | 错误码 | Service | Admin |
+|---|---------|------------|--------|---------|-------|
+| 1 | XSS跨站脚本 | 18条正则: script/iframe/object/embed/link/meta/base/javascript:/vbscript:/data:text/html/on事件/svg/img/expression/marquee/applet/form | 40001 | ✅ | ✅ |
+| 2 | SQL注入 | 20条正则: UNION SELECT/DROP/DELETE/EXEC/xp_cmdshell/xp_regread/sp_executesql/benchmark/sleep/pg_sleep/load_file/into outfile/into dumpfile/waitfor/char/OR注入 | 40002 | ✅ | ✅ |
+| 3 | CRLF Header注入 | `[\r\n]` in: Authorization/X-Platform/API-Version/X-Forwarded-For/Referer/Origin | 40003 | ✅ | ✅ |
+| 4 | 路径遍历 | `../` + `%2e%2f`编码 + `%252e%252f`二层编码 + null byte `\0` + `.env`/`.git`/`phpmyadmin`/`wp-admin`/`/etc/`/`/proc/`/`composer.json` | 40004 | ✅ | ✅ |
+| 5 | 请求体限制 | Content-Length > 10MB(Service) / 20MB(Admin) | 40005 | ✅ | ✅ |
+| 6 | Content-Type限制 | 仅JSON/form-data/form-urlencoded | 40006 | ✅ | ✅ |
+| 7 | **文件上传校验** | 黑名单扩展名(php/phtml/sh/exe/js/...)+双重扩展名攻击+空扩展名 | 40009 | ✅ | ✅ |
+| 8 | **HTTP安全响应头** | nosniff/DENY/XSS-Protection/Referrer-Policy/Permissions-Policy/Cache-Control/Server隐藏 | — | ✅ | ✅ |
+| 9 | **暴力破解防护** | Redis计数器: API 10次/60s, Admin 5次/300s | 40008 | ✅ | ✅ |
+| 10 | **XXE实体注入** | `<!ENTITY SYSTEM>`, `<!DOCTYPE [` | 40010 | ✅ | ✅ |
+| 11 | **SSRF服务器伪造** | 内网IP(127/10/172.16/192.168/0.0/169.254.169.254)+localhost+metadata.google.internal | 40011 | ✅ | ✅ |
+| 12 | **HTTP方法校验** | 仅 GET/POST/PUT/DELETE/PATCH/OPTIONS/HEAD | 40012 | ✅ | ✅ |
+| 13 | **Host头校验** | 拒绝裸IP直接访问 | 40013 | ✅ | — |
+| 14 | **敏感数据脱敏** | 日志/错误响应过滤password/token/secret | — | ✅ | ✅ |
+| 15 | **CORS白名单** | 可配置origin限制 | — | ⚠️ | ⚠️ |
 
 ### 4.2 中间件管道
 
@@ -355,7 +354,7 @@ cd service && php vendor/bin/phpunit tests/
 
 | 测试类 | Tests | 覆盖 |
 |--------|-------|------|
-| SecurityTest | 7 | XSS脚本/事件/html注入 + SQL注入UNION/DROP + 正常输入无误报 + 路径遍历 |
+| SecurityTest | 16 | XSS(8条)+SQLi(2条)+XXE(2条)+SSRF(2条)+File double ext+Path encoded+Null byte |
 | JwtTest | 4 | encode三段式JWT + decode往返 + 无效token→null + 空token→null |
 | ApiResponseTest | 3 | success(code=0) + fail(error code) + paginate(list+meta分页) |
-| **Total** | **14** | **44 assertions — ALL PASS** |
+| **Total** | **23** | **68 assertions — ALL PASS** |

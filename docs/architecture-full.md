@@ -196,14 +196,14 @@ graph LR
 |---|--------|------|------|
 | 1 | Cors | 全局 | Access-Control-* 响应头, OPTIONS预检返回200 |
 | 2 | SecurityMiddleware | 全局 | XSS/SQL注入/CRLF/路径遍历/Content-Type/请求体10MB |
-| 3 | PlatformMiddleware | 全局 | X-Platform header + UA降级识别8个平台 |
-| 4 | GeoIpMiddleware | 全局 | MaxMind GeoIP2 未登录用户区域/币种/语言识别 |
-| 5 | LocaleMiddleware | 全局 | Accept-Language解析, 5语言精确匹配→降级→默认 |
-| 6 | HashidsDecode | 全局 | URL/Body中 `*_id` 字段 hashid→snowflake ID |
-| 7 | VersionRoute | 全局 | API-Version header→控制器命名空间(v1/v2)映射 |
-| 8 | PosterVerify | 路由 | 注册/下单/支付 Redis验证token |
-| 9 | JwtAuth | 路由 | Bearer Token HS256验签+过期+userId注入 |
-| 10 | HashidsEncode | 全局 | 响应JSON递归遍历, snowflake ID→hashid |
+| 4 | PlatformMiddleware | 全局 | X-Platform header + UA降级识别8个平台 |
+| 5 | GeoIpMiddleware | 全局 | MaxMind GeoIP2 未登录用户区域/币种/语言识别 |
+| 6 | LocaleMiddleware | 全局 | Accept-Language解析, 5语言精确匹配→降级→默认 |
+| 7 | HashidsDecode | 全局 | URL/Body中 `*_id` 字段 hashid→snowflake ID |
+| 8 | VersionRoute | 全局 | API-Version header→控制器命名空间(v1/v2)映射 |
+| 9 | PosterVerify | 路由 | 注册/下单/支付 Redis验证token |
+| 10 | JwtAuth | 路由 | Bearer Token HS256验签+过期+userId注入 |
+| 11 | HashidsEncode | 全局 | 响应JSON递归遍历, snowflake ID→hashid |
 
 ### 3.3 Admin 管道
 
@@ -372,7 +372,69 @@ PaymentGatewayInterface
 
 ---
 
-## 7. 部署架构
+## 7. 高并发架构
+
+### 7.1 限流策略 (RateLimitMiddleware)
+
+```mermaid
+graph LR
+    A[Request] --> B{匹配规则?}
+    B -->|Yes| C[Redis ZSET<br/>滑动窗口计数]
+    B -->|No| D[默认规则<br/>60s/100次]
+    C --> E{超限?}
+    D --> C
+    E -->|Yes| F[429 Retry-After]
+    E -->|No| G[Pass]
+```
+
+| 端点 | 窗口 | 限制 | 说明 |
+|------|------|------|------|
+| /api/auth/login | 60s | 10次 | 防撞库 |
+| /api/auth/register | 300s | 5次 | 防批量注册 |
+| /api/payment | 60s | 5次 | 防盗刷 |
+| /api/orders | 10s | 3次 | 防刷单 |
+| /api/search | 1s | 10次 | 防爬虫 |
+| 默认 | 60s | 100次 | 通用API |
+
+### 7.2 缓存策略 (Cache Helper)
+
+| 策略 | 实现 | 说明 |
+|------|------|------|
+| Cache-Aside | `Cache::remember(key, ttl, callback)` | 缓存未命中时回源DB并写入缓存 |
+| 防雪崩 | 随机TTL ±10% | 避免大量缓存同时过期 |
+| 防穿透 | 空值缓存60s | 防止恶意查询不存在的数据穿透到DB |
+| 标签缓存 | `Cache::setWithTag(key, val, ttl, tag)` | 按标签批量失效 |
+| 分布式锁 | `Cache::lock(key, ttl)` | Redis SETNX + TTL |
+
+### 7.3 热点数据缓存
+
+| 端点 | TTL | 说明 |
+|------|-----|------|
+| /api/countries | 3600s | 国家/货币数据 |
+| /api/categories | 1800s | 分类树 |
+| /api/settings | 3600s | 系统配置 |
+| /api/faq | 3600s | FAQ |
+| /api/banners | 300s | 轮播图 |
+| /api/flash-sales | 60s | 秒杀(高频更新) |
+
+### 7.4 连接池优化
+
+| 资源 | 最大连接 | 最小连接 | 等待超时 | 空闲超时 | 心跳 |
+|------|---------|---------|---------|---------|------|
+| MySQL | 50 | 10 | 2s | 60s | 45s |
+| Redis | 30 | 5 | — | 60s | — |
+
+### 7.5 异步队列
+
+| 操作 | 优化前 | 优化后 |
+|------|--------|--------|
+| 邮件发送 | 同步阻塞 | Redis Queue 异步 |
+| Feed同步 | 同步HTTP | 异步任务 |
+| 推荐计算 | 定时全量 | 增量+异步 |
+| 大数据导出 | 内存溢出风险 | 队列分片 |
+| 操作日志 | 逐条写入 | 批量写入 |
+
+## 8. 部署架构
 
 ```
 docker-compose.yml:
@@ -386,7 +448,7 @@ docker-compose.yml:
 
 ---
 
-## 8. 测试
+## 9. 测试
 
 ```bash
 cd service && php vendor/bin/phpunit tests/
@@ -401,7 +463,7 @@ cd service && php vendor/bin/phpunit tests/
 
 ---
 
-## 9. 项目统计
+## 10. 项目统计
 
 | 维度 | 数量 |
 |------|------|

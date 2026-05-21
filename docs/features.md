@@ -244,7 +244,38 @@ Admin: Security → Platform → HashidsDecode → AccessControl → HashidsEnco
 
 ---
 
-## 5. 数据表关系图
+
+## 5. 高并发与性能
+
+### 5.1 限流规则
+
+| 端点 | 算法 | 窗口 | 限制 |
+|------|------|------|------|
+| /api/auth/login | 滑动窗口 | 60s | 10次 |
+| /api/auth/register | 滑动窗口 | 300s | 5次 |
+| /api/payment | 滑动窗口 | 60s | 5次 |
+| /api/orders | 滑动窗口 | 10s | 3次 |
+| /api/search | 滑动窗口 | 1s | 10次 |
+| 默认 | 滑动窗口 | 60s | 100次 |
+
+### 5.2 缓存架构
+
+| 层级 | 技术 | TTL | 说明 |
+|------|------|-----|------|
+| 热点数据 | Redis Cache-Aside | 60s~3600s | 国家/分类/配置/FAQ |
+| 防雪崩 | 随机TTL ±10% | — | 避免同时过期 |
+| 防穿透 | 空值缓存 | 60s | 恶意查询保护 |
+| 标签失效 | Tag-based | — | 批量清理 |
+| 分布式锁 | SETNX+TTL | 10s | 并发控制 |
+
+### 5.3 连接池
+
+| 资源 | 最大 | 最小 | 超时 |
+|------|------|------|------|
+| MySQL | 50 | 10 | 2s |
+| Redis | 30 | 5 | — |
+
+## 6. 数据表关系图
 
 ```
 erik_users ──┬── addresses, social_accounts, wishlists, kyc
@@ -275,7 +306,7 @@ erik_countries ──┬── vat_settings, tariff_rules(dest_country_id)
 
 ---
 
-## 6. API端点设计
+## 7. API端点设计
 
 ### 6.1 公开接口 (25端点)
 
@@ -346,7 +377,7 @@ erik_countries ──┬── vat_settings, tariff_rules(dest_country_id)
 
 ---
 
-## 7. 测试验证
+## 8. 测试验证
 
 ```bash
 cd service && php vendor/bin/phpunit tests/

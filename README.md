@@ -61,20 +61,29 @@ shop-php/
   docs/             设计文档
 ```
 
-## 核心功能
+## 功能覆盖
 
-| 模块 | 功能 |
-|------|------|
-| 商品 | 多语言内容、分币种定价、SKU管理、合规标签、HS Code、ES搜索 |
-| 交易 | 购物车、订单、Stripe/PayPal/Klarna支付、退款、退货 |
-| 物流 | 国际物流商、分区运费、海外仓、HS申报、商业发票/装箱单 |
-| 海关 | HS Code编码库、关税规则、VAT/IOSS、各国合规限制 |
-| 营销 | 优惠券、轮播图、秒杀、拼团、分销 |
-| 供应链 | 供应商、采购单、质检、库存流水 |
-| 风控 | 规则引擎、3DS验证、KYC、GDPR/CCPA |
-| 内容 | CMS页面、FAQ、知识库、尺码对照表、商品Feed |
-| 增长 | 会员体系、积分、礼品卡、B2B批发、订阅周期购 |
-| 多平台 | Amazon/eBay/Shopee刊登+订单聚合、多商家入驻 |
+| 维度 | 覆盖内容 |
+|------|---------|
+| **B2C零售** | 多语言商品、分币种定价、SKU、购物车、订单、支付、退款、退货 |
+| **B2B批发** | 阶梯定价(MOQ)、企业认证(税号/营业执照)、询价 |
+| **多商家入驻** | 卖家审核、商品审核、分成分账 |
+| **跨境合规** | HS Code编码库、关税规则、VAT/IOSS、各国合规标签(FDA/CE/RoHS) |
+| **国际物流** | 物流分区运费、海外仓(发货仓+退货仓)、HS申报、商业发票/装箱单 |
+| **支付** | Stripe/PayPal/Klarna/Adyen、BNPL先买后付、3DS验证 |
+| **营销** | 优惠券(分区+新老客)、轮播图(区域可见)、秒杀、拼团、分销(链接+佣金+提现) |
+| **多平台** | Amazon/eBay/Shopee/Lazada/Temu商品刊登+订单聚合 |
+| **供应链** | 供应商评级、采购→质检→入库、库存流水(不可变账本)、调拨 |
+| **风控合规** | 规则引擎(旁路打分)、KYC实名、GDPR/CCPA数据请求、Cookie Consent |
+| **安全防护** | 15类攻击检测(XSS/SQL注入/XXE/SSRF/CRLF/路径遍历/文件上传/暴力破解/HTTP方法/Host/CORS) |
+| **高并发** | 令牌桶限流、Cache-Aside缓存(防雪崩+防穿透)、熔断器、DB读写分离、连接池优化 |
+| **会员增长** | 积分规则、会员等级权益、礼品卡、降价提醒、订阅周期购、AB测试 |
+| **内容管理** | CMS多语言页面、FAQ、知识库、尺码对照表、邮件模板、商品Feed同步 |
+| **客服** | WebSocket实时IM、知识库(表结构已建) |
+| **基础设施** | Snowflake分布式ID、Hashids接口混淆、JWT认证、AES加密、GeoIP区域识别 |
+| **多端覆盖** | Flutter(iOS/Android/macOS/Windows/Linux/iPadOS)+HarmonyOS(ArkTS)+Web Admin |
+| **平台追踪** | 8平台来源识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+DB记录 |
+| **测试** | 23 tests / 68 assertions — ALL PASS (Security+Jwt+ApiResponse) |
 
 ## 核心设计
 

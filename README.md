@@ -52,7 +52,7 @@ cd apps/flutter && flutter pub get && flutter run -d macos
 
 ```
 shop-php/
-  service/          PHP业务API (webman)        — 36控制器 + 112模型 + 9中间件
+  service/          PHP业务API (webman)        — 37控制器 + 112模型 + 11中间件
   admin/            管理后台 (webman-admin)      — 67控制器 + 65模型
   apps/flutter/     Flutter客户端              — 9页面 + 5语言 + PC自适应
   apps/harmonyos/   鸿蒙客户端                  — 8页面 + ArkTS

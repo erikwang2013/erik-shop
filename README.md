@@ -102,6 +102,7 @@ shop-php/
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |
+| [API接口文档](docs/api.md) | 71个API端点完整文档 (请求/响应示例/错误码/状态码) |
 | [部署文档](docs/deployment.md) | Docker/手动部署、环境变量、运维命令 |
 
 

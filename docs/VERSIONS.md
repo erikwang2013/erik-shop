@@ -1,4 +1,5 @@
-# Erik Shop — 三版本对比
+# Erik Shop — 跨境电商平台
+基于 webman 全家桶构建的全栈跨境电商平台，覆盖 B2C/B2B 场景和第三方卖家入驻。
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 

@@ -122,6 +122,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | GDPR/CCPA数据请求 | — | — | ✅ |
 | Cookie Consent管理 | — | — | ✅ |
 | 平台来源追踪 | — | ✅ | ✅ |
+| 平台来源追踪 (8平台) | — | ✅ | ✅ |
 
 ### 高并发
 

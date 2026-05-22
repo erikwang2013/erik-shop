@@ -4,6 +4,33 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+
+## 平台追踪
+
+### 8平台识别
+
+| 平台 | Header | Flutter | Admin |
+|------|--------|---------|-------|
+| iOS | `ios` | Platform.isIOS + TargetPlatform.iOS | UA iPhone |
+| iPadOS | `ipados` | Platform.isIOS + !TargetPlatform.iOS | UA iPad |
+| macOS | `macos` | Platform.isMacOS | UA Macintosh |
+| Windows | `windows` | Platform.isWindows | UA Windows |
+| Linux | `linux` | Platform.isLinux | UA Linux |
+| Android | `android` | Platform.isAndroid | UA Android |
+| HarmonyOS | `harmonyos` | — | UA HarmonyOS |
+| Web | `web` | kIsWeb | 默认 |
+
+### DB追踪字段
+
+| 表 | 字段 | 说明 |
+|----|------|------|
+| erik_orders | platform VARCHAR(16) | 下单平台 |
+| erik_payments | platform VARCHAR(16) | 支付平台 |
+| erik_operation_logs | platform VARCHAR(16) | 操作平台 |
+| erik_users | last_login_platform VARCHAR(16) | 登录平台 |
+| erik_search_logs | platform VARCHAR(16) | 搜索平台 |
+| erik_chat_messages | platform VARCHAR(16) | 消息来源 |
+
 ## 1. 功能总览
 
 ### 1.0 覆盖总览

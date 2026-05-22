@@ -1,4 +1,4 @@
-# Erik Shop — 跨境电商平台 (完整版 Full)
+# Erik Shop — 跨境电商平台 完整版(Full)
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 

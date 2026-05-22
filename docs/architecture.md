@@ -81,4 +81,8 @@ cd service && php start.php start -d
 cd admin && php start.php start -d
 ```
 
+- **多语言 (i18n)**: 5语言翻译文件 + LocaleMiddleware + Flutter AppLocalizations
+- **API文档**: hg/apidoc自动生成 (6分组, 控制器注解驱动)
+- **平台追踪**: 8平台 X-Platform header + DB记录
+
 详见: [部署文档](deployment.md) | [完整架构文档](architecture-full.md) | [功能设计文档](features.md)

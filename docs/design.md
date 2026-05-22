@@ -141,7 +141,23 @@ MySQL: 50max/10min/2s超时 | 读写分离: 30max/5min (2读副本, sticky=true)
 - 价格: erik_product_sku_prices 按币种独立定价
 - Header: Accept-Language + API-Version
 
-## 6. 测试
+## 6. API文档
+
+使用 hg/apidoc 根据控制器注解自动生成。启动后访问 `/apidoc/`。
+
+注解示例:
+```php
+/**
+ * @Apidoc\Title("用户登录")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/login")
+ * @Apidoc\Param(name="email", type="string", require=true)
+ * @Apidoc\Returned(name="access_token", type="string")
+ */
+public function login(Request $request) { ... }
+```
+
+## 7. 测试
 
 23 tests / 68 assertions — ALL PASS
 

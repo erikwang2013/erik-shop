@@ -155,6 +155,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Flutter (iOS/Android) | ✅ | ✅ | ✅ |
 | Flutter (macOS/Windows/Linux) | ✅ | ✅ | ✅ |
 | Flutter iPadOS | ✅ | ✅ | ✅ |
+| 国际化 (5语言翻译) | ✅ | ✅ | ✅ |
+| API文档 (hg/apidoc) | ✅ | ✅ | ✅ |
 | HarmonyOS (ArkTS) | — | — | ✅ |
 | Web Admin | ✅ | ✅ | ✅ |
 | Admin ECharts仪表盘 | ✅ | ✅ | ✅ |

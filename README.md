@@ -58,8 +58,8 @@ cd apps/flutter && flutter pub get && flutter run -d macos
 
 ```
 shop-php/
-  service/          PHP业务API (webman)        — 37控制器 + 112模型 + 11中间件
-  admin/            管理后台 (webman-admin)      — 67控制器 + 65模型
+  service/          PHP业务API (webman)        — 37控制器 + 112模型 + 9全局中间件
+  admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + ECharts仪表盘
   apps/flutter/     Flutter客户端              — 9页面 + 5语言 + PC自适应
   apps/harmonyos/   鸿蒙客户端                  — 8页面 + ArkTS
   database/         数据库                      — 110张表 (erik_前缀, snowflake主键)
@@ -108,7 +108,8 @@ shop-php/
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |
-| [API接口文档](docs/api.md) | 71个API端点完整文档 (请求/响应示例/错误码/状态码) |
+| [API接口文档](docs/api.md) | 71个API端点 (静态文档) |
+| [hg/apidoc接口文档](http://localhost:8787/apidoc/) | hg/apidoc自动生成 (6分组: 认证/商品/交易/物流海关/用户营销/运营) | (请求/响应示例/错误码/状态码) |
 | [部署文档](docs/deployment.md) | Docker/手动部署、环境变量、运维命令 |
 
 

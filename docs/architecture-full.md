@@ -448,7 +448,26 @@ docker-compose.yml:
 
 ---
 
-## 9. 测试
+
+## 8. 国际化 (i18n)
+
+| 层级 | 实现 |
+|------|------|
+| Service | LocaleMiddleware + 5语言翻译文件(45 key/语言) |
+| Admin | 5语言翻译文件 |
+| Flutter | AppLocalizations + Riverpod Provider |
+| API | Accept-Language header 自动注入 |
+
+## 9. API文档 (hg/apidoc)
+
+| 组件 | 说明 |
+|------|------|
+| 包 | hg/apidoc v5.3 |
+| 配置 | config/plugin/hg/apidoc/app.php (6分组) |
+| 注解 | @Apidoc\Title/Desc/Method/Url/Param/Returned |
+| 访问 | http://localhost:8787/apidoc/ |
+
+## 11. 测试
 
 ```bash
 cd service && php vendor/bin/phpunit tests/
@@ -463,7 +482,7 @@ cd service && php vendor/bin/phpunit tests/
 
 ---
 
-## 10. 项目统计
+## 12. 项目统计
 
 | 维度 | 数量 |
 |------|------|

@@ -1,5 +1,9 @@
 # 跨境电商平台 — API 接口文档
 
+> 动态文档: 启动Service后访问 http://localhost:8787/apidoc/ (hg/apidoc自动生成)
+
+
+
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---

@@ -72,7 +72,6 @@ Cors → Security(基础攻击检测) → Locale(语言) → HashidsDecode
 | [三版本定义](VERSIONS.md) — 简化版/标准版/完整版差异 |
 | [API接口文档](docs/api.md) — ~30个端点 + 请求/响应示例 |
 | [功能设计](docs/features.md) — 功能清单 + 业务流程 |
-| [架构设计](docs/architecture.md) — 系统架构 + 中间件管道 |
 | [部署文档](docs/deployment.md) — Docker/手动部署 |
 
 ## 测试

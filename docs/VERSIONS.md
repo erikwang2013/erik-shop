@@ -6,12 +6,12 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ## 版本概览
 
-| | 简化版 (Lite) | 标准版 (Standard) | 完整版 (Pro) |
+| | 简化版 (Lite) | 标准版 (Standard) | 完整版 (Full) |
 |---|:---:|:---:|:---:|
 | **定位** | 个人开发者 / 小型电商 | 成长型跨境商家 | 企业级全栈平台 |
 | **许可证** | MIT 开源 | 商业授权 | 商业授权 |
 | **获取方式** | GitHub 公开下载 | 联系 erik@erik.xyz | 联系 erik@erik.xyz |
-| **分支** | `lite` | `standard` | `pro` |
+| **分支** | `lite` | `standard` | `Full` |
 | **当前** | — | — | ✅ |
 
 ---
@@ -20,7 +20,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 用户系统
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 邮箱注册/登录 (JWT) | ✅ | ✅ | ✅ |
 | 社交登录 (Google/Apple/Facebook) | — | ✅ | ✅ |
@@ -31,7 +31,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 商品系统
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 分类管理 (树形) | ✅ | ✅ | ✅ |
 | SKU + 属性 | ✅ | ✅ | ✅ |
@@ -46,7 +46,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 交易系统
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 购物车 | ✅ | ✅ | ✅ |
 | 订单管理 | ✅ | ✅ | ✅ |
@@ -60,7 +60,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 跨境物流
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 国际物流商管理 | — | ✅ | ✅ |
 | 物流分区 + 阶梯费率 | — | ✅ | ✅ |
@@ -71,7 +71,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 海关税务
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | HS Code编码库 | — | ✅ | ✅ |
 | 关税规则配置 | — | ✅ | ✅ |
@@ -81,7 +81,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 营销工具
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 优惠券 | ✅ | ✅ | ✅ |
 | 轮播图 | ✅ | ✅ | ✅ |
@@ -92,7 +92,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 供应链
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 供应商管理 | — | — | ✅ |
 | 采购单 | — | — | ✅ |
@@ -102,7 +102,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 平台扩展
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 多店铺管理 | — | — | ✅ |
 | 多商家入驻 (第三方卖家) | — | — | ✅ |
@@ -112,7 +112,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 风控合规
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 基础攻击检测 (XSS/SQLi) | ✅ | ✅ | ✅ |
 | 扩展攻击检测 (XXE/SSRF等) | — | — | ✅ |
@@ -124,7 +124,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 高并发
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | OPCache | ✅ | ✅ | ✅ |
 | DB连接池 | ✅ | ✅ | ✅ |
@@ -136,7 +136,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 内容与增长
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 系统通知 | ✅ | ✅ | ✅ |
 | 邮件模板 | — | — | ✅ |
@@ -148,7 +148,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 客户端
 
-| 功能 | Lite | Standard | Pro |
+| 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | Flutter (iOS/Android) | ✅ | ✅ | ✅ |
 | Flutter (macOS/Windows/Linux) | ✅ | ✅ | ✅ |
@@ -165,7 +165,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 数据库
 
-| | Lite | Standard | Pro |
+| | Lite | Standard | Full |
 |---|:---:|:---:|:---:|
 | 数据表 | **23** | **62** | **110** |
 | 用户相关 | 3 | 5 | 7 |
@@ -190,14 +190,14 @@ Standard:  Cors → Security(4类) → Platform → GeoIp → Locale
           → HashidsDecode → VersionRoute
           → (PosterVerify) → (JwtAuth) → HashidsEncode
 
-Pro:       Cors → Security(15类) → RateLimit(令牌桶) → Platform → GeoIp
+Full:       Cors → Security(15类) → RateLimit(令牌桶) → Platform → GeoIp
           → Locale → HashidsDecode → VersionRoute
           → (PosterVerify) → (JwtAuth) → HashidsEncode
 ```
 
 ### 代码规模
 
-| | Lite | Standard | Pro |
+| | Lite | Standard | Full |
 |---|:---:|:---:|:---:|
 | Service 模型 | 26 | 55 | 112 |
 | Service 控制器 | 15 | 24 | 37 |
@@ -211,7 +211,7 @@ Pro:       Cors → Security(15类) → RateLimit(令牌桶) → Platform → Ge
 
 ### 技术栈
 
-| 组件 | Lite | Standard | Pro |
+| 组件 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | snowflake-php | ✅ | ✅ | ✅ |
 | hashids | ✅ | ✅ | ✅ |
@@ -232,11 +232,11 @@ Pro:       Cors → Security(15类) → RateLimit(令牌桶) → Platform → Ge
 ## 升级路径
 
 ```
-Lite (开源) ──→ Standard (商业) ──→ Pro (商业)
+Lite (开源) ──→ Standard (商业) ──→ Full (商业)
 
 升级方式:
   1. 联系 erik@erik.xyz 获取对应版本代码
-  2. 导入增量 schema (lite→standard 增加~40表, standard→pro 增加~48表)
+  2. 导入增量 schema (lite→standard 增加~40表, standard→Full 增加~48表)
   3. 复制对应版本控制器/模型/中间件
   4. composer require 新增依赖包
 ```
@@ -249,6 +249,6 @@ Lite (开源) ──→ Standard (商业) ──→ Pro (商业)
 |------|------|
 | **简化版 (Lite)** | GitHub 开源 [github.com/erikwang2013/shop-php](https://github.com/erikwang2013/shop-php) `lite` 分支 |
 | **标准版 (Standard)** | 商业授权 — 联系 **erik@erik.xyz** |
-| **完整版 (Pro)** | 商业授权 — 联系 **erik@erik.xyz** |
+| **完整版 (Full)** | 商业授权 — 联系 **erik@erik.xyz** |
 
 商业授权包含: 完整源代码 / 部署支持 / 优先更新 / 技术咨询

@@ -11,7 +11,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **定位** | 个人开发者 / 小型电商 | 成长型跨境商家 | 企业级全栈平台 |
 | **许可证** | MIT 开源 | 商业授权 | 商业授权 |
 | **获取方式** | GitHub 公开下载 | 联系 erik@erik.xyz | 联系 erik@erik.xyz |
-| **分支** | `lite` | `standard` | `Full` |
+| **分支** | `lite` | `standard` | `full` |
 | **当前** | — | — | ✅ |
 
 ---

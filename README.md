@@ -6,7 +6,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
 > 简化版 (MIT开源): `lite` 分支 | 标准版 (商业): `standard` 分支
 >
-> 商业授权联系: **erik@erik.xyz** | 版本对比: [VERSIONS.md](VERSIONS.md)
+> 商业授权联系: **erik@erik.xyz** | 版本对比: [docs/VERSIONS.md]
 
 ## 项目简介
 

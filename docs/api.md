@@ -1,4 +1,4 @@
-# 跨境电商平台 — API 接口文档
+# 跨境电商平台 — API 接口文档 (简化版)
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
@@ -507,82 +507,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
-## 7. 物流接口
-
-### 7.1 运费计算 `GET /api/shipping/calculate`
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| dest_country_id | int | 是 | 目的国ID (snowflake) |
-| weight | int | 否 | 重量(克) (默认500) |
-
-**响应:**
-```json
-{
-  "code": 0, "msg": "ok",
-  "data": {
-    "zone_name": "北美区",
-    "weight_kg": 0.5,
-    "dest_country": "US",
-    "options": [
-      {
-        "logistics_name": "DHL Express",
-        "logistics_code": "DHL",
-        "fee": 25.50,
-        "estimated_days": "3-5",
-        "tracking_url": "https://www.dhl.com/track?num="
-      }
-    ]
-  }
-}
-```
-
----
-
-## 8. 关税接口
-
-### 8.1 关税估算 `GET /api/tariff/estimate`
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| product_id | string | 是 | 商品ID (hashid) |
-| dest_country_id | int | 是 | 目的国ID |
-| declared_value | number | 是 | 申报价值 |
-
-**响应:**
-```json
-{
-  "code": 0, "msg": "ok",
-  "data": {
-    "duty_rate": 12.0, "vat_rate": 20.0,
-    "estimated_duty": 12.00, "estimated_vat": 22.40,
-    "estimated_total": 34.40,
-    "is_estimate": true,
-    "disclaimer": "仅供参考，实际以海关核定为准"
-  }
-}
-```
-
----
-
-## 9. 退货接口 `[JWT]`
-
-### 9.1 退货列表 `GET /api/returns`
-
-### 9.2 申请退货 `POST /api/returns`
-
-**请求:**
-```json
-{
-  "order_id": "Or1d2E3r",
-  "reason_id": 1
-}
-```
-
-### 9.3 退货面单 `GET /api/returns/{id}/label`
-
----
-
 ## 10. 用户接口 `[JWT]`
 
 ### 10.1 个人信息 `GET /api/user/profile`
@@ -630,39 +554,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 11.3 领取优惠券 `POST /api/coupons/{id}/claim` `[JWT]`
 
-### 11.4 秒杀列表 `GET /api/flash-sales`
-
-### 11.5 拼团列表 `GET /api/group-buys`
-
-### 11.6 分销链接 `GET /api/affiliate/links` `[JWT]`
-
-### 11.7 分销佣金 `GET /api/affiliate/commissions` `[JWT]`
-
----
-
-## 12. 会员接口 `[JWT]`
-
-### 12.1 会员信息 `GET /api/membership`
-
-**响应:**
-```json
-{
-  "code": 0, "msg": "ok",
-  "data": {
-    "current_level": {"id": "Lv1", "name": "Gold", "level": 2},
-    "current_benefits": [{"benefit_type": "discount", "benefit_value": "5%"}],
-    "all_levels": [],
-    "current_score": 1500
-  }
-}
-```
-
-### 12.2 积分流水 `GET /api/points`
-
----
-
-## 13. 其它接口
-
 ### 13.1 国家数据 `GET /api/countries`
 
 返回全部可用国家/货币/汇率/默认值。
@@ -677,25 +568,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | category_id | string | 否 | 分类筛选 |
 | page | int | 否 | 页码 |
 
-### 13.4 商品对比 `GET/POST/DELETE /api/comparisons[/{id}]` `[JWT]`
-
-### 13.5 个性化推荐 `GET /api/recommendations` `[JWT]`
-
-### 13.6 降价提醒 `GET/POST /api/price-alerts` `[JWT]`
-
-### 13.7 收藏夹 `GET/POST/DELETE /api/wishlist[/{id}]` `[JWT]`
-
 ### 13.8 通知 `GET /api/notifications` `PUT /api/notifications/{id}/read` `[JWT]`
-
-### 13.9 FAQ `GET /api/faq?category=shipping`
-
-### 13.10 CMS页面 `GET /api/cms/{slug}`
-
-### 13.11 尺码对照表 `GET /api/size-charts?category_id=1&type=clothing`
-
-### 13.12 合规检查 `GET /api/compliance/check?product_id=xxx&dest_country_id=xxx`
-
-### 13.13 GeoIP检测 `GET /api/geoip/detect`
 
 ### 13.14 评价发表 `POST /api/reviews` `[JWT]`
 
@@ -703,42 +576,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 {"product_id":"x","order_id":"x","rating":5,"content":"Good","images":[]}
 ```
 
-### 13.15 礼品卡余额 `GET /api/gift-cards/balance?code=xxx` `[JWT]`
-
 ### 13.16 礼品卡兑换 `POST /api/gift-cards/redeem` `[JWT]`
 
 ```json
 {"code": "GIFT-CODE-HERE"}
 ```
-
-### 13.17 GDPR请求 `POST /api/privacy/request` `[JWT]`
-
-```json
-{"type": "data_access|data_delete|opt_out|data_portability"}
-```
-
-### 13.18 导出订单 `GET /api/export/orders` `[JWT]`
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| date_from | string | 否 | 开始日期 (YYYY-MM-DD) |
-| date_to | string | 否 | 结束日期 |
-
-返回CSV文件下载。
-
-### 13.19 B2B询价 `GET/POST /api/b2b/quotes` `[JWT]`
-
-```json
-{"product_id":"x","sku_id":"x","quantity":1000,"target_price":15.00,"currency_code":"USD"}
-```
-
-### 13.20 健康检查 `GET /api/health`
-
-```json
-{"code":0,"msg":"ok","data":{"status":"ok","timestamp":"...","db":"ok","redis":"ok"}}
-```
-
----
 
 ## 附录: 状态码对照
 

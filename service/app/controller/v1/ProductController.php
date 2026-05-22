@@ -8,12 +8,7 @@ namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\Products;
 use app\model\ProductSkus;
-use app\model\ProductTranslations;
-use app\model\ProductSkuPrices;
 use app\model\Categories;
-use app\model\Countries;
-use app\model\ExchangeRates;
-use app\model\VatSettings;
 use Webman\Http\Request;
 
 /**

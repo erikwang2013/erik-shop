@@ -8,10 +8,6 @@ namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\Payments;
 use app\model\Orders;
-use app\model\PaymentGateways;
-use app\model\PaymentGatewayMethods;
-use app\model\PlatformSettlements;
-use app\common\PaymentGateway as Gateway;
 use Webman\Http\Request;
 
 class PaymentController extends \app\controller\BaseApiController

@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Currencies;
 
+/**
+ * @Apidoc\Group("general")
+ * @Apidoc\Sort(5)
+ */
 class ShopCurrencyController extends Crud
 {
     protected $model = Currencies::class;

@@ -10,12 +10,18 @@ use app\model\Carts;
 use app\model\ProductSkus;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("cart")
+ * @Apidoc\Sort(3)
+ */
 class CartController extends \app\controller\BaseApiController
 {
     /**
-     * 购物车列表
-     * GET /api/cart
-     */
+ * @Apidoc\Title("删除")
+ * @Apidoc\Method("DELETE")
+ * @Apidoc\Url("/api/cart/{id}")
+ * @Apidoc\Author("erik")
+ */
     public function index(Request $request): \support\Response
     {
         $userId = $request->userId;

@@ -14,12 +14,19 @@ use app\model\ProductSkus;
 use app\model\UserAddresses;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("order")
+ * @Apidoc\Sort(4)
+ */
 class OrderController extends \app\controller\BaseApiController
 {
     /**
-     * 订单列表
-     * GET /api/orders
-     */
+ * @Apidoc\Title("创建订单")
+ * @Apidoc\Desc("从购物车下单,需人机验证")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/orders")
+ * @Apidoc\Author("erik")
+ */
     public function index(Request $request): \support\Response
     {
         $userId = $request->userId;
@@ -168,9 +175,11 @@ class OrderController extends \app\controller\BaseApiController
     }
 
     /**
-     * 取消订单
-     * POST /api/orders/{id}/cancel
-     */
+ * @Apidoc\Title("取消订单")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/orders/{id}/cancel")
+ * @Apidoc\Author("erik")
+ */
     public function cancel(Request $request, string $id): \support\Response
     {
         $userId = $request->userId;

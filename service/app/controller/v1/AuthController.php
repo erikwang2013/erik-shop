@@ -7,8 +7,19 @@ use app\model\Users;
 use app\common\Jwt;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("auth")
+ * @Apidoc\Sort(1)
+ */
 class AuthController extends \app\controller\BaseApiController
 {
+    /**
+ * @Apidoc\Title("用户注册")
+ * @Apidoc\Desc("邮箱注册,需人机验证")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/register")
+ * @Apidoc\Author("erik")
+ */
     public function register(Request $request): \support\Response
     {
         $email = $request->input('email');
@@ -42,6 +53,13 @@ class AuthController extends \app\controller\BaseApiController
         ], '注册成功');
     }
 
+    /**
+ * @Apidoc\Title("用户登录")
+ * @Apidoc\Desc("邮箱+密码登录")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/login")
+ * @Apidoc\Author("erik")
+ */
     public function login(Request $request): \support\Response
     {
         $email = $request->input('email');
@@ -70,6 +88,12 @@ class AuthController extends \app\controller\BaseApiController
         ], '登录成功');
     }
 
+    /**
+ * @Apidoc\Title("刷新Token")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/refresh")
+ * @Apidoc\Author("erik")
+ */
     public function refresh(Request $request): \support\Response
     {
         $refreshToken = $request->input('refresh_token');

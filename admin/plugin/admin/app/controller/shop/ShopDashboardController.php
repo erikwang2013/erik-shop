@@ -8,8 +8,18 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Base;
 use support\Request;
 
+/**
+ * @Apidoc\Group("general")
+ * @Apidoc\Sort(6)
+ */
 class ShopDashboardController extends Base
 {
+    /**
+ * @Apidoc\Title("仪表盘")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/app/admin/shop/ShopDashboardController/index")
+ * @Apidoc\Author("erik")
+ */
     public function index(Request $request)
     {
         return view('shop/dashboard/index', [

@@ -7,6 +7,10 @@ use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Refunds;
 use support\Request;
 
+/**
+ * @Apidoc\Group("general")
+ * @Apidoc\Sort(13)
+ */
 class ShopRefundController extends Crud
 {
     protected $model = Refunds::class;

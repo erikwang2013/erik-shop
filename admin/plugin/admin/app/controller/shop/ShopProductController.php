@@ -4,6 +4,10 @@ use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Products;
 use plugin\admin\app\model\shop\Categories;
 
+/**
+ * @Apidoc\Group("general")
+ * @Apidoc\Sort(12)
+ */
 class ShopProductController extends Crud
 {
     protected $model = Products::class;

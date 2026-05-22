@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Notifications;
 
+/**
+ * @Apidoc\Group("general")
+ * @Apidoc\Sort(8)
+ */
 class ShopNotificationController extends Crud
 {
     protected $model = Notifications::class;

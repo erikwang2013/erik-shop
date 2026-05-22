@@ -14,12 +14,19 @@ use Webman\Http\Request;
 /**
  * 商品控制器
  */
+/**
+ * @Apidoc\Group("product")
+ * @Apidoc\Sort(2)
+ */
 class ProductController extends \app\controller\BaseApiController
 {
     /**
-     * 商品列表（分页+筛选+排序）
-     * GET /api/products
-     */
+ * @Apidoc\Title("商品详情")
+ * @Apidoc\Desc("含SKU/多语言/多币种/合规/HS")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/products/{id}")
+ * @Apidoc\Author("erik")
+ */
     public function index(Request $request): \support\Response
     {
         $page = (int) $request->input('page', 1);

@@ -5,8 +5,18 @@ use app\model\Users;
 use app\model\UserAddresses;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("user")
+ * @Apidoc\Sort(6)
+ */
 class UserController extends \app\controller\BaseApiController
 {
+    /**
+ * @Apidoc\Title("更新信息")
+ * @Apidoc\Method("PUT")
+ * @Apidoc\Url("/api/user/profile")
+ * @Apidoc\Author("erik")
+ */
     public function profile(Request $request): \support\Response
     {
         $user = Users::select(['id','nickname','avatar','email','mobile','sex','birthday','money','score','level','status','invite_code','last_login_at'])->find($request->userId);
@@ -22,6 +32,12 @@ class UserController extends \app\controller\BaseApiController
         return ApiResponse::success($user, '更新成功');
     }
 
+    /**
+ * @Apidoc\Title("删除地址")
+ * @Apidoc\Method("DELETE")
+ * @Apidoc\Url("/api/user/addresses/{id}")
+ * @Apidoc\Author("erik")
+ */
     public function addresses(Request $request): \support\Response
     {
         $list = UserAddresses::where('user_id', $request->userId)->get();
@@ -57,6 +73,12 @@ class UserController extends \app\controller\BaseApiController
         return ApiResponse::success(null, '已删除');
     }
 
+    /**
+ * @Apidoc\Title("语言币种")
+ * @Apidoc\Method("PUT")
+ * @Apidoc\Url("/api/user/locale")
+ * @Apidoc\Author("erik")
+ */
     public function updateLocale(Request $request): \support\Response
     {
         return ApiResponse::success(['locale'=>$request->input('locale','en'),'currency'=>$request->input('currency','USD')], '已更新');

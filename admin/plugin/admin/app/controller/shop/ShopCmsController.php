@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\CmsPages;
 
+/**
+ * @Apidoc\Group("cms")
+ * @Apidoc\Sort(42)
+ */
 class ShopCmsController extends Crud
 {
     protected $model = CmsPages::class;

@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\FaqTranslations;
 
+/**
+ * @Apidoc\Group("cms")
+ * @Apidoc\Sort(43)
+ */
 class ShopFaqController extends Crud
 {
     protected $model = FaqTranslations::class;

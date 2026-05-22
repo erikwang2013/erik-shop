@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\KnowledgeBase;
 
+/**
+ * @Apidoc\Group("cms")
+ * @Apidoc\Sort(44)
+ */
 class ShopKnowledgeBaseController extends Crud
 {
     protected $model = KnowledgeBase::class;

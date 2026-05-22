@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\SizeCharts;
 
+/**
+ * @Apidoc\Group("cms")
+ * @Apidoc\Sort(47)
+ */
 class ShopSizeChartController extends Crud
 {
     protected $model = SizeCharts::class;

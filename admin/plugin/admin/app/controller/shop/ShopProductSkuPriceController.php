@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\ProductSkuPrices;
 
+/**
+ * @Apidoc\Group("sku")
+ * @Apidoc\Sort(57)
+ */
 class ShopProductSkuPriceController extends Crud
 {
     protected $model = ProductSkuPrices::class;

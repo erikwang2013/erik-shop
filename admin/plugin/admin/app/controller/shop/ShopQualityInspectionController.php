@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\QualityInspections;
 
+/**
+ * @Apidoc\Group("supply")
+ * @Apidoc\Sort(29)
+ */
 class ShopQualityInspectionController extends Crud
 {
     protected $model = QualityInspections::class;

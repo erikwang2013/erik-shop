@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\UserKyc;
 
+/**
+ * @Apidoc\Group("risk")
+ * @Apidoc\Sort(40)
+ */
 class ShopUserKycController extends Crud
 {
     protected $model = UserKyc::class;

@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\PrivacyRequests;
 
+/**
+ * @Apidoc\Group("risk")
+ * @Apidoc\Sort(41)
+ */
 class ShopPrivacyController extends Crud
 {
     protected $model = PrivacyRequests::class;

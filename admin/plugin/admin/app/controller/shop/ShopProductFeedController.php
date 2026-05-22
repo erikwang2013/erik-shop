@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\ProductFeeds;
 
+/**
+ * @Apidoc\Group("cms")
+ * @Apidoc\Sort(46)
+ */
 class ShopProductFeedController extends Crud
 {
     protected $model = ProductFeeds::class;

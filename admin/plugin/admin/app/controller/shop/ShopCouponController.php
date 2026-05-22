@@ -8,6 +8,10 @@ use plugin\admin\app\model\shop\Coupons;
 use support\Request;
 use support\exception\BusinessException;
 
+/**
+ * @Apidoc\Group("coupon")
+ * @Apidoc\Sort(16)
+ */
 class ShopCouponController extends Crud
 {
     protected $model = Coupons::class;

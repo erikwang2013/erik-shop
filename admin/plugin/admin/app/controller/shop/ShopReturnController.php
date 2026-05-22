@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\ReturnOrders;
 
+/**
+ * @Apidoc\Group("order")
+ * @Apidoc\Sort(59)
+ */
 class ShopReturnController extends Crud
 {
     protected $model = ReturnOrders::class;

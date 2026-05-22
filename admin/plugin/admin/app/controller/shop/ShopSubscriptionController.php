@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Subscriptions;
 
+/**
+ * @Apidoc\Group("growth")
+ * @Apidoc\Sort(53)
+ */
 class ShopSubscriptionController extends Crud
 {
     protected $model = Subscriptions::class;

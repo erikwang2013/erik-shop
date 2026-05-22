@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\RiskLogs;
 
+/**
+ * @Apidoc\Group("risk")
+ * @Apidoc\Sort(39)
+ */
 class ShopRiskLogController extends Crud
 {
     protected $model = RiskLogs::class;

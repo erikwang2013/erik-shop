@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\ProductHsCodes;
 
+/**
+ * @Apidoc\Group("customs")
+ * @Apidoc\Sort(56)
+ */
 class ShopProductHsCodeController extends Crud
 {
     protected $model = ProductHsCodes::class;

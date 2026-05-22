@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Settings;
 
+/**
+ * @Apidoc\Group("setting")
+ * @Apidoc\Sort(23)
+ */
 class ShopSettingController extends Crud
 {
     protected $model = Settings::class;

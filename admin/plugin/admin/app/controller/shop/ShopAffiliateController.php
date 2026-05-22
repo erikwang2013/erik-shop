@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\AffiliateLinks;
 
+/**
+ * @Apidoc\Group("affiliate")
+ * @Apidoc\Sort(20)
+ */
 class ShopAffiliateController extends Crud
 {
     protected $model = AffiliateLinks::class;

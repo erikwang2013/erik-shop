@@ -59,7 +59,7 @@ cd apps/flutter && flutter pub get && flutter run -d macos
 ```
 shop-php/
   service/          PHP业务API (webman)        — 37控制器 + 112模型 + 9全局中间件
-  admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + ECharts仪表盘
+  admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + hg/apidoc + ECharts仪表盘
   apps/flutter/     Flutter客户端              — 9页面 + 5语言 + PC自适应
   apps/harmonyos/   鸿蒙客户端                  — 8页面 + ArkTS
   database/         数据库                      — 110张表 (erik_前缀, snowflake主键)

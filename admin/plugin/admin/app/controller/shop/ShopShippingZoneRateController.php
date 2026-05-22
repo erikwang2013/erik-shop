@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\ShippingZoneRates;
 
+/**
+ * @Apidoc\Group("shipping")
+ * @Apidoc\Sort(10)
+ */
 class ShopShippingZoneRateController extends Crud
 {
     protected $model = ShippingZoneRates::class;

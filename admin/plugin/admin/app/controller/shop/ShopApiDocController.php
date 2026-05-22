@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\ApiDocs;
 
+/**
+ * @Apidoc\Group("data")
+ * @Apidoc\Sort(67)
+ */
 class ShopApiDocController extends Crud
 {
     protected $model = ApiDocs::class;

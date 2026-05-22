@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\InventoryLogs;
 
+/**
+ * @Apidoc\Group("supply")
+ * @Apidoc\Sort(30)
+ */
 class ShopInventoryLogController extends Crud
 {
     protected $model = InventoryLogs::class;

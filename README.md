@@ -62,7 +62,6 @@ Cors → Security → Platform → GeoIp → Locale → HashidsDecode
 |------|
 | [三版本定义](VERSIONS.md) |
 | [API接口文档](docs/api.md) |
-| [架构设计](docs/architecture.md) |
 | [功能设计](docs/features.md) |
 | [部署文档](docs/deployment.md) |
 

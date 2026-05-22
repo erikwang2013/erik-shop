@@ -1,10 +1,10 @@
-# Erik Shop — 跨境电商平台 (完整版 Pro)
+# Erik Shop — 跨境电商平台 (完整版 Full)
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
-> **当前分支: 完整版 (Pro) — 商业授权**
->
-> 简化版 (MIT开源): `lite` 分支 | 标准版 (商业): `standard` 分支
+## 版本
+
+> 简化版 (MIT开源): `lite` | 标准版 (商业): `standard` | 完整版 (商业): `full`
 >
 > 商业授权联系: **erik@erik.xyz** | 版本对比: [docs/VERSIONS.md]
 

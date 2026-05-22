@@ -12,7 +12,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **许可证** | MIT 开源 | 商业授权 | 商业授权 |
 | **获取方式** | GitHub 公开下载 | 联系 erik@erik.xyz | 联系 erik@erik.xyz |
 | **分支** | `lite` | `standard` | `pro` |
-| **当前** | — | — | ✅ |
+| **当前** | — | ✅ | — |
 
 ---
 

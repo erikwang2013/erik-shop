@@ -29,7 +29,8 @@
     "phpoffice/phpspreadsheet": "^2.0",
     "barryvdh/laravel-dompdf": "^3.0",
     "guzzlehttp/guzzle": "^7.0",
-    "phpoption/phpoption": "^1.9"
+    "phpoption/phpoption": "^1.9",
+    "hg/apidoc": "^5.3"
   },
   "autoload": {
     "psr-4": {

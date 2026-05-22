@@ -4,6 +4,10 @@ use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Payments;
 use support\Request;
 
+/**
+ * @Apidoc\Group("payment")
+ * @Apidoc\Sort(3)
+ */
 class ShopPaymentController extends Crud
 {
     protected $model = Payments::class;

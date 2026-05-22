@@ -14,12 +14,21 @@ use app\model\PlatformSettlements;
 use app\common\PaymentGateway as Gateway;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("payment")
+ * @Apidoc\Sort(5)
+ */
 class PaymentController extends \app\controller\BaseApiController
 {
     /**
-     * 获取可用支付方式（按国家+币种）
-     * GET /api/payment/methods?country=DE&currency=EUR
-     */
+ * @Apidoc\Title("支付方式")
+ * @Apidoc\Desc("按国家+币种")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/payment/methods")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="country", type="string", require=false, default="US")
+ * @Apidoc\Param(name="currency", type="string", require=false, default="USD")
+ */
     public function methods(Request $request): \support\Response
     {
         $country = $request->input('country', 'US');
@@ -45,9 +54,16 @@ class PaymentController extends \app\controller\BaseApiController
     }
 
     /**
-     * 创建支付
-     * POST /api/payment/create
-     */
+ * @Apidoc\Title("创建支付")
+ * @Apidoc\Desc("需人机验证")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/payment/create")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Header(name="X-Poster-Token", type="string", require=true, desc="人机验证Token")
+ * @Apidoc\Param(name="order_id", type="string", require=true, desc="订单ID")
+ * @Apidoc\Param(name="gateway", type="string", require=false, default="stripe")
+ * @Apidoc\Param(name="method", type="string", require=false, default="card")
+ */
     public function create(Request $request): \support\Response
     {
         $userId = $request->userId;
@@ -102,9 +118,11 @@ class PaymentController extends \app\controller\BaseApiController
     }
 
     /**
-     * 查询支付状态
-     * GET /api/payment/status/{id}
-     */
+ * @Apidoc\Title("支付状态")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/payment/status/{id}")
+ * @Apidoc\Author("erik")
+ */
     public function status(Request $request, string $id): \support\Response
     {
         $payment = Payments::find($id);

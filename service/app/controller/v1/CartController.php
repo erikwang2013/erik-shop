@@ -10,12 +10,19 @@ use app\model\Carts;
 use app\model\ProductSkus;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("cart")
+ * @Apidoc\Sort(3)
+ */
 class CartController extends \app\controller\BaseApiController
 {
     /**
-     * 购物车列表
-     * GET /api/cart
-     */
+ * @Apidoc\Title("购物车列表")
+ * @Apidoc\Desc("当前用户购物车")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/cart")
+ * @Apidoc\Author("erik")
+ */
     public function index(Request $request): \support\Response
     {
         $userId = $request->userId;
@@ -47,9 +54,13 @@ class CartController extends \app\controller\BaseApiController
     }
 
     /**
-     * 添加商品到购物车
-     * POST /api/cart
-     */
+ * @Apidoc\Title("添加购物车")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/cart")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="sku_id", type="string", require=true, desc="SKU ID")
+ * @Apidoc\Param(name="quantity", type="int", require=false, default=1, desc="数量")
+ */
     public function store(Request $request): \support\Response
     {
         $userId = $request->userId;
@@ -86,9 +97,12 @@ class CartController extends \app\controller\BaseApiController
     }
 
     /**
-     * 更新购物车数量
-     * PUT /api/cart/{id}
-     */
+ * @Apidoc\Title("更新数量")
+ * @Apidoc\Method("PUT")
+ * @Apidoc\Url("/api/cart/{id}")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="quantity", type="int", require=true, desc="数量")
+ */
     public function update(Request $request, string $id): \support\Response
     {
         $userId = $request->userId;
@@ -116,9 +130,11 @@ class CartController extends \app\controller\BaseApiController
     }
 
     /**
-     * 删除购物车商品
-     * DELETE /api/cart/{id}
-     */
+ * @Apidoc\Title("删除")
+ * @Apidoc\Method("DELETE")
+ * @Apidoc\Url("/api/cart/{id}")
+ * @Apidoc\Author("erik")
+ */
     public function destroy(Request $request, string $id): \support\Response
     {
         $userId = $request->userId;

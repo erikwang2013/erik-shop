@@ -14,12 +14,21 @@ use app\model\ProductSkus;
 use app\model\UserAddresses;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("order")
+ * @Apidoc\Sort(4)
+ */
 class OrderController extends \app\controller\BaseApiController
 {
     /**
-     * 订单列表
-     * GET /api/orders
-     */
+ * @Apidoc\Title("订单列表")
+ * @Apidoc\Desc("分页+状态筛选")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/orders")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="status", type="int", require=false, desc="0待付/1已付/2已发/3已收/4完成/5取消")
+ * @Apidoc\Param(name="page", type="int", require=false, default=1, desc="页码")
+ */
     public function index(Request $request): \support\Response
     {
         $userId = $request->userId;
@@ -55,9 +64,11 @@ class OrderController extends \app\controller\BaseApiController
     }
 
     /**
-     * 订单详情
-     * GET /api/orders/{id}
-     */
+ * @Apidoc\Title("订单详情")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/orders/{id}")
+ * @Apidoc\Author("erik")
+ */
     public function show(Request $request, string $id): \support\Response
     {
         $userId = $request->userId;
@@ -75,9 +86,16 @@ class OrderController extends \app\controller\BaseApiController
     }
 
     /**
-     * 创建订单（从购物车）
-     * POST /api/orders
-     */
+ * @Apidoc\Title("创建订单")
+ * @Apidoc\Desc("从购物车下单,需人机验证")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/orders")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Header(name="X-Poster-Token", type="string", require=true, desc="人机验证Token")
+ * @Apidoc\Param(name="address_id", type="string", require=true, desc="地址ID")
+ * @Apidoc\Param(name="coupon_id", type="string", require=false, desc="优惠券ID")
+ * @Apidoc\Param(name="currency_code", type="string", require=false, default="USD")
+ */
     public function store(Request $request): \support\Response
     {
         $userId = $request->userId;
@@ -168,9 +186,12 @@ class OrderController extends \app\controller\BaseApiController
     }
 
     /**
-     * 取消订单
-     * POST /api/orders/{id}/cancel
-     */
+ * @Apidoc\Title("取消订单")
+ * @Apidoc\Desc("仅待付款")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/orders/{id}/cancel")
+ * @Apidoc\Author("erik")
+ */
     public function cancel(Request $request, string $id): \support\Response
     {
         $userId = $request->userId;

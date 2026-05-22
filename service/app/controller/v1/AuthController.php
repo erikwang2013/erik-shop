@@ -7,8 +7,26 @@ use app\model\Users;
 use app\common\Jwt;
 use Webman\Http\Request;
 
+/**
+ * @Apidoc\Group("auth")
+ * @Apidoc\Sort(1)
+ */
 class AuthController extends \app\controller\BaseApiController
 {
+    /**
+ * @Apidoc\Title("用户注册")
+ * @Apidoc\Desc("邮箱注册,需人机验证")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/register")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Header(name="X-Poster-Token", type="string", require=true, desc="人机验证Token")
+ * @Apidoc\Param(name="email", type="string", require=true, desc="邮箱")
+ * @Apidoc\Param(name="password", type="string", require=true, desc="密码")
+ * @Apidoc\Param(name="nickname", type="string", require=false, desc="昵称")
+ * @Apidoc\Returned(name="user_id", type="string", desc="用户ID")
+ * @Apidoc\Returned(name="access_token", type="string", desc="JWT令牌")
+ * @Apidoc\Returned(name="expires_in", type="int", desc="有效期(秒)")
+ */
     public function register(Request $request): \support\Response
     {
         $email = $request->input('email');
@@ -42,6 +60,19 @@ class AuthController extends \app\controller\BaseApiController
         ], '注册成功');
     }
 
+    /**
+ * @Apidoc\Title("用户登录")
+ * @Apidoc\Desc("邮箱+密码登录")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/login")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="email", type="string", require=true, desc="邮箱")
+ * @Apidoc\Param(name="password", type="string", require=true, desc="密码")
+ * @Apidoc\Returned(name="user_id", type="string", desc="用户ID")
+ * @Apidoc\Returned(name="level", type="int", desc="等级")
+ * @Apidoc\Returned(name="access_token", type="string", desc="JWT令牌")
+ * @Apidoc\Returned(name="expires_in", type="int", desc="有效期(秒)")
+ */
     public function login(Request $request): \support\Response
     {
         $email = $request->input('email');
@@ -70,6 +101,16 @@ class AuthController extends \app\controller\BaseApiController
         ], '登录成功');
     }
 
+    /**
+ * @Apidoc\Title("刷新Token")
+ * @Apidoc\Desc("用refresh_token刷新")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/refresh")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="refresh_token", type="string", require=true, desc="刷新令牌")
+ * @Apidoc\Returned(name="access_token", type="string", desc="新JWT令牌")
+ * @Apidoc\Returned(name="expires_in", type="int", desc="有效期(秒)")
+ */
     public function refresh(Request $request): \support\Response
     {
         $refreshToken = $request->input('refresh_token');

@@ -13,11 +13,20 @@ use PhpOffice\PhpSpreadsheet\Style\Border;
 use Barryvdh\DomPDF\Facade\Pdf;
 use support\Request;
 
+/**
+ * @Apidoc\Group("export")
+ * @Apidoc\Sort(11)
+ */
 class ShopExportController extends Base
 {
     /**
-     * 导出订单Excel（含HS Code/关税/币种）
-     */
+ * @Apidoc\Title("导出订单Excel")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/app/admin/shop/ShopExport/orders")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="date_from", type="string", require=false, desc="开始日期(YYYY-MM-DD)")
+ * @Apidoc\Param(name="date_to", type="string", require=false, desc="结束日期")
+ */
     public function orders(Request $request)
     {
         $dateFrom = $request->input('date_from');
@@ -71,8 +80,11 @@ class ShopExportController extends Base
     }
 
     /**
-     * 商业发票PDF
-     */
+ * @Apidoc\Title("发票PDF")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/app/admin/shop/ShopExport/invoice")
+ * @Apidoc\Author("erik")
+ */
     public function invoice(Request $request, $orderId)
     {
         $order = Orders::with(['items'])->find($orderId);

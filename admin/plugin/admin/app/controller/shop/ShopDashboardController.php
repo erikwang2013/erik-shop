@@ -8,8 +8,19 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Base;
 use support\Request;
 
+/**
+ * @Apidoc\Group("dashboard")
+ * @Apidoc\Sort(10)
+ */
 class ShopDashboardController extends Base
 {
+    /**
+ * @Apidoc\Title("数据面板")
+ * @Apidoc\Desc("ECharts可视化仪表盘")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/app/admin/shop/ShopDashboard/index")
+ * @Apidoc\Author("erik")
+ */
     public function index(Request $request)
     {
         return view('shop/dashboard/index', [
@@ -17,6 +28,14 @@ class ShopDashboardController extends Base
         ]);
     }
 
+    /**
+ * @Apidoc\Title("图表数据")
+ * @Apidoc\Desc("近N天销售趋势")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/app/admin/shop/ShopDashboard/chartData")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="days", type="int", require=false, default=7, desc="天数")
+ */
     public function chartData(Request $request)
     {
         $days = (int) $request->input('days', 7);
@@ -33,6 +52,13 @@ class ShopDashboardController extends Base
         return $this->json(['code' => 0, 'data' => $data]);
     }
 
+    /**
+ * @Apidoc\Title("KPI数据")
+ * @Apidoc\Desc("今日订单/营收/用户等")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/app/admin/shop/ShopDashboard/kpi")
+ * @Apidoc\Author("erik")
+ */
     public function kpi()
     {
         $today = date('Y-m-d');

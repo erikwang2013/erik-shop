@@ -5,6 +5,10 @@ use plugin\admin\app\model\shop\Orders;
 use support\Request;
 use support\exception\BusinessException;
 
+/**
+ * @Apidoc\Group("order")
+ * @Apidoc\Sort(2)
+ */
 class ShopOrderController extends Crud
 {
     protected $model = Orders::class;

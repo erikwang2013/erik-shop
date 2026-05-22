@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\GroupBuys;
 
+/**
+ * @Apidoc\Group("groupbuy")
+ * @Apidoc\Sort(15)
+ */
 class ShopGroupBuyController extends Crud
 {
     protected $model = GroupBuys::class;

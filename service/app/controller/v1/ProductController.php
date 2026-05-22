@@ -19,12 +19,26 @@ use Webman\Http\Request;
 /**
  * 商品控制器
  */
+/**
+ * @Apidoc\Group("product")
+ * @Apidoc\Sort(2)
+ */
 class ProductController extends \app\controller\BaseApiController
 {
     /**
-     * 商品列表（分页+筛选+排序）
-     * GET /api/products
-     */
+ * @Apidoc\Title("商品列表")
+ * @Apidoc\Desc("分页+筛选+排序")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/products")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="page", type="int", require=false, default=1, desc="页码")
+ * @Apidoc\Param(name="per_page", type="int", require=false, default=20, desc="每页(max100)")
+ * @Apidoc\Param(name="category_id", type="string", require=false, desc="分类ID")
+ * @Apidoc\Param(name="keyword", type="string", require=false, desc="搜索")
+ * @Apidoc\Param(name="sort", type="string", require=false, default="default", desc="排序")
+ * @Apidoc\Returned(name="list", type="array", desc="商品列表")
+ * @Apidoc\Returned(name="total", type="int", desc="总数")
+ */
     public function index(Request $request): \support\Response
     {
         $page = (int) $request->input('page', 1);
@@ -82,9 +96,17 @@ class ProductController extends \app\controller\BaseApiController
     }
 
     /**
-     * 商品详情
-     * GET /api/products/{id}
-     */
+ * @Apidoc\Title("商品详情")
+ * @Apidoc\Desc("含SKU/多语言/多币种/合规/HS")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/api/products/{id}")
+ * @Apidoc\Author("erik")
+ * @Apidoc\Param(name="currency", type="string", require=false, default="USD", desc="币种")
+ * @Apidoc\Param(name="dest_country", type="string", require=false, default="US", desc="目的国ISO2")
+ * @Apidoc\Returned(name="id", type="string", desc="商品ID")
+ * @Apidoc\Returned(name="skus", type="array", desc="SKU(含分币种价格)")
+ * @Apidoc\Returned(name="images", type="array", desc="图片")
+ */
     public function show(Request $request, string $id): \support\Response
     {
         $locale = $request->locale ?? 'en';

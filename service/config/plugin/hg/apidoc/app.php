@@ -1,0 +1,32 @@
+<?php
+return [
+    "enable" => true,
+    "apidoc" => [
+        "title" => "Erik Shop — Service API",
+        "desc"  => "跨境电商平台业务接口文档",
+        "apps" => [
+            ["title"=>"认证接口","path"=>"app\controller\v1","key"=>"auth","groups"=>[["name"=>"auth","title"=>"认证"],["name"=>"social","title"=>"社交登录"]]],
+            ["title"=>"商品接口","path"=>"app\controller\v1","key"=>"product","groups"=>[["name"=>"product","title"=>"商品"],["name"=>"category","title"=>"分类"],["name"=>"search","title"=>"搜索"],["name"=>"review","title"=>"评价"]]],
+            ["title"=>"交易接口","path"=>"app\controller\v1","key"=>"trade","groups"=>[["name"=>"cart","title"=>"购物车"],["name"=>"order","title"=>"订单"],["name"=>"payment","title"=>"支付"],["name"=>"return","title"=>"退货"]]],
+            ["title"=>"物流海关","path"=>"app\controller\v1","key"=>"logistics","groups"=>[["name"=>"shipping","title"=>"物流"],["name"=>"tariff","title"=>"关税"]]],
+            ["title"=>"用户营销","path"=>"app\controller\v1","key"=>"user","groups"=>[["name"=>"user","title"=>"用户"],["name"=>"wishlist","title"=>"收藏"],["name"=>"coupon","title"=>"优惠券"],["name"=>"banner","title"=>"轮播图"],["name"=>"flashsale","title"=>"秒杀"],["name"=>"groupbuy","title"=>"拼团"],["name"=>"affiliate","title"=>"分销"],["name"=>"notification","title"=>"通知"]]],
+            ["title"=>"运营工具","path"=>"app\controller\v1","key"=>"ops","groups"=>[["name"=>"country","title"=>"国家数据"],["name"=>"settings","title"=>"配置"],["name"=>"export","title"=>"导出"],["name"=>"health","title"=>"健康检查"],["name"=>"document","title"=>"文档"]]],
+        ],
+        "definitions" => "app\common\Definitions",
+        "auto_url" => ["letter_rule"=>"lcfirst","prefix"=>""],
+        "auto_register_routes"=>false,"cache"=>["enable"=>false],"auth"=>["enable"=>false],
+        "params" => [
+            "header" => [
+                ["name"=>"Authorization","type"=>"string","require"=>false,"desc"=>"Bearer Token"],
+                ["name"=>"API-Version","type"=>"string","require"=>false,"default"=>"2026-05-20","desc"=>"API版本"],
+                ["name"=>"Accept-Language","type"=>"string","require"=>false,"default"=>"en","desc"=>"zh_CN/zh_HK/en/ja/ko"],
+                ["name"=>"X-Platform","type"=>"string","require"=>false,"default"=>"web","desc"=>"ios/ipados/macos/windows/linux/android/harmonyos/web"],
+            ],
+        ],
+        "responses" => [
+            "success" => [["name"=>"code","desc"=>"业务代码","type"=>"int","require"=>1],["name"=>"msg","desc"=>"业务信息","type"=>"string","require"=>1],["name"=>"data","desc"=>"业务数据","main"=>true,"type"=>"object","require"=>1]],
+            "error" => [["name"=>"code","desc"=>"错误码","type"=>"int","require"=>1],["name"=>"msg","desc"=>"错误信息","type"=>"string","require"=>1],["name"=>"data","desc"=>"null","type"=>"null","require"=>0]],
+        ],
+        "default_author"=>"erik <erik@erik.xyz>","default_method"=>"GET","allowCrossDomain"=>true,
+    ]
+];

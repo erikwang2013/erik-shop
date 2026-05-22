@@ -1,4 +1,7 @@
-# 跨境电商平台 — API 接口文档
+# 跨境电商平台 — API 接口文档 (完整版)
+
+> **动态文档 (hg/apidoc):** Service → /apidoc/ | Admin → /apidoc/
+> 基于控制器注解自动生成，含请求参数、响应格式、在线调试
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 

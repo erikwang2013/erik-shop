@@ -8,6 +8,10 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Shipments;
 
+/**
+ * @Apidoc\Group("shipment")
+ * @Apidoc\Sort(9)
+ */
 class ShopShipmentController extends Crud
 {
     protected $model = Shipments::class;

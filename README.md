@@ -1,4 +1,4 @@
-# Erik Shop — 简化版 (Lite)
+# Erik Shop 跨境电商平台— 简化版 (Lite)
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 

@@ -2,7 +2,11 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
-> 跨境电商平台简化版。标准版和完整版见 [VERSIONS.md](VERSIONS.md)
+## 版本
+
+> 简化版 (MIT开源): `lite` | 标准版 (商业): `standard` | 完整版 (商业): `full`
+>
+> 商业授权联系: **erik@erik.xyz** | 版本对比: [docs/VERSIONS.md]
 
 ## 技术栈
 

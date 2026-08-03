@@ -1,6 +1,13 @@
 <?php
+/**
+ * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+ */
+
 namespace app\controller\v1;
+
 use app\common\ApiResponse;
+use app\common\HashidsHelper;
+use app\common\Jwt;
 use app\model\Users;
 use app\model\UserSocialAccounts;
 use Webman\Http\Request;
@@ -29,10 +36,12 @@ class SocialAuthController extends \app\controller\BaseApiController
                 $user->last_login_ip = $request->getRealIp();
                 $user->save();
                 return ApiResponse::success([
-                    'user_id' => $user->id,
+                    'user_id' => HashidsHelper::encode($user->id),
                     'nickname' => $user->nickname,
                     'email' => $user->email,
                     'is_new' => false,
+                    'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+                    'expires_in' => config('jwt.default_expire', 7200),
                 ], '登录成功');
             }
         }
@@ -50,10 +59,12 @@ class SocialAuthController extends \app\controller\BaseApiController
                 $user->last_login_ip = $request->getRealIp();
                 $user->save();
                 return ApiResponse::success([
-                    'user_id' => $user->id,
+                    'user_id' => HashidsHelper::encode($user->id),
                     'nickname' => $user->nickname,
                     'email' => $user->email,
                     'is_new' => false,
+                    'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+                    'expires_in' => config('jwt.default_expire', 7200),
                 ], '登录成功');
             }
         }
@@ -75,10 +86,12 @@ class SocialAuthController extends \app\controller\BaseApiController
         ]);
 
         return ApiResponse::success([
-            'user_id' => $user->id,
+            'user_id' => HashidsHelper::encode($user->id),
             'nickname' => $user->nickname,
             'email' => $user->email,
             'is_new' => true,
+            'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+            'expires_in' => config('jwt.default_expire', 7200),
         ], '注册成功');
     }
 }

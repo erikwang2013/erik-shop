@@ -162,8 +162,21 @@ class ShopProductController extends Crud
 ## 命令
 
 ```bash
+# 根目录 Makefile 快捷命令
+make start            # 启动 service + admin
+make stop             # 停止所有服务
+make reload           # 平滑重启
+
+# 原生命令
 php start.php start         # 启动（开发模式）
 php start.php start -d      # 守护进程启动
 php start.php stop          # 停止
 php start.php reload        # 平滑重启
+
+# 测试
+php vendor/bin/phpunit      # 运行测试（需 composer install）
 ```
+
+## 测试
+
+`composer.json` 已添加 `require-dev` 中的 `phpunit/phpunit: ^12.5`。

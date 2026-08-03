@@ -36,15 +36,43 @@ class GeoIpMiddleware implements MiddlewareInterface
     private function lookup(string $ip): array
     {
         $config = config('geoip.default');
-        // 内网IP直接返回默认值
-        if (in_array($ip, ['127.0.0.1', '::1', 'localhost']) || str_starts_with($ip, '192.168.') || str_starts_with($ip, '10.')) {
+
+        if (in_array($ip, ['127.0.0.1', '::1', 'localhost'])
+            || str_starts_with($ip, '192.168.')
+            || str_starts_with($ip, '10.')
+        ) {
             return $config;
         }
 
-        // TODO: 集成 MaxMind GeoLite2 数据库
-        // $reader = new \MaxMind\Db\Reader(config('geoip.database_path'));
-        // $record = $reader->get($ip);
+        $dbPath = config('geoip.database_path', '');
+        if (!empty($dbPath) && file_exists($dbPath)) {
+            try {
+                $reader = new \MaxMind\Db\Reader($dbPath);
+                $record = $reader->get($ip);
+                $reader->close();
+
+                if ($record) {
+                    return [
+                        'country_iso_code' => $record['country']['iso_code'] ?? $config['country_iso_code'],
+                        'currency' => $this->mapCurrency($record['country']['iso_code'] ?? ''),
+                        'language' => $config['language'],
+                    ];
+                }
+            } catch (\Throwable $e) {
+                // Degrade to defaults when MaxMind is unavailable
+            }
+        }
 
         return $config;
+    }
+
+    private function mapCurrency(string $countryCode): string
+    {
+        return match (strtoupper($countryCode)) {
+            'US' => 'USD', 'GB' => 'GBP', 'JP' => 'JPY',
+            'KR' => 'KRW', 'CN' => 'CNY', 'HK' => 'HKD',
+            'DE', 'FR', 'IT', 'ES', 'NL', 'BE', 'AT', 'IE' => 'EUR',
+            default => 'USD',
+        };
     }
 }

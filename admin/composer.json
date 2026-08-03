@@ -61,5 +61,8 @@
       "erikwang2013/poster-php": true,
       "erikwang2013/season": true
     }
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.5"
   }
 }

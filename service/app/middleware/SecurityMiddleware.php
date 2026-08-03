@@ -147,7 +147,7 @@ class SecurityMiddleware implements MiddlewareInterface
         $response = $next($request);
 
         // 14. 添加安全响应头
-        return $this->addSecurityHeaders($response);
+        return $this->addSecurityHeaders($response, $request);
     }
 
     // ===== 检测方法 =====
@@ -316,9 +316,9 @@ class SecurityMiddleware implements MiddlewareInterface
 
     // ===== 响应安全头 =====
 
-    private function addSecurityHeaders(Response $response): Response
+    private function addSecurityHeaders(Response $response, Request $request): Response
     {
-        return $response->withHeaders([
+        $headers = [
             'X-Content-Type-Options' => 'nosniff',
             'X-Frame-Options' => 'DENY',
             'X-XSS-Protection' => '1; mode=block',
@@ -326,8 +326,15 @@ class SecurityMiddleware implements MiddlewareInterface
             'X-Permitted-Cross-Domain-Policies' => 'none',
             'X-Download-Options' => 'noopen',
             'Permissions-Policy' => 'camera=(), microphone=(), geolocation=()',
-            'Cache-Control' => 'no-store, no-cache, must-revalidate',
-            'Server' => '',  // 隐藏Server头
-        ]);
+            'Server' => '',
+        ];
+
+        if (in_array(strtoupper($request->method()), ['GET', 'HEAD', 'OPTIONS'])) {
+            $headers['Cache-Control'] = 'public, max-age=60, s-maxage=300';
+        } else {
+            $headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
+        }
+
+        return $response->withHeaders($headers);
     }
 }

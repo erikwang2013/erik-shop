@@ -75,15 +75,25 @@ class PaymentController extends \app\controller\BaseApiController
             'status' => 0,  // 待支付
         ]);
 
-        // 调用真实支付网关
-        $gatewayObj = Gateway::make($gateway);
-        $result = $gatewayObj->createPayment([
-            'amount' => $order->pay_amount,
-            'currency' => $order->currency_code,
-            'order_id' => $order->id,
-            'order_no' => $order->order_no,
-            'methods' => [$method],
-        ]);
+        // 调用支付网关
+        try {
+            $gatewayObj = Gateway::make($gateway);
+            $result = $gatewayObj->createPayment([
+                'amount' => $order->pay_amount,
+                'currency' => $order->currency_code,
+                'order_id' => $order->id,
+                'order_no' => $order->order_no,
+                'methods' => [$method],
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            $payment->status = 3;
+            $payment->save();
+            return ApiResponse::fail('不支持的支付网关: ' . $gateway, 422);
+        } catch (\Throwable $e) {
+            $payment->status = 3;
+            $payment->save();
+            return ApiResponse::fail('支付网关错误，请稍后重试', 500);
+        }
 
         // 记录网关交易号
         $payment->transaction_no = $result['txn_id'];

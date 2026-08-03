@@ -5,6 +5,7 @@
 
 namespace app\common;
 
+use GuzzleHttp\Client as HttpClient;
 use Stripe\StripeClient;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
@@ -103,31 +104,114 @@ class StripeGateway implements PaymentGatewayInterface
 
 class PayPalGateway implements PaymentGatewayInterface
 {
+    private HttpClient $http;
+    private string $baseUrl;
+    private string $clientId;
+    private string $clientSecret;
+
+    public function __construct()
+    {
+        $mode = config('payment.paypal.mode', 'sandbox');
+        $this->baseUrl = $mode === 'live'
+            ? 'https://api-m.paypal.com'
+            : 'https://api-m.sandbox.paypal.com';
+        $this->clientId = config('payment.paypal.client_id', '');
+        $this->clientSecret = config('payment.paypal.client_secret', '');
+        $this->http = new HttpClient(['base_uri' => $this->baseUrl, 'timeout' => 15]);
+    }
+
+    private function getAccessToken(): string
+    {
+        $response = $this->http->post('/v1/oauth2/token', [
+            'auth' => [$this->clientId, $this->clientSecret],
+            'form_params' => ['grant_type' => 'client_credentials'],
+        ]);
+        return json_decode($response->getBody(), true)['access_token'] ?? '';
+    }
+
     public function createPayment(array $data): array
     {
-        // TODO: PayPal REST API 集成
+        $token = $this->getAccessToken();
+        $amount = number_format($data['amount'], 2, '.', '');
+
+        $response = $this->http->post('/v2/checkout/orders', [
+            'headers' => [
+                'Authorization' => "Bearer {$token}",
+                'Content-Type' => 'application/json',
+            ],
+            'json' => [
+                'intent' => 'CAPTURE',
+                'purchase_units' => [[
+                    'amount' => ['currency_code' => $data['currency'], 'value' => $amount],
+                    'reference_id' => (string)($data['order_id'] ?? ''),
+                ]],
+            ],
+        ]);
+
+        $result = json_decode($response->getBody(), true);
+
         return [
             'gateway' => 'paypal',
-            'txn_id' => 'PAYPAL_' . uniqid(),
-            'status' => 'created',
-            'amount' => $data['amount'],
+            'txn_id' => $result['id'] ?? 'PAYPAL_' . uniqid(),
+            'client_secret' => '',
+            'status' => $result['status'] ?? 'CREATED',
+            'amount' => (float)$amount,
             'currency' => $data['currency'],
         ];
     }
 
     public function capturePayment(string $txnId): array
     {
-        return ['txn_id' => $txnId, 'status' => 'captured'];
+        $token = $this->getAccessToken();
+        $response = $this->http->post("/v2/checkout/orders/{$txnId}/capture", [
+            'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
+        ]);
+        $result = json_decode($response->getBody(), true);
+
+        return [
+            'txn_id' => $txnId,
+            'status' => $result['status'] ?? 'COMPLETED',
+            'captured' => ($result['status'] ?? '') === 'COMPLETED',
+        ];
     }
 
     public function refundPayment(string $txnId, float $amount): array
     {
-        return ['refund_id' => 'REFUND_' . uniqid(), 'status' => 'completed'];
+        $token = $this->getAccessToken();
+        $response = $this->http->post("/v2/payments/captures/{$txnId}/refund", [
+            'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
+            'json' => ['amount' => ['currency_code' => 'USD', 'value' => number_format($amount, 2, '.', '')]],
+        ]);
+        $result = json_decode($response->getBody(), true);
+
+        return [
+            'refund_id' => $result['id'] ?? 'REFUND_' . uniqid(),
+            'txn_id' => $txnId,
+            'status' => $result['status'] ?? 'COMPLETED',
+            'amount' => $amount,
+        ];
     }
 
     public function verifyWebhook(string $payload, string $signature): bool
     {
-        // PayPal: 验证 webhook 签名
-        return true;
+        $webhookId = config('payment.paypal.webhook_id', '');
+        if (empty($webhookId)) return false;
+
+        $token = $this->getAccessToken();
+        $response = $this->http->post('/v1/notifications/verify-webhook-signature', [
+            'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
+            'json' => [
+                'auth_algo' => $signature,
+                'cert_url' => '',
+                'transmission_id' => '',
+                'transmission_sig' => '',
+                'transmission_time' => '',
+                'webhook_id' => $webhookId,
+                'webhook_event' => json_decode($payload, true),
+            ],
+        ]);
+
+        $result = json_decode($response->getBody(), true);
+        return ($result['verification_status'] ?? '') === 'SUCCESS';
     }
 }

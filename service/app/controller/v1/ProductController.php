@@ -55,10 +55,23 @@ class ProductController extends \app\controller\BaseApiController
                   ->orWhereHas('translation', fn($t) => $t->where('title','like',"%{$keyword}%"));
             });
         }
-        $query = match($sort){'price_asc'=>$query->orderBy('min_price'),'price_desc'=>$query->orderBy('min_price','desc'),'sales'=>$query->orderBy('sales_count','desc'),'newest'=>$query->orderBy('id','desc'),default=>$query->orderBy('sort','desc')->orderBy('id','desc')};
+        $query = match ($sort) {
+            'price_asc'  => $query->orderBy('min_price'),
+            'price_desc' => $query->orderBy('min_price', 'desc'),
+            'sales'      => $query->orderBy('sales_count', 'desc'),
+            'newest'     => $query->orderBy('id', 'desc'),
+            default      => $query->orderBy('sort', 'desc')->orderBy('id', 'desc'),
+        };
         $paginator = $query->paginate($perPage, ['*'], 'page', $page);
         $items = $paginator->items();
-        foreach ($items as $p) { $p->makeHidden(['description','deleted_at']); $t = ProductTranslations::where('product_id',$p->id)->where('locale',$locale)->first(); if($t){$p->title=$t->title?:$p->title;} }
+        foreach ($items as $p) {
+            $p->makeHidden(['description', 'deleted_at']);
+            $t = ProductTranslations::where('product_id', $p->id)
+                ->where('locale', $locale)->first();
+            if ($t) {
+                $p->title = $t->title ?: $p->title;
+            }
+        }
         return ApiResponse::paginate($items, $paginator->total(), $page, $perPage);
     }
 
@@ -80,19 +93,41 @@ class ProductController extends \app\controller\BaseApiController
         $locale = $request->locale ?? 'en';
         $currencyCode = $request->input('currency', 'USD');
         $destCountryCode = $request->input('dest_country', 'US');
-        $product = Products::with(['skus.prices','images','hsCodes.hsCode','compliance'])->find($id);
-        if (!$product || $product->status < 1) return ApiResponse::fail('商品不存在或已下架', 404);
-        $translation = ProductTranslations::where('product_id',$product->id)->where('locale',$locale)->first();
-        if ($translation) { $product->title = $translation->title ?: $product->title; $product->description = $translation->description ?: $product->description; }
-        $destCountry = Countries::where('iso_code_2',$destCountryCode)->first();
-        foreach ($product->skus as $sku) {
-            $cp = $sku->prices->where('currency_code',$currencyCode)->first();
-            $bp = $cp ? $cp->price : $this->convertPrice($sku->default_price,'CNY',$currencyCode);
-            $vr = VatSettings::where('country_id',$destCountry->id)->value('vat_rate') ?? 0;
-            $sku->display_price = ['tax_exclusive'=>round($bp,2),'tax_inclusive'=>round($bp*(1+$vr/100),2),'vat_amount'=>round($bp*$vr/100,2),'vat_rate'=>$vr,'currency'=>$currencyCode,'display_mode'=>$destCountry->price_display_mode??'tax_exclusive'];
+        $product = Products::with(['skus.prices', 'images', 'hsCodes.hsCode', 'compliance'])->find($id);
+        if (!$product || $product->status !== 2) {
+            return ApiResponse::fail('商品不存在或已下架', 404);
         }
-        $product->compliance_info = $product->compliance->map(fn($c)=>['category'=>$c->complianceCategory->name??'','code'=>$c->complianceCategory->code??'','cert_no'=>$c->cert_no]);
-        $product->hs_codes = $product->hsCodes->map(fn($h)=>['code'=>$h->hsCode->code??'','is_primary'=>(bool)$h->is_primary]);
+
+        $translation = ProductTranslations::where('product_id', $product->id)
+            ->where('locale', $locale)->first();
+        if ($translation) {
+            $product->title = $translation->title ?: $product->title;
+            $product->description = $translation->description ?: $product->description;
+        }
+
+        $destCountry = Countries::where('iso_code_2', $destCountryCode)->first();
+        foreach ($product->skus as $sku) {
+            $cp = $sku->prices->where('currency_code', $currencyCode)->first();
+            $bp = $cp ? $cp->price : $this->convertPrice($sku->default_price, 'CNY', $currencyCode);
+            $vr = VatSettings::where('country_id', $destCountry->id)->value('vat_rate') ?? 0;
+            $sku->display_price = [
+                'tax_exclusive' => round($bp, 2),
+                'tax_inclusive' => round($bp * (1 + $vr / 100), 2),
+                'vat_amount' => round($bp * $vr / 100, 2),
+                'vat_rate' => $vr,
+                'currency' => $currencyCode,
+                'display_mode' => $destCountry->price_display_mode ?? 'tax_exclusive',
+            ];
+        }
+        $product->compliance_info = $product->compliance->map(fn($c) => [
+            'category' => $c->complianceCategory->name ?? '',
+            'code' => $c->complianceCategory->code ?? '',
+            'cert_no' => $c->cert_no,
+        ]);
+        $product->hs_codes = $product->hsCodes->map(fn($h) => [
+            'code' => $h->hsCode->code ?? '',
+            'is_primary' => (bool)$h->is_primary,
+        ]);
         $product->increment('view_count');
         return ApiResponse::success($product);
     }

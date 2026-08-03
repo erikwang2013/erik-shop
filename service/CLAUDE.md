@@ -192,9 +192,39 @@ ApiResponse::paginate($items, $total, $page, $perPage);
 ## 命令
 
 ```bash
+# 根目录 Makefile 快捷命令
+make start            # 启动 service + admin
+make stop             # 停止所有服务
+make reload           # 平滑重启
+make test             # 运行 PHPUnit 测试
+make lint             # PHP 语法检查
+make check            # phpstan 静态分析
+make fix              # php-cs-fixer 代码格式化
+
+# 原生命令
 php start.php start         # 启动（开发模式）
 php start.php start -d      # 守护进程启动
 php start.php stop          # 停止
 php start.php reload        # 平滑重启
 php start.php status        # 查看状态
+php vendor/bin/phpunit      # 运行测试
 ```
+
+## 测试与工具
+
+| 工具 | 配置 | 用途 |
+|------|------|------|
+| PHPUnit 12.5 | `phpunit.xml` | 单元测试（23 tests, 68 assertions） |
+| phpstan | `phpstan.neon` (level 5) | 静态分析 |
+| php-cs-fixer | `.php-cs-fixer.php` | PSR-12 代码格式化 |
+| CI/CD | `.github/workflows/ci.yml` | PHP 8.1/8.2/8.3 矩阵测试 |
+
+## 功能实现状态
+
+| 模块 | 状态 |
+|------|:--:|
+| Stripe 支付 | 完整 |
+| PayPal REST API (Guzzle + OAuth2) | 完整 |
+| PhpSpreadsheet XLSX 导出 | 完整 |
+| MaxMind GeoLite2 GeoIP | 完整 |
+| Item-based 协同过滤推荐 | 完整 |

@@ -141,12 +141,22 @@ shop-php/
 ## 测试
 
 ```bash
-cd service && php vendor/bin/phpunit tests/
+make test             # 推荐方式
+cd service && php vendor/bin/phpunit tests/   # 原生命令
 # 23 tests, 68 assertions — ALL PASS
-# SecurityTest(16): XSS+SQLi+XXE+SSRF+File+Path
-# JwtTest(4): encode/decode validation
-# ApiResponseTest(3): success/fail/paginate format
 ```
+
+## 开发工具
+
+```bash
+make help             # 查看所有命令
+make lint             # PHP 语法检查
+make check            # phpstan 静态分析
+make fix              # php-cs-fixer 代码格式化
+```
+
+CI/CD: `.github/workflows/ci.yml` — PHP 8.1/8.2/8.3 矩阵测试
+
 ## License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz

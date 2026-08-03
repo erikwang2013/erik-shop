@@ -18,7 +18,10 @@ class Jwt
         if (self::$instance === null) {
             $config = config('jwt') ?: (require base_path() . '/config/jwt.php');
             if (empty($config['secret_key'])) {
-                $config['secret_key'] = getenv('JWT_SECRET') ?: 'erik-test-secret-key-do-not-use-in-production';
+                $config['secret_key'] = getenv('JWT_SECRET') ?: getenv('JWT_SECRET_KEY') ?: '';
+            }
+            if (empty($config['secret_key'])) {
+                throw new \RuntimeException('JWT secret key is not configured. Set JWT_SECRET or JWT_SECRET_KEY in .env');
             }
             self::$instance = new ErikJwtInstance($config);
         }

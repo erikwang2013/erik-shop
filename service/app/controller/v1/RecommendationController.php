@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\model\OrderItems;
 use app\model\Products;
 use Webman\Http\Request;
 
@@ -43,7 +44,7 @@ class RecommendationController extends \app\controller\BaseApiController
     private function collaborativeFilter(int $userId, int $limit): array
     {
         // Get user's purchased product IDs
-        $purchasedIds = \app\model\OrderItems::whereHas('order', fn($q) =>
+        $purchasedIds = OrderItems::whereHas('order', fn($q) =>
             $q->where('user_id', $userId)->whereIn('status', [2, 3, 4])
         )->pluck('product_id')->unique()->toArray();
 
@@ -52,7 +53,7 @@ class RecommendationController extends \app\controller\BaseApiController
         }
 
         // Find users who bought the same products
-        $similarUserIds = \app\model\OrderItems::whereIn('product_id', $purchasedIds)
+        $similarUserIds = OrderItems::whereIn('product_id', $purchasedIds)
             ->whereHas('order', fn($q) => $q->where('user_id', '!=', $userId))
             ->pluck('order.user_id')->unique()->toArray();
 
@@ -61,7 +62,7 @@ class RecommendationController extends \app\controller\BaseApiController
         }
 
         // Get products bought by similar users, excluding already purchased
-        $recommendedIds = \app\model\OrderItems::whereHas('order', fn($q) =>
+        $recommendedIds = OrderItems::whereHas('order', fn($q) =>
             $q->whereIn('user_id', $similarUserIds)->whereIn('status', [2, 3, 4])
         )->whereNotIn('product_id', $purchasedIds)
             ->selectRaw('product_id, COUNT(*) as score')

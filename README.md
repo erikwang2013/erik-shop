@@ -53,6 +53,20 @@ cd ../service && composer install && php start.php start -d
 
 详见 [INSTALL.md](INSTALL.md)
 
+### Docker 部署
+
+```bash
+# 配置环境变量
+cp .env.example .env  # 或设置 DB_PASS / JWT_SECRET 等变量
+
+# 一键启动全部服务
+docker-compose up -d
+# nginx:80 → service:8787 + admin:8788
+# MySQL:3306, Redis:6379, ES:9200
+```
+
+详见 [部署文档](docs/deployment.md)
+
 ## 项目结构
 
 ```

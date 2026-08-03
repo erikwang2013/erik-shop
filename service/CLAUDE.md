@@ -30,7 +30,7 @@ shop-php/
   install.sql       # 完整安装 SQL（70张表），Web安装向导自动导入
   service/
     .env.example    # 环境变量模板，Web安装向导自动生成 .env
-    .env            # 实际环境变量（首次安装自动生成，含JWT/Hashids/加密密钥）
+    .env            # 实际环境变量（首次安装自动生成，含 JWT_SECRET + JWT_SECRET_KEY + Hashids + AES 密钥）
     config/
     database.php      # MySQL 连接，表前缀 erik_
     redis.php         # Redis 缓存/session

@@ -123,6 +123,24 @@ INSERT INTO `wa_admin_roles` (`role_id`, `admin_id`) VALUES (1, 1);
 
 </details>
 
+### 方式三：Docker 部署 / Docker Deployment
+
+```bash
+# 1. 配置环境变量
+export DB_PASS=your_db_password
+export JWT_SECRET=$(openssl rand -hex 32)
+export HASHIDS_SALT=$(openssl rand -hex 8)
+export ENCRYPTION_KEY=$(openssl rand -hex 16)
+
+# 2. 启动全部服务
+docker-compose up -d
+
+# 3. 运行 Web 安装向导
+# http://localhost/app/admin/install/step1
+```
+
+Docker 服务：Nginx(:80) → service(:8787) + admin(:8788)，MySQL(:3306)，Redis(:6379)，ES(:9200)
+
 ---
 
 ### 启动服务 / Start Services

@@ -38,9 +38,17 @@ http://127.0.0.1:8788/app/admin/install/step1
 - 创建 MySQL 数据库
 - 导入根目录 `install.sql`（70张表：7 `wa_` + 63 `erik_`）
 - 生成 `plugin/admin/config/database.php` 和 `thinkorm.php`
-- 生成 `service/.env`（含随机生成的 JWT/Hashids/AES 密钥）
+- 生成 `service/.env` 和 `admin/.env`（含随机 JWT/Hashids/AES/Encryption 密钥 + `JWT_SECRET_KEY`）
 - 创建管理员账号
 - SIGUSR1 重载服务
+
+### Docker 部署
+
+```bash
+docker-compose up -d  # nginx:80 → service:8787 + admin:8788
+```
+- admin 容器端口 `8788`（`APP_PORT` 环境变量控制）
+- Nginx upstream 指向 `admin:8788`
 
 ### webman-admin 插件结构
 

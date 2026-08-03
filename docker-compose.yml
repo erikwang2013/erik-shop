@@ -43,6 +43,7 @@ services:
       - ES_HOST=elasticsearch
       - ES_PORT=9200
       - JWT_SECRET=${JWT_SECRET:-change_me_256bit}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-${JWT_SECRET:-change_me_256bit}}
       - HASHIDS_SALT=${HASHIDS_SALT:-change_me}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-change_me_32byte_key}
     volumes:
@@ -94,7 +95,7 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./service/database/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./install.sql:/docker-entrypoint-initdb.d/01-install.sql:ro
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci

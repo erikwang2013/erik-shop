@@ -270,6 +270,7 @@ EOF;
             'DB_USER=erik' => 'DB_USER=' . $user,
             'DB_PASS=change_me' => 'DB_PASS=' . $password,
             'JWT_SECRET=change_me_to_random_256bit_string' => 'JWT_SECRET=' . $jwtSecret,
+            'JWT_SECRET_KEY=' => 'JWT_SECRET_KEY=' . $jwtSecret,
             'HASHIDS_SALT=change_me_hashids_salt' => 'HASHIDS_SALT=' . $hashidsSalt,
             'ENCRYPTION_KEY=change_me_32_byte_key_here!!' => 'ENCRYPTION_KEY=' . $encryptionKey,
             'SNOWFLAKE_WORKER_ID=1' => 'SNOWFLAKE_WORKER_ID=' . $workerId,

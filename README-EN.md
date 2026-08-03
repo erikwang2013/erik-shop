@@ -53,6 +53,18 @@ cd ../service && composer install && php start.php start -d
 
 See [INSTALL.md](INSTALL.md) for detailed manual setup instructions.
 
+### Docker Deployment
+
+```bash
+# Configure environment
+cp .env.example .env  # set DB_PASS / JWT_SECRET etc.
+
+# Start all services
+docker-compose up -d
+# nginx:80 → service:8787 + admin:8788
+# MySQL:3306, Redis:6379, ES:9200
+```
+
 ## Project Structure
 
 ```

@@ -10,7 +10,7 @@ use support\Response;
 use Webman\Captcha\CaptchaBuilder;
 
 /**
- * 安装
+ * 安装向导 — 跨境电商平台一键部署
  */
 class InstallController extends Base
 {
@@ -21,7 +21,7 @@ class InstallController extends Base
     protected $noNeedLogin = ['step1', 'step2'];
 
     /**
-     * 设置数据库
+     * 第一步：数据库配置 + 导入完整 SQL + 生成 .env
      * @param Request $request
      * @return Response
      * @throws BusinessException|\Throwable
@@ -31,7 +31,7 @@ class InstallController extends Base
         $database_config_file = base_path() . '/plugin/admin/config/database.php';
         clearstatcache();
         if (is_file($database_config_file)) {
-            return $this->json(1, '管理后台已经安装！如需重新安装，请删除该插件数据库配置文件并重启');
+            return $this->json(1, '管理后台已经安装！如需重新安装，请删除 ' . $database_config_file . ' 并重启');
         }
 
         if (!class_exists(CaptchaBuilder::class) || !class_exists(Manager::class)) {
@@ -49,9 +49,9 @@ class InstallController extends Base
             $db = $this->getPdo($host, $user, $password, $port);
             $smt = $db->query("show databases like '$database'");
             if (empty($smt->fetchAll())) {
-                $db->exec("create database $database");
+                $db->exec("create database `$database` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
             }
-            $db->exec("use $database");
+            $db->exec("use `$database`");
             $smt = $db->query("show tables");
             $tables = $smt->fetchAll();
         } catch (\Throwable $e) {
@@ -67,14 +67,36 @@ class InstallController extends Base
             throw $e;
         }
 
+        // 所有需要安装的表
         $tables_to_install = [
-            'wa_admins',
-            'wa_admin_roles',
-            'wa_roles',
-            'wa_rules',
-            'wa_options',
-            'wa_users',
-            'wa_uploads',
+            'wa_admins', 'wa_admin_roles', 'wa_roles', 'wa_rules', 'wa_options', 'wa_users', 'wa_uploads',
+            'erik_users', 'erik_user_addresses', 'erik_user_social_accounts', 'erik_user_kyc', 'erik_user_wishlists',
+            'erik_membership_levels', 'erik_membership_benefits', 'erik_categories', 'erik_products',
+            'erik_product_translations', 'erik_product_skus', 'erik_product_sku_prices', 'erik_product_images',
+            'erik_product_attrs', 'erik_product_attr_values', 'erik_product_reviews', 'erik_review_translations',
+            'erik_product_compliance', 'erik_compliance_categories', 'erik_product_hs_codes', 'erik_banners',
+            'erik_product_comparisons', 'erik_product_recommendations', 'erik_carts', 'erik_orders',
+            'erik_order_items', 'erik_order_logs', 'erik_payments', 'erik_refunds', 'erik_return_orders',
+            'erik_return_labels', 'erik_order_documents', 'erik_countries', 'erik_currencies', 'erik_exchange_rates',
+            'erik_logistics_companies', 'erik_shipping_zones', 'erik_shipping_zone_rates', 'erik_warehouses',
+            'erik_shipments', 'erik_shipping_insurances', 'erik_inventory_logs', 'erik_inventory_transfers',
+            'erik_hs_codes', 'erik_tariff_rules', 'erik_vat_settings', 'erik_country_compliance_rules',
+            'erik_payment_gateways', 'erik_payment_gateway_methods', 'erik_platform_settlements',
+            'erik_supplier_settlements', 'erik_currency_exchange_gains_losses', 'erik_coupons', 'erik_user_coupons',
+            'erik_flash_sales', 'erik_flash_sale_skus', 'erik_group_buys', 'erik_affiliate_links',
+            'erik_affiliate_commissions', 'erik_affiliate_payouts', 'erik_suppliers', 'erik_purchase_orders',
+            'erik_purchase_order_items', 'erik_quality_inspections', 'erik_quality_inspection_items',
+            'erik_risk_rules', 'erik_risk_logs', 'erik_privacy_requests', 'erik_cookie_consents',
+            'erik_privacy_policy_versions', 'erik_shops', 'erik_platform_accounts', 'erik_platform_listings',
+            'erik_platform_orders', 'erik_platform_order_items', 'erik_merchants', 'erik_merchant_products',
+            'erik_merchant_settlements', 'erik_cms_pages', 'erik_cms_page_translations', 'erik_product_feeds',
+            'erik_product_feed_logs', 'erik_size_charts', 'erik_size_chart_values', 'erik_notifications',
+            'erik_email_templates', 'erik_email_logs', 'erik_price_alerts', 'erik_search_logs',
+            'erik_operation_logs', 'erik_subscriptions', 'erik_subscription_orders', 'erik_subscription_logs',
+            'erik_point_rules', 'erik_point_logs', 'erik_gift_cards', 'erik_b2b_prices', 'erik_b2b_verifications',
+            'erik_b2b_quotes', 'erik_chat_sessions', 'erik_chat_messages', 'erik_knowledge_base',
+            'erik_knowledge_base_translations', 'erik_faq_translations', 'erik_ab_tests', 'erik_ab_test_variants',
+            'erik_ab_test_results', 'erik_api_rate_limits', 'erik_api_docs', 'erik_settings',
         ];
 
         $tables_exist = [];
@@ -84,31 +106,36 @@ class InstallController extends Base
         $tables_conflict = array_intersect($tables_to_install, $tables_exist);
         if (!$overwrite) {
             if ($tables_conflict) {
-                return $this->json(1, '以下表' . implode(',', $tables_conflict) . '已经存在，如需覆盖请选择强制覆盖');
+                $conflict_list = implode(',', array_slice($tables_conflict, 0, 10));
+                $more = count($tables_conflict) > 10 ? '等' . count($tables_conflict) . '张表' : '';
+                return $this->json(1, '以下表 ' . $conflict_list . $more . ' 已经存在，如需覆盖请勾选「强制覆盖」');
             }
         } else {
             foreach ($tables_conflict as $table) {
-                $db->exec("DROP TABLE `$table`");
+                $db->exec("DROP TABLE IF EXISTS `$table`");
             }
         }
 
-        $sql_file = base_path() . '/plugin/admin/install.sql';
+        // 导入项目根目录 install.sql
+        $sql_file = base_path(false) . '/install.sql';
         if (!is_file($sql_file)) {
-            return $this->json(1, '数据库SQL文件不存在');
+            return $this->json(1, '安装SQL文件不存在: ' . $sql_file);
         }
 
-        $sql_query = file_get_contents($sql_file);
-        $sql_query = $this->removeComments($sql_query);
-        $sql_query = $this->splitSqlFile($sql_query, ';');
-        foreach ($sql_query as $sql) {
+        $sql_content = file_get_contents($sql_file);
+        $sql_content = $this->removeComments($sql_content);
+        $queries = $this->splitSqlFile($sql_content, ';');
+        foreach ($queries as $sql) {
+            $sql = trim($sql);
+            if ($sql === '') continue;
             $db->exec($sql);
         }
 
         // 导入菜单
         $menus = include base_path() . '/plugin/admin/config/menu.php';
-        // 安装过程中没有数据库配置，无法使用api\Menu::import()方法
         $this->importMenu($menus, $db);
 
+        // 写入 plugin/admin/config/database.php
         $config_content = <<<EOF
 <?php
 return  [
@@ -130,41 +157,28 @@ return  [
     ],
 ];
 EOF;
-
         file_put_contents($database_config_file, $config_content);
 
+        // 写入 plugin/admin/config/thinkorm.php
         $think_orm_config = <<<EOF
 <?php
 return [
     'default' => 'mysql',
     'connections' => [
         'mysql' => [
-            // 数据库类型
             'type' => 'mysql',
-            // 服务器地址
             'hostname' => '$host',
-            // 数据库名
             'database' => '$database',
-            // 数据库用户名
             'username' => '$user',
-            // 数据库密码
             'password' => '$password',
-            // 数据库连接端口
             'hostport' => $port,
-            // 数据库连接参数
             'params' => [
-                // 连接超时3秒
-                \PDO::ATTR_TIMEOUT => 3,
+                \\PDO::ATTR_TIMEOUT => 3,
             ],
-            // 数据库编码默认采用utf8
             'charset' => 'utf8mb4',
-            // 数据库表前缀
             'prefix' => '',
-            // 断线重连
             'break_reconnect' => true,
-            // 关闭SQL监听日志
             'trigger_sql' => true,
-            // 自定义分页类
             'bootstrap' =>  ''
         ],
     ],
@@ -172,6 +186,8 @@ return [
 EOF;
         file_put_contents(base_path() . '/plugin/admin/config/thinkorm.php', $think_orm_config);
 
+        // 生成 service/.env
+        $this->generateEnvFiles($host, $port, $database, $user, $password);
 
         // 尝试reload
         if (function_exists('posix_kill')) {
@@ -184,7 +200,7 @@ EOF;
     }
 
     /**
-     * 设置管理员
+     * 第二步：创建管理员账号
      * @param Request $request
      * @return Response
      * @throws BusinessException
@@ -233,10 +249,52 @@ EOF;
     }
 
     /**
+     * 生成 service/.env 和 admin/.env
+     */
+    protected function generateEnvFiles(string $host, string $port, string $database, string $user, string $password): void
+    {
+        $jwtSecret = bin2hex(random_bytes(32));
+        $hashidsSalt = bin2hex(random_bytes(8));
+        $encryptionKey = bin2hex(random_bytes(16));
+
+        $sid = gethostname();
+        $workerId = abs(crc32($sid . '_worker')) % 32;
+        $datacenterId = abs(crc32($sid . '_dc')) % 32;
+
+        // 生成 service/.env
+        $template = file_get_contents(base_path(false) . '/service/.env.example');
+        $replacements = [
+            'DB_HOST=127.0.0.1' => 'DB_HOST=' . $host,
+            'DB_PORT=3306' => 'DB_PORT=' . $port,
+            'DB_NAME=erik_shop' => 'DB_NAME=' . $database,
+            'DB_USER=erik' => 'DB_USER=' . $user,
+            'DB_PASS=change_me' => 'DB_PASS=' . $password,
+            'JWT_SECRET=change_me_to_random_256bit_string' => 'JWT_SECRET=' . $jwtSecret,
+            'HASHIDS_SALT=change_me_hashids_salt' => 'HASHIDS_SALT=' . $hashidsSalt,
+            'ENCRYPTION_KEY=change_me_32_byte_key_here!!' => 'ENCRYPTION_KEY=' . $encryptionKey,
+            'SNOWFLAKE_WORKER_ID=1' => 'SNOWFLAKE_WORKER_ID=' . $workerId,
+            'SNOWFLAKE_DATACENTER_ID=1' => 'SNOWFLAKE_DATACENTER_ID=' . $datacenterId,
+        ];
+        $envContent = str_replace(array_keys($replacements), array_values($replacements), $template);
+        file_put_contents(base_path(false) . '/service/.env', $envContent);
+
+        // 生成 admin/.env（admin 的 config/database.php 也从 getenv 读取）
+        $adminEnv = <<<EOF
+# Admin — 数据库连接（与 service 共享同一数据库）
+DB_HOST={$host}
+DB_PORT={$port}
+DB_NAME={$database}
+DB_USER={$user}
+DB_PASS={$password}
+HASHIDS_SALT={$hashidsSalt}
+SNOWFLAKE_WORKER_ID={$workerId}
+SNOWFLAKE_DATACENTER_ID={$datacenterId}
+EOF;
+        file_put_contents(base_path() . '/.env', $adminEnv);
+    }
+
+    /**
      * 添加菜单
-     * @param array $menu
-     * @param \PDO $pdo
-     * @return int
      */
     protected function addMenu(array $menu, \PDO $pdo): int
     {
@@ -268,9 +326,6 @@ EOF;
 
     /**
      * 导入菜单
-     * @param array $menu_tree
-     * @param \PDO $pdo
-     * @return void
      */
     protected function importMenu(array $menu_tree, \PDO $pdo)
     {
@@ -306,8 +361,6 @@ EOF;
 
     /**
      * 去除sql文件中的注释
-     * @param $sql
-     * @return string
      */
     protected function removeComments($sql): string
     {
@@ -316,9 +369,6 @@ EOF;
 
     /**
      * 分割sql文件
-     * @param $sql
-     * @param $delimiter
-     * @return array
      */
     function splitSqlFile($sql, $delimiter): array
     {
@@ -354,7 +404,6 @@ EOF;
                             $temp .= $tokens[$j] . $delimiter;
                             $tokens[$j] = "";
                         }
-
                     }
                 }
             }
@@ -365,12 +414,6 @@ EOF;
 
     /**
      * 获取pdo连接
-     * @param $host
-     * @param $username
-     * @param $password
-     * @param $port
-     * @param $database
-     * @return \PDO
      */
     protected function getPdo($host, $username, $password, $port, $database = null): \PDO
     {

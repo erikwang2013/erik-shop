@@ -26,8 +26,12 @@
 ## 目录结构
 
 ```
-service/
-  config/
+shop-php/
+  install.sql       # 完整安装 SQL（70张表），Web安装向导自动导入
+  service/
+    .env.example    # 环境变量模板，Web安装向导自动生成 .env
+    .env            # 实际环境变量（首次安装自动生成，含JWT/Hashids/加密密钥）
+    config/
     database.php      # MySQL 连接，表前缀 erik_
     redis.php         # Redis 缓存/session
     jwt.php           # JWT 密钥和有效期
@@ -56,7 +60,7 @@ service/
         FlashSaleController.php
         GroupBuyController.php
         ...
-    model/            # 模型（extends BaseModel，91张表）
+    model/            # 模型（extends BaseModel，63张表）
     middleware/       # 中间件（含 VersionRoute, PosterVerify, LocaleMiddleware, GeoIpMiddleware）
     common/           # 工具类
       Tariff.php      # 关税估算
@@ -87,7 +91,7 @@ service/
       PlatformOrderSyncCron.php # 多平台订单同步
     search/           # Scout Searchable 定义
   database/
-    schema.sql        # 63张表建表语句
+    schema.sql        # 原始业务表SQL（已被根目录 install.sql 替代，Web安装向导不再使用此文件）
     seeders/          # 种子数据（国家/HS Code/汇率/物流分区/合规分类/尺码表/风控规则）
 ```
 

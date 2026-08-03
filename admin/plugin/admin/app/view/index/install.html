@@ -2,110 +2,141 @@
 <html lang="zh-cn">
 <head>
     <meta charset="utf-8">
-    <title>Webman Admin 安装</title>
+    <title>跨境电商平台 — 一键安装向导</title>
     <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
     <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
+    <style>
+        .install-header { text-align:center; padding: 30px 0 10px; }
+        .install-header h1 { font-size: 26px; color: #333; margin-bottom: 8px; }
+        .install-header p { color: #999; font-size: 14px; }
+        .install-features { text-align:center; margin: 20px auto; max-width: 600px; }
+        .install-features span { display: inline-block; background: #f0f9eb; color: #36b368; padding: 4px 14px; border-radius: 4px; margin: 4px 6px; font-size: 13px; }
+        .step-desc { text-align:center; color: #666; font-size: 13px; margin-bottom: 24px; }
+        .result-box { text-align:center; margin-top: 60px; }
+        .result-box .icon-success { font-size: 60px; color: #52C41A; }
+        .result-box h2 { font-size: 24px; color: #333; margin: 20px 0 10px; }
+        .result-box .info-list { display: inline-block; text-align: left; background: #f6f8fa; padding: 20px 30px; border-radius: 8px; margin: 20px 0; }
+        .result-box .info-list li { line-height: 2; color: #555; font-size: 14px; }
+        .result-box .info-list li code { background: #e8e8e8; padding: 2px 8px; border-radius: 3px; font-size: 13px; }
+    </style>
 </head>
 <body class="pear-container">
 <div class="layui-row layui-col-space10">
     <div class="layui-col-md12">
         <div class="layui-card">
-            <div class="layui-card">
-                <div class="layui-card-body" style="padding-top: 40px;">
-                    <h1 style="text-align:center;margin: 20px 0 40px">Webman Admin 安装</h1>
+            <div class="layui-card-body" style="padding-top: 20px;">
 
-                    <div class="layui-carousel" id="stepForm" lay-filter="stepForm" style="margin: 0 auto;">
-                        <div carousel-item>
-                            <div>
-                                <form class="layui-form" action="javascript:void(0);" style="margin: 0 auto;max-width: 460px;padding-top: 40px;">
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">用户名</label>
-                                        <div class="layui-input-block">
-                                            <input type="text" placeholder="请填写入用户名" name="user" class="layui-input" lay-verify="required" required value="root" autocomplete="off"/>
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">密码</label>
-                                        <div class="layui-input-block">
-                                            <input type="password" placeholder="请填写入密码" name="password" class="layui-input" autocomplete="off"/>
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">数据库</label>
-                                        <div class="layui-input-block">
-                                            <input type="text" placeholder="请填写入数据库" name="database" class="layui-input" lay-verify="required" required value="webman_admin"/>
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">host</label>
-                                        <div class="layui-input-block">
-                                            <input type="text" placeholder="请填写入数据库host" name="host" class="layui-input" lay-verify="required" required value="127.0.0.1"/>
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">端口</label>
-                                        <div class="layui-input-block">
-                                            <input type="number" placeholder="请填写入数据库端口" name="port" class="layui-input" required value="3306" />
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">强制覆盖</label>
-                                        <div class="layui-input-block">
-                                            <input type="checkbox" name="overwrite" lay-skin="primary">
-                                        </div>
-                                    </div>
+                <div class="install-header">
+                    <h1>跨境电商平台 — 一键安装向导</h1>
+                    <p>Cross-Border E-Commerce Platform Installer</p>
+                </div>
+                <div class="install-features">
+                    <span>PHP 8.1+</span>
+                    <span>MySQL 5.7+</span>
+                    <span>Redis</span>
+                    <span>70张数据表</span>
+                    <span>多语言</span>
+                    <span>多币种</span>
+                    <span>海关报关</span>
+                    <span>国际物流</span>
+                    <span>多平台</span>
+                </div>
 
-                                    <div class="layui-form-item">
-                                        <div class="layui-input-block">
-                                            <button type="button" class="pear-btn next">跳过此步骤</button>
-                                            <button class="pear-btn pear-btn-primary" lay-submit lay-filter="formStep">
-                                                &emsp;下一步&emsp;
-                                            </button>
-                                        </div>
+                <div class="layui-carousel" id="stepForm" lay-filter="stepForm" style="margin: 0 auto;">
+                    <div carousel-item>
+                        <div>
+                            <p class="step-desc">请输入 MySQL 数据库连接信息，系统将自动创建库表并生成配置文件</p>
+                            <form class="layui-form" action="javascript:void(0);" style="margin: 0 auto;max-width: 460px;padding-top: 10px;">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">主机地址</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="host" class="layui-input" lay-verify="required" required value="127.0.0.1" autocomplete="off"/>
                                     </div>
-                                </form>
-                            </div>
-                            <div>
-                                <form class="layui-form"  action="javascript:void(0);" style="margin: 0 auto;max-width: 460px;padding-top: 40px;">
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">用户名</label>
-                                        <div class="layui-input-block">
-                                            <input type="text" placeholder="请填写入用户名" name="username" class="layui-input" lay-verify="required" required />
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">密码</label>
-                                        <div class="layui-input-block">
-                                            <input type="password" placeholder="请填写入密码" name="password" class="layui-input"/>
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <label class="layui-form-label">确认密码</label>
-                                        <div class="layui-input-block">
-                                            <input type="password" placeholder="请填再次写入密码" name="password_confirm" class="layui-input"/>
-                                        </div>
-                                    </div>
-                                    <div class="layui-form-item">
-                                        <div class="layui-input-block">
-                                            <button type="button" class="pear-btn pre">上一步</button>
-                                            <button class="pear-btn pear-btn-primary" lay-submit lay-filter="formStep2">
-                                                &emsp;提交&emsp;
-                                            </button>
-                                        </div>
-                                    </div>
-                                </form>
-                            </div>
-                            <div>
-                                <div style="text-align: center;margin-top: 90px;">
-                                    <i class="layui-icon layui-circle pear-back" style="color: white;font-size:30px;font-weight:bold;background: #52C41A;padding: 20px;line-height: 80px;">&#xe605;</i>
-                                    <div style="font-size: 24px;color: #333;font-weight: 500;margin-top: 30px;">
-                                        安装成功
-                                    </div>
-                                    <div style="font-size: 14px;color: #666;margin-top: 20px;">需要重启才能生效</div>
                                 </div>
-                                <div style="text-align: center;margin-top: 50px;">
-                                    <button class="pear-btn pear-btn-primary finish">进入后台</button>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">端口</label>
+                                    <div class="layui-input-block">
+                                        <input type="number" name="port" class="layui-input" required value="3306" />
+                                    </div>
                                 </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">用户名</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="user" class="layui-input" lay-verify="required" required value="root" autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">密码</label>
+                                    <div class="layui-input-block">
+                                        <input type="password" name="password" class="layui-input" autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">数据库名</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="database" class="layui-input" lay-verify="required" required value="shop_db" autocomplete="off"/>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">强制覆盖</label>
+                                    <div class="layui-input-block">
+                                        <input type="checkbox" name="overwrite" lay-skin="primary" title="勾选后将删除已有同名表，请谨慎操作">
+                                    </div>
+                                </div>
+
+                                <div class="layui-form-item" style="text-align:center;padding-top:10px;">
+                                    <button class="pear-btn pear-btn-primary layui-btn-lg" lay-submit lay-filter="formStep">
+                                        下一步：创建管理员 &emsp;
+                                    </button>
+                                </div>
+                                <div style="text-align:center;color:#999;font-size:12px;margin-top:10px;">
+                                    点击后将创建数据库、导入70张表、生成配置文件，预计耗时 5-15 秒
+                                </div>
+                            </form>
+                        </div>
+                        <div>
+                            <p class="step-desc">设置后台管理员账号，用于登录管理面板</p>
+                            <form class="layui-form" action="javascript:void(0);" style="margin: 0 auto;max-width: 460px;padding-top: 40px;">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">管理员账号</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="username" class="layui-input" lay-verify="required" required placeholder="请输入登录用户名" />
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">登录密码</label>
+                                    <div class="layui-input-block">
+                                        <input type="password" name="password" class="layui-input" lay-verify="required|pass" required placeholder="至少6位密码"/>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">确认密码</label>
+                                    <div class="layui-input-block">
+                                        <input type="password" name="password_confirm" class="layui-input" lay-verify="required|pass" required placeholder="请再次输入密码"/>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item" style="text-align:center;padding-top:10px;">
+                                    <button type="button" class="pear-btn pre">上一步</button>
+                                    <button class="pear-btn pear-btn-primary layui-btn-lg" lay-submit lay-filter="formStep2">
+                                        完成安装 &emsp;
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <div>
+                            <div class="result-box">
+                                <div class="icon-success">&#10003;</div>
+                                <h2>安装成功</h2>
+                                <p style="color:#666;">跨境电商平台已部署完成，请妥善保管以下信息</p>
+                                <ul class="info-list">
+                                    <li>管理后台：<code>/app/admin</code></li>
+                                    <li>API 服务：<code>端口 8787</code></li>
+                                    <li>配置文件：<code>service/.env</code></li>
+                                    <li>下次重启后所有服务自动生效</li>
+                                </ul>
+                            </div>
+                            <div style="text-align:center;margin-top:20px;">
+                                <button class="pear-btn pear-btn-primary layui-btn-lg finish">进入管理后台</button>
                             </div>
                         </div>
                     </div>
@@ -113,7 +144,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <script>
@@ -129,42 +159,52 @@
 <script src="/app/admin/component/pear/pear.js"></script>
 
 <script>
-    layui.use(["form", "step","code","element", "popup"], function() {
+    layui.use(["form", "step", "code", "element", "popup"], function() {
         var $ = layui.$,
-                form = layui.form,
-                step = layui.step;
+            form = layui.form,
+            step = layui.step;
 
         layui.code();
+
+        form.verify({
+            pass: [/^[\S]{6,32}$/, '密码必须6到32位，且不能出现空格']
+        });
 
         step.render({
             elem: "#stepForm",
             filter: "stepForm",
             width: "100%",
             stepWidth: "70%",
-            height: "500px",
+            height: "520px",
             stepItems: [{
-                title: "填写数据库信息"
+                title: "数据库配置"
             }, {
-                title: "填写管理员账户"
+                title: "管理员账号"
             }, {
-                title: "完成"
+                title: "安装完成"
             }]
         });
 
         form.on("submit(formStep)", function(data) {
-            let loading = layer.load();
+            var loading = layer.load(2, {shade: [0.3, '#000']});
             $.ajax({
                 url: "/app/admin/install/step1",
                 type: "POST",
                 dataType: "json",
                 data: data.field,
+                timeout: 60000,
                 success: function (res) {
                     if (res.code) {
+                        layer.close(loading);
                         return layui.popup.failure(res.msg);
                     }
-                    layui.popup.success("操作成功", function () {
+                    layui.popup.success("数据库安装成功！请设置管理员账号", function () {
                         step.next("#stepForm");
                     });
+                },
+                error: function () {
+                    layer.close(loading);
+                    layui.popup.failure("请求失败，请检查网络或服务状态");
                 },
                 complete: function () {
                     layer.close(loading);
@@ -174,7 +214,10 @@
         });
 
         form.on("submit(formStep2)", function(data) {
-            let loading = layer.load();
+            if (data.field.password !== data.field.password_confirm) {
+                return layui.popup.failure("两次密码不一致");
+            }
+            var loading = layer.load(2, {shade: [0.3, '#000']});
             $.ajax({
                 url: "/app/admin/install/step2",
                 type: "POST",
@@ -182,11 +225,14 @@
                 data: data.field,
                 success: function (res) {
                     if (res.code) {
+                        layer.close(loading);
                         return layui.popup.failure(res.msg);
                     }
-                    //layui.popup.success("安装成功");
                     step.next("#stepForm");
+                },
+                error: function () {
                     layer.close(loading);
+                    layui.popup.failure("请求失败，请检查网络或服务状态");
                 },
                 complete: function () {
                     layer.close(loading);
@@ -200,13 +246,8 @@
             return false;
         });
 
-        $(".next").click(function() {
-            step.next("#stepForm");
-            return false;
-        });
-
         $(".finish").click(function() {
-            location.reload();
+            window.location.href = "/app/admin/account/login";
         });
     })
 </script>

@@ -27,23 +27,38 @@
 admin/ 是独立的 webman 项目，安装了 `webman/admin` 插件。
 与 service/ 共享同一个 MySQL 数据库，通过 `config/database.php` 配置连接。
 
+### 一键 Web 安装
+
+首次启动后访问任意页面自动跳转到安装向导：
+```
+http://127.0.0.1:8788/app/admin/install/step1
+```
+
+安装向导（`InstallController`）自动完成：
+- 创建 MySQL 数据库
+- 导入根目录 `install.sql`（70张表：7 `wa_` + 63 `erik_`）
+- 生成 `plugin/admin/config/database.php` 和 `thinkorm.php`
+- 生成 `service/.env`（含随机生成的 JWT/Hashids/AES 密钥）
+- 创建管理员账号
+- SIGUSR1 重载服务
+
 ### webman-admin 插件结构
 
 ```
 plugin/admin/
   api/              # 外部 API（Auth, Menu, Install, Middleware）
   app/
-    controller/     # 管理控制器（14个内置控制器）
+    controller/     # 管理控制器
       Base.php      # 基础控制器（json/success/fail 响应）
       Crud.php      # 通用 CRUD 控制器（select/insert/update/delete）
       IndexController.php  # 仪表盘
+      InstallController.php  # Web 安装向导（step1=DB+SQL+env / step2=管理员）
     model/          # 管理模型
       Base.php      # 基础模型（连接 plugin.admin.mysql）
     common/         # 工具类（Auth, Layui, Tree, Util）
     middleware/     # AccessControl 权限中间件
-    view/           # LayUI 视图
+    view/           # LayUI 视图（含 index/install.html 安装向导页面）
   config/           # 插件配置（menu.php 定义菜单结构）
-  install.sql       # 安装 SQL（wa_ 前缀系统表）
 ```
 
 ### 扩展 CRUD 控制器模式
@@ -121,7 +136,7 @@ class ShopProductController extends Crud
 | 前缀 | 用途 | 示例 |
 |------|------|------|
 | `wa_` | webman-admin 系统表 | wa_admins, wa_roles, wa_rules, wa_uploads |
-| `erik_` | 商城业务表（45张） | erik_products, erik_orders, erik_hs_codes, erik_shipping_zones, erik_product_translations, erik_product_sku_prices 等 |
+| `erik_` | 商城业务表（63张） | erik_products, erik_orders, erik_hs_codes, erik_shipping_zones, erik_product_translations, erik_product_sku_prices 等 |
 
 ## 技术栈
 

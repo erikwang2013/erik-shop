@@ -30,39 +30,38 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ## 快速开始
 
+### 方式一：Web 一键安装（推荐）
+
 ```bash
-# 1. 克隆项目
-git clone https://github.com/erikwang2013/shop-php.git
-cd shop-php
+# 1. 安装 admin 依赖
+cd admin && composer install
 
-# 2. 环境配置
-cp .env.example .env
-# 编辑 .env 填入数据库/Redis/ES/JWT密钥等配置
+# 2. 启动管理后台
+php start.php start -d
 
-# 3. 导入数据库
-mysql -u root -p erik_shop < service/database/schema.sql
+# 3. 浏览器打开安装向导
+# http://127.0.0.1:8788/app/admin/install/step1
+# 填入数据库信息 → 设置管理员账号 → 完成
 
-# 4. 启动 Service API
-cd service && composer install && php start.php start -d
-
-# 5. 启动 Admin 管理后台
-cd admin && composer install && php start.php start -d
-
-# 6. Flutter 客户端
-cd apps/flutter && flutter pub get && flutter run -d macos
-
-# 访问: http://localhost:8787 (API) / http://admin.localhost:8787 (管理后台)
+# 4. 安装依赖并启动 API
+cd ../service && composer install && php start.php start -d
 ```
+
+> 安装向导自动完成：建库 → 导入 70 张表 → 生成 service/.env 和 admin/.env（含随机密钥） → 创建管理员 → 重载服务
+
+### 方式二：命令行手动安装
+
+详见 [INSTALL.md](INSTALL.md)
 
 ## 项目结构
 
 ```
 shop-php/
-  service/          PHP业务API (webman)        — 37控制器 + 112模型 + 9全局中间件
-  admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + hg/apidoc + ECharts仪表盘
+  install.sql       # 一键安装 SQL（70 张表），Web 安装向导自动导入
+  service/          PHP业务API (webman)        — 37控制器 + 63模型 + 9全局中间件
+  admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + ECharts仪表盘 + Web安装向导
   apps/flutter/     Flutter客户端              — 9页面 + 5语言 + PC自适应
   apps/harmonyos/   鸿蒙客户端                  — 8页面 + ArkTS
-  database/         数据库                      — 110张表 (erik_前缀, snowflake主键)
   docker/           Docker部署                  — Nginx + PHP + MySQL + Redis + ES
   docs/             设计文档
 ```
@@ -93,7 +92,7 @@ shop-php/
 
 ## 核心设计
 
-- **Snowflake主键**：110张表全部使用 `erikwang2013/snowflake-php` 生成的bigint ID
+- **Snowflake主键**：70张表全部使用 `erikwang2013/snowflake-php` 生成的bigint ID
 - **Hashids接口**：中间件自动编码/解码，控制器无感知
 - **Encryptable加密**：email/mobile/address等敏感字段数据库级加密
 - **JWT认证**：HS256 + 黑名单 + 自动刷新
@@ -104,12 +103,15 @@ shop-php/
 
 | 文档 | 说明 |
 |------|------|
+| [README-EN.md](README-EN.md) | English documentation |
+| [INSTALL.md](INSTALL.md) | 安装指南（Web 一键安装 + 手动安装） |
+| [AUDIT-REPORT.md](AUDIT-REPORT.md) | 安装系统审查报告 |
 | [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、API端点设计、状态机 |
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |
 | [API接口文档](docs/api.md) | 71个API端点 (静态文档) |
-| [hg/apidoc接口文档](http://localhost:8787/apidoc/) | hg/apidoc自动生成 (6分组: 认证/商品/交易/物流海关/用户营销/运营) | (请求/响应示例/错误码/状态码) |
+| [hg/apidoc接口文档](http://localhost:8787/apidoc/) | hg/apidoc自动生成 (6分组: 认证/商品/交易/物流海关/用户营销/运营) |
 | [部署文档](docs/deployment.md) | Docker/手动部署、环境变量、运维命令 |
 
 

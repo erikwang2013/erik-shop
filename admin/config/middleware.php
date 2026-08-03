@@ -9,8 +9,10 @@
  */
 
 return [
-    app\middleware\SecurityMiddleware::class,  // 安全攻击检测拦截
-    app\middleware\PlatformMiddleware::class,  // 操作来源端识别
-    app\middleware\HashidsDecode::class,       // 请求hashid→snowflake ID
-    app\middleware\HashidsEncode::class,       // 响应snowflake ID→hashid
+    '' => [
+        app\middleware\SecurityMiddleware::class,  // 安全攻击检测拦截
+        app\middleware\PlatformMiddleware::class,  // 操作来源端识别
+        app\middleware\HashidsDecode::class,       // 请求hashid→snowflake ID
+        app\middleware\HashidsEncode::class,       // 响应snowflake ID→hashid
+    ],
 ];

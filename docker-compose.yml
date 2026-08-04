@@ -42,8 +42,8 @@ services:
       - REDIS_PORT=6379
       - ES_HOST=elasticsearch
       - ES_PORT=9200
-      - JWT_SECRET=${JWT_SECRET:-change_me_256bit}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-${JWT_SECRET:-change_me_256bit}}
+      - JWT_SECRET=${JWT_SECRET:-INYvriETO8Bc3xy/SI3mcMdrL9wqHPXXUjA2rUqQkK8=}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-INYvriETO8Bc3xy/SI3mcMdrL9wqHPXXUjA2rUqQkK8=}
       - HASHIDS_SALT=${HASHIDS_SALT:-change_me}
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-base64:aJSrbfDcz5f1Jw6cDK81D3XZ+Bdo9YJ7jXhbHop4URc=}
       - ENCRYPTION_CIPHER=${ENCRYPTION_CIPHER:-AES-256-CBC}

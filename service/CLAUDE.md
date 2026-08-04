@@ -122,6 +122,7 @@ LocaleMiddleware:
 9. `PosterVerify` — 敏感操作随机验证（注册/下单/支付，路由级中间件）
 10. `JwtAuth` — JWT token 验证（路由级中间件）
 11. `HashidsEncode` — 响应中的 snowflake ID 自动编码为 hashids
+12. `Encryption` — 接口数据加解密（通过 `X-Encrypt-Response` / `X-Encrypted` header 触发）
 
 ### 多语言商品模式
 ```

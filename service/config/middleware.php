@@ -8,7 +8,7 @@
  * 按顺序执行，顺序不可变
  *
  * 请求 → Cors → Security → RateLimit → Platform → GeoIp → Locale → HashidsDecode
- *      → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode → 控制器
+ *      → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption → 控制器
  */
 
 return [
@@ -21,4 +21,5 @@ return [
     app\middleware\HashidsDecode::class,    // 请求hashid→snowflake ID
     app\middleware\VersionRoute::class,     // API版本路由(API-Version header)
     app\middleware\HashidsEncode::class,    // 响应snowflake ID→hashid
+    app\middleware\EncryptionMiddleware::class, // 接口数据加解密（X-Encrypt-Response header 触发）
 ];

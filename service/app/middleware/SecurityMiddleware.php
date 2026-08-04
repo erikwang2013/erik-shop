@@ -30,7 +30,14 @@ class SecurityMiddleware implements MiddlewareInterface
             self::$guardInitialized = true;
         }
 
-        $threats = SecurityGuard::guard($request->all(), [
+        $data = $request->all();
+        foreach ($request->file() as $key => $file) {
+            if (is_array($file) && isset($file['tmp_name'], $file['name'])) {
+                $data[$key] = ['tmp_name' => $file['tmp_name'], 'name' => $file['name']];
+            }
+        }
+
+        $threats = SecurityGuard::guard($data, [
             'ip'     => $request->getRealIp(),
             'method' => $request->method(),
             'uri'    => $request->uri(),

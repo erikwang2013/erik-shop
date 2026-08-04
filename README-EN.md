@@ -218,7 +218,55 @@ sequenceDiagram
     RES->>C: JSON Response
 ```
 
-> See [full diagram collection](docs/diagrams.md) for 6 diagrams including order lifecycle and deployment architecture.
+> See [full diagram collection](docs/diagrams.md) for 7 diagrams including order lifecycle, deployment, and security architecture.
+
+### Security Architecture
+
+```mermaid
+graph TB
+    subgraph L1["Layer 1: Network Perimeter"]
+        NG1["Nginx SSL/TLS · Reject Raw IP"]
+        CORS1["CORS Whitelist"]
+    end
+
+    subgraph L2["Layer 2: WAF 11 Attack Detections"]
+        direction LR
+        D1["XSS 18 rules"] & D2["SQLi 20 rules"] & D3["CRLF Inject"]
+        D4["Path Traversal"] & D5["XXE Entity"] & D6["SSRF Forgery"]
+        D7["File Upload"] & D8["Method Check"] & D9["Content-Type"]
+        D10["Body Limit"] & D11["Host Check"]
+    end
+
+    subgraph L3["Layer 3: Traffic Control"]
+        BR["Brute Force Protection<br/>Redis Counter"]
+        RL["Token Bucket<br/>Rate Limit 6 Rules"]
+    end
+
+    subgraph L4["Layer 4: Authentication"]
+        PV["PosterVerify<br/>Captcha Slide/Puzzle"]
+        JWT_A["JwtAuth HS256<br/>Blacklist · Auto Refresh"]
+    end
+
+    subgraph L5["Layer 5: Data Security"]
+        HD["Hashids ID Obfuscation"]
+        AES["AES-256-CBC<br/>Three-Layer Encryption"]
+        MSK["Sensitive Masking<br/>Log/Error Filter"]
+    end
+
+    subgraph L6["Layer 6: Response Security"]
+        SH["HTTP Security Headers<br/>nosniff · DENY"]
+    end
+
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6
+    L6 --> RESP(["Secure Response"])
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+```
 
 ## Quick Start
 

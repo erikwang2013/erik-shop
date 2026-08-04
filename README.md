@@ -218,7 +218,55 @@ sequenceDiagram
     RES->>C: JSON Response
 ```
 
-> 更多细节见 [完整架构图集](docs/diagrams.md)（含订单生命周期、部署架构等 6 张图）
+> 更多细节见 [完整架构图集](docs/diagrams.md)（含订单生命周期、部署架构、安全架构等 7 张图）
+
+### 安全架构图
+
+```mermaid
+graph TB
+    subgraph L1["第一层：网络边界"]
+        NG1["Nginx SSL/TLS · 拒绝裸IP"]
+        CORS1["CORS 白名单"]
+    end
+
+    subgraph L2["第二层：WAF 攻击检测 11类"]
+        direction LR
+        D1["XSS 18规则"] & D2["SQLi 20规则"] & D3["CRLF注入"]
+        D4["路径遍历"] & D5["XXE实体"] & D6["SSRF伪造"]
+        D7["文件上传"] & D8["方法校验"] & D9["Content-Type"]
+        D10["Body限制"] & D11["Host校验"]
+    end
+
+    subgraph L3["第三层：流量控制"]
+        BR["暴力破解防护<br/>Redis计数器"]
+        RL["令牌桶限流<br/>6端点规则"]
+    end
+
+    subgraph L4["第四层：身份认证"]
+        PV["PosterVerify<br/>人机验证 滑块/拼图"]
+        JWT_A["JwtAuth HS256<br/>黑名单 · 自动刷新"]
+    end
+
+    subgraph L5["第五层：数据安全"]
+        HD["Hashids ID混淆"]
+        AES["AES-256-CBC<br/>三层加密"]
+        MSK["敏感脱敏<br/>日志/错误过滤"]
+    end
+
+    subgraph L6["第六层：响应安全"]
+        SH["HTTP安全头<br/>nosniff · DENY"]
+    end
+
+    L1 --> L2 --> L3 --> L4 --> L5 --> L6
+    L6 --> RESP(["安全响应"])
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+```
 
 ## 快速开始
 

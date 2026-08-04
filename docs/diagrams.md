@@ -485,6 +485,134 @@ graph TB
 
 ---
 
+## 七、安全架构图
+
+```mermaid
+graph TB
+    subgraph Request["入口"]
+        REQ["HTTP Request"]
+    end
+
+    subgraph L1["第一层：网络边界"]
+        direction TB
+        NG["Nginx 反向代理<br/>· SSL/TLS 终端<br/>· 请求体大小限制<br/>· 拒绝裸 IP 直连"]
+        CORS_W["CORS 白名单<br/>· Access-Control-Allow-Origin<br/>· 可配置 origin 限制"]
+    end
+
+    subgraph L2["第二层：WAF 攻击检测 (SecurityMiddleware)"]
+        direction TB
+        CT{"Content-Type<br/>校验"}
+        BS{"Body Size<br/>≤ 10MB"}
+        XSS{"XSS 检测<br/>18 条正则"}
+        SQLI{"SQLi 检测<br/>20 条正则"}
+        CRLF{"CRLF 注入<br/>Header 检测"}
+        PATH_T{"路径遍历<br/>编码/null byte"}
+        XXE{"XXE 实体注入<br/>ENTITY/DOCTYPE"}
+        SSRF{"SSRF 伪造<br/>内网 IP 检测"}
+        FILE_CHK{"文件上传<br/>黑名单/双重扩展名"}
+        METHOD{"HTTP 方法<br/>白名单校验"}
+        HOST{"Host 头<br/>校验"}
+
+        CT -->|非法| E403["403"]
+        CT -->|通过| BS
+        BS -->|超限| E413["413"]
+        BS -->|通过| XSS
+        XSS -->|命中| E40001["40001"]
+        XSS -->|通过| SQLI
+        SQLI -->|命中| E40002["40002"]
+        SQLI -->|通过| CRLF
+        CRLF -->|命中| E40003["40003"]
+        CRLF -->|通过| PATH_T
+        PATH_T -->|命中| E40004["40004"]
+        PATH_T -->|通过| XXE
+        XXE -->|命中| E40010["40010"]
+        XXE -->|通过| SSRF
+        SSRF -->|命中| E40011["40011"]
+        SSRF -->|通过| FILE_CHK
+        FILE_CHK -->|命中| E40009["40009"]
+        FILE_CHK -->|通过| METHOD
+        METHOD -->|非法| E40012["40012"]
+        METHOD -->|通过| HOST
+    end
+
+    subgraph L3["第三层：流量控制"]
+        direction TB
+        BRUTE["暴力破解防护<br/>Redis 计数器<br/>API: 10次/60s<br/>Admin: 5次/300s"]
+        RATE["令牌桶限流<br/>Redis ZSET 滑动窗口<br/>6 端点独立规则"]
+        BRUTE --> RATE
+    end
+
+    subgraph L4["第四层：身份认证"]
+        direction TB
+        POSTER["PosterVerify 人机验证<br/>· 滑块 · 拼图 · 点击<br/>· 注册/下单/支付触发"]
+        JWT_AUTH["JWT 认证<br/>· HS256 签名<br/>· 过期检查<br/>· 黑名单 Redis<br/>· request→userId 注入"]
+        POSTER --> JWT_AUTH
+    end
+
+    subgraph L5["第五层：数据安全"]
+        direction TB
+        HASHIDS["Hashids ID 混淆<br/>· 请求: hashid→snowflake<br/>· 响应: snowflake→hashid<br/>· 防止 ID 枚举"]
+        AES_ENC["AES-256-CBC 加密<br/>· 传输层: POST body 敏感字段<br/>· 响应层: X-Encrypted header<br/>· 数据库: Encryptable trait<br/>email/mobile/name/tax_id"]
+        SENS_MASK["敏感数据脱敏<br/>· 日志过滤 password/token/secret<br/>· 错误响应脱敏<br/>· 不泄露内部信息"]
+    end
+
+    subgraph L6["第六层：响应安全"]
+        direction TB
+        SEC_HEADERS["HTTP 安全响应头<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· Server 隐藏<br/>· Cache-Control"]
+    end
+
+    subgraph Audit["审计追溯"]
+        direction LR
+        PLATFORM["平台追踪<br/>X-Platform header<br/>8 平台识别<br/>6 表记录"]
+        OP_LOG["操作日志<br/>erik_operation_logs<br/>platform · user_id<br/>action · ip · ua"]
+    end
+
+    REQ --> NG
+    NG --> CORS_W
+    CORS_W --> L2
+    HOST --> BRUTE
+    RATE --> POSTER
+
+    L5 --> L6
+    L6 --> RESP(["安全响应"])
+
+    PLATFORM -.-> OP_LOG
+    L2 -.-> PLATFORM
+    L4 -.-> PLATFORM
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+    style Audit fill:#f5f5f5
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E40009 fill:#ff5252,color:#fff
+    style E40010 fill:#ff5252,color:#fff
+    style E40011 fill:#ff5252,color:#fff
+    style E40012 fill:#ff5252,color:#fff
+```
+
+### 安全防护总览
+
+| 层级 | 防线 | 技术/包 | 覆盖范围 |
+|------|------|---------|---------|
+| 第一层 | 网络边界 | Nginx SSL + 反向代理 + Host校验 | Service + Admin |
+| 第二层 | WAF 攻击检测 | `erikwang2013/security-php` 25+检测器 | 11 类攻击: XSS/SQLi/CRLF/路径遍历/XXE/SSRF/文件上传/方法/Host/Content-Type/Body |
+| 第三层 | 流量控制 | RateLimitMiddleware + 暴力破解 Redis 计数器 | 令牌桶限流(6端点) + 登录/注册防爆 |
+| 第四层 | 身份认证 | PosterVerify + JwtAuth HS256 | 人机验证(滑块/拼图/点击) + Bearer Token + 黑名单 |
+| 第五层 | 数据安全 | Hashids + AES-256-CBC + Encryptable | 三层加密: ID混淆/传输加密/数据库字段加密 |
+| 第六层 | 响应安全 | HTTP 安全头 + 敏感脱敏 | nosniff/DENY/XSS-Protection/Referrer-Policy/日志脱敏 |
+| 持续 | 审计追溯 | PlatformMiddleware + OperationLogs | 8平台来源追踪 + 6表记录 + 操作日志 |
+
+---
+
 ## 图例索引
 
 | 编号 | 图名 | 类型 | 用途 |
@@ -495,3 +623,4 @@ graph TB
 | 四 | 请求生命周期图 | 生命周期 | 展示从请求到响应的完整时序和各阶段交互 |
 | 五 | 订单生命周期图 | 生命周期 | 展示订单从购物车到完成/退款的所有状态流转 |
 | 六 | 部署架构图 | 架构图 | 展示 Docker Compose 容器编排、网络、数据卷 |
+| 七 | 安全架构图 | 架构图 | 展示 6 层纵深防御体系：边界→WAF→流量→认证→数据→响应 |

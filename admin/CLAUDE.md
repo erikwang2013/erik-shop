@@ -69,6 +69,17 @@ plugin/admin/
   config/           # 插件配置（menu.php 定义菜单结构）
 ```
 
+### 中间件栈（按顺序）
+请求 → `Security` → `Platform` → `HashidsDecode` → `AccessControl`(admin内置) → `HashidsEncode` → 控制器
+
+| 中间件 | 用途 |
+|--------|------|
+| SecurityMiddleware | WAF 攻击检测（基于 erikwang2013/security-php）+ 暴力破解防护 |
+| PlatformMiddleware | 操作来源端识别 |
+| HashidsDecode | 请求 hashid → snowflake ID 解码 |
+| AccessControl | webman-admin 内置权限控制 |
+| HashidsEncode | 响应 snowflake ID → hashid 编码 |
+
 ### 扩展 CRUD 控制器模式
 所有商城管理控制器继承 `plugin\admin\app\controller\Crud`：
 ```php
@@ -155,6 +166,7 @@ class ShopProductController extends Crud
 | illuminate/database ^12 | Laravel 数据库层 |
 | layui | 前端 UI（Pear Admin 主题） |
 | phpoffice/phpspreadsheet | Excel 导出 |
+| erikwang2013/security-php | WAF 攻击检测与防护 |
 | erikwang2013/poster-php | 敏感操作随机验证 |
 | barryvdh/laravel-dompdf | PDF 导出（商业发票/装箱单） |
 | guzzlehttp/guzzle | 物流 API 对接 |

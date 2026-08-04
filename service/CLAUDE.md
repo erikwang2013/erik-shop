@@ -112,13 +112,16 @@ LocaleMiddleware:
 
 ### 中间件栈（按顺序）
 1. `Cors` — CORS 跨域处理
-2. `GeoIpMiddleware` — IP区域识别，自动设置语言/币种（未登录用户）
-3. `LocaleMiddleware` — 解析 `Accept-Language` header，设置当前语言
-4. `HashidsDecode` — 请求中的 hashid 参数自动解码为 snowflake ID
-5. `VersionRoute` — 读取 `API-Version` header，路由到版本控制器
-6. `PosterVerify` — 敏感操作随机验证（注册/下单/支付）
-7. `JwtAuth` — JWT token 验证（仅保护路由）
-8. `HashidsEncode` — 响应中的 snowflake ID 自动编码为 hashids
+2. `Security` — WAF 攻击检测（基于 erikwang2013/security-php，25+ 类攻击检测器）+ 暴力破解防护
+3. `RateLimit` — 令牌桶限流
+4. `Platform` — 操作来源端识别（Web/App/iOS/Android）
+5. `GeoIpMiddleware` — IP 区域识别，自动设置语言/币种（未登录用户）
+6. `LocaleMiddleware` — 解析 `Accept-Language` header，设置当前语言
+7. `HashidsDecode` — 请求中的 hashid 参数自动解码为 snowflake ID
+8. `VersionRoute` — 读取 `API-Version` header，路由到版本控制器
+9. `PosterVerify` — 敏感操作随机验证（注册/下单/支付，路由级中间件）
+10. `JwtAuth` — JWT token 验证（路由级中间件）
+11. `HashidsEncode` — 响应中的 snowflake ID 自动编码为 hashids
 
 ### 多语言商品模式
 ```
@@ -180,6 +183,7 @@ ApiResponse::paginate($items, $total, $page, $perPage);
 | erikwang2013/snowflake-php | 分布式 ID 生成 |
 | erikwang2013/hashids | 接口 ID 加解密 |
 | erikwang2013/jwt-webman | JWT 认证 |
+| erikwang2013/security-php | WAF 攻击检测与防护（25+ 类检测器，IP 黑名单） |
 | erikwang2013/encryption | 接口敏感数据加解密 |
 | erikwang2013/encryptable | 数据库字段加解密 |
 | erikwang2013/poster-php | 敏感操作随机验证 |

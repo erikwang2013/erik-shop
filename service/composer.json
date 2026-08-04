@@ -42,7 +42,8 @@
     "firebase/php-jwt": "^6.0",
     "phpoption/phpoption": "^1.9",
     "vlucas/phpdotenv": "^5.6",
-    "hg/apidoc": "^5.3"
+    "hg/apidoc": "^5.3",
+    "erikwang2013/security-php": "^1.1"
   },
   "suggest": {
     "ext-event": "For better performance."
@@ -81,7 +82,9 @@
       "erikwang2013/jwt-webman": true,
       "erikwang2013/poster-php": true,
       "erikwang2013/season": true,
-      "webman/event": true
+      "webman/event": true,
+      "php-http/discovery": true,
+      "erikwang2013/security-php": true
     }
   },
   "require-dev": {

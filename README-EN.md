@@ -28,6 +28,198 @@ A full-stack cross-border e-commerce platform built on the webman ecosystem, cov
 **Payments:** Stripe, PayPal, Klarna, Adyen
 **Clients:** Flutter 3.x (Riverpod + GoRouter + Dio), HarmonyOS API 12+ (ArkTS + ArkUI)
 
+## Architecture Diagrams
+
+> Full diagram collection: [docs/diagrams.md](docs/diagrams.md)
+
+### System Architecture
+
+```mermaid
+graph TB
+    subgraph Clients["Client Layer"]
+        direction LR
+        FL["Flutter App<br/>iOS Android macOS<br/>Windows Linux iPadOS"]
+        HM["HarmonyOS App<br/>ArkTS + ArkUI"]
+        WB["Web Admin<br/>LayUI + ECharts"]
+    end
+
+    subgraph Gateway["Gateway"]
+        NG["Nginx :80/:443<br/>api.erik.xyz → Service<br/>admin.erik.xyz → Admin"]
+    end
+
+    subgraph Apps["Application Layer"]
+        subgraph Service["Service API (webman) :8787"]
+            MW["9 Global Middleware<br/>Cors→Security→Platform→GeoIp→Locale<br/>→HashidsDecode→VersionRoute→HashidsEncode"]
+            RT["2 Route Middleware<br/>PosterVerify · JwtAuth"]
+            CTRL["37 Controllers · 112 Models"]
+        end
+        subgraph Admin["Admin (webman-admin) :8788"]
+            AMW["5 Middleware<br/>Security→Platform→HashidsDecode<br/>→AccessControl(RBAC)→HashidsEncode"]
+            ACTRL["67 Controllers · 65 Models"]
+        end
+    end
+
+    subgraph Data["Data Layer"]
+        MySQL[("MySQL 8.0<br/>110 tables · erik_ prefix<br/>Read/Write Split")]
+        Redis[("Redis 7<br/>Cache · Session<br/>Rate Limit · Lock")]
+        ES[("ES 8<br/>Multi-language Search")]
+    end
+
+    subgraph External["External Services"]
+        Pay["Stripe · PayPal<br/>Klarna · Adyen"]
+        Geo["MaxMind<br/>GeoIP2"]
+        Email["SMTP<br/>Async Queue"]
+    end
+
+    FL --> NG
+    HM --> NG
+    WB --> NG
+    NG --> Service
+    NG --> Admin
+    Service --> MySQL & Redis & ES
+    Service --> Pay & Geo & Email
+    Admin --> MySQL & Redis
+```
+
+### Request Processing Flow
+
+```mermaid
+graph TB
+    START(["HTTP Request"]) --> CORS["① Cors Headers"]
+    CORS --> SEC["② Security 6 Checkpoints"]
+    SEC --> SEC_DETAIL["Content-Type → Body Size → XSS(18 rules)<br/>→ SQLi(20 rules) → CRLF → Path Traversal"]
+    SEC_DETAIL -->|Hit| ERR["4xxxx Error Response"]
+    SEC_DETAIL -->|Pass| PLAT["③ Platform 8-Source ID"]
+    PLAT --> GEO["④ GeoIp Region/Currency"]
+    GEO --> LOCALE["⑤ Locale 5 Languages"]
+    LOCALE --> HDEC["⑥ HashidsDecode ID Decode"]
+    HDEC --> VER["⑦ VersionRoute API Version"]
+    VER --> RATE["⑧ RateLimit Token Bucket"]
+    RATE -->|Exceeded| E429["429 Retry-After"]
+    RATE -->|Pass| POSTER{"Sensitive Op?"}
+    POSTER -->|Register/Order/Pay| POSTER_V["⑨ PosterVerify Captcha"]
+    POSTER -->|No| JWT{"Auth Required?"}
+    POSTER_V --> JWT
+    JWT -->|Yes| JWT_V["⑩ JwtAuth HS256 + Blacklist"]
+    JWT -->|No| HENC["⑪ HashidsEncode ID Encode"]
+    JWT_V --> HENC
+    HENC --> CTRL["Controller Business Logic"]
+    CTRL --> ENC{"Encrypt Response?"}
+    ENC -->|Yes| ENC_MW["⑫ Encryption AES-256-CBC"]
+    ENC -->|No| RESP(["JSON Response"])
+    ENC_MW --> RESP
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style ERR fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style CTRL fill:#bbdefb
+```
+
+### Feature Module Map
+
+```mermaid
+graph TB
+    CENTER["Erik Shop Cross-Border E-Commerce"]
+
+    CENTER --> B2C["B2C Retail<br/>Multi-language · Multi-currency<br/>SKU · Cart · Orders"]
+    CENTER --> B2B["B2B Wholesale<br/>Tiered Pricing · Verification<br/>RFQ · Quotes"]
+    CENTER --> MART["Multi-Vendor<br/>Seller Onboarding<br/>Revenue Split"]
+    CENTER --> CROSS["Compliance<br/>HS Code · Tariff Rules<br/>VAT/IOSS · Labels"]
+    CENTER --> LOGISTICS["Logistics<br/>Zone Rates · DHL/UPS<br/>Overseas Warehouse"]
+    CENTER --> PAY["Payments<br/>Stripe · PayPal<br/>Klarna · Adyen · 3DS"]
+    CENTER --> MKT["Marketing<br/>Coupons · Flash Sales<br/>Group Buy · Affiliate"]
+    CENTER --> MULTI["Multi-Platform<br/>Amazon · eBay · Shopee<br/>Listings · Orders"]
+    CENTER --> SUPPLY["Supply Chain<br/>Suppliers · Procurement<br/>QC · Inventory Ledger"]
+    CENTER --> RISK["Risk & Compliance<br/>Rule Engine · KYC<br/>GDPR · CCPA"]
+    CENTER --> SECM["Security<br/>15 Attack Detections<br/>XSS · SQLi · XXE · SSRF"]
+    CENTER --> PERF["Performance<br/>Rate Limit · Cache-Aside<br/>Circuit Breaker · R/W Split"]
+    CENTER --> GROWTH["Growth<br/>Points · Gift Cards<br/>A/B Testing · Subscriptions"]
+    CENTER --> CMS["Content<br/>CMS · FAQ · Knowledge Base<br/>Size Charts · Feed Sync"]
+    CENTER --> CS["Support<br/>WebSocket IM<br/>Knowledge Base"]
+    CENTER --> INFRA["Infrastructure<br/>Snowflake · Hashids<br/>JWT · AES · Poster"]
+    CENTER --> CLIENTS["Multi-Client<br/>Flutter 5 Platforms<br/>HarmonyOS · Web"]
+
+    style CENTER fill:#1565c0,color:#fff
+```
+
+### Request Lifecycle
+
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant N as Nginx
+    participant S as Security MW
+    participant P as Middleware Pipeline
+    participant R as RateLimit
+    participant RT as Router
+    participant J as JwtAuth
+    participant CTL as Controller
+    participant M as Model
+    participant DB as MySQL/Redis/ES
+    participant RES as Response
+
+    C->>N: HTTP Request
+    N->>S: Forward
+
+    rect rgb(255,205,210)
+        Note over S: Security Check 6 Gates
+        S->>S: Content-Type→Body→XSS→SQLi→CRLF→Path
+    end
+
+    alt Attack Detected
+        S-->>C: 4xxxx Error
+    end
+
+    S->>P: Passed
+
+    rect rgb(227,242,253)
+        Note over P: Preprocessing 6 Steps
+        P->>P: Cors→Platform→GeoIp→Locale→HashidsDecode→VersionRoute
+    end
+
+    P->>R: Rate Check
+    R->>DB: Redis ZSET Sliding Window
+    alt Exceeded
+        R-->>C: 429
+    end
+
+    R->>RT: Route Match
+
+    alt Sensitive Operation
+        RT->>RT: PosterVerify Captcha
+    end
+
+    alt Auth Required
+        RT->>J: Bearer Token
+        J->>DB: Redis Blacklist Check
+        alt Invalid
+            J-->>C: 401
+        end
+    end
+
+    RT->>CTL: Business Logic
+
+    rect rgb(200,230,201)
+        Note over CTL,DB: Business Processing
+        CTL->>M: Call Model
+        M->>DB: Read/Write
+        DB-->>M: Data
+        M-->>CTL: Result
+    end
+
+    CTL->>RES: Return Data
+
+    rect rgb(187,222,251)
+        Note over RES: Response Processing
+        RES->>RES: HashidsEncode→Encrypt→JSON
+    end
+
+    RES->>C: JSON Response
+```
+
+> See [full diagram collection](docs/diagrams.md) for 6 diagrams including order lifecycle and deployment architecture.
+
 ## Quick Start
 
 ### Method 1: Web Installer (Recommended)
@@ -118,6 +310,7 @@ shop-php/
 | [INSTALL.md](INSTALL.md) | Installation guide (web installer + manual) |
 | [AUDIT-REPORT.md](AUDIT-REPORT.md) | Installation system audit report |
 | [Features](docs/features.md) | Complete feature matrix, workflows, API endpoints, state machines |
+| [Diagrams](docs/diagrams.md) | Architecture, flowchart, feature map, lifecycle, deployment (6 Mermaid diagrams) |
 | [Architecture](docs/architecture-full.md) | System architecture diagrams, middleware pipeline, data/security/payment architecture |
 | [Design](docs/design.md) | Database schema, API specification, security, i18n |
 | [API Reference](docs/api.md) | 71 API endpoints (static documentation) |

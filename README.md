@@ -28,6 +28,198 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 **支付：** Stripe, PayPal, Klarna, Adyen
 **客户端：** Flutter 3.x (Riverpod + GoRouter + Dio), HarmonyOS API 12+ (ArkTS + ArkUI)
 
+## 架构图集
+
+> 完整图集及大图查看：[docs/diagrams.md](docs/diagrams.md)
+
+### 系统架构图
+
+```mermaid
+graph TB
+    subgraph Clients["客户端层"]
+        direction LR
+        FL["Flutter App<br/>iOS Android macOS<br/>Windows Linux iPadOS"]
+        HM["HarmonyOS App<br/>ArkTS + ArkUI"]
+        WB["Web Admin<br/>LayUI + ECharts"]
+    end
+
+    subgraph Gateway["接入层"]
+        NG["Nginx :80/:443<br/>api.erik.xyz → Service<br/>admin.erik.xyz → Admin"]
+    end
+
+    subgraph Apps["应用层"]
+        subgraph Service["Service API (webman) :8787"]
+            MW["全局中间件 9个<br/>Cors→Security→Platform→GeoIp→Locale<br/>→HashidsDecode→VersionRoute→HashidsEncode"]
+            RT["路由中间件 2个<br/>PosterVerify · JwtAuth"]
+            CTRL["37 控制器 · 112 模型"]
+        end
+        subgraph Admin["Admin (webman-admin) :8788"]
+            AMW["中间件 5个<br/>Security→Platform→HashidsDecode<br/>→AccessControl(RBAC)→HashidsEncode"]
+            ACTRL["67 控制器 · 65 模型"]
+        end
+    end
+
+    subgraph Data["数据层"]
+        MySQL[("MySQL 8.0<br/>110表 erik_前缀<br/>读写分离")]
+        Redis[("Redis 7<br/>缓存·Session<br/>限流·锁")]
+        ES[("ES 8<br/>多语言搜索")]
+    end
+
+    subgraph External["外部服务"]
+        Pay["Stripe·PayPal<br/>Klarna·Adyen"]
+        Geo["MaxMind<br/>GeoIP2"]
+        Email["SMTP<br/>异步队列"]
+    end
+
+    FL --> NG
+    HM --> NG
+    WB --> NG
+    NG --> Service
+    NG --> Admin
+    Service --> MySQL & Redis & ES
+    Service --> Pay & Geo & Email
+    Admin --> MySQL & Redis
+```
+
+### 请求处理流程图
+
+```mermaid
+graph TB
+    START(["HTTP 请求"]) --> CORS["① Cors 响应头设置"]
+    CORS --> SEC["② Security 6道检测门"]
+    SEC --> SEC_DETAIL["Content-Type → Body Size → XSS(18规则)<br/>→ SQLi(20规则) → CRLF → Path Traversal"]
+    SEC_DETAIL -->|命中| ERR["4xxxx 错误响应"]
+    SEC_DETAIL -->|通过| PLAT["③ Platform 8平台识别"]
+    PLAT --> GEO["④ GeoIp 区域/币种识别"]
+    GEO --> LOCALE["⑤ Locale 5语言"]
+    LOCALE --> HDEC["⑥ HashidsDecode ID解码"]
+    HDEC --> VER["⑦ VersionRoute API版本"]
+    VER --> RATE["⑧ RateLimit 令牌桶限流"]
+    RATE -->|超限| E429["429 Retry-After"]
+    RATE -->|通过| POSTER{"敏感操作?"}
+    POSTER -->|注册/下单/支付| POSTER_V["⑨ PosterVerify 人机验证"]
+    POSTER -->|否| JWT{"需认证?"}
+    POSTER_V --> JWT
+    JWT -->|是| JWT_V["⑩ JwtAuth HS256验签+黑名单"]
+    JWT -->|否| HENC["⑪ HashidsEncode ID编码"]
+    JWT_V --> HENC
+    HENC --> CTRL["Controller 业务处理"]
+    CTRL --> ENC{"需加密?"}
+    ENC -->|是| ENC_MW["⑫ Encryption AES-256-CBC"]
+    ENC -->|否| RESP(["JSON Response"])
+    ENC_MW --> RESP
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style ERR fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style CTRL fill:#bbdefb
+```
+
+### 功能模块全景图
+
+```mermaid
+graph TB
+    CENTER["Erik Shop 跨境电商平台"]
+
+    CENTER --> B2C["B2C零售<br/>多语言商品·SKU<br/>购物车·订单·退款"]
+    CENTER --> B2B["B2B批发<br/>阶梯定价·企业认证<br/>询价·报价"]
+    CENTER --> MART["多商家入驻<br/>卖家审核·商品审核<br/>分成分账"]
+    CENTER --> CROSS["跨境合规<br/>HS Code·关税规则<br/>VAT/IOSS·合规标签"]
+    CENTER --> LOGISTICS["国际物流<br/>分区运费·DHL/UPS<br/>海外仓·商业发票"]
+    CENTER --> PAY["支付系统<br/>Stripe·PayPal<br/>Klarna·Adyen·3DS"]
+    CENTER --> MKT["营销中心<br/>优惠券·秒杀<br/>拼团·分销"]
+    CENTER --> MULTI["多平台<br/>Amazon·eBay·Shopee<br/>刊登·订单聚合"]
+    CENTER --> SUPPLY["供应链<br/>供应商评级·采购<br/>质检·库存流水"]
+    CENTER --> RISK["风控合规<br/>规则引擎·KYC<br/>GDPR·CCPA"]
+    CENTER --> SECM["安全防护<br/>15类攻击检测<br/>XSS·SQLi·XXE·SSRF"]
+    CENTER --> PERF["高并发<br/>令牌桶·Cache-Aside<br/>熔断·读写分离"]
+    CENTER --> GROWTH["会员增长<br/>积分·礼品卡<br/>AB测试·订阅购"]
+    CENTER --> CMS["内容管理<br/>CMS·FAQ·知识库<br/>尺码表·Feed同步"]
+    CENTER --> CS["客服<br/>WebSocket IM<br/>知识库"]
+    CENTER --> INFRA["基础设施<br/>Snowflake·Hashids<br/>JWT·AES·Poster"]
+    CENTER --> CLIENTS["多端覆盖<br/>Flutter 5平台<br/>HarmonyOS·Web"]
+
+    style CENTER fill:#1565c0,color:#fff
+```
+
+### 请求生命周期图
+
+```mermaid
+sequenceDiagram
+    participant C as 客户端
+    participant N as Nginx
+    participant S as Security MW
+    participant P as 中间件管道
+    participant R as RateLimit
+    participant RT as 路由
+    participant J as JwtAuth
+    participant CTL as Controller
+    participant M as Model
+    participant DB as MySQL/Redis/ES
+    participant RES as Response
+
+    C->>N: HTTP Request
+    N->>S: 转发
+
+    rect rgb(255,205,210)
+        Note over S: 安全检测 6关
+        S->>S: Content-Type→Body→XSS→SQLi→CRLF→Path
+    end
+
+    alt 攻击命中
+        S-->>C: 4xxxx 错误
+    end
+
+    S->>P: 安全通过
+
+    rect rgb(227,242,253)
+        Note over P: 预处理 6步
+        P->>P: Cors→Platform→GeoIp→Locale→HashidsDecode→VersionRoute
+    end
+
+    P->>R: 限流检查
+    R->>DB: Redis ZSET 滑动窗口
+    alt 超限
+        R-->>C: 429
+    end
+
+    R->>RT: 路由匹配
+
+    alt 敏感操作
+        RT->>RT: PosterVerify 人机验证
+    end
+
+    alt 需认证
+        RT->>J: Bearer Token
+        J->>DB: Redis 黑名单检查
+        alt 无效
+            J-->>C: 401
+        end
+    end
+
+    RT->>CTL: 业务处理
+
+    rect rgb(200,230,201)
+        Note over CTL,DB: 业务逻辑
+        CTL->>M: 调用模型
+        M->>DB: 读写
+        DB-->>M: 数据
+        M-->>CTL: 结果
+    end
+
+    CTL->>RES: 返回数据
+
+    rect rgb(187,222,251)
+        Note over RES: 响应处理
+        RES->>RES: HashidsEncode→加密→JSON
+    end
+
+    RES->>C: JSON Response
+```
+
+> 更多细节见 [完整架构图集](docs/diagrams.md)（含订单生命周期、部署架构等 6 张图）
+
 ## 快速开始
 
 ### 方式一：Web 一键安装（推荐）
@@ -121,6 +313,7 @@ shop-php/
 | [INSTALL.md](INSTALL.md) | 安装指南（Web 一键安装 + 手动安装） |
 | [AUDIT-REPORT.md](AUDIT-REPORT.md) | 安装系统审查报告 |
 | [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、API端点设计、状态机 |
+| [架构图集](docs/diagrams.md) | 架构图、流程图、功能图、生命周期图、部署图（6张Mermaid图） |
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |

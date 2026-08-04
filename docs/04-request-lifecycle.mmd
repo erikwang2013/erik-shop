@@ -1,0 +1,108 @@
+sequenceDiagram
+    participant Client as 客户端<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as 中间件管道<br/>9 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as 路由分发
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: 转发请求
+
+    rect rgb(255, 205, 210)
+        Note over Security: 安全检测阶段
+        Security->>Security: ① Content-Type 校验
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ XSS 检测 18规则
+        Security->>Security: ④ SQLi 检测 20规则
+        Security->>Security: ⑤ CRLF Header 注入
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt 攻击命中
+        Security-->>Client: 4xxxx 错误响应
+    end
+
+    Security->>Pipeline: 安全通过
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: 请求预处理阶段
+        Pipeline->>Pipeline: ⑦ Cors 响应头设置
+        Pipeline->>Pipeline: ⑧ Platform 来源识别
+        Pipeline->>Pipeline: ⑨ GeoIp 区域/币种
+        Pipeline->>Pipeline: ⑩ Locale 语言设置
+        Pipeline->>Pipeline: ⑪ HashidsDecode ID解码
+        Pipeline->>Pipeline: ⑫ VersionRoute API版本
+    end
+
+    Pipeline->>RateLimit: 限流检查
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: 令牌桶限流
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>滑动窗口计数
+        Redis-->>RateLimit: 当前窗口请求数
+    end
+
+    alt 超限
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: 通过
+
+    Route->>Route: API-Version → 命名空间<br/>Controller 匹配
+
+    alt 敏感操作 注册/下单/支付
+        Route->>Poster: 人机验证
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt 验证失败
+            Poster-->>Client: 40007 验证失败
+        end
+    end
+
+    alt 需认证接口
+        Route->>JWT: Bearer Token
+        JWT->>JWT: HS256 验签 + 过期检查
+        JWT->>Redis: SISMEMBER jwt_blacklist
+        Redis-->>JWT: 黑名单状态
+        alt Token 无效
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: 业务处理
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: 业务逻辑处理
+        Controller->>Model: 调用 Model
+        Model->>Model: Snowflake ID 生成
+        Model->>Model: Encryptable 加密/解密
+        Model->>MySQL: 读写操作
+        MySQL-->>Model: 结果
+        Model->>Redis: 缓存读写 Cache-Aside
+        Redis-->>Model: 缓存数据
+        Model->>ES: 搜索/索引
+        ES-->>Model: 搜索结果
+        Model-->>Controller: 业务数据
+    end
+
+    Controller->>Response: 返回数据
+
+    rect rgb(187, 222, 251)
+        Note over Response: 响应后处理
+        Response->>Response: HashidsEncode ID编码
+        Response->>Response: AES 加密敏感字段
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

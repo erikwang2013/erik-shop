@@ -1,0 +1,68 @@
+graph TB
+    START(["HTTP 请求到达"]) --> CORS["① Cors<br/>Access-Control-* 响应头<br/>OPTIONS 预检返回 200"]
+
+    CORS --> SEC["② Security 攻击检测<br/>━━━━━━━━━━━━━━━"]
+    SEC --> SEC1{"Content-Type<br/>合法?"}
+    SEC1 -->|否| E403["403 Forbidden"]
+    SEC1 -->|是| SEC2{"Body Size<br/>≤ 10MB?"}
+    SEC2 -->|否| E413["413 Too Large"]
+    SEC2 -->|是| SEC3{"XSS 检测<br/>18条规则"}
+    SEC3 -->|命中| E40001["40001 XSS 拦截"]
+    SEC3 -->|通过| SEC4{"SQLi 检测<br/>20条规则"}
+    SEC4 -->|命中| E40002["40002 SQLi 拦截"]
+    SEC4 -->|通过| SEC5{"CRLF 检测<br/>Header 注入"}
+    SEC5 -->|命中| E40003["40003 CRLF 拦截"]
+    SEC5 -->|通过| SEC6{"路径遍历<br/>检测"}
+    SEC6 -->|命中| E40004["40004 Path 拦截"]
+    SEC6 -->|通过| SEC_PASS["安全检测通过"]
+
+    SEC_PASS --> PLAT["③ Platform<br/>X-Platform Header<br/>+ UA 降级识别<br/>8 平台来源"]
+
+    PLAT --> GEO["④ GeoIp<br/>MaxMind GeoIP2<br/>未登录用户<br/>区域/币种/语言识别"]
+
+    GEO --> LOCALE["⑤ Locale<br/>Accept-Language 解析<br/>5 语言精确匹配 → 降级 → 默认"]
+
+    LOCALE --> HDEC["⑥ HashidsDecode<br/>请求中 *_id 字段<br/>hashid → snowflake ID"]
+
+    HDEC --> VER["⑦ VersionRoute<br/>API-Version Header<br/>→ v1/v2 命名空间路由"]
+
+    VER --> RATE["⑧ RateLimit<br/>Redis ZSET 滑动窗口<br/>令牌桶限流"]
+
+    RATE -->|超限| E429["429 Too Many Requests<br/>Retry-After 响应头"]
+    RATE -->|通过| ROUTE_CHECK{"路由匹配?"}
+
+    ROUTE_CHECK -->|敏感操作<br/>注册/下单/支付| POSTER["⑨ PosterVerify<br/>Redis 验证 token<br/>滑块/拼图/点击"]
+    ROUTE_CHECK -->|需认证| JWT_START["⑩ JwtAuth"]
+    ROUTE_CHECK -->|公开接口| HENC
+
+    POSTER --> JWT_START
+
+    JWT_START --> JWT_CHECK{"Bearer Token<br/>HS256 验签"}
+    JWT_CHECK -->|失效/过期| E401["401 Unauthorized"]
+    JWT_CHECK -->|有效| JWT_INJECT["注入 request→userId<br/>检查黑名单"]
+
+    JWT_INJECT --> HENC["⑪ HashidsEncode<br/>响应 JSON 递归遍历<br/>snowflake ID → hashid"]
+
+    HENC --> CTRL["Controller<br/>业务逻辑处理<br/>Model 查询 · 验证 · 计算"]
+
+    CTRL --> ENC_RESP{"需加密响应?"}
+
+    ENC_RESP -->|是| ENC["⑫ Encryption<br/>AES-256-CBC 加密<br/>X-Encrypted: 1 Header"]
+    ENC_RESP -->|否| RESP
+    ENC --> RESP(["JSON Response<br/>{code, msg, data}<br/>+ CORS Headers<br/>+ X-Platform Header"])
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style POSTER fill:#ffe0b2
+    style JWT_START fill:#c8e6c9
+    style CTRL fill:#bbdefb
+    style START fill:#e8eaf6
+    style RESP fill:#e8eaf6
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style E401 fill:#ff5252,color:#fff

@@ -48,11 +48,27 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ![请求生命周期图](docs/04-request-lifecycle.svg)
 
-> 更多细节见 [完整架构图集](docs/diagrams.md)（含订单生命周期、部署架构、安全架构等 7 张图）
+> 更多细节见 [完整架构图集](docs/diagrams.md)（含订单生命周期、部署架构、安全架构、多币种结算等 8 张图）
 
 ### 安全架构图
 
 ![安全架构图](docs/07-security-architecture.svg)
+
+### 多币种结算流程图
+
+![多币种结算流程图](docs/08-multi-currency-settlement.svg)
+
+### 多币种结算说明
+
+**多币种定价**：商品 SKU 按 `currency_code` 分币种定价，下单时订单锁定收款币种（USD / EUR / GBP / CNY 等）。
+
+**汇率服务**：`erik_exchange_rates` 汇率表支持 manual 手动维护与 exchangerate-api 自动拉取，按 `effective_at` 生效时间版本化管理，结算时取支付时点汇率快照。
+
+**原币扣款**：Stripe / PayPal / Klarna / Adyen 按订单币种原币扣款，Webhook 验签确认到账后更新支付与订单状态。
+
+**分账结算**：支付成功后自动生成 `PlatformSettlements` 平台分账（订单总额 + 平台佣金 + 支付网关手续费，按订单币种记账）；卖家结算 `MerchantSettlements`（订单金额 → 抽成率 → 结算金额）、供应商结算 `SupplierSettlements`、分销佣金提现 `AffiliatePayouts` 四线独立结算，状态 0 待结算 / 1 已结算。
+
+**汇兑损益**：`CurrencyExchangeGainsLosses` 追踪收款币种与结算币种差异，对比支付时汇率与结算时汇率，正数 = 汇兑收益、负数 = 汇兑亏损，支撑跨境电商多币种对账与审计。
 
 ## 快速开始
 
@@ -147,7 +163,7 @@ shop-php/
 | [INSTALL.md](INSTALL.md) | 安装指南（Web 一键安装 + 手动安装） |
 | [AUDIT-REPORT.md](AUDIT-REPORT.md) | 安装系统审查报告 |
 | [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、API端点设计、状态机 |
-| [架构图集](docs/diagrams.md) | 架构图、流程图、功能图、生命周期图、部署图（6张Mermaid图） |
+| [架构图集](docs/diagrams.md) | 架构图、流程图、功能图、生命周期图、部署图、多币种结算图（8张Mermaid图） |
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |

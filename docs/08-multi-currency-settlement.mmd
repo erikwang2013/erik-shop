@@ -1,0 +1,28 @@
+flowchart TD
+    A["商品分币种定价<br/>SKU 按 currency_code 定价<br/>(USD/EUR/GBP/CNY…)"] --> B["购物车/下单<br/>订单锁定收款币种"]
+    B --> C["汇率服务 erik_exchange_rates<br/>manual 手动维护 / exchangerate-api 自动拉取<br/>生效时间 effective_at 版本化"]
+
+    C --> D["发起支付<br/>Stripe / PayPal / Klarna / Adyen<br/>按收款币种原币扣款"]
+    D --> E["支付回调 Webhook<br/>payment_intent.succeeded<br/>验签 Gateway::verifyWebhook"]
+
+    E --> F["更新支付/订单<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["平台分账 PlatformSettlements<br/>订单总额 total_amount<br/>平台佣金 platform_fee<br/>支付网关手续费 payment_gateway_fee<br/>currency_code = 订单币种"]
+
+    G --> H1["卖家结算 MerchantSettlements<br/>订单金额 → 抽成率 → 结算金额<br/>0待结算 / 1已结算"]
+    G --> H2["供应商结算 SupplierSettlements<br/>应付供应商货款"]
+    G --> H3["分销结算 AffiliatePayouts<br/>佣金 + 提现"]
+    G --> H4["平台收益<br/>平台佣金 + 支付手续费"]
+
+    H1 --> I["汇兑损益追踪 CurrencyExchangeGainsLosses<br/>收款金额/币种 ↔ 结算金额/币种<br/>支付时汇率 vs 结算时汇率<br/>正=汇兑收益 / 负=汇兑亏损"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["结算完成 settled_at<br/>对账核销 / 审计追溯"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

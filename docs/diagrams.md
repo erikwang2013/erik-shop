@@ -58,6 +58,24 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 八、多币种结算流程图
+
+![八、多币种结算流程图](08-multi-currency-settlement.svg)
+
+### 多币种结算说明
+
+**多币种定价**：商品 SKU 按 `currency_code` 分币种定价，下单时订单锁定收款币种（USD / EUR / GBP / CNY 等）。
+
+**汇率服务**：`erik_exchange_rates` 汇率表支持 manual 手动维护与 exchangerate-api 自动拉取，按 `effective_at` 生效时间版本化管理，结算时取支付时点汇率快照。
+
+**原币扣款**：Stripe / PayPal / Klarna / Adyen 按订单币种原币扣款，Webhook 验签确认到账后更新支付与订单状态。
+
+**分账结算**：支付成功后自动生成 `PlatformSettlements` 平台分账（订单总额 + 平台佣金 + 支付网关手续费，按订单币种记账）；卖家结算 `MerchantSettlements`（订单金额 → 抽成率 → 结算金额）、供应商结算 `SupplierSettlements`、分销佣金提现 `AffiliatePayouts` 四线独立结算，状态 0 待结算 / 1 已结算。
+
+**汇兑损益**：`CurrencyExchangeGainsLosses` 追踪收款币种与结算币种差异，对比支付时汇率与结算时汇率，正数 = 汇兑收益、负数 = 汇兑亏损，支撑跨境电商多币种对账与审计。
+
+---
+
 ## 图例索引
 
 | 编号 | 图名 | 类型 | 用途 |
@@ -69,3 +87,4 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 五 | 订单生命周期图 | 生命周期 | 展示订单从购物车到完成/退款的所有状态流转 |
 | 六 | 部署架构图 | 架构图 | 展示 Docker Compose 容器编排、网络、数据卷 |
 | 七 | 安全架构图 | 架构图 | 展示 6 层纵深防御体系：边界→WAF→流量→认证→数据→响应 |
+| 八 | 多币种结算流程图 | 流程图 | 展示分币种定价→支付→分账→结算→汇兑损益的完整链路 |

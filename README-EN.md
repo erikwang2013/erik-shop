@@ -48,11 +48,27 @@ A full-stack cross-border e-commerce platform built on the webman ecosystem, cov
 
 ![Request Lifecycle](docs/04-request-lifecycle.svg)
 
-> See [full diagram collection](docs/diagrams.md) for 7 diagrams including order lifecycle, deployment, and security architecture.
+> See [full diagram collection](docs/diagrams.md) for 8 diagrams including order lifecycle, deployment, security architecture, and multi-currency settlement.
 
 ### Security Architecture
 
 ![Security Architecture](docs/07-security-architecture.svg)
+
+### Multi-Currency Settlement Flow
+
+![Multi-Currency Settlement Flow](docs/08-multi-currency-settlement.svg)
+
+### Multi-Currency Settlement Notes
+
+**Multi-currency pricing**: product SKUs are priced per `currency_code`; orders lock in the settlement currency (USD / EUR / GBP / CNY etc.) at checkout.
+
+**Exchange rate service**: the `erik_exchange_rates` table supports manual maintenance and automatic pulls via exchangerate-api, versioned by the `effective_at` timestamp; settlement uses the exchange-rate snapshot at payment time.
+
+**Native-currency capture**: Stripe / PayPal / Klarna / Adyen charge in the order currency; the payment webhook is signature-verified before payment and order status are updated.
+
+**Settlement splitting**: on successful payment, `PlatformSettlements` is auto-generated (order total + platform commission + gateway fee, booked in the order currency). Four independent settlement lines — merchant settlements `MerchantSettlements` (order amount → commission rate → settlement amount), supplier settlements `SupplierSettlements`, and affiliate payouts `AffiliatePayouts` — each with status 0 pending / 1 settled.
+
+**FX gain/loss**: `CurrencyExchangeGainsLosses` tracks the difference between the received and settled currencies, comparing the exchange rate at payment vs. at settlement; positive = FX gain, negative = FX loss, supporting multi-currency reconciliation and auditing for cross-border e-commerce.
 
 ## Quick Start
 
@@ -144,7 +160,7 @@ shop-php/
 | [INSTALL.md](INSTALL.md) | Installation guide (web installer + manual) |
 | [AUDIT-REPORT.md](AUDIT-REPORT.md) | Installation system audit report |
 | [Features](docs/features.md) | Complete feature matrix, workflows, API endpoints, state machines |
-| [Diagrams](docs/diagrams.md) | Architecture, flowchart, feature map, lifecycle, deployment (6 Mermaid diagrams) |
+| [Diagrams](docs/diagrams.md) | Architecture, flowchart, feature map, lifecycle, deployment, multi-currency settlement (8 Mermaid diagrams) |
 | [Architecture](docs/architecture-full.md) | System architecture diagrams, middleware pipeline, data/security/payment architecture |
 | [Design](docs/design.md) | Database schema, API specification, security, i18n |
 | [API Reference](docs/api.md) | 71 API endpoints (static documentation) |

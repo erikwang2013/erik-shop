@@ -7,6 +7,7 @@ namespace app\controller\v1;
 
 use app\common\ApiResponse;
 use app\model\OrderItems;
+use app\model\Orders;
 use app\model\Products;
 use Webman\Http\Request;
 
@@ -52,10 +53,12 @@ class RecommendationController extends \app\controller\BaseApiController
             return [];
         }
 
-        // Find users who bought the same products
-        $similarUserIds = OrderItems::whereIn('product_id', $purchasedIds)
-            ->whereHas('order', fn($q) => $q->where('user_id', '!=', $userId))
-            ->pluck('order.user_id')->unique()->toArray();
+        // Find users who bought the same products (Builder pluck 不支持点号关联语法，直接查订单表)
+        $similarUserIds = Orders::whereIn('id', OrderItems::whereIn('product_id', $purchasedIds)->pluck('order_id'))
+            ->where('user_id', '!=', $userId)
+            ->pluck('user_id')
+            ->unique()
+            ->toArray();
 
         if (empty($similarUserIds)) {
             return [];
@@ -78,7 +81,7 @@ class RecommendationController extends \app\controller\BaseApiController
 
         return Products::where('status', 2)
             ->whereIn('id', $recommendedIds)
-            ->orderByRaw('FIELD(id, ' . implode(',', $recommendedIds) . ')')
+            ->orderByRaw('FIELD(id, ' . implode(',', array_fill(0, count($recommendedIds), '?')) . ')', $recommendedIds)
             ->get()
             ->toArray();
     }

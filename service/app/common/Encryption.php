@@ -20,7 +20,19 @@ class Encryption
     private static function init(): void
     {
         if (!isset(self::$key)) {
-            self::$key = config('encryption.key', '');
+            $key = config('encryption.key', '');
+            if (empty($key)) {
+                throw new \RuntimeException('ENCRYPTION_KEY is not configured. Set ENCRYPTION_KEY in .env');
+            }
+            // 支持 Laravel 风格 base64: 前缀
+            if (str_starts_with($key, 'base64:')) {
+                $key = base64_decode(substr($key, 7));
+            }
+            $keyLength = strlen($key);
+            if (!in_array($keyLength, [16, 24, 32], true)) {
+                throw new \RuntimeException('ENCRYPTION_KEY must decode to 16/24/32 bytes for AES cipher');
+            }
+            self::$key = $key;
             self::$cipher = config('encryption.cipher', 'AES-256-CBC');
         }
     }

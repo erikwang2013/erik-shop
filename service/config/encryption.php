@@ -9,8 +9,8 @@
  */
 
 return [
-    // 加密密钥（AES-256需要32字节，生产环境通过环境变量设置）
-    'key' => getenv('ENCRYPTION_KEY') ?: 'base64:your-32-byte-key-change-in-production!!',
+    // 加密密钥（AES-256需要32字节，生产环境必须通过 ENCRYPTION_KEY 环境变量设置，为空时 Encryption 类会拒绝使用）
+    'key' => getenv('ENCRYPTION_KEY') ?: '',
 
     // 加密算法
     'cipher' => 'AES-256-CBC',

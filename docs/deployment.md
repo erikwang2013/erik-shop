@@ -41,7 +41,7 @@ docker compose logs -f admin
 |------|------|------|
 | nginx | 80, 443 | 反向代理 |
 | service | 8787 (内部) | PHP业务API |
-| admin | 8787 (内部) | 管理后台 |
+| admin | 8788 (内部) | 管理后台 |
 | mysql | 3306 | MySQL 8.0 |
 | redis | 6379 | Redis 7 |
 | elasticsearch | 9200 | ES 8 |
@@ -53,7 +53,7 @@ docker compose logs -f admin
 - [ ] `APP_ENV=production`
 - [ ] `config/app.php` 中 `debug` 设为 `false`
 - [ ] SSL证书配置 (nginx+Let's Encrypt)
-- [ ] 数据库已导入 `service/database/schema.sql`
+- [ ] 数据库已导入根目录 `install.sql`（117 张表，Web 安装向导自动导入）
 - [ ] ES索引已创建: `php start.php scout:import "app\model\Products"`
 - [ ] MySQL/Redis/ES 数据卷已配置备份
 
@@ -102,7 +102,7 @@ php start.php start -d
 mysql -u root -p -e "CREATE DATABASE erik_shop CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # 导入表结构
-mysql -u root -p erik_shop < service/database/schema.sql
+mysql -u root -p erik_shop < install.sql
 
 # 导入种子数据（可选）
 php -r "

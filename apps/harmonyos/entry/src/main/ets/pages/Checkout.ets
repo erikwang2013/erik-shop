@@ -1,6 +1,7 @@
 /**
  * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
  */
+import { promptAction, router } from '@kit.ArkUI';
 import { ApiClient } from '../common/api/ApiClient';
 
 @Entry
@@ -60,9 +61,9 @@ struct Checkout {
           Text('订单商品').fontSize(16).fontWeight(FontWeight.Bold).width('100%').padding(12)
           ForEach(this.cartItems, (item: Record<string, Object>) => {
             Row() {
-              Image(item['image'] as string ?? '').width(60).height(60)
+              Image((item['image'] as string) ?? '').width(60).height(60)
               Column() {
-                Text(item['title'] as string ?? '').maxLines(2).fontSize(13)
+                Text((item['title'] as string) ?? '').maxLines(2).fontSize(13)
                 Text('$' + ((item['price'] as number) ?? 0).toFixed(2) + ' x ' + (item['quantity'] ?? 1))
                   .fontSize(12).fontColor('#999')
               }.alignItems(HorizontalAlign.Start).layoutWeight(1).padding(8)
@@ -80,8 +81,8 @@ struct Checkout {
                 this.shippingFee = (opt['fee'] as number) ?? 0;
               })
               Column() {
-                Text(opt['logistics_name'] as string ?? '').fontSize(14)
-                Text('$' + ((opt['fee'] as number) ?? 0).toFixed(2) + ' · ' + (opt['estimated_days'] as string ?? '')).fontSize(12).fontColor('#999')
+                Text((opt['logistics_name'] as string) ?? '').fontSize(14)
+                Text('$' + ((opt['fee'] as number) ?? 0).toFixed(2) + ' · ' + ((opt['estimated_days'] as string) ?? '')).fontSize(12).fontColor('#999')
               }.alignItems(HorizontalAlign.Start).margin({ left: 8 })
             }.width('100%').padding(8)
           })
@@ -92,10 +93,10 @@ struct Checkout {
           Text('支付方式').fontSize(16).fontWeight(FontWeight.Bold).width('100%').padding(12)
           ForEach(this.paymentMethods, (method: Record<string, Object>) => {
             Row() {
-              Radio({ value: method['method_code'] as string ?? '', group: 'payment' }).onChange((_checked: boolean) => {
-                this.selectedPayment = method['method_code'] as string ?? '';
+              Radio({ value: (method['method_code'] as string) ?? '', group: 'payment' }).onChange((_checked: boolean) => {
+                this.selectedPayment = (method['method_code'] as string) ?? '';
               })
-              Text(method['method_name'] as string ?? '').fontSize(14).margin({ left: 8 })
+              Text((method['method_name'] as string) ?? '').fontSize(14).margin({ left: 8 })
             }.width('100%').padding(8)
           })
         }.width('100%')

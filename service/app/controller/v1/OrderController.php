@@ -13,6 +13,7 @@ use app\model\Carts;
 use app\model\ProductSkus;
 use app\model\ProductSkuPrices;
 use app\model\UserAddresses;
+use support\Db;
 use Webman\Http\Request;
 
 class OrderController extends \app\controller\BaseApiController
@@ -99,73 +100,97 @@ class OrderController extends \app\controller\BaseApiController
             return ApiResponse::fail('购物车无可结算商品', 422);
         }
 
-        // 生成订单号
-        $orderNo = 'ORD' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
+        // 事务内创建订单 + 明细 + 原子扣库存 + 清购物车，任一步失败整体回滚
+        try {
+            $result = Db::transaction(function () use ($userId, $address, $cartItems, $currencyCode, $remark) {
+                // 生成订单号
+                $orderNo = 'ORD' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
 
-        // 创建订单
-        $order = Orders::create([
-            'order_no' => $orderNo,
-            'user_id' => $userId,
-            'status' => 0,   // 待付款
-            'currency_code' => $currencyCode,
-            'remark' => $remark,
-            'address_snapshot' => $address->toArray(),
-        ]);
+                // 创建订单
+                $order = Orders::create([
+                    'order_no' => $orderNo,
+                    'user_id' => $userId,
+                    'status' => 0,   // 待付款
+                    'currency_code' => $currencyCode,
+                    'remark' => $remark,
+                    'address_snapshot' => $address->toArray(),
+                ]);
 
-        $totalAmount = 0;
+                // 批量查询分币种价格，避免循环内 N+1
+                $priceMap = ProductSkuPrices::whereIn('sku_id', $cartItems->pluck('sku_id'))
+                    ->where('currency_code', $currencyCode)
+                    ->pluck('price', 'sku_id')
+                    ->map(fn($p) => (float) $p)
+                    ->toArray();
 
-        foreach ($cartItems as $cart) {
-            $sku = ProductSkus::find($cart->sku_id);
-            if (!$sku || $sku->stock < $cart->quantity) {
-                $order->status = 5;
+                $totalAmount = 0;
+
+                foreach ($cartItems as $cart) {
+                    $sku = ProductSkus::find($cart->sku_id);
+                    if (!$sku) {
+                        throw new \RuntimeException("SKU {$cart->sku_id} 不存在");
+                    }
+
+                    // 原子扣减库存（条件 stock >= quantity，并发下不会超卖）
+                    $affected = ProductSkus::where('id', $sku->id)
+                        ->where('stock', '>=', $cart->quantity)
+                        ->decrement('stock', $cart->quantity);
+                    if (!$affected) {
+                        throw new \RuntimeException("SKU {$cart->sku_id} 库存不足");
+                    }
+
+                    $price = $priceMap[$sku->id] ?? (float) $sku->default_price;
+                    $subtotal = round($price * $cart->quantity, 2);
+
+                    OrderItems::create([
+                        'order_id' => $order->id,
+                        'product_id' => $sku->product_id,
+                        'sku_id' => $sku->id,
+                        'title' => $sku->product->title ?? 'Product',
+                        'image' => $sku->image,
+                        'sku_attrs_snapshot' => $sku->attrs,
+                        'price' => $price,
+                        'quantity' => $cart->quantity,
+                        'subtotal' => $subtotal,
+                    ]);
+
+                    $totalAmount += $subtotal;
+                }
+
+                // 更新订单金额
+                $order->total_amount = $totalAmount;
+                $order->pay_amount = $totalAmount;
                 $order->save();
-                return ApiResponse::fail("SKU {$cart->sku_id} 库存不足", 422);
-            }
 
-            $price = $this->getSkuPrice($sku, $currencyCode);
-            $subtotal = round($price * $cart->quantity, 2);
+                // 记录日志
+                OrderLogs::create([
+                    'order_id' => $order->id,
+                    'to_status' => 0,
+                    'operator' => 'user',
+                    'remark' => '创建订单',
+                ]);
 
-            OrderItems::create([
-                'order_id' => $order->id,
-                'product_id' => $sku->product_id,
-                'sku_id' => $sku->id,
-                'title' => $sku->product->title ?? 'Product',
-                'image' => $sku->image,
-                'sku_attrs_snapshot' => $sku->attrs,
-                'price' => $price,
-                'quantity' => $cart->quantity,
-                'subtotal' => $subtotal,
+                // 清空购物车已购买商品
+                Carts::where('user_id', $userId)->where('selected', 1)->delete();
+
+                return [
+                    'order_id' => $order->id,
+                    'order_no' => $order->order_no,
+                    'total_amount' => $totalAmount,
+                    'currency_code' => $currencyCode,
+                ];
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail($e->getMessage(), 422);
+        } catch (\Throwable $e) {
+            \support\Log::error('订单创建失败: ' . $e->getMessage(), [
+                'user_id' => $userId,
+                'trace' => $e->getTraceAsString(),
             ]);
-
-            // 扣减库存
-            $sku->stock -= $cart->quantity;
-            $sku->save();
-
-            $totalAmount += $subtotal;
+            return ApiResponse::fail('订单创建失败，请稍后重试', 500);
         }
 
-        // 更新订单金额
-        $order->total_amount = $totalAmount;
-        $order->pay_amount = $totalAmount;
-        $order->save();
-
-        // 记录日志
-        OrderLogs::create([
-            'order_id' => $order->id,
-            'to_status' => 0,
-            'operator' => 'user',
-            'remark' => '创建订单',
-        ]);
-
-        // 清空购物车已购买商品
-        Carts::where('user_id', $userId)->where('selected', 1)->delete();
-
-        return ApiResponse::success([
-            'order_id' => $order->id,
-            'order_no' => $order->order_no,
-            'total_amount' => $totalAmount,
-            'currency_code' => $currencyCode,
-        ], '订单创建成功');
+        return ApiResponse::success($result, '订单创建成功');
     }
 
     /**
@@ -185,32 +210,43 @@ class OrderController extends \app\controller\BaseApiController
             return ApiResponse::fail('仅待付款订单可取消', 422);
         }
 
-        // 恢复库存
-        $items = OrderItems::where('order_id', $order->id)->get();
-        foreach ($items as $item) {
-            ProductSkus::where('id', $item->sku_id)->increment('stock', $item->quantity);
+        try {
+            Db::transaction(function () use ($order) {
+                // 原子门闩：仅待付款订单可被本次取消，防止并发重复取消导致库存重复恢复
+                $updated = Orders::where('id', $order->id)
+                    ->where('status', 0)
+                    ->update([
+                        'status' => 5,
+                        'canceled_at' => date('Y-m-d H:i:s'),
+                    ]);
+                if (!$updated) {
+                    throw new \RuntimeException('订单状态已变化，请刷新后重试');
+                }
+
+                // 恢复库存
+                $items = OrderItems::where('order_id', $order->id)->get();
+                foreach ($items as $item) {
+                    ProductSkus::where('id', $item->sku_id)->increment('stock', $item->quantity);
+                }
+
+                OrderLogs::create([
+                    'order_id' => $order->id,
+                    'from_status' => 0,
+                    'to_status' => 5,
+                    'operator' => 'user',
+                    'remark' => '用户取消订单',
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail($e->getMessage(), 422);
+        } catch (\Throwable $e) {
+            \support\Log::error('订单取消失败: ' . $e->getMessage(), [
+                'order_id' => $order->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ApiResponse::fail('订单取消失败，请稍后重试', 500);
         }
 
-        $order->status = 5;
-        $order->canceled_at = date('Y-m-d H:i:s');
-        $order->save();
-
-        OrderLogs::create([
-            'order_id' => $order->id,
-            'from_status' => 0,
-            'to_status' => 5,
-            'operator' => 'user',
-            'remark' => '用户取消订单',
-        ]);
-
         return ApiResponse::success(null, '订单已取消');
-    }
-
-    private function getSkuPrice($sku, string $currencyCode): float
-    {
-        $price = ProductSkuPrices::where('sku_id', $sku->id)
-            ->where('currency_code', $currencyCode)
-            ->value('price');
-        return $price ? (float) $price : (float) $sku->default_price;
     }
 }

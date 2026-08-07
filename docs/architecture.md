@@ -24,8 +24,8 @@ shop-php/
     app/model/         112模型 (BaseModel + 110业务模型)
     app/middleware/     12中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/StaticFile)
     app/common/          8工具类 (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/Cache/CircuitBreaker/PaymentGateway)
-    database/          schema.sql (110表) + seeders
-    tests/              4测试类 (26 tests, 71 assertions)
+    database/          schema.sql (已被根目录 install.sql 替代) + seeders
+    tests/              4测试类 (22 tests, 45 assertions)
   admin/             管理后台 (137 PHP文件)
     plugin/admin/app/controller/shop/ 67控制器
     plugin/admin/app/model/shop/      65模型
@@ -65,7 +65,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(内置RBAC) �
 
 ## 6. 测试
 
-26 tests / 71 assertions — ALL PASS
+22 tests / 45 assertions — ALL PASS
 - SecurityTest (16): XSS+SQLi+XXE+SSRF+File+Path
 - JwtTest (4): encode/decode validation
 - ApiResponseTest (3): success/fail/paginate

@@ -52,6 +52,5 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
           const SizedBox(height: 16),
           if (_order!.status == 0) FilledButton.tonal(onPressed: _cancel, child: const Text('Cancel Order')),
         ]),
-    );
   );
 }

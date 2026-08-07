@@ -14,8 +14,8 @@ interface PaymentGatewayInterface
 {
     public function createPayment(array $data): array;
     public function capturePayment(string $txnId): array;
-    public function refundPayment(string $txnId, float $amount): array;
-    public function verifyWebhook(string $payload, string $signature): bool;
+    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array;
+    public function verifyWebhook(string $payload, string $signature, array $headers = []): bool;
 }
 
 class PaymentGateway
@@ -66,7 +66,6 @@ class StripeGateway implements PaymentGatewayInterface
 
     public function capturePayment(string $txnId): array
     {
-        $intent = $this->client->paymentIntents->retrieve($txnId);
         $intent = $this->client->paymentIntents->capture($txnId);
 
         return [
@@ -76,7 +75,7 @@ class StripeGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function refundPayment(string $txnId, float $amount): array
+    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
     {
         $refund = $this->client->refunds->create([
             'payment_intent' => $txnId,
@@ -91,7 +90,7 @@ class StripeGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function verifyWebhook(string $payload, string $signature): bool
+    public function verifyWebhook(string $payload, string $signature, array $headers = []): bool
     {
         try {
             Webhook::constructEvent($payload, $signature, $this->webhookSecret);
@@ -175,12 +174,12 @@ class PayPalGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function refundPayment(string $txnId, float $amount): array
+    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
     {
         $token = $this->getAccessToken();
         $response = $this->http->post("/v2/payments/captures/{$txnId}/refund", [
             'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
-            'json' => ['amount' => ['currency_code' => 'USD', 'value' => number_format($amount, 2, '.', '')]],
+            'json' => ['amount' => ['currency_code' => $currency, 'value' => number_format($amount, 2, '.', '')]],
         ]);
         $result = json_decode($response->getBody(), true);
 
@@ -192,20 +191,31 @@ class PayPalGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function verifyWebhook(string $payload, string $signature): bool
+    public function verifyWebhook(string $payload, string $signature, array $headers = []): bool
     {
         $webhookId = config('payment.paypal.webhook_id', '');
         if (empty($webhookId)) return false;
+
+        // 五个验签字段来自请求 header（webman 以小写键返回）
+        $transmissionId = $headers['paypal-transmission-id'] ?? '';
+        $transmissionSig = $headers['paypal-transmission-sig'] ?? '';
+        $transmissionTime = $headers['paypal-transmission-time'] ?? '';
+        $certUrl = $headers['paypal-cert-url'] ?? '';
+        $authAlgo = $headers['paypal-auth-algo'] ?? '';
+        if ($transmissionId === '' || $transmissionSig === '' || $transmissionTime === ''
+            || $certUrl === '' || $authAlgo === '') {
+            return false;
+        }
 
         $token = $this->getAccessToken();
         $response = $this->http->post('/v1/notifications/verify-webhook-signature', [
             'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
             'json' => [
-                'auth_algo' => $signature,
-                'cert_url' => '',
-                'transmission_id' => '',
-                'transmission_sig' => '',
-                'transmission_time' => '',
+                'auth_algo' => $authAlgo,
+                'cert_url' => $certUrl,
+                'transmission_id' => $transmissionId,
+                'transmission_sig' => $transmissionSig,
+                'transmission_time' => $transmissionTime,
                 'webhook_id' => $webhookId,
                 'webhook_event' => json_decode($payload, true),
             ],

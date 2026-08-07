@@ -55,7 +55,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **基础设施** | Snowflake分布式ID(bigint非自增)、Hashids接口ID混淆、JWT认证(HS256+黑名单+刷新)、AES加解密(接口+数据库三层加密)、GeoIP区域识别(MaxMind)、Poster人机验证(滑块/拼图/点击) | 完整 |
 | **多端覆盖** | Flutter 5平台(iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS(ArkTS 8页面) + Web Admin(LayUI+ECharts) + API | Flutter 25文件,HarmonyOS 13文件,Admin 137文件 |
 | **平台追踪** | 8平台识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+X-Platform header+6表记录(orders/payments/operation_logs/users/search_logs/chat_messages) | 完整 |
-| **测试** | 26 tests / 71 assertions — ALL PASS (SecurityTest 16: XSS+SQLi+XXE+SSRF+File+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | 单元测试完整,集成测试待补 |
+| **测试** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | 单元测试完整,集成测试待补 |
 
 ### 1.1 模块矩阵
 
@@ -436,8 +436,8 @@ cd service && php vendor/bin/phpunit tests/
 
 | 测试类 | Tests | 覆盖 |
 |--------|-------|------|
-| SecurityTest | 16 | XSS(8条)+SQLi(2条)+XXE(2条)+SSRF(2条)+File double ext+Path encoded+Null byte |
+| SecurityTest | 12 | XSS(3条)+SQLi(2条)+XXE(2条)+SSRF(1条)+Path(2条)+信用卡泄漏(1条)+正常放行(1条) |
 | JwtTest | 4 | encode三段式JWT + decode往返 + 无效token→null + 空token→null |
 | ApiResponseTest | 3 | success(code=0) + fail(error code) + paginate(list+meta分页) |
 | RedisFacadeTest | 3 | ping + set/get往返 + redis() 辅助函数（Redis 不可用时 skip） |
-| **Total** | **26** | **71 assertions — ALL PASS** |
+| **Total** | **22** | **45 assertions — ALL PASS** |

@@ -16,3 +16,13 @@ RUN docker-php-source delete \
 
 RUN mkdir -p /app
 WORKDIR /app
+
+COPY . /app
+
+# 生产模式安装依赖
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && composer install --no-dev --optimize-autoloader --no-interaction
+
+EXPOSE 8788
+
+CMD ["php", "start.php", "start"]

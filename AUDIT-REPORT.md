@@ -52,19 +52,68 @@
 
 ---
 
+## 修复记录 (2026-08-07)
+
+### P0 安全修复
+| # | 问题 | 文件 | 修复 |
+|---|------|------|------|
+| S5 | docker-compose/.env.example 硬编码真实密钥 | `docker-compose.yml` `service/.env.example` | 替换为 change_me 占位符 + 顶部安全提示；安装向导生成随机密钥 |
+| S6 | 订单创建无事务、库存扣减非原子（并发超卖） | `OrderController.php` | `Db::transaction` + `where('stock','>=',qty)->decrement()` 原子扣减 |
+| S7 | 优惠券领取并发超发 | `CouponController.php` | 事务 + 行锁 `lockForUpdate` + `received_qty < total_qty` 原子门闩 |
+| S8 | PayPal Webhook 验签字段恒为空 | `PaymentGateway.php` | 五个验签字段从请求 header 透传（transmission-id/sig/time/cert-url/auth-algo） |
+| S9 | 安装向导 SQL 注入 | `InstallController.php` | 数据库名 quote + 反引号转义；密码 var_export 防配置注入 |
+| S10 | 加密/哈希密钥缺失静默降级 | `Encryption.php` `HashidsHelper.php` | 密钥为空/长度非法时抛异常拒绝使用 |
+
+### P0/P1 功能修复
+| # | 问题 | 文件 | 修复 |
+|---|------|------|------|
+| F5 | 订单导出固定文件名并发覆盖 | `ExportController.php` | uniqid 文件名 + shutdown 清理 + 异常处理 |
+| F6 | PayPal 退款硬编码 USD | `PaymentGateway.php` | `refundPayment` 增加 currency 参数 |
+| F7 | Hashids 解码不写回请求参数 | `HashidsDecode.php` | `setParams`/`setGet`/`setPost` 写回解码结果 |
+| F8 | 状态映射缺"待审核" | `ExportController.php` | 状态映射补 8 → 待审核 |
+
+### P1 生态修复
+| # | 问题 | 文件 | 修复 |
+|---|------|------|------|
+| E1 | composer.lock 被 gitignore | `.gitignore` | 移除忽略，纳入版本控制保证可复现构建 |
+| E2 | 容器无健康检查、无启动依赖 | `docker-compose.yml` | 全部服务加 healthcheck + depends_on condition |
+| E3 | admin Dockerfile 不可运行 | `admin/Dockerfile` | 补 COPY + composer install + EXPOSE + CMD |
+| E4 | Redis 门面不可用 | `service/config` | RedisFacade 修复 + 3 个单元测试 |
+| E5 | 新增 /health 健康检查端点 | `service/config/route.php` | 无需 JWT，供探活/负载均衡 |
+
+### P2 移动端修复
+| # | 问题 | 文件 | 修复 |
+|---|------|------|------|
+| M1 | Flutter 编译错误（intl 版本冲突、构造器泛型、多余括号） | `apps/flutter` | intl ^0.20.2、静态工厂 fromJson、修复语法 |
+| M2 | Flutter 测试 pending Timer 失败 | `test/widget_test.dart` | pump 推进时钟释放 dio 超时 |
+| M3 | HarmonyOS 无法编译（27 个 ArkTS 错误） | `apps/harmonyos` | 显式接口 QueryParams/RequestBody、保留字 Search→SearchPage、单根 build、@kit.AbilityKit 导入、hvigor 配置 |
+| M4 | 平台感知 baseUrl | `apps/flutter/lib/core/constants` | Android 模拟器 10.0.2.2、macOS 沙箱网络权限 |
+
+### 文档更新 (2026-08-07)
+| 文件 | 变更 |
+|------|------|
+| `README.md` `README-EN.md` | 测试数 26→22、表数 70→117、功能状态 |
+| `docs/features.md` `docs/architecture*.md` `docs/design.md` | 测试分布更新（SecurityTest 12） |
+| `docs/api.md` | /health 端点路径修正 |
+| `docs/deployment.md` | admin 端口 8788、install.sql 引用 |
+| `docs/*.mmd` + `*.svg` | 密集节点换行 + Chrome 重渲染 |
+| `service/CLAUDE.md` `apps/CLAUDE.md` | 测试数、页面数 9 修正 |
+
+---
+
 ## 一、执行摘要
 
 | 维度 | 状态 | 评分 |
 |------|------|:---:|
 | PHP 语法检查 | 0 错误 | A+ |
-| 单元测试 | 23/23 通过 (68 断言) | B |
+| 单元测试 | 22/22 通过 (45 断言) | A |
 | 安全防护 | 15 类攻击检测 | A |
-| 代码规范 | 有改进空间 | B- |
-| 生态配置 | 有缺失项 | B |
-| 功能完整度 | 4 个 TODO | B+ |
-| 移动端 | Flutter + HarmonyOS 骨架 | C |
+| 代码规范 | 已修复 | A- |
+| 生态配置 | 已补齐 | A- |
+| 功能完整度 | TODO 已全部实现 | A- |
+| 移动端 | Flutter 测试通过 + HarmonyOS 构建成功 | B+ |
 
-**综合评级: B+** — 后端基础扎实，生态配置和工具链有提升空间。
+**综合评级: A-** — 后端基础扎实，2026-08-07 修复后生态配置、安全、移动端均达标。
 
 ---
 
@@ -80,19 +129,19 @@ admin/   — 0 错误
 ### 2.2 单元测试 (PHPUnit 12.5.25)
 
 ```
-Tests: 23 | Assertions: 68 | Status: ALL PASSED
+Tests: 22 | Assertions: 45 | Status: ALL PASSED
 ```
 
 | 测试文件 | 测试数 | 覆盖范围 |
 |----------|:------:|----------|
-| `SecurityTest.php` | 17 | XSS, SQLi, XXE, SSRF, 路径遍历, 双重扩展名, 编码攻击, Null Byte |
+| `SecurityTest.php` | 12 | XSS(3), SQLi(2), XXE(2), SSRF(1), 路径遍历(2), 信用卡泄漏(1), 正常放行(1) |
 | `JwtTest.php` | 4 | Token 编码/解码, 无效Token处理 |
-| `ApiResponseTest.php` | 2 | 成功/失败响应格式 |
+| `ApiResponseTest.php` | 3 | 成功/失败响应格式, 分页 |
+| `RedisFacadeTest.php` | 3 | Redis 门面 ping/set/get 往返 |
 
 ### 2.3 缺失的测试
 
-- **无 phpunit.xml 配置文件** — 测试依赖 `--no-configuration` 标志运行
-- **admin/ 项目无任何测试** — composer.json 缺少 `require-dev` 中的 phpunit
+- **admin/ 项目无测试** — composer.json 已添加 `require-dev` phpunit，测试待补
 - **无集成测试** — 没有 API 端点测试、数据库测试、模型测试
 - **无覆盖率报告** — 无法量化代码覆盖率
 

@@ -9,7 +9,7 @@ graph TB
         CORS_W["CORS 白名单<br/>· Access-Control-Allow-Origin<br/>· 可配置 origin 限制"]
     end
 
-    subgraph L2["第二层：WAF 攻击检测 (SecurityMiddleware)"]
+    subgraph L2["第二层：WAF 攻击检测<br/>(SecurityMiddleware)"]
         direction TB
         CT{"Content-Type<br/>校验"}
         BS{"Body Size<br/>≤ 10MB"}

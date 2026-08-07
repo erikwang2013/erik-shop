@@ -21,6 +21,11 @@ class JwtTest extends TestCase
             define('BASE_PATH', dirname(__DIR__));
         }
         require_once BASE_PATH . '/vendor/autoload.php';
+
+        // 测试环境显式提供签名密钥（Jwt::instance 对空密钥 fail-closed，不依赖 .env）
+        if (!getenv('JWT_SECRET') && !getenv('JWT_SECRET_KEY')) {
+            putenv('JWT_SECRET=' . bin2hex(random_bytes(32)));
+        }
     }
 
     #[\PHPUnit\Framework\Attributes\Test]

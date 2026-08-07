@@ -30,32 +30,50 @@ class HashidsDecode implements MiddlewareInterface
 
     /**
      * 解码路由参数中的hashid
+     * 通过 setParams 写回路由参数，控制器方法参数即可拿到解码后的 snowflake ID
      */
     private function decodeRouteParams(Request $request): void
     {
-        $params = $request->route?->param('id');
-        if ($params && is_string($params)) {
-            $decoded = HashidsHelper::decode($params);
-            if ($decoded !== null) {
-                // 注入解码后的ID到request属性
-                $request->decodedRouteId = $decoded;
+        $route = $request->route;
+        if (!$route) {
+            return;
+        }
+        $params = $route->param();
+        $updates = [];
+        foreach ($params as $key => $value) {
+            if (is_string($value)) {
+                $decoded = HashidsHelper::decode($value);
+                if ($decoded !== null) {
+                    $updates[$key] = $decoded;
+                }
             }
+        }
+        if ($updates) {
+            $route->setParams($updates);
         }
     }
 
     /**
      * 解码请求参数中以_id结尾的字段
+     * 解码结果写回 GET/POST 参数，控制器通过 $request->input() 即可读取
      */
     private function decodeQueryParams(Request $request): void
     {
         $all = $request->all();
+        $updates = [];
         foreach ($all as $key => $value) {
             if (is_string($value) && (str_ends_with($key, '_id') || $key === 'id')) {
                 $decoded = HashidsHelper::decode($value);
                 if ($decoded !== null) {
-                    $request->offsetSet($key, $decoded);
+                    $updates[$key] = $decoded;
                 }
             }
+        }
+        if ($updates) {
+            if ($request->isGet() || $request->isOptions()) {
+                $request->setGet($updates);
+            }
+            $request->setPost($updates);
         }
     }
 }

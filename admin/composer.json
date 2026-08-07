@@ -14,7 +14,7 @@
     }
   ],
   "require": {
-    "php": ">=8.1",
+    "php": ">=8.3",
     "workerman/webman-framework": "^2.1",
     "monolog/monolog": "^2.0",
     "webman/admin": "~2.0",

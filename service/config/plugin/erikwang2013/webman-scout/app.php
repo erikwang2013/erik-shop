@@ -19,7 +19,8 @@ return [
     */
 
     // getenv 仅单参数；勿写 getenv('X','default')，第二个参数是 local_only(bool)，会导致 driver=false 进而误匹配 createDriver()
-    'driver' => getenv('OPENSEARCH_SCOUT_DRIVER') ?: 'opensearch',
+    // 项目主搜索为 Elasticsearch（config/scout.php 使用 ES_HOST），默认 driver 与其一致
+    'driver' => getenv('OPENSEARCH_SCOUT_DRIVER') ?: 'elasticsearch',
 
     /*
     |--------------------------------------------------------------------------

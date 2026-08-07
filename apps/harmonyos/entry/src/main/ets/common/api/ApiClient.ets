@@ -7,6 +7,29 @@ import preferences from '@ohos.data.preferences';
 const BASE_URL = 'http://10.0.2.2:8787/api';
 const API_VERSION = '2026-05-20';
 
+/** 查询参数（GET），显式声明以满足 ArkTS 字面量约束 */
+export interface QueryParams {
+  position?: string;
+  per_page?: number;
+  sort?: string;
+  keyword?: string;
+  status?: number;
+  dest_country_id?: number;
+  weight?: number;
+  country?: string;
+  currency?: string;
+}
+
+/** 请求体（POST），显式声明以满足 ArkTS 字面量约束 */
+export interface RequestBody {
+  email?: string;
+  password?: string;
+  nickname?: string;
+  sku_id?: string;
+  quantity?: number;
+  currency_code?: string;
+}
+
 export class ApiClient {
   private static instance: ApiClient;
   private token: string = '';
@@ -25,7 +48,7 @@ export class ApiClient {
     this.locale = prefs.getSync('locale', 'en') as string;
   }
 
-  async get(path: string, params?: Record<string, string | number>): Promise<ApiResponse> {
+  async get(path: string, params?: QueryParams): Promise<ApiResponse> {
     const url = BASE_URL + path;
     const request = http.createHttp();
 
@@ -49,7 +72,7 @@ export class ApiClient {
     return JSON.parse(response.result as string) as ApiResponse;
   }
 
-  async post(path: string, data?: Object): Promise<ApiResponse> {
+  async post(path: string, data?: RequestBody): Promise<ApiResponse> {
     const url = BASE_URL + path;
     const request = http.createHttp();
 
@@ -75,13 +98,7 @@ export class ApiClient {
 
   setToken(token: string): void { this.token = token; }
   setLocale(locale: string): void { this.locale = locale; }
-}
 
-export interface ApiResponse {
-  code: number;
-  msg: string;
-  data: Object | null;
-}
   async delete(path: string): Promise<ApiResponse> {
     const url = BASE_URL + path;
     const request = http.createHttp();
@@ -100,3 +117,10 @@ export interface ApiResponse {
     });
     return JSON.parse(response.result as string) as ApiResponse;
   }
+}
+
+export interface ApiResponse {
+  code: number;
+  msg: string;
+  data: Object | null;
+}

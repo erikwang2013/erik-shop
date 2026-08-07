@@ -736,7 +736,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 {"product_id":"x","sku_id":"x","quantity":1000,"target_price":15.00,"currency_code":"USD"}
 ```
 
-### 13.20 健康检查 `GET /api/health`
+### 13.20 健康检查 `GET /health`
 
 ```json
 {"code":0,"msg":"ok","data":{"status":"ok","timestamp":"...","db":"ok","redis":"ok"}}

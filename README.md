@@ -89,7 +89,7 @@ php start.php start -d
 cd ../service && composer install && php start.php start -d
 ```
 
-> 安装向导自动完成：建库 → 导入 70 张表 → 生成 service/.env 和 admin/.env（含随机密钥） → 创建管理员 → 重载服务
+> 安装向导自动完成：建库 → 导入 117 张表 → 生成 service/.env 和 admin/.env（含随机密钥） → 创建管理员 → 重载服务
 
 ### 方式二：命令行手动安装
 
@@ -113,7 +113,7 @@ docker-compose up -d
 
 ```
 shop-php/
-  install.sql       # 一键安装 SQL（70 张表），Web 安装向导自动导入
+  install.sql       # 一键安装 SQL（117 张表），Web 安装向导自动导入
   service/          PHP业务API (webman)        — 37控制器 + 63模型 + 10全局中间件
   admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + ECharts仪表盘 + Web安装向导
   apps/flutter/     Flutter客户端              — 9页面 + 5语言 + PC自适应
@@ -144,11 +144,11 @@ shop-php/
 | **基础设施** | Snowflake分布式ID、Hashids接口混淆、JWT认证、AES加密、GeoIP区域识别 |
 | **多端覆盖** | Flutter(iOS/Android/macOS/Windows/Linux/iPadOS)+HarmonyOS(ArkTS)+Web Admin |
 | **平台追踪** | 8平台来源识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+DB记录 |
-| **测试** | 26 tests / 71 assertions — ALL PASS (Security+Jwt+ApiResponse+Redis) |
+| **测试** | 22 tests / 45 assertions — ALL PASS (Security+Jwt+ApiResponse+Redis) |
 
 ## 核心设计
 
-- **Snowflake主键**：70张表全部使用 `erikwang2013/snowflake-php` 生成的bigint ID
+- **Snowflake主键**：117张表全部使用 `erikwang2013/snowflake-php` 生成的bigint ID
 - **Hashids接口**：中间件自动编码/解码，控制器无感知
 - **Encryptable加密**：email/mobile/address等敏感字段数据库级加密
 - **JWT认证**：HS256 + 黑名单 + 自动刷新
@@ -186,7 +186,7 @@ shop-php/
 ```bash
 make test             # 推荐方式
 cd service && php vendor/bin/phpunit tests/   # 原生命令
-# 26 tests, 71 assertions — ALL PASS
+# 22 tests, 45 assertions — ALL PASS
 ```
 
 ## 开发工具

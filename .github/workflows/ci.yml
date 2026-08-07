@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        php: ['8.3', '8.4']
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: testpass
+          MYSQL_DATABASE: erik_shop_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: pdo, pdo_mysql, redis, mbstring
+          coverage: none
+
+      - name: Install dependencies
+        working-directory: service
+        run: composer install --no-progress --prefer-dist
+
+      - name: PHP syntax check
+        run: |
+          find service/app service/config admin/app admin/config -name "*.php" -exec php -l {} \; | grep -v "No syntax" && exit 1 || exit 0
+
+      - name: Run tests
+        working-directory: service
+        run: php vendor/bin/phpunit
+        env:
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_NAME: erik_shop_test
+          DB_USER: root
+          DB_PASS: testpass
+          REDIS_HOST: 127.0.0.1
+          REDIS_PORT: 6379
+          JWT_SECRET: ci-test-secret-key-do-not-use-in-production

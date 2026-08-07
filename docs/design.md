@@ -159,7 +159,7 @@ public function login(Request $request) { ... }
 
 ## 7. 测试
 
-26 tests / 71 assertions — ALL PASS
+22 tests / 45 assertions — ALL PASS
 
 ```bash
 cd service && php vendor/bin/phpunit tests/

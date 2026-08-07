@@ -37,13 +37,13 @@ class ShopDashboardController extends Base
  */
     public function chartData(Request $request)
     {
-        $days = (int) $request->input('days', 7);
+        $days = max(1, min((int) $request->input('days', 7), 365));
         $data = [];
         for ($i = $days - 1; $i >= 0; $i--) {
             $date = date('Y-m-d', strtotime("-{$i} days"));
             $data[] = [
                 'date' => $date,
-                'revenue' => \plugin\admin\app\model\shop\Orders::whereDate('paid_at', $date)->sum('pay_amount') ?? 0,
+                'revenue' => \plugin\admin\app\model\shop\Orders::whereDate('pay_at', $date)->sum('pay_amount') ?? 0,
                 'orders' => \plugin\admin\app\model\shop\Orders::whereDate('created_at', $date)->count(),
                 'new_users' => \plugin\admin\app\model\shop\Users::whereDate('created_at', $date)->count(),
             ];
@@ -63,7 +63,7 @@ class ShopDashboardController extends Base
         $today = date('Y-m-d');
         return $this->json(['code' => 0, 'data' => [
             'today_orders' => \plugin\admin\app\model\shop\Orders::whereDate('created_at', $today)->count(),
-            'today_revenue' => \plugin\admin\app\model\shop\Orders::whereDate('paid_at', $today)->sum('pay_amount') ?? 0,
+            'today_revenue' => \plugin\admin\app\model\shop\Orders::whereDate('pay_at', $today)->sum('pay_amount') ?? 0,
             'total_users' => \plugin\admin\app\model\shop\Users::count(),
             'total_products' => \plugin\admin\app\model\shop\Products::count(),
             'pending_reviews' => \plugin\admin\app\model\shop\ProductReviews::where('status', 0)->count(),

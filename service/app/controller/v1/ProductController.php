@@ -62,12 +62,13 @@ class ProductController extends \app\controller\BaseApiController
             'newest'     => $query->orderBy('id', 'desc'),
             default      => $query->orderBy('sort', 'desc')->orderBy('id', 'desc'),
         };
-        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        // 带 locale 约束 eager load，避免每页循环内 N+1 查询
+        $paginator = $query->with(['translation' => fn($q) => $q->where('locale', $locale)])
+            ->paginate($perPage, ['*'], 'page', $page);
         $items = $paginator->items();
         foreach ($items as $p) {
             $p->makeHidden(['description', 'deleted_at']);
-            $t = ProductTranslations::where('product_id', $p->id)
-                ->where('locale', $locale)->first();
+            $t = $p->translation->first();
             if ($t) {
                 $p->title = $t->title ?: $p->title;
             }
@@ -106,15 +107,19 @@ class ProductController extends \app\controller\BaseApiController
         }
 
         $destCountry = Countries::where('iso_code_2', $destCountryCode)->first();
+        // VAT 税率与目的国无关SKU，循环外查一次
+        $destCountryId = $destCountry->id ?? null;
+        $vatRate = $destCountryId
+            ? (VatSettings::where('country_id', $destCountryId)->value('vat_rate') ?? 0)
+            : 0;
         foreach ($product->skus as $sku) {
             $cp = $sku->prices->where('currency_code', $currencyCode)->first();
             $bp = $cp ? $cp->price : $this->convertPrice($sku->default_price, 'CNY', $currencyCode);
-            $vr = VatSettings::where('country_id', $destCountry->id)->value('vat_rate') ?? 0;
             $sku->display_price = [
                 'tax_exclusive' => round($bp, 2),
-                'tax_inclusive' => round($bp * (1 + $vr / 100), 2),
-                'vat_amount' => round($bp * $vr / 100, 2),
-                'vat_rate' => $vr,
+                'tax_inclusive' => round($bp * (1 + $vatRate / 100), 2),
+                'vat_amount' => round($bp * $vatRate / 100, 2),
+                'vat_rate' => $vatRate,
                 'currency' => $currencyCode,
                 'display_mode' => $destCountry->price_display_mode ?? 'tax_exclusive',
             ];

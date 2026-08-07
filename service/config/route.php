@@ -150,5 +150,8 @@ Route::group('/api', function () {
 // ===== 支付Webhook（无需JWT，需验签） =====
 Route::post('/webhook/payment/{gateway:\w+}', [app\controller\v1\PaymentController::class, 'webhook']);
 
+// ===== 健康检查（无需JWT，供探活/负载均衡） =====
+Route::get('/health', [app\controller\v1\HealthController::class, 'index']);
+
 // ===== 关闭默认路由 =====
 Route::disableDefaultRoute();

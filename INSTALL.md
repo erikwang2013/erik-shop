@@ -44,7 +44,7 @@ php start.php start
 
 安装向导会**自动完成**：
 - 创建 MySQL 数据库（如不存在）
-- 导入 `install.sql` 全部 70 张表（7 张 `wa_` + 63 张 `erik_`）
+- 导入 `install.sql` 全部 117 张表（7 张 `wa_` + 110 张 `erik_`）
 - 导入管理后台菜单
 - 生成 `plugin/admin/config/database.php` 和 `thinkorm.php`
 - 生成 `service/.env`（含随机生成的 JWT/Hashids/加密密钥）
@@ -74,7 +74,7 @@ CREATE DATABASE IF NOT EXISTS `shop_db`
 mysql -u root -p shop_db < install.sql
 ```
 
-> `install.sql` 包含 **70张表**及默认种子数据。
+> `install.sql` 包含 **117 张表**及默认种子数据。
 
 ### 3. 配置 service/.env
 

@@ -1,6 +1,7 @@
 /**
  * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
  */
+import { router } from '@kit.ArkUI';
 import { ApiClient } from '../common/api/ApiClient';
 
 @Entry
@@ -22,7 +23,7 @@ struct Cart {
 
   calcTotal() {
     this.total = this.items.reduce((sum, item) =>
-      sum + (item['price'] as number ?? 0) * (item['quantity'] as number ?? 1), 0);
+      sum + ((item['price'] as number) ?? 0) * ((item['quantity'] as number) ?? 1), 0);
   }
 
   async removeItem(id: string) {
@@ -45,9 +46,9 @@ struct Cart {
           ForEach(this.items, (item: Record<string, Object>) => {
             ListItem() {
               Row() {
-                Image(item['image'] as string ?? '').width(80).height(80)
+                Image((item['image'] as string) ?? '').width(80).height(80)
                 Column() {
-                  Text(item['title'] as string ?? '').maxLines(2).fontSize(14)
+                  Text((item['title'] as string) ?? '').maxLines(2).fontSize(14)
                   Text(`$${(item['price'] as number)?.toFixed(2)} x ${item['quantity']}`)
                     .fontSize(12).fontColor('#999')
                 }.alignItems(HorizontalAlign.Start).layoutWeight(1).padding(8)

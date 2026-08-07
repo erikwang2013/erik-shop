@@ -37,6 +37,7 @@ return [
     'paypal' => [
         'client_id' => getenv('PAYPAL_CLIENT_ID') ?: '',
         'client_secret' => getenv('PAYPAL_CLIENT_SECRET') ?: '',
+        'webhook_id' => getenv('PAYPAL_WEBHOOK_ID') ?: '',  // 官方 verify-webhook-signature 验签必需
         'mode' => getenv('PAYPAL_MODE') ?: 'sandbox',   // sandbox/live
     ],
 

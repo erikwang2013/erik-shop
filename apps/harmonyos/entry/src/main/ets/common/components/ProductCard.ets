@@ -2,6 +2,8 @@
  * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
  * 商品卡片组件 - 用于首页、搜索、列表
  */
+import { router } from '@kit.ArkUI';
+
 @Component
 export struct ProductCard {
   @Prop product: ProductCardItem;

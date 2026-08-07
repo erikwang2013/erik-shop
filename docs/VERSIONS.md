@@ -32,6 +32,19 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 9 | 模型引用 Erik\Encryptable\Encryptable trait 不存在（包内是 Maize\Encryptable 命名空间的 CastsAttributes） | Critical | 新建 service/Erik/Encryptable/Encryptable.php 经典 trait 兼容层（底层复用包的 Encryption::php） |
 | 10 | composer 插件 Installer.php 顶层函数重复声明 fatal | Medium | function_exists 幂等守卫（service/admin 两个 vendor 均已修复） |
 | 11 | HashidsEncode getHeader() 返回 string 导致 implode 报错 | High | (array) 强制转换 |
+| 12 | docker-compose/.env.example 硬编码真实 JWT/加密密钥 | Critical | 替换为 change_me 占位符，安装向导生成随机密钥 |
+| 13 | 订单创建无事务、库存扣减非原子（并发超卖） | Critical | Db::transaction + 条件 decrement 原子扣减 |
+| 14 | 优惠券领取并发超发/超领 | High | 事务 + 行锁 lockForUpdate + received_qty 原子门闩 |
+| 15 | PayPal Webhook 验签字段恒为空（verify-webhook-signature 必失败） | High | 五个验签字段从请求 header 透传 |
+| 16 | 安装向导 SQL 注入（数据库名/密码拼接） | High | quote + 反引号转义 + var_export 写配置 |
+| 17 | 加密/哈希密钥缺失时静默降级 | High | Encryption/HashidsHelper 空值或长度非法抛异常 |
+| 18 | 订单导出固定文件名并发覆盖 | Medium | uniqid 文件名 + shutdown 清理 + try/catch |
+| 19 | Hashids 解码不写回请求参数（路由参数/GET/POST） | High | setParams/setGet/setPost 写回 |
+| 20 | composer.lock 被 gitignore（构建不可复现） | Medium | 移除忽略纳入版本控制 |
+| 21 | 容器无健康检查、无启动依赖 | Medium | 全服务 healthcheck + depends_on condition |
+| 22 | admin Dockerfile 不可运行 | High | 补 COPY + composer install + EXPOSE + CMD |
+| 23 | Flutter 编译错误（intl 冲突/构造器泛型/多余括号）+ 测试 pending Timer | High | intl ^0.20.2、静态工厂、pump 推进时钟 |
+| 24 | HarmonyOS 27 个 ArkTS 编译错误无法出包 | High | 显式接口、保留字改名、单根 build、@kit 导入、hvigor 配置 |
 
 ---
 

@@ -2,6 +2,7 @@
  * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
  * 首页 - Banner + 分类入口 + 热门商品
  */
+import { router } from '@kit.ArkUI';
 import { ApiClient } from '../common/api/ApiClient';
 import { ProductCard } from '../common/components/ProductCard';
 

@@ -12,7 +12,7 @@ use support\Request;
 
 return [
     // 调试模式（开发环境启用，生产环境必须关闭）
-    'debug' => true,
+    'debug' => env('APP_DEBUG', false),
 
     // 错误报告级别（开发环境全部报告）
     'error_reporting' => E_ALL,

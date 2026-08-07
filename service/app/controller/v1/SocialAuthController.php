@@ -8,6 +8,7 @@ namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\common\HashidsHelper;
 use app\common\Jwt;
+use app\common\SocialAuth;
 use app\model\Users;
 use app\model\UserSocialAccounts;
 use Webman\Http\Request;
@@ -17,13 +18,24 @@ class SocialAuthController extends \app\controller\BaseApiController
     public function login(Request $request): \support\Response
     {
         $provider = $request->input('provider');  // google/apple/facebook
-        $providerUserId = $request->input('provider_user_id');
+        $idToken = $request->input('id_token', '');
         $email = $request->input('email', '');
         $name = $request->input('name', '');
 
         if (!in_array($provider, ['google','apple','facebook'])) {
             return ApiResponse::fail('不支持的社交平台', 422);
         }
+        if ($idToken === '') {
+            return ApiResponse::fail('缺少 id_token', 422);
+        }
+
+        // 验证 id_token（fail-closed），provider_user_id 取自验证结果而非客户端提交
+        try {
+            $verified = SocialAuth::verify($provider, $idToken, $email);
+        } catch (\Throwable $e) {
+            return ApiResponse::fail('社交登录验证失败: ' . $e->getMessage(), 401);
+        }
+        $providerUserId = $verified['sub'];
 
         // 查找已有绑定
         $social = UserSocialAccounts::where('provider', $provider)

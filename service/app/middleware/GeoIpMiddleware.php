@@ -16,6 +16,9 @@ use Webman\MiddlewareInterface;
  */
 class GeoIpMiddleware implements MiddlewareInterface
 {
+    // Reader 进程级复用，避免每个请求都重新打开 mmdb 文件
+    private static ?\MaxMind\Db\Reader $reader = null;
+
     public function process(Request $request, callable $next): Response
     {
         // 已登录用户不覆盖（已有手动选择）
@@ -47,9 +50,10 @@ class GeoIpMiddleware implements MiddlewareInterface
         $dbPath = config('geoip.database_path', '');
         if (!empty($dbPath) && file_exists($dbPath)) {
             try {
-                $reader = new \MaxMind\Db\Reader($dbPath);
-                $record = $reader->get($ip);
-                $reader->close();
+                if (self::$reader === null) {
+                    self::$reader = new \MaxMind\Db\Reader($dbPath);
+                }
+                $record = self::$reader->get($ip);
 
                 if ($record) {
                     return [

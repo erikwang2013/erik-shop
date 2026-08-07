@@ -2,6 +2,11 @@
 # Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 # 跨境电商平台 - Docker 生产部署配置
 # =============================================================
+# 生产部署前必须通过 .env（同目录）或环境变量设置以下密钥：
+#   JWT_SECRET / JWT_SECRET_KEY   — 随机 256bit（如 openssl rand -base64 48）
+#   ENCRYPTION_KEY                — base64: 前缀的 16/24/32 字节密钥
+#   HASHIDS_SALT / DB_PASS / MYSQL_ROOT_PASS / REDIS_PASS
+# 默认占位符仅用于本地开发，切勿用于生产。
 
 version: '3.8'
 
@@ -42,19 +47,28 @@ services:
       - REDIS_PORT=6379
       - ES_HOST=elasticsearch
       - ES_PORT=9200
-      - JWT_SECRET=${JWT_SECRET:-INYvriETO8Bc3xy/SI3mcMdrL9wqHPXXUjA2rUqQkK8=}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-INYvriETO8Bc3xy/SI3mcMdrL9wqHPXXUjA2rUqQkK8=}
+      - JWT_SECRET=${JWT_SECRET:-change_me_to_random_256bit_string}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change_me_to_random_256bit_string}
       - HASHIDS_SALT=${HASHIDS_SALT:-change_me}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-base64:aJSrbfDcz5f1Jw6cDK81D3XZ+Bdo9YJ7jXhbHop4URc=}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-base64:Y2hhbmdlX21lXzMyX2J5dGVfa2V5X2hlcmVfMDEyMzQ=}
       - ENCRYPTION_CIPHER=${ENCRYPTION_CIPHER:-AES-256-CBC}
       - ENCRYPTION_PREVIOUS_KEYS=${ENCRYPTION_PREVIOUS_KEYS:-}
     volumes:
       - ./service:/app
       - /app/runtime
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8787/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
-      - mysql
-      - redis
-      - elasticsearch
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     networks:
       - erik-net
 
@@ -77,15 +91,23 @@ services:
       - HASHIDS_SALT=${HASHIDS_SALT:-change_me}
       - SNOWFLAKE_WORKER_ID=${SNOWFLAKE_WORKER_ID:-2}
       - SNOWFLAKE_DATACENTER_ID=${SNOWFLAKE_DATACENTER_ID:-1}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-base64:aJSrbfDcz5f1Jw6cDK81D3XZ+Bdo9YJ7jXhbHop4URc=}
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-base64:Y2hhbmdlX21lXzMyX2J5dGVfa2V5X2hlcmVfMDEyMzQ=}
       - ENCRYPTION_CIPHER=${ENCRYPTION_CIPHER:-AES-256-CBC}
       - ENCRYPTION_PREVIOUS_KEYS=${ENCRYPTION_PREVIOUS_KEYS:-}
     volumes:
       - ./admin:/app
       - /app/runtime
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8788/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - erik-net
 
@@ -104,6 +126,12 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./install.sql:/docker-entrypoint-initdb.d/01-install.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${MYSQL_ROOT_PASS:-change_me}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -120,6 +148,11 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS:-}", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     command: redis-server --appendonly yes --requirepass ${REDIS_PASS:-}
     networks:
       - erik-net
@@ -135,6 +168,12 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
+    healthcheck:
+      test: ["CMD", "curl", "-fs", "http://127.0.0.1:9200/_cluster/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     volumes:
       - es_data:/usr/share/elasticsearch/data
     networks:

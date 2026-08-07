@@ -1,6 +1,8 @@
 /**
  * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
  */
+import { router } from '@kit.ArkUI';
+
 @Entry
 @Component
 struct Profile {
@@ -26,8 +28,8 @@ struct Profile {
         ListItem() { this.menuItem('收藏夹', '') }
         ListItem() { this.menuItem('收货地址', '') }
         ListItem() { this.menuItem('礼品卡', '') }
-        ListItem() { this.menuItem('语言', '').rightText('中文') }
-        ListItem() { this.menuItem('币种', '').rightText('USD') }
+        ListItem() { this.menuItem('语言', '', '中文') }
+        ListItem() { this.menuItem('币种', '', 'USD') }
         ListItem() { this.menuItem('隐私设置', '') }
       }
       .layoutWeight(1)
@@ -35,10 +37,13 @@ struct Profile {
     .width('100%').height('100%')
   }
 
-  @Builder menuItem(title: string, route: string) {
+  @Builder menuItem(title: string, route: string, rightText: string = '') {
     Row() {
       Text(title).fontSize(16)
       Blank()
+      if (rightText) {
+        Text(rightText).fontSize(12).fontColor('#999').margin({ right: 4 })
+      }
       Image($r('app.media.arrow_right')).width(20).height(20)
     }
     .width('100%').padding(16)

@@ -1,10 +1,6 @@
 {
   "apiType": "stageMode",
-  "buildOption": {
-    "arkOptions": {
-      "runtimeOnly": false
-    }
-  },
+  "buildOption": {},
   "targets": [
     {
       "name": "default",

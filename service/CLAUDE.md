@@ -27,7 +27,7 @@
 
 ```
 shop-php/
-  install.sql       # 完整安装 SQL（70张表），Web安装向导自动导入
+  install.sql       # 完整安装 SQL（117张表），Web安装向导自动导入
   service/
     .env.example    # 环境变量模板，Web安装向导自动生成 .env
     .env            # 实际环境变量（首次安装自动生成，含 JWT_SECRET + JWT_SECRET_KEY + Hashids + AES 密钥）
@@ -219,7 +219,7 @@ php vendor/bin/phpunit      # 运行测试
 
 | 工具 | 配置 | 用途 |
 |------|------|------|
-| PHPUnit 12.5 | `phpunit.xml` | 单元测试（23 tests, 68 assertions） |
+| PHPUnit 12.5 | `phpunit.xml` | 单元测试（22 tests, 45 assertions） |
 | phpstan | `phpstan.neon` (level 5) | 静态分析 |
 | php-cs-fixer | `.php-cs-fixer.php` | PSR-12 代码格式化 |
 | CI/CD | `.github/workflows/ci.yml` | PHP 8.1/8.2/8.3 矩阵测试 |

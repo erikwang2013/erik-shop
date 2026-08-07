@@ -14,7 +14,11 @@ class HashidsHelper
     public static function instance(): HashidsManager
     {
         if (self::$instance === null) {
-            self::$instance = new HashidsManager(config('hashids'));
+            $config = config('hashids');
+            if (empty($config['connections']['main']['salt'] ?? '')) {
+                throw new \RuntimeException('HASHIDS_SALT is not configured. Set HASHIDS_SALT in .env');
+            }
+            self::$instance = new HashidsManager($config);
         }
         return self::$instance;
     }

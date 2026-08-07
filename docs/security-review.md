@@ -11,7 +11,7 @@
 | Check | Result |
 |---|---|
 | PHP 语法检查（47 个文件） | 全部通过 |
-| PHPUnit（26 tests, 71 assertions） | 全部通过 |
+| PHPUnit（22 tests, 45 assertions） | 全部通过 |
 | SecurityGuard 安全载荷测试 | 正确拦截 XSS + SQLi |
 | SecurityGuard 安全请求测试 | 无误报 |
 | phpstan 静态分析 | 未安装（非阻塞） |
@@ -209,6 +209,6 @@ docs/security-review.md                           (本报告)
 - API 传输加解密已接入中间件（EncryptionMiddleware, AES-256-CBC, header 触发）
 - JWT 密钥已配置（JWT_SECRET + JWT_SECRET_KEY 均已设置）
 - 文件上传检测已修复（合并 $_FILES 数据传入 SecurityGuard）
-- 无功能回归（23/23 测试通过）
+- 无功能回归（22/22 测试通过）
 - 无中间件重复检测
 - Docker 部署环境变量完整

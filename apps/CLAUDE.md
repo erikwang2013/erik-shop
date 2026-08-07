@@ -56,9 +56,9 @@ apps/harmonyos/
     src/main/
       ets/
         entryability/   EntryAbility.ets (应用入口+AppState初始化)
-        pages/          8个页面
+        pages/          9个页面
           Index.ets, ProductDetail.ets, Cart.ets, OrderList.ets,
-          Checkout.ets, Profile.ets, Login.ets, Search.ets
+          Checkout.ets, Profile.ets, Login.ets, Register.ets, Search.ets
         common/
           api/           ApiClient.ets (HTTP客户端+ApiResponse接口)
           components/    ProductCard.ets (可复用商品卡片)

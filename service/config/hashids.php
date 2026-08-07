@@ -17,7 +17,8 @@ return [
 
         // 主连接 - 用于API请求/响应ID编解码
         'main' => [
-            'salt' => getenv('HASHIDS_SALT') ?: 'erik-shop-hashids-salt-change-me',
+            // salt 为空时 HashidsHelper 会拒绝使用，生产环境必须通过 HASHIDS_SALT 设置
+            'salt' => getenv('HASHIDS_SALT') ?: '',
             'length' => 8,
         ],
 

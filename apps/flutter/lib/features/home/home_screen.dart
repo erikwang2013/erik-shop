@@ -24,13 +24,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   Future<void> _loadData() async {
-    final res = await ApiClient.instance.get('/products', params: {'per_page': 12, 'sort': 'sales'});
-    if (mounted && res.isSuccess && res.data != null) {
-      final data = res.data as Map<String, dynamic>;
-      setState(() {
-        _hotProducts = (data['list'] as List).map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
-        _loading = false;
-      });
+    try {
+      final res = await ApiClient.instance.get('/products', params: {'per_page': 12, 'sort': 'sales'});
+      if (mounted && res.isSuccess && res.data != null) {
+        final data = res.data as Map<String, dynamic>;
+        setState(() {
+          _hotProducts = (data['list'] as List).map((e) => Product.fromJson(e as Map<String, dynamic>)).toList();
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      // 网络异常时静默降级为空列表，避免 UI 崩溃
+      if (mounted) setState(() => _loading = false);
     }
   }
 

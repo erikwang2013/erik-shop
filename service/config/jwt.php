@@ -9,8 +9,8 @@
  */
 
 return [
-    // 签名密钥
-    'secret_key' => getenv('JWT_SECRET') ?: 'your-256-bit-secret-key-change-in-production',
+    // 签名密钥（生产环境必须通过 JWT_SECRET 环境变量设置，为空时 Jwt 类会拒绝启动）
+    'secret_key' => getenv('JWT_SECRET') ?: '',
 
     // 加密算法
     'algorithm' => 'HS256',

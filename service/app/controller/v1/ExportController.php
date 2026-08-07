@@ -43,49 +43,80 @@ class ExportController extends \app\controller\BaseApiController
 
     private function exportXlsx($orders): \support\Response
     {
-        $spreadsheet = new Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
+        try {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
 
-        $headers = ['订单号', '日期', '金额', '币种', '状态', '商品数', 'HS Code'];
-        $sheet->fromArray($headers, null, 'A1');
+            $headers = ['订单号', '日期', '金额', '币种', '状态', '商品数', 'HS Code'];
+            $sheet->fromArray($headers, null, 'A1');
 
-        $row = 2;
-        $statusMap = ['待付款', '已付款', '已发货', '已收货', '已完成', '已取消', '退款中', '已退款'];
+            $row = 2;
+            $statusMap = ['待付款', '已付款', '已发货', '已收货', '已完成', '已取消', '退款中', '已退款', '待审核'];
 
-        foreach ($orders as $o) {
-            $items = $o->items ?? collect();
-            $hsCodes = $items->pluck('hs_code')->filter()->unique()->implode(', ');
-            $sheet->fromArray([
-                $o->order_no,
-                $o->created_at,
-                $o->pay_amount,
-                $o->currency_code,
-                $statusMap[$o->status] ?? '未知',
-                $items->count(),
-                $hsCodes,
-            ], null, "A{$row}");
-            $row++;
+            foreach ($orders as $o) {
+                $items = $o->items ?? collect();
+                $hsCodes = $items->pluck('hs_code')->filter()->unique()->implode(', ');
+                $sheet->fromArray([
+                    $o->order_no,
+                    $o->created_at,
+                    $o->pay_amount,
+                    $o->currency_code,
+                    $statusMap[$o->status] ?? '未知',
+                    $items->count(),
+                    $hsCodes,
+                ], null, "A{$row}");
+                $row++;
+            }
+
+            // 唯一文件名避免并发导出互相覆盖，发送后清理临时文件
+            $tmpFile = runtime_path() . '/orders_export_' . uniqid() . '.xlsx';
+            $writer = new Xlsx($spreadsheet);
+            $writer->save($tmpFile);
+            register_shutdown_function(fn() => @unlink($tmpFile));
+
+            return response()->file($tmpFile, 'orders.xlsx');
+        } catch (\Throwable $e) {
+            \support\Log::error('订单导出失败: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::fail('导出失败，请稍后重试', 500);
         }
-
-        $tmpFile = runtime_path() . '/orders_export.xlsx';
-        $writer = new Xlsx($spreadsheet);
-        $writer->save($tmpFile);
-
-        return response()->file($tmpFile, 'orders.xlsx');
     }
 
     private function exportCsv($orders): \support\Response
     {
-        $statusMap = ['待付款', '已付款', '已发货', '已收货', '已完成', '已取消'];
-        $csv = "Order No,Date,Amount,Currency,Status\n";
-        foreach ($orders as $o) {
-            $statusText = $statusMap[$o->status] ?? '';
-            $csv .= "{$o->order_no},{$o->created_at},{$o->pay_amount},{$o->currency_code},{$statusText}\n";
-        }
+        try {
+            $statusMap = ['待付款', '已付款', '已发货', '已收货', '已完成', '已取消', '退款中', '已退款', '待审核'];
+            $csv = "Order No,Date,Amount,Currency,Status\n";
+            foreach ($orders as $o) {
+                $statusText = $statusMap[$o->status] ?? '';
+                $csv .= implode(',', [
+                    $this->csvField($o->order_no),
+                    $this->csvField($o->created_at),
+                    $this->csvField($o->pay_amount),
+                    $this->csvField($o->currency_code),
+                    $this->csvField($statusText),
+                ]) . "\n";
+            }
 
-        return response($csv, 200, [
-            'Content-Type' => 'text/csv',
-            'Content-Disposition' => 'attachment; filename="orders.csv"',
-        ]);
+            return response($csv, 200, [
+                'Content-Type' => 'text/csv',
+                'Content-Disposition' => 'attachment; filename="orders.csv"',
+            ]);
+        } catch (\Throwable $e) {
+            \support\Log::error('订单 CSV 导出失败: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return ApiResponse::fail('导出失败，请稍后重试', 500);
+        }
+    }
+
+    // 转义 CSV 字段；以 = + - @ 开头的值加单引号前缀，防止 Excel 公式注入
+    private function csvField(mixed $value): string
+    {
+        $value = (string)($value ?? '');
+        if (preg_match('/^[=+\-@]/', $value)) {
+            $value = "'" . $value;
+        }
+        if (preg_match('/[",\r\n]/', $value)) {
+            $value = '"' . str_replace('"', '""', $value) . '"';
+        }
+        return $value;
     }
 }

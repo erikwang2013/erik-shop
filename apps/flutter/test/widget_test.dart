@@ -1,30 +1,19 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
+// ShopApp 冒烟测试：验证应用可构建并渲染主界面。
+// 不依赖真实网络（flutter_test 环境下 HTTP 请求自动返回 400，HomeScreen 已做异常降级）。
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:shop_app/main.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
-
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('ShopApp 构建并渲染主界面', (WidgetTester tester) async {
+    await tester.pumpWidget(const ProviderScope(child: ShopApp()));
     await tester.pump();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // 主界面应用栏标题正常显示
+    expect(find.text('Erik Shop'), findsOneWidget);
+
+    // 推进时钟，释放 dio 超时等 pending Timer（测试环境 HTTP 被拦截为 400）
+    await tester.pump(const Duration(seconds: 12));
   });
 }

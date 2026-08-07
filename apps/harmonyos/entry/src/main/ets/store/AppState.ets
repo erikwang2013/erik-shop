@@ -52,7 +52,7 @@ export class AppState {
     try {
       const res = await ApiClient.getInstance().get('/cart');
       if (res.code === 0) {
-        const items = res.data as Array<Object> ?? [];
+        const items = (res.data as Array<Object>) ?? [];
         this.cartCount = items.length;
       }
     } catch (e) {}

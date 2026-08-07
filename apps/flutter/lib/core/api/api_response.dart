@@ -7,7 +7,7 @@ class ApiResponse<T> {
 
   ApiResponse({required this.code, required this.msg, this.data});
 
-  factory ApiResponse.fromJson(Map<String, dynamic> json) {
+  static ApiResponse<T> fromJson<T>(Map<String, dynamic> json) {
     return ApiResponse(
       code: json['code'] ?? -1,
       msg: json['msg'] ?? 'Unknown error',

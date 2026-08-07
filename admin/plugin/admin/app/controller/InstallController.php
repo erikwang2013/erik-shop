@@ -47,21 +47,21 @@ class InstallController extends Base
 
         try {
             $db = $this->getPdo($host, $user, $password, $port);
-            $smt = $db->query("show databases like '$database'");
+            $smt = $db->query('show databases like ' . $db->quote(str_replace(['%', '_'], ['\%', '\_'], $database)));
             if (empty($smt->fetchAll())) {
-                $db->exec("create database `$database` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+                $db->exec('create database `' . str_replace('`', '``', $database) . '` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
             }
-            $db->exec("use `$database`");
+            $db->exec('use `' . str_replace('`', '``', $database) . '`');
             $smt = $db->query("show tables");
             $tables = $smt->fetchAll();
         } catch (\Throwable $e) {
-            if (stripos($e, 'Access denied for user')) {
+            if (stripos($e->getMessage(), 'Access denied for user')) {
                 return $this->json(1, '数据库用户名或密码错误');
             }
-            if (stripos($e, 'Connection refused')) {
+            if (stripos($e->getMessage(), 'Connection refused')) {
                 return $this->json(1, 'Connection refused. 请确认数据库IP端口是否正确，数据库已经启动');
             }
-            if (stripos($e, 'timed out')) {
+            if (stripos($e->getMessage(), 'timed out')) {
                 return $this->json(1, '数据库连接超时，请确认数据库IP端口是否正确，安全组及防火墙已经放行端口');
             }
             throw $e;
@@ -135,7 +135,12 @@ class InstallController extends Base
         $menus = include base_path() . '/plugin/admin/config/menu.php';
         $this->importMenu($menus, $db);
 
-        // 写入 plugin/admin/config/database.php
+        // 写入 plugin/admin/config/database.php（var_export 防密码含引号/美元符号破坏 PHP 文件）
+        $dbHost = var_export($host, true);
+        $dbPort = var_export($port, true);
+        $dbName = var_export($database, true);
+        $dbUser = var_export($user, true);
+        $dbPass = var_export($password, true);
         $config_content = <<<EOF
 <?php
 return  [
@@ -143,11 +148,11 @@ return  [
     'connections' => [
         'mysql' => [
             'driver'      => 'mysql',
-            'host'        => '$host',
-            'port'        => '$port',
-            'database'    => '$database',
-            'username'    => '$user',
-            'password'    => '$password',
+            'host'        => $dbHost,
+            'port'        => $dbPort,
+            'database'    => $dbName,
+            'username'    => $dbUser,
+            'password'    => $dbPass,
             'charset'     => 'utf8mb4',
             'collation'   => 'utf8mb4_general_ci',
             'prefix'      => '',
@@ -167,11 +172,11 @@ return [
     'connections' => [
         'mysql' => [
             'type' => 'mysql',
-            'hostname' => '$host',
-            'database' => '$database',
-            'username' => '$user',
-            'password' => '$password',
-            'hostport' => $port,
+            'hostname' => $dbHost,
+            'database' => $dbName,
+            'username' => $dbUser,
+            'password' => $dbPass,
+            'hostport' => $dbPort,
             'params' => [
                 \\PDO::ATTR_TIMEOUT => 3,
             ],

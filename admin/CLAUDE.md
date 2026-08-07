@@ -36,7 +36,7 @@ http://127.0.0.1:8788/app/admin/install/step1
 
 安装向导（`InstallController`）自动完成：
 - 创建 MySQL 数据库
-- 导入根目录 `install.sql`（70张表：7 `wa_` + 63 `erik_`）
+- 导入根目录 `install.sql`（117张表：7 `wa_` + 110 `erik_`）
 - 生成 `plugin/admin/config/database.php` 和 `thinkorm.php`
 - 生成 `service/.env` 和 `admin/.env`（含随机 JWT/Hashids/AES/Encryption 密钥 + `JWT_SECRET_KEY`）
 - 创建管理员账号

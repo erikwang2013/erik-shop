@@ -478,10 +478,11 @@ cd service && php vendor/bin/phpunit tests/
 
 | 测试类 | Tests | 覆盖 |
 |--------|-------|------|
-| SecurityTest | 7 | XSS+SQLi+CRLF+Path |
+| SecurityTest | 12 | XSS+SQLi+XXE+SSRF+Path |
 | JwtTest | 4 | encode/decode/invalid |
 | ApiResponseTest | 3 | success/fail/paginate |
-| **Total** | **14** | **44 assertions PASS** |
+| RedisFacadeTest | 3 | ping/set/get/redis() |
+| **Total** | **22** | **45 assertions PASS** |
 
 ---
 
@@ -498,7 +499,7 @@ cd service && php vendor/bin/phpunit tests/
 | 工具类 | 6 |
 | 定时任务 | 12 |
 | 配置项 | 35+ |
-| 测试 | 26 tests, 71 assertions |
+| 测试 | 22 tests, 45 assertions |
 | Skills | 13 |
 | 文档 | 6 |
 | **总计** | **~650** |

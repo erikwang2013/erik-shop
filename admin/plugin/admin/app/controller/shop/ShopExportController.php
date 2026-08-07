@@ -51,7 +51,7 @@ class ShopExportController extends Base
 
         // 数据行
         $row = 2;
-        $statusMap = ['待付款','已付款','已发货','已收货','已完成','已取消','退款中','已退款'];
+        $statusMap = ['待付款','已付款','已发货','已收货','已完成','已取消','退款中','已退款','待审核'];
         foreach ($orders as $o) {
             $sheet->fromArray([
                 $o->order_no, $o->created_at,
@@ -96,18 +96,18 @@ class ShopExportController extends Base
         </style></head><body>
             <h1>商业发票 / Commercial Invoice</h1>
             <div class="header"><div>
-                <p><strong>发票号:</strong> INV-' . $order->order_no . '</p>
-                <p><strong>日期:</strong> ' . $order->created_at . '</p>
-                <p><strong>币种:</strong> ' . $order->currency_code . '</p>
+                <p><strong>发票号:</strong> INV-' . htmlspecialchars($order->order_no) . '</p>
+                <p><strong>日期:</strong> ' . htmlspecialchars($order->created_at) . '</p>
+                <p><strong>币种:</strong> ' . htmlspecialchars($order->currency_code) . '</p>
             </div></div>
             <table><thead><tr><th>商品</th><th>数量</th><th>单价</th><th>小计</th></tr></thead><tbody>';
 
         foreach ($order->items as $item) {
-            $html .= '<tr><td>' . $item->title . '</td><td>' . $item->quantity . '</td><td>' . number_format($item->price, 2) . '</td><td>' . number_format($item->subtotal, 2) . '</td></tr>';
+            $html .= '<tr><td>' . htmlspecialchars($item->title) . '</td><td>' . (int) $item->quantity . '</td><td>' . number_format((float) $item->price, 2) . '</td><td>' . number_format((float) $item->subtotal, 2) . '</td></tr>';
         }
 
         $html .= '</tbody></table>
-            <p class="total">总计: ' . number_format($order->pay_amount, 2) . ' ' . $order->currency_code . '</p>
+            <p class="total">总计: ' . number_format((float) $order->pay_amount, 2) . ' ' . htmlspecialchars($order->currency_code) . '</p>
             <p style="font-size:11px;color:#666">仅供海关申报使用，实际金额以订单为准。</p>
         </body></html>';
 

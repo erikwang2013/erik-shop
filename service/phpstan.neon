@@ -7,6 +7,27 @@ parameters:
         - vendor
         - runtime
         - tests
+        - config/plugin
     ignoreErrors:
-        - '#Dynamic call to static method#'
-    checkMissingIterableValueType: false
+        # Eloquent 魔法方法（__call 动态分发：where/create/find/first/whereHas 等），无 larastan 扩展时的框架误报
+        - '#Call to an undefined (static )?method (static )?app\\model\\[A-Za-z0-9_]+::#'
+        # Eloquent 数据库列动态属性（$model->column）
+        - '#Access to an undefined property app\\model\\[A-Za-z0-9_]+::#'
+        # webman Request 动态属性（JwtAuth 等中间件注入 $request->userId 等）
+        - '#Access to an undefined property Webman\\Http\\Request::#'
+        # webman Redis 门面（__callStatic 转发到连接实例）
+        - '#Call to an undefined (static )?method support\\Redis::#'
+        # Hashids 门面（__call 转发 encode/decode 到连接实例）
+        - '#Call to an undefined method Erikwang2013\\Hashids\\HashidsManager::#'
+        # SizeChartController 嵌套集合类型（hasMany 动态属性级联，PHPStan 无法解析）
+        - identifier: argument.unresolvableType
+          paths:
+              - app/controller/v1/SizeChartController.php
+        # SecurityMiddleware 上传文件 instanceof 防御（webman file() 类型标注不精确，多文件时元素可为数组）
+        - identifier: instanceof.alwaysTrue
+          paths:
+              - app/middleware/SecurityMiddleware.php
+        # Cron 常驻进程的 while(true) 循环（进程生命周期内持续运行，非死循环 bug）
+        - identifier: while.alwaysTrue
+          paths:
+              - app/process

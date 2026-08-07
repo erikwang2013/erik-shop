@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:responsive_framework/responsive_framework.dart';
 import '../../core/api/api_client.dart';
+import '../../core/i18n/locale_provider.dart';
+import '../../core/utils/currency_formatter.dart';
 import '../../data/models/product.dart';
 import 'widgets/product_card.dart';
 
@@ -85,7 +86,7 @@ class _ProductListScreenState extends ConsumerState<ProductListScreen> {
                     values: RangeValues(_priceMin, _priceMax),
                     min: 0, max: 5000,
                     divisions: 50,
-                    labels: RangeLabels('\$${_priceMin.toInt()}', '\$${_priceMax.toInt()}'),
+                    labels: RangeLabels(CurrencyFormatter.formatPrice(_priceMin, ref.watch(currencyProvider)), CurrencyFormatter.formatPrice(_priceMax, ref.watch(currencyProvider))),
                     onChanged: (v) { _priceMin = v.start; _priceMax = v.end; },
                     onChangeEnd: (_) => _load(),
                   ),

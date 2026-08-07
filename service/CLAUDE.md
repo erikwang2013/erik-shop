@@ -17,7 +17,7 @@
 - 控制器命名空间：`app\controller\v1`、`app\controller\v2`（按版本）
 - 模型命名空间：`app\model`
 - 中间件命名空间：`app\middleware`
-- 工具类命名空间：`app\common`（含跨境专用：Tariff, Shipping, Currency, SocialAuth）
+- 工具类命名空间：`app\common`（含跨境专用：SocialAuth, PaymentGateway）
 
 ### 配置文件
 - 所有配置文件位于 `config/` 目录，每个配置项必须带注释说明
@@ -60,24 +60,17 @@ shop-php/
         FlashSaleController.php
         GroupBuyController.php
         ...
-    model/            # 模型（extends BaseModel，63张表）
+    model/            # 模型（extends BaseModel，110张业务表）
     middleware/       # 中间件（含 VersionRoute, PosterVerify, LocaleMiddleware, GeoIpMiddleware）
-    common/           # 工具类
-      Tariff.php      # 关税估算
-      Shipping.php    # 运费计算
-      Currency.php    # 多币种价格
-      SocialAuth.php  # 社交登录
-      PaymentGateway.php      # 支付网关抽象（Stripe/PayPal/Klarna/Adyen/Afterpay）
-      Settlement.php          # 平台分账+供应商结算+分销佣金
-      InventoryManager.php    # 库存流水/调拨/盘点（不可变账本）
-      QualityInspection.php   # 质检流程（入库/出库门禁）
-      Compliance.php          # 合规检查（禁售/限售/标签）
-      GeoIp.php               # GeoIP区域识别
-      RiskEngine.php          # 风控引擎（AVS/邮编/3DS/批量注册/异常检测）
-      ProductFeed.php         # Google/Meta 商品Feed生成
-      SizeChart.php           # 尺码转换（US/UK/EU/JP/CN）
-      ReviewTranslator.php    # 评价机器翻译
-      Recommendation.php      # 协同过滤推荐
+    common/           # 工具类（8个）
+      Snowflake.php         # Snowflake分布式ID生成
+      HashidsHelper.php     # Hashids ID 混淆
+      ApiResponse.php       # 统一响应格式
+      Encryption.php        # 接口AES加解密
+      Jwt.php               # JWT 认证工具
+      PaymentGateway.php    # 支付网关抽象（Stripe/PayPal/Klarna/Adyen/Afterpay）
+      SocialAuth.php        # 社交登录
+      Definitions.php       # 共享定义/常量
     process/          # 自定义进程 + 定时任务
       ExchangeRateCron.php      # 汇率更新
       ShipmentTrackingCron.php  # 物流轨迹拉取
@@ -112,7 +105,7 @@ LocaleMiddleware:
 
 ### 中间件栈（按顺序）
 1. `Cors` — CORS 跨域处理
-2. `Security` — WAF 攻击检测（基于 erikwang2013/security-php，25+ 类攻击检测器）+ 暴力破解防护
+2. `Security` — WAF 攻击检测（基于 erikwang2013/security-php，31 类攻击检测器）+ 暴力破解防护
 3. `RateLimit` — 令牌桶限流
 4. `Platform` — 操作来源端识别（Web/App/iOS/Android）
 5. `GeoIpMiddleware` — IP 区域识别，自动设置语言/币种（未登录用户）
@@ -148,7 +141,7 @@ erik_hs_codes (id, code, description)                           ← HS编码库
 erik_product_hs_codes (product_id, hs_code_id, is_primary)      ← 商品关联
 erik_tariff_rules (dest_country_id, hs_code_id, duty_rate, vat_rate) ← 关税规则
 ```
-- 下单时 `Tariff.php` 根据目的国+商品HS Code查表计算预估关税和增值税
+- 下单时 `TariffController` 根据目的国+商品HS Code查 `erik_tariff_rules` 计算预估关税和增值税
 - 预估结果在结算页展示，实际以海关核定为准
 
 ### 社交登录模式
@@ -184,7 +177,7 @@ ApiResponse::paginate($items, $total, $page, $perPage);
 | erikwang2013/snowflake-php | 分布式 ID 生成 |
 | erikwang2013/hashids | 接口 ID 加解密 |
 | erikwang2013/jwt-webman | JWT 认证 |
-| erikwang2013/security-php | WAF 攻击检测与防护（25+ 类检测器，IP 黑名单） |
+| erikwang2013/security-php | WAF 攻击检测与防护（31 类检测器，IP 黑名单） |
 | erikwang2013/encryption | 接口敏感数据加解密 |
 | erikwang2013/encryptable | 数据库字段加解密 |
 | erikwang2013/poster-php | 敏感操作随机验证 |
@@ -222,7 +215,7 @@ php vendor/bin/phpunit      # 运行测试
 | PHPUnit 12.5 | `phpunit.xml` | 单元测试（22 tests, 45 assertions） |
 | phpstan | `phpstan.neon` (level 5) | 静态分析 |
 | php-cs-fixer | `.php-cs-fixer.php` | PSR-12 代码格式化 |
-| CI/CD | `.github/workflows/ci.yml` | PHP 8.1/8.2/8.3 矩阵测试 |
+| CI/CD | `.github/workflows/ci.yml` | PHP 8.3/8.4 矩阵测试 |
 
 ## 功能实现状态
 

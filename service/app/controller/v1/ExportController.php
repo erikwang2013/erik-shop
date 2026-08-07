@@ -74,7 +74,7 @@ class ExportController extends \app\controller\BaseApiController
             $writer->save($tmpFile);
             register_shutdown_function(fn() => @unlink($tmpFile));
 
-            return response()->file($tmpFile, 'orders.xlsx');
+            return response()->download($tmpFile, 'orders.xlsx');
         } catch (\Throwable $e) {
             \support\Log::error('订单导出失败: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
             return ApiResponse::fail('导出失败，请稍后重试', 500);

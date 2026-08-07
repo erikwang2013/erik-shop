@@ -20,6 +20,10 @@ class JwtAuth implements MiddlewareInterface
         if (!$payload) {
             return json(['code' => 401, 'msg' => 'Token无效或已过期', 'data' => null]);
         }
+        // 仅接受 access 类型令牌，refresh_token 不得用于业务接口
+        if (($payload['type'] ?? '') !== 'access') {
+            return json(['code' => 401, 'msg' => 'Token类型不正确', 'data' => null]);
+        }
         $request->userId = $payload['sub'] ?? null;
 
         return $next($request);

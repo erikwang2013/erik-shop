@@ -15,8 +15,10 @@ class B2bController extends \app\controller\BaseApiController
             return ApiResponse::fail('请先完成企业认证', 403);
         }
 
-        $quotes = B2bQuotes::where('user_id', $request->userId)->orderBy('id','desc')->get();
-        return ApiResponse::success($quotes);
+        $page = (int) $request->input('page', 1);
+        $perPage = min((int) $request->input('per_page', 10), 50);
+        $paginator = B2bQuotes::where('user_id', $request->userId)->orderBy('id','desc')->paginate($perPage, ['*'], 'page', $page);
+        return ApiResponse::paginate($paginator->items(), $paginator->total(), $page, $perPage);
     }
 
     public function store(Request $request): \support\Response

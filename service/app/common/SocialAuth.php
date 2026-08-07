@@ -33,8 +33,8 @@ class SocialAuth
     {
         return match ($provider) {
             'google' => self::verifyGoogle($idToken, $clientEmail),
-            'apple' => self::verifyApple($idToken),
-            'facebook' => self::verifyFacebook($idToken),
+            'apple' => self::verifyApple($idToken, $clientEmail),
+            'facebook' => self::verifyFacebook($idToken, $clientEmail),
             default => throw new \InvalidArgumentException("不支持的社交平台: {$provider}"),
         };
     }
@@ -56,7 +56,7 @@ class SocialAuth
         return ['sub' => (string)$info['sub'], 'email' => $info['email'] ?? ''];
     }
 
-    private static function verifyApple(string $idToken): array
+    private static function verifyApple(string $idToken, string $clientEmail = ''): array
     {
         $clientId = config('social.apple.client_id', '');
         $resp = self::http()->get('https://appleid.apple.com/auth/keys');
@@ -79,10 +79,14 @@ class SocialAuth
         if (empty($arr['sub'])) {
             throw new \RuntimeException('Apple id_token 缺少 sub');
         }
-        return ['sub' => (string)$arr['sub'], 'email' => $arr['email'] ?? ''];
+        $email = $arr['email'] ?? '';
+        if ($clientEmail !== '' && $email !== '' && strcasecmp($email, $clientEmail) !== 0) {
+            throw new \RuntimeException('Apple id_token 邮箱与提交邮箱不一致');
+        }
+        return ['sub' => (string)$arr['sub'], 'email' => $email];
     }
 
-    private static function verifyFacebook(string $idToken): array
+    private static function verifyFacebook(string $idToken, string $clientEmail = ''): array
     {
         $appId = config('social.facebook.app_id', '');
         $appSecret = config('social.facebook.app_secret', '');
@@ -100,6 +104,10 @@ class SocialAuth
         if (empty($data['data']['user_id'])) {
             throw new \RuntimeException('Facebook token 缺少 user_id');
         }
-        return ['sub' => (string)$data['data']['user_id']];
+        $email = $data['data']['email'] ?? '';
+        if ($clientEmail !== '' && $email !== '' && strcasecmp($email, $clientEmail) !== 0) {
+            throw new \RuntimeException('Facebook token 邮箱与提交邮箱不一致');
+        }
+        return ['sub' => (string)$data['data']['user_id'], 'email' => $email];
     }
 }

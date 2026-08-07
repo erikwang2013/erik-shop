@@ -2,7 +2,7 @@ sequenceDiagram
     participant Client as 客户端<br/>Flutter/HarmonyOS/Web
     participant Nginx as Nginx :80/:443
     participant Security as Security<br/>Middleware
-    participant Pipeline as 中间件管道<br/>9 Global MW
+    participant Pipeline as 中间件管道<br/>10 Global MW
     participant RateLimit as RateLimit<br/>Middleware
     participant Route as 路由分发
     participant Poster as PosterVerify
@@ -21,8 +21,8 @@ sequenceDiagram
         Note over Security: 安全检测阶段
         Security->>Security: ① Content-Type 校验
         Security->>Security: ② Body Size ≤ 10MB
-        Security->>Security: ③ XSS 检测 18规则
-        Security->>Security: ④ SQLi 检测 20规则
+        Security->>Security: ③ XSS 检测 13规则
+        Security->>Security: ④ SQLi 检测 13规则
         Security->>Security: ⑤ CRLF Header 注入
         Security->>Security: ⑥ Path Traversal
     end
@@ -71,8 +71,6 @@ sequenceDiagram
     alt 需认证接口
         Route->>JWT: Bearer Token
         JWT->>JWT: HS256 验签 + 过期检查
-        JWT->>Redis: SISMEMBER jwt_blacklist
-        Redis-->>JWT: 黑名单状态
         alt Token 无效
             JWT-->>Client: 401 Unauthorized
         end
@@ -88,8 +86,6 @@ sequenceDiagram
         Model->>Model: Encryptable 加密/解密
         Model->>MySQL: 读写操作
         MySQL-->>Model: 结果
-        Model->>Redis: 缓存读写 Cache-Aside
-        Redis-->>Model: 缓存数据
         Model->>ES: 搜索/索引
         ES-->>Model: 搜索结果
         Model-->>Controller: 业务数据

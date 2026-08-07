@@ -7,9 +7,12 @@ namespace app\model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class FlashSales extends BaseModel
-{    protected $table = "erik_flash_sales";
+{
+    use SoftDeletes;
+    protected $table = "erik_flash_sales";
     public function flashSaleSkus(): HasMany
     {
         return $this->hasMany(FlashSaleSkus::class, "flash_sale_id");

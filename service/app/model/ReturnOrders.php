@@ -7,9 +7,12 @@ namespace app\model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ReturnOrders extends BaseModel
-{    protected $table = "erik_return_orders";
+{
+    use SoftDeletes;
+    protected $table = "erik_return_orders";
     public function order(): BelongsTo
     {
         return $this->belongsTo(Orders::class, "order_id");

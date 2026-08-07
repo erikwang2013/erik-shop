@@ -47,13 +47,13 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **多平台** | Amazon/eBay/Shopee/Lazada/Temu商品刊登+订单聚合、多店铺管理 | 完整 |
 | **供应链** | 供应商档案+评级、采购单(审核→发货→收货→质检)、质检(入库+出库门禁/外观/功能/合规标签检查)、库存流水(不可变账本:入库/出库/调拨/盘点) | 完整 |
 | **风控合规** | 规则引擎(旁路打分:地址校验/邮编匹配/3DS/批量注册/货值异常)、KYC实名、GDPR/CCPA数据请求、Cookie Consent版本管理 | 完整 |
-| **安全防护** | SecurityMiddleware 15类自定义检测 + security-php 31个检测器: XSS(18条)/SQL注入(20条)/CRLF/路径遍历(编码+null byte)/Body大小/Content-Type/文件上传/HTTP安全头/暴力破解(Redis计数器)/XXE/SSRF/方法/Host/敏感脱敏/CORS | 完整 |
-| **高并发** | 令牌桶限流(滑动窗口+6端点规则)、Cache-Aside缓存(防雪崩随机TTL+防穿透空值缓存+标签批量失效)、熔断器(5次→熔断60s+自动恢复)、DB读写分离(2读副本+sticky)、连接池(DB 50/10+Redis 30/5)、热点响应缓存(6端点)、OPCache(256MB/CLI) | 完整 |
+| **安全防护** | SecurityMiddleware 封装 security-php 31个检测器: XSS(13条)/SQL注入(13条)/CRLF/路径遍历(编码+null byte)/Body大小/Content-Type/文件上传/HTTP安全头/暴力破解(Redis计数器)/XXE/SSRF/方法/Host/敏感脱敏/CORS | 完整 |
+| **高并发** | 令牌桶限流(滑动窗口+6端点规则)、DB读写分离(2读副本+sticky)、连接池(DB 50/10+Redis 30/5)、OPCache(128MB, Docker环境) | 完整 |
 | **会员增长** | 会员等级+权益、积分规则+流水、礼品卡(余额+兑换)、降价/到货提醒、收藏夹、商品对比、浏览历史、订阅周期购、AB测试(流量分配+置信度) | 完整 |
 | **内容管理** | CMS多语言页面(Landing/Blog)、FAQ多语言、知识库多语言、尺码对照表(服装/鞋类+US/UK/EU/JP/CN转换)、邮件模板(多语言)、商品Feed(Google/Meta+定时同步) | 完整 |
 | **客服** | WebSocket实时IM(chat_sessions/chat_messages)、知识库多语言 | 表结构完整,WS待实现 |
-| **基础设施** | Snowflake分布式ID(bigint非自增)、Hashids接口ID混淆、JWT认证(HS256+黑名单+刷新)、AES加解密(接口+数据库三层加密)、GeoIP区域识别(MaxMind)、Poster人机验证(滑块/拼图/点击) | 完整 |
-| **多端覆盖** | Flutter 5平台(iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS(ArkTS 8页面) + Web Admin(LayUI+ECharts) + API | Flutter 25文件,HarmonyOS 13文件,Admin 137文件 |
+| **基础设施** | Snowflake分布式ID(bigint非自增)、Hashids接口ID混淆、JWT认证(HS256+access/refresh双token刷新)、AES加解密(接口+数据库三层加密)、GeoIP区域识别(MaxMind)、Poster人机验证(滑块/拼图/点击) | 完整 |
+| **多端覆盖** | Flutter 5平台(iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS(ArkTS 9页面) + Web Admin(LayUI+ECharts) + API | Flutter 25文件,HarmonyOS 14文件,Admin 239文件 |
 | **平台追踪** | 8平台识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+X-Platform header+6表记录(orders/payments/operation_logs/users/search_logs/chat_messages) | 完整 |
 | **测试** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | 单元测试完整,集成测试待补 |
 
@@ -249,14 +249,14 @@ GET /api/tariff/estimate?product_id=xxx&dest_country_id=xxx&declared_value=100
 
 ---
 
-## 4. 安全防护 (SecurityMiddleware 15类自定义检测 + security-php 31个检测器)
+## 4. 安全防护 (SecurityMiddleware 封装 security-php 31个检测器)
 
 ### 4.1 检测规则总表
 
 | # | 攻击类型 | 主要检测方式 | 错误码 | Service | Admin |
 |---|---------|------------|--------|---------|-------|
-| 1 | XSS跨站脚本 | 18条正则: script/iframe/object/embed/link/meta/base/javascript:/vbscript:/data:text/html/on事件/svg/img/expression/marquee/applet/form | 40001 | ✅ | ✅ |
-| 2 | SQL注入 | 20条正则: UNION SELECT/DROP/DELETE/EXEC/xp_cmdshell/xp_regread/sp_executesql/benchmark/sleep/pg_sleep/load_file/into outfile/into dumpfile/waitfor/char/OR注入 | 40002 | ✅ | ✅ |
+| 1 | XSS跨站脚本 | 13条正则: script/iframe/on事件/svg+on/style/expression/javascript:/embed/object/link/meta | 40001 | ✅ | ✅ |
+| 2 | SQL注入 | 13条正则: UNION SELECT/SELECT FROM WHERE/sleep/benchmark/pg_sleep/布尔型/字符串型/注释符/MySQL特殊注释/schema枚举/load_file/into outfile/存储过程/waitfor/delay | 40002 | ✅ | ✅ |
 | 3 | CRLF Header注入 | `[\r\n]` in: Authorization/X-Platform/API-Version/X-Forwarded-For/Referer/Origin | 40003 | ✅ | ✅ |
 | 4 | 路径遍历 | `../` + `%2e%2f`编码 + `%252e%252f`二层编码 + null byte `\0` + `.env`/`.git`/`phpmyadmin`/`wp-admin`/`/etc/`/`/proc/`/`composer.json` | 40004 | ✅ | ✅ |
 | 5 | 请求体限制 | Content-Length > 10MB(Service) / 20MB(Admin) | 40005 | ✅ | ✅ |
@@ -309,15 +309,15 @@ Admin: Security → Platform → HashidsDecode → AccessControl → HashidsEnco
 | /api/search | 滑动窗口 | 1s | 10次 |
 | 默认 | 滑动窗口 | 60s | 100次 |
 
-### 5.2 缓存架构
+### 5.2 Redis 用途
 
-| 层级 | 技术 | TTL | 说明 |
-|------|------|-----|------|
-| 热点数据 | Redis Cache-Aside | 60s~3600s | 国家/分类/配置/FAQ |
-| 防雪崩 | 随机TTL ±10% | — | 避免同时过期 |
-| 防穿透 | 空值缓存 | 60s | 恶意查询保护 |
-| 标签失效 | Tag-based | — | 批量清理 |
-| 分布式锁 | SETNX+TTL | 10s | 并发控制 |
+| 用途 | 实现 |
+|------|------|
+| 限流令牌桶 | Redis ZSET 滑动窗口 |
+| 人机验证 | PosterVerify 验证码状态 |
+| Session 存储 | Redis KV 存储 |
+
+业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）。
 
 ### 5.3 连接池
 
@@ -359,7 +359,7 @@ erik_countries ──┬── vat_settings, tariff_rules(dest_country_id)
 
 ## 7. API端点设计
 
-### 6.1 公开接口 (25端点)
+### 6.1 公开接口 (23端点)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -387,7 +387,7 @@ erik_countries ──┬── vat_settings, tariff_rules(dest_country_id)
 | GET | /api/geoip/detect | GeoIP检测 |
 | GET | /api/compliance/check | 合规检查 |
 
-### 6.2 认证接口 (45端点)
+### 6.2 认证接口 (47端点)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -425,6 +425,13 @@ erik_countries ──┬── vat_settings, tariff_rules(dest_country_id)
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | /webhook/payment/{gateway} | 支付异步通知(验签) |
+
+### 6.4 Admin 与健康检查 (2端点)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /api/admin/refunds/{id}/execute | 后台退款执行 |
+| GET | /health | 健康检查 |
 
 ---
 

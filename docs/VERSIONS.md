@@ -162,10 +162,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | OPCache | ✅ | ✅ | ✅ |
 | DB连接池 | ✅ | ✅ | ✅ |
 | 令牌桶限流 | — | — | ✅ |
-| Cache-Aside缓存 | — | — | ✅ |
-| 熔断器 | — | — | ✅ |
 | DB读写分离 | — | — | ✅ |
-| 异步队列 | — | — | ✅ |
+| Cron 定时任务 (10个) | — | — | ✅ |
 
 ### 内容与增长
 
@@ -234,15 +232,15 @@ Full:       Cors → Security(31类) → RateLimit(令牌桶) → Platform → G
 
 | | Lite | Standard | Full |
 |---|:---:|:---:|:---:|
-| Service 模型 | 26 | 55 | 112 |
-| Service 控制器 | 15 | 24 | 37 |
-| Service 中间件 | 7 | 9+2 | 11+2 |
+| Service 模型 | 26 | 55 | 111 |
+| Service 控制器 | 15 | 24 | 39 |
+| Service 中间件 | 7 | 9+2 | 12+2 |
 | Service 工具类 | 5 | 5 | 8 |
-| Admin 模型 | 15 | 34 | 65 |
-| Admin 控制器 | 15 | 27 | 67 |
-| Flutter 页面 | 12 | 12 | 12 |
-| HarmonyOS | — | — | 8页面 |
-| PHPUnit测试 | 23 | 23 | 23 |
+| Admin 模型 | 15 | 34 | 76 |
+| Admin 控制器 | 15 | 27 | 82 |
+| Flutter 页面 | 11 | 11 | 11 |
+| HarmonyOS | — | — | 9页面 |
+| PHPUnit测试 | 22 | 22 | 22 |
 
 ### 技术栈
 

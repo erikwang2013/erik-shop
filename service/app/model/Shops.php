@@ -6,11 +6,13 @@
 namespace app\model;
 
 use Erik\Encryptable\Encryptable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Shops extends BaseModel
 {    use Encryptable;
+    use SoftDeletes;
     protected $table = "erik_shops";
     protected $encryptable = ["name"];
 

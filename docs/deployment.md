@@ -61,7 +61,7 @@ docker compose logs -f admin
 
 ### 2.1 环境依赖
 
-- PHP 8.1+ (ext: pdo_mysql, bcmath, opcache, redis, gd, zip, intl, sockets, pcntl)
+- PHP 8.3+ (ext: pdo_mysql, bcmath, opcache, redis, gd, zip, intl, sockets, pcntl)
 - MySQL 8.0+
 - Redis 7+
 - Elasticsearch 8+ (可选，搜索功能需要)

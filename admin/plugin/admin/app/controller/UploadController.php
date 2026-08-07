@@ -208,6 +208,9 @@ class UploadController extends Crud
             if (!in_array($ext, ['jpg', 'jpeg', 'gif', 'png'])) {
                 return json(['code' => 2, 'msg' => '仅支持 jpg jpeg gif png格式']);
             }
+            if ($file->getSize() > 5 * 1024 * 1024) {
+                return json(['code' => 2, 'msg' => '头像大小不能超过5MB']);
+            }
             $image = Image::make($file);
             $width = $image->width();
             $height = $image->height();
@@ -304,6 +307,9 @@ class UploadController extends Crud
         $mime_type = $file->getUploadMimeType();
         $file_name = $file->getUploadName();
         $file_size = $file->getSize();
+        if ($file_size > 10 * 1024 * 1024) {
+            throw new BusinessException('文件大小不能超过10MB', 400);
+        }
 
         if (!$ext && $file_name === 'blob') {
             [$___image, $ext] = explode('/', $mime_type);

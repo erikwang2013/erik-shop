@@ -10,9 +10,11 @@ use app\model\Orders;
 use app\model\OrderItems;
 use app\model\OrderLogs;
 use app\model\Carts;
+use app\model\Countries;
 use app\model\ProductSkus;
 use app\model\ProductSkuPrices;
 use app\model\UserAddresses;
+use app\model\UserKyc;
 use support\Db;
 use Webman\Http\Request;
 
@@ -84,7 +86,6 @@ class OrderController extends \app\controller\BaseApiController
     {
         $userId = $request->userId;
         $addressId = $request->input('address_id');
-        $couponId = $request->input('coupon_id', 0);
         $currencyCode = $request->input('currency_code', 'USD');
         $remark = $request->input('remark', '');
 
@@ -92,6 +93,20 @@ class OrderController extends \app\controller\BaseApiController
         $address = UserAddresses::where('id', $addressId)->where('user_id', $userId)->first();
         if (!$address) {
             return ApiResponse::fail('收货地址不存在', 422);
+        }
+
+        // 合规校验：禁售国家拦截 + KYC 必需市场校验
+        $country = Countries::find($address->country_id);
+        if ($country) {
+            if (in_array($country->iso_code_2, config('country.blocked_countries', []))) {
+                return ApiResponse::fail('商品无法配送到该国家/地区', 422);
+            }
+            if ($country->kyc_required || in_array($country->iso_code_2, config('country.kyc_required_countries', []))) {
+                $kycOk = UserKyc::where('user_id', $userId)->where('status', 1)->exists();
+                if (!$kycOk) {
+                    return ApiResponse::fail('该国家/地区要求实名认证（KYC）后才能下单', 422);
+                }
+            }
         }
 
         // 获取购物车已选中商品
@@ -125,8 +140,14 @@ class OrderController extends \app\controller\BaseApiController
 
                 $totalAmount = 0;
 
+                // 批量预取 SKU（含商品标题），避免循环内 N+1 查询
+                $skus = ProductSkus::with('product')
+                    ->whereIn('id', $cartItems->pluck('sku_id'))
+                    ->get()
+                    ->keyBy('id');
+
                 foreach ($cartItems as $cart) {
-                    $sku = ProductSkus::find($cart->sku_id);
+                    $sku = $skus[$cart->sku_id] ?? null;
                     if (!$sku) {
                         throw new \RuntimeException("SKU {$cart->sku_id} 不存在");
                     }

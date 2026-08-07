@@ -19,7 +19,8 @@ test: ## Run PHPUnit tests
 	cd service && php vendor/bin/phpunit
 
 lint: ## Lint PHP syntax
-	find service/app service/config admin/app admin/config -name "*.php" -exec php -l {} \; | grep -v "No syntax"
+	@errors=$$(find service/app service/config admin/app admin/config -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax" || true); \
+	if [ -n "$$errors" ]; then echo "$$errors"; exit 1; fi; echo "All PHP files pass syntax check"
 
 check: ## Run static analysis
 	cd service && vendor/bin/phpstan analyse
@@ -33,10 +34,10 @@ install: ## Install Composer dependencies
 	cd admin && composer install
 
 docker-up: ## Start Docker containers
-	docker-compose up -d
+	docker compose up -d
 
 docker-down: ## Stop Docker containers
-	docker-compose down
+	docker compose down
 
 logs-service: ## Tail service logs
 	tail -f service/runtime/logs/webman.log

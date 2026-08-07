@@ -7,9 +7,12 @@ namespace app\model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Orders extends BaseModel
-{    protected $table = "erik_orders";
+{
+    use SoftDeletes;
+    protected $table = "erik_orders";
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReviews::class, "order_id");

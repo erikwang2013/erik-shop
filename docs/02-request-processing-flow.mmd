@@ -6,9 +6,9 @@ graph TB
     SEC1 -->|否| E403["403 Forbidden"]
     SEC1 -->|是| SEC2{"Body Size<br/>≤ 10MB?"}
     SEC2 -->|否| E413["413 Too Large"]
-    SEC2 -->|是| SEC3{"XSS 检测<br/>18条规则"}
+    SEC2 -->|是| SEC3{"XSS 检测<br/>13条规则"}
     SEC3 -->|命中| E40001["40001 XSS 拦截"]
-    SEC3 -->|通过| SEC4{"SQLi 检测<br/>20条规则"}
+    SEC3 -->|通过| SEC4{"SQLi 检测<br/>13条规则"}
     SEC4 -->|命中| E40002["40002 SQLi 拦截"]
     SEC4 -->|通过| SEC5{"CRLF 检测<br/>Header 注入"}
     SEC5 -->|命中| E40003["40003 CRLF 拦截"]
@@ -39,7 +39,7 @@ graph TB
 
     JWT_START --> JWT_CHECK{"Bearer Token<br/>HS256 验签"}
     JWT_CHECK -->|失效/过期| E401["401 Unauthorized"]
-    JWT_CHECK -->|有效| JWT_INJECT["注入 request→userId<br/>检查黑名单"]
+    JWT_CHECK -->|有效| JWT_INJECT["注入 request→userId"]
 
     JWT_INJECT --> HENC["⑪ HashidsEncode<br/>响应 JSON 递归遍历<br/>snowflake ID → hashid"]
 

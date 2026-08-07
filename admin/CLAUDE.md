@@ -155,7 +155,7 @@ class ShopProductController extends Crud
 | 前缀 | 用途 | 示例 |
 |------|------|------|
 | `wa_` | webman-admin 系统表 | wa_admins, wa_roles, wa_rules, wa_uploads |
-| `erik_` | 商城业务表（63张） | erik_products, erik_orders, erik_hs_codes, erik_shipping_zones, erik_product_translations, erik_product_sku_prices 等 |
+| `erik_` | 商城业务表（110张） | erik_products, erik_orders, erik_hs_codes, erik_shipping_zones, erik_product_translations, erik_product_sku_prices 等 |
 
 ## 技术栈
 

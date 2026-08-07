@@ -80,7 +80,13 @@
                                 <div class="layui-form-item">
                                     <label class="layui-form-label">强制覆盖</label>
                                     <div class="layui-input-block">
-                                        <input type="checkbox" name="overwrite" lay-skin="primary" title="勾选后将删除已有同名表，请谨慎操作">
+                                        <input type="checkbox" name="overwrite" lay-filter="overwrite" lay-skin="primary" title="勾选后将删除已有同名表，请谨慎操作">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item" id="overwrite-confirm-item" style="display:none;">
+                                    <label class="layui-form-label">覆盖确认</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="confirm" class="layui-input" autocomplete="off" placeholder="勾选强制覆盖后，请输入数据库名进行二次确认"/>
                                     </div>
                                 </div>
 
@@ -183,6 +189,14 @@
             }, {
                 title: "安装完成"
             }]
+        });
+
+        // 勾选「强制覆盖」时显示二次确认输入框
+        form.on("checkbox(overwrite)", function(data) {
+            $("#overwrite-confirm-item").toggle(data.elem.checked);
+            if (!data.elem.checked) {
+                $("input[name=confirm]").val("");
+            }
         });
 
         form.on("submit(formStep)", function(data) {

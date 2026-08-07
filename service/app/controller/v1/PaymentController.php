@@ -95,6 +95,10 @@ class PaymentController extends \app\controller\BaseApiController
         } catch (\Throwable $e) {
             $payment->status = 3;
             $payment->save();
+            \support\Log::error('支付创建失败 [gateway=' . $gateway . ', order=' . $order->order_no . ']: ' . $e->getMessage(), [
+                'payment_id' => $payment->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
             return ApiResponse::fail('支付网关错误，请稍后重试', 500);
         }
 

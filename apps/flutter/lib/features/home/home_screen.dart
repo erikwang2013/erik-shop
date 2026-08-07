@@ -70,7 +70,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   title: const Text('Erik Shop'),
                   floating: true,
                   actions: [
-                    IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+                    IconButton(icon: const Icon(Icons.search), onPressed: () => context.push('/products')),
                     IconButton(icon: const Icon(Icons.shopping_cart_outlined), onPressed: () => context.push('/cart')),
                   ],
                 ),

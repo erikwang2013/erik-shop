@@ -13,8 +13,8 @@ graph TB
         direction TB
         CT{"Content-Type<br/>校验"}
         BS{"Body Size<br/>≤ 10MB"}
-        XSS{"XSS 检测<br/>18 条正则"}
-        SQLI{"SQLi 检测<br/>20 条正则"}
+        XSS{"XSS 检测<br/>13 条正则"}
+        SQLI{"SQLi 检测<br/>13 条正则"}
         CRLF{"CRLF 注入<br/>Header 检测"}
         PATH_T{"路径遍历<br/>编码/null byte"}
         XXE{"XXE 实体注入<br/>ENTITY/DOCTYPE"}
@@ -55,7 +55,7 @@ graph TB
     subgraph L4["第四层：身份认证"]
         direction TB
         POSTER["PosterVerify 人机验证<br/>· 滑块 · 拼图 · 点击<br/>· 注册/下单/支付触发"]
-        JWT_AUTH["JWT 认证<br/>· HS256 签名<br/>· 过期检查<br/>· 黑名单 Redis<br/>· request→userId 注入"]
+        JWT_AUTH["JWT 认证<br/>· HS256 签名<br/>· 过期检查<br/>· 双token刷新<br/>· request→userId 注入"]
         POSTER --> JWT_AUTH
     end
 

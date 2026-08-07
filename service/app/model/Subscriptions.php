@@ -7,9 +7,12 @@ namespace app\model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Subscriptions extends BaseModel
-{    protected $table = "erik_subscriptions";
+{
+    use SoftDeletes;
+    protected $table = "erik_subscriptions";
     public function user(): BelongsTo
     {
         return $this->belongsTo(Users::class, "user_id");

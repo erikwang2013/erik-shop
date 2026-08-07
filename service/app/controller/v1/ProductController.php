@@ -94,7 +94,7 @@ class ProductController extends \app\controller\BaseApiController
         $locale = $request->locale ?? 'en';
         $currencyCode = $request->input('currency', 'USD');
         $destCountryCode = $request->input('dest_country', 'US');
-        $product = Products::with(['skus.prices', 'images', 'hsCodes.hsCode', 'compliance'])->find($id);
+        $product = Products::with(['skus.prices', 'images', 'hsCodes.hsCode', 'compliance.complianceCategory'])->find($id);
         if (!$product || $product->status !== 2) {
             return ApiResponse::fail('商品不存在或已下架', 404);
         }
@@ -133,7 +133,7 @@ class ProductController extends \app\controller\BaseApiController
             'code' => $h->hsCode->code ?? '',
             'is_primary' => (bool)$h->is_primary,
         ]);
-        $product->increment('view_count');
+        Products::where('id', $product->id)->increment('view_count');
         return ApiResponse::success($product);
     }
 

@@ -7,15 +7,14 @@ namespace app\model;
 
 use app\common\Snowflake;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 class BaseModel extends Model
 {
-    use SoftDeletes;
-
     public $incrementing = false;
     protected $keyType = 'string';
     protected $dateFormat = 'Y-m-d H:i:s';
+    // 所有模型均显式构造写入字段（无 request 全量直传），放宽批量赋值默认限制
+    protected $guarded = [];
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
     const DELETED_AT = 'deleted_at';

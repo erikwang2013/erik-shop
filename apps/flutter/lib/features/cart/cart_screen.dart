@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/api/api_client.dart';
+import '../../core/i18n/locale_provider.dart';
+import '../../core/utils/currency_formatter.dart';
 
-class CartScreen extends StatefulWidget {
+class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
   @override
-  State<CartScreen> createState() => _CartScreenState();
+  ConsumerState<CartScreen> createState() => _CartScreenState();
 }
 
-class _CartScreenState extends State<CartScreen> {
+class _CartScreenState extends ConsumerState<CartScreen> {
   List<Map<String, dynamic>> _items = [];
   bool _loading = true;
 
@@ -32,6 +35,7 @@ class _CartScreenState extends State<CartScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currency = ref.watch(currencyProvider);
     return Scaffold(
       appBar: AppBar(title: const Text('Shopping Cart')),
       body: _loading
@@ -51,7 +55,7 @@ class _CartScreenState extends State<CartScreen> {
                               child: Image.network(item['image'] ?? '', width: 60, height: 60, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.image)),
                             ),
                             title: Text(item['title'] ?? ''),
-                            subtitle: Text('\$${(item['price'] as num?)?.toStringAsFixed(2) ?? '0.00'} x ${item['quantity']}'),
+                            subtitle: Text('${CurrencyFormatter.formatPrice((item['price'] as num?)?.toDouble() ?? 0, currency)} x ${item['quantity']}'),
                             trailing: IconButton(icon: const Icon(Icons.delete_outline), onPressed: () => _removeItem(item['id'] as String)),
                           );
                         },

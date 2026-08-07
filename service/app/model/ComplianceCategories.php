@@ -6,9 +6,11 @@
 namespace app\model;
 
 use Erik\Encryptable\Encryptable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ComplianceCategories extends BaseModel
 {    use Encryptable;
+    use SoftDeletes;
     protected $table = "erik_compliance_categories";
     protected $encryptable = ["name"];
 

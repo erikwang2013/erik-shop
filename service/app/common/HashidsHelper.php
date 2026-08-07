@@ -5,6 +5,7 @@
 
 namespace app\common;
 
+use Erikwang2013\Hashids\HashidsFactory;
 use Erikwang2013\Hashids\HashidsManager;
 
 class HashidsHelper
@@ -18,7 +19,7 @@ class HashidsHelper
             if (empty($config['connections']['main']['salt'] ?? '')) {
                 throw new \RuntimeException('HASHIDS_SALT is not configured. Set HASHIDS_SALT in .env');
             }
-            self::$instance = new HashidsManager($config);
+            self::$instance = new HashidsManager($config, new HashidsFactory());
         }
         return self::$instance;
     }

@@ -16,9 +16,6 @@ class SnowflakeWorker
 {
     public function onWorkerStart(Worker $worker): void
     {
-        Snowflake::init(
-            config('snowflake.worker_id', 1),
-            config('snowflake.datacenter_id', 1)
-        );
+        Snowflake::init();
     }
 }

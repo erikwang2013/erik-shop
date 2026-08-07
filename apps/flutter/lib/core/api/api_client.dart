@@ -9,7 +9,6 @@ import 'api_response.dart';
 class ApiClient {
   static final ApiClient instance = ApiClient._();
   late final Dio dio;
-  final _storage = const FlutterSecureStorage();
 
   ApiClient._() {
     dio = Dio(BaseOptions(

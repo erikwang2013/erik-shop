@@ -16,6 +16,7 @@ interface PaymentGatewayInterface
     public function capturePayment(string $txnId): array;
     public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array;
     public function verifyWebhook(string $payload, string $signature, array $headers = []): bool;
+    public function resolveCaptureId(string $txnId): string;
 }
 
 class PaymentGateway
@@ -99,6 +100,12 @@ class StripeGateway implements PaymentGatewayInterface
             return false;
         }
     }
+
+    public function resolveCaptureId(string $txnId): string
+    {
+        // Stripe 退款直接使用 payment intent id，无需解析
+        return $txnId;
+    }
 }
 
 class PayPalGateway implements PaymentGatewayInterface
@@ -125,7 +132,11 @@ class PayPalGateway implements PaymentGatewayInterface
             'auth' => [$this->clientId, $this->clientSecret],
             'form_params' => ['grant_type' => 'client_credentials'],
         ]);
-        return json_decode($response->getBody(), true)['access_token'] ?? '';
+        $token = json_decode($response->getBody(), true)['access_token'] ?? '';
+        if ($token === '') {
+            throw new \RuntimeException('PayPal OAuth 令牌获取失败');
+        }
+        return $token;
     }
 
     public function createPayment(array $data): array
@@ -148,10 +159,14 @@ class PayPalGateway implements PaymentGatewayInterface
         ]);
 
         $result = json_decode($response->getBody(), true);
+        if (empty($result['id'])) {
+            // 失败时抛异常而非伪造交易号，避免 webhook 永远匹配不上导致订单卡死
+            throw new \RuntimeException('PayPal 创建支付失败: ' . json_encode($result));
+        }
 
         return [
             'gateway' => 'paypal',
-            'txn_id' => $result['id'] ?? 'PAYPAL_' . uniqid(),
+            'txn_id' => $result['id'],
             'client_secret' => '',
             'status' => $result['status'] ?? 'CREATED',
             'amount' => (float)$amount,
@@ -182,19 +197,50 @@ class PayPalGateway implements PaymentGatewayInterface
             'json' => ['amount' => ['currency_code' => $currency, 'value' => number_format($amount, 2, '.', '')]],
         ]);
         $result = json_decode($response->getBody(), true);
+        if (empty($result['id'])) {
+            throw new \RuntimeException('PayPal 退款失败: ' . json_encode($result));
+        }
 
         return [
-            'refund_id' => $result['id'] ?? 'REFUND_' . uniqid(),
+            'refund_id' => $result['id'],
             'txn_id' => $txnId,
             'status' => $result['status'] ?? 'COMPLETED',
             'amount' => $amount,
         ];
     }
 
+    /**
+     * PayPal 退款需要 capture id，而 createPayment 返回的是订单号
+     * 通过查询订单详情解析出已捕获交易的 capture id；
+     * 若传入的已是 capture id（直接调用退款），查询 404 时原样返回
+     */
+    public function resolveCaptureId(string $txnId): string
+    {
+        $token = $this->getAccessToken();
+        try {
+            $response = $this->http->get("/v2/checkout/orders/{$txnId}", [
+                'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
+            ]);
+        } catch (\GuzzleHttp\Exception\RequestException $e) {
+            if ($e->getResponse() && $e->getResponse()->getStatusCode() === 404) {
+                return $txnId;
+            }
+            throw $e;
+        }
+
+        $order = json_decode($response->getBody(), true);
+        $captureId = $order['purchase_units'][0]['payments']['captures'][0]['id'] ?? '';
+        if ($captureId === '') {
+            throw new \RuntimeException('PayPal 订单尚未捕获，无法退款');
+        }
+        return $captureId;
+    }
+
     public function verifyWebhook(string $payload, string $signature, array $headers = []): bool
     {
         $webhookId = config('payment.paypal.webhook_id', '');
         if (empty($webhookId)) return false;
+
 
         // 五个验签字段来自请求 header（webman 以小写键返回）
         $transmissionId = $headers['paypal-transmission-id'] ?? '';

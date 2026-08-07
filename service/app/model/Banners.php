@@ -5,6 +5,10 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class Banners extends BaseModel
-{    protected $table = "erik_banners";
+{
+    use SoftDeletes;
+    protected $table = "erik_banners";
 }

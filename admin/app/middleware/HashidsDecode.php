@@ -5,6 +5,7 @@
 
 namespace app\middleware;
 
+use Erikwang2013\Hashids\HashidsFactory;
 use Erikwang2013\Hashids\HashidsManager;
 use Webman\Http\Request;
 use Webman\Http\Response;
@@ -33,7 +34,7 @@ class HashidsDecode implements MiddlewareInterface
 
     private function decode(string $hash): ?string
     {
-        $instance = new HashidsManager(config('hashids'));
+        $instance = new HashidsManager(config('hashids'), new HashidsFactory());
         $decoded = $instance->decode($hash);
         if (empty($decoded)) return null;
         return (string) $decoded[0];

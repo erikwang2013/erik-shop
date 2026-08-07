@@ -5,6 +5,10 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class VatSettings extends BaseModel
-{    protected $table = "erik_vat_settings";
+{
+    use SoftDeletes;
+    protected $table = "erik_vat_settings";
 }

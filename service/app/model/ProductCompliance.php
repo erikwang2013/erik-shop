@@ -7,9 +7,11 @@ namespace app\model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ProductCompliance extends BaseModel
 {
+    use SoftDeletes;
     protected $table = "erik_product_compliance";
 
     public function product(): BelongsTo

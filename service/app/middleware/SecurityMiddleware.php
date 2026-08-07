@@ -8,6 +8,7 @@ namespace app\middleware;
 use Erikwang2013\Security\SecurityGuard;
 use Webman\Http\Request;
 use Webman\Http\Response;
+use Webman\Http\UploadFile;
 use Webman\MiddlewareInterface;
 
 /**
@@ -32,8 +33,8 @@ class SecurityMiddleware implements MiddlewareInterface
 
         $data = $request->all();
         foreach ($request->file() as $key => $file) {
-            if (is_array($file) && isset($file['tmp_name'], $file['name'])) {
-                $data[$key] = ['tmp_name' => $file['tmp_name'], 'name' => $file['name']];
+            if ($file instanceof UploadFile) {
+                $data[$key] = ['name' => $file->getUploadName() ?? ''];
             }
         }
 

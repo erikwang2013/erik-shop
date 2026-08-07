@@ -41,7 +41,7 @@ graph TB
 
     SECURITY --> SECURITY_DETAIL["31类攻击检测<br/>XSS · SQL注入 · CRLF<br/>路径遍历 · XXE · SSRF<br/>文件上传 · 暴力破解<br/>Host · CORS · 脱敏"]
 
-    PERF --> PERF_DETAIL["令牌桶限流 滑动窗口<br/>Cache-Aside 防雪崩+穿透<br/>熔断器 5次→60s<br/>DB读写分离 2读副本<br/>连接池 DB 50/10 · Redis 30/5"]
+    PERF --> PERF_DETAIL["令牌桶限流 滑动窗口<br/>6端点限流规则<br/>DB读写分离 2读副本+sticky<br/>连接池 DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
 
     GROWTH --> GROWTH_DETAIL["会员等级+权益<br/>积分规则+流水<br/>礼品卡 余额+兑换<br/>降价/到货提醒<br/>AB测试 流量分配+置信度"]
 
@@ -49,7 +49,7 @@ graph TB
 
     CS --> CS_DETAIL["WebSocket 实时 IM<br/>chat_sessions<br/>chat_messages<br/>知识库多语言"]
 
-    INFRA --> INFRA_DETAIL["Snowflake 分布式 ID<br/>Hashids 接口混淆<br/>JWT HS256 + 黑名单<br/>AES-256-CBC 加密<br/>Encryptable 数据库加密<br/>Poster 人机验证<br/>GeoIP 区域识别"]
+    INFRA --> INFRA_DETAIL["Snowflake 分布式 ID<br/>Hashids 接口混淆<br/>JWT HS256 双token刷新<br/>AES-256-CBC 加密<br/>Encryptable 数据库加密<br/>Poster 人机验证<br/>GeoIP 区域识别"]
 
     CLIENTS --> CLIENTS_DETAIL["Flutter 5平台<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
 

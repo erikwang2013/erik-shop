@@ -13,23 +13,23 @@ graph TB
     subgraph Apps["应用层 Application"]
         subgraph Service["Service API (webman) :8787"]
             direction TB
-            MW["全局中间件 9个<br/>Cors → Security → Platform<br/>→ GeoIp → Locale<br/>→ HashidsDecode → VersionRoute<br/>→ HashidsEncode"]
+            MW["全局中间件 10个<br/>Cors → Security → RateLimit<br/>→ Platform → GeoIp → Locale<br/>→ HashidsDecode → VersionRoute<br/>→ HashidsEncode → Encryption"]
             RT["路由中间件 2个<br/>PosterVerify · JwtAuth"]
-            CTRL["37 控制器 7组<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · Affiliate<br/>B2b · Cms · Faq · FlashSale<br/>GroupBuy · GiftCard · Review<br/>Search · SocialAuth · Settings"]
-            MDL["112 模型 Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable 加密<br/>+ Searchable ES 同步<br/>+ SoftDelete 软删除<br/>68 表外键关联"]
+            CTRL["39 控制器<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · Affiliate<br/>B2b · Cms · Faq · FlashSale<br/>GroupBuy · GiftCard · Review<br/>Search · SocialAuth · Settings"]
+            MDL["111 模型 Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable 加密<br/>+ Searchable ES 同步<br/>+ SoftDelete 软删除<br/>45 表启用软删除"]
         end
         subgraph Admin["Admin (webman-admin) :8788"]
             direction TB
             AMW["中间件 5个<br/>Security → Platform<br/>→ HashidsDecode<br/>→ AccessControl RBAC<br/>→ HashidsEncode"]
-            ACTRL["67 控制器<br/>商品 · 订单 · 用户 · 营销<br/>物流 · 供应链 · 风控<br/>CMS · 客服 · 系统"]
-            AMDL["65 模型"]
+            ACTRL["82 控制器<br/>商品 · 订单 · 用户 · 营销<br/>物流 · 供应链 · 风控<br/>CMS · 客服 · 系统"]
+            AMDL["76 模型"]
         end
     end
 
     subgraph Data["数据层 Data"]
         direction LR
-        MySQL[("MySQL 8.0 :3306<br/>110 表 · erik_ 前缀<br/>Snowflake bigint PK<br/>读写分离 2读副本")]
-        Redis[("Redis 7 :6379<br/>Cache-Aside 缓存<br/>Session · 限流令牌桶<br/>Poster 验证 · 分布式锁")]
+        MySQL[("MySQL 8.0 :3306<br/>117 表 · erik_ 前缀<br/>Snowflake bigint PK<br/>读写分离 2读副本")]
+        Redis[("Redis 7 :6379<br/>限流令牌桶<br/>Session · Poster 验证")]
         ES[("Elasticsearch 8 :9200<br/>多语言分词搜索<br/>商品 · 分类 · CMS")]
     end
 
@@ -37,7 +37,7 @@ graph TB
         direction LR
         Pay["支付网关<br/>Stripe · PayPal<br/>Klarna · Adyen<br/>Webhook 异步通知"]
         Geo["GeoIP<br/>MaxMind GeoIP2<br/>区域 · 币种识别"]
-        Email["邮件服务<br/>SMTP 异步队列<br/>多语言模板"]
+        Email["邮件服务<br/>多语言模板<br/>（email_templates 表）"]
     end
 
     FL --> NG

@@ -8,10 +8,13 @@ class WishlistController extends \app\controller\BaseApiController
 {
     public function index(Request $request): \support\Response
     {
-        $items = UserWishlists::where('user_id', $request->userId)
+        $page = (int) $request->input('page', 1);
+        $perPage = min((int) $request->input('per_page', 10), 50);
+        $paginator = UserWishlists::where('user_id', $request->userId)
             ->with(['product.skus.prices'])
-            ->orderBy('id', 'desc')->get();
-        return ApiResponse::success($items);
+            ->orderBy('id', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+        return ApiResponse::paginate($paginator->items(), $paginator->total(), $page, $perPage);
     }
 
     public function store(Request $request): \support\Response

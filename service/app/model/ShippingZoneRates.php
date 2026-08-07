@@ -5,6 +5,10 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class ShippingZoneRates extends BaseModel
-{    protected $table = "erik_shipping_zone_rates";
+{
+    use SoftDeletes;
+    protected $table = "erik_shipping_zone_rates";
 }

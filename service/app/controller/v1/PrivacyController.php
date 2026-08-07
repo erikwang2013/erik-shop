@@ -8,8 +8,10 @@ class PrivacyController extends \app\controller\BaseApiController
 {
     public function index(Request $request): \support\Response
     {
-        $list = PrivacyRequests::where('user_id', $request->userId)->orderBy('id','desc')->get();
-        return ApiResponse::success($list);
+        $page = (int) $request->input('page', 1);
+        $perPage = min((int) $request->input('per_page', 10), 50);
+        $paginator = PrivacyRequests::where('user_id', $request->userId)->orderBy('id','desc')->paginate($perPage, ['*'], 'page', $page);
+        return ApiResponse::paginate($paginator->items(), $paginator->total(), $page, $perPage);
     }
 
     public function create(Request $request): \support\Response

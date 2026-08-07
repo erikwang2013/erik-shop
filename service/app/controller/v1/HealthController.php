@@ -14,7 +14,8 @@ class HealthController extends \app\controller\BaseApiController
         $status = ['status' => 'ok', 'timestamp' => date('c')];
 
         try {
-            $status['db'] = \support\Db::connection()->getPdo() ? 'ok' : 'error';
+            \support\Db::connection()->getPdo();
+            $status['db'] = 'ok';
         } catch (\Throwable $e) {
             $status['db'] = 'error';
         }

@@ -5,6 +5,10 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class ProductSkuPrices extends BaseModel
-{    protected $table = "erik_product_sku_prices";
+{
+    use SoftDeletes;
+    protected $table = "erik_product_sku_prices";
 }

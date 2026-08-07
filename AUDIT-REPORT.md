@@ -38,7 +38,7 @@
 | `service/phpunit.xml` | PHPUnit 测试配置（12.5 schema） |
 | `.editorconfig` | 统一编辑器设置（缩进/换行/编码） |
 | `Makefile` | 14 个快捷命令（start/stop/test/lint/check/fix/docker 等） |
-| `.github/workflows/ci.yml` | CI 矩阵测试（PHP 8.1/8.2/8.3 + MySQL + Redis） |
+| `.github/workflows/ci.yml` | CI 矩阵测试（PHP 8.3/8.4 + MySQL + Redis） |
 | `service/phpstan.neon` | 静态分析配置（level 5） |
 | `service/.php-cs-fixer.php` | PSR-12 代码格式化配置 |
 | `admin/composer.json` | 添加 `require-dev` phpunit |
@@ -244,7 +244,7 @@ Tests: 22 | Assertions: 45 | Status: ALL PASSED
 | Elasticsearch 搜索集成 | OK |
 | API 版本控制 (Header 方式) | OK |
 | 完整路由配置 (70+ 端点) | OK |
-| 中间件管道 (12 层) | OK |
+| 中间件管道 (14 层) | OK |
 | 支付网关配置 (Stripe/PayPal/Klarna) | OK |
 | Cron 进程定义 (10 个定时任务) | OK |
 | 数据库种子数据 | OK |
@@ -253,9 +253,7 @@ Tests: 22 | Assertions: 45 | Status: ALL PASSED
 | install.sql 完整安装脚本 (117 表) | OK |
 | 移动端 Flutter App 骨架 | OK |
 | 移动端 HarmonyOS App 骨架 | OK |
-| 响应缓存配置 (热点接口) | OK |
 | 限流规则 (6 条) | OK |
-| 异步队列配置 | OK |
 | OPCache 配置 | OK |
 
 ### 5.2 缺失
@@ -283,7 +281,7 @@ Tests: 22 | Assertions: 45 | Status: ALL PASSED
 3. **中间件管道**: 可组合、可排序的安全和业务中间件
 4. **多语言/多币种**: 商品翻译表 + SKU 分币种价格表设计合理
 5. **HS Code 关税**: 完整的跨境海关税率计算体系
-6. **高并发准备**: 连接池、读写分离、响应缓存、限流均已配置
+6. **高并发准备**: 连接池、读写分离、令牌桶限流、OPCache 均已配置
 7. **支付抽象**: `PaymentGateway` 工厂模式，便于扩展新渠道
 8. **安全纵深**: 31 类攻击检测 + 数据库加密 + ID 混淆 + 人机验证
 
@@ -291,7 +289,7 @@ Tests: 22 | Assertions: 45 | Status: ALL PASSED
 
 | 优先级 | 建议 | 理由 |
 |:------:|------|------|
-| 高 | 补全 4 个 TODO 功能 | PayPal/推荐/导出/GeoIP 是跨境核心功能 |
+| ~~高~~ | ~~补全 4 个 TODO 功能~~（已完成） | PayPal/推荐/导出/GeoIP 均已实现，见上文「功能 TODO 实现」 |
 | 高 | 添加 CI/CD pipeline | 确保每次提交自动化测试 |
 | 高 | SocialAuthController 返回 JWT | 客户端社交登录后无法调用需认证的 API |
 | 中 | 添加 phpstan 静态分析 | 提前发现类型错误和潜在Bug |
@@ -344,11 +342,12 @@ cd service && php vendor/bin/phpunit tests/
 
 ## 九、结论
 
-项目代码基础扎实，安全防护全面，架构设计合理。主要短板:
-1. 4 个功能模块标为 TODO 尚未实现
-2. 缺少 CI/CD 和代码质量管理工具链
-3. 社交登录未返回 JWT 的用户体验断裂
-4. Admin 端没有任何自动化测试
+项目代码基础扎实，安全防护全面，架构设计合理。修复后的现状:
+1. 4 个 TODO 功能模块（PayPal/推荐/导出/GeoIP）已全部实现
+2. CI/CD 与代码质量管理工具链已补齐（CI 矩阵、PHPStan、php-cs-fixer）
+3. 社交登录已返回 JWT
+4. Admin 端自动化测试仍为空（后续建议补充）
+5. 定时任务（10 个 Cron）已全部实现并通过冒烟验证
 
 建议优先处理高优先级项目，补全工具链后再进入生产部署。
 

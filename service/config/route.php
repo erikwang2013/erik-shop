@@ -150,6 +150,10 @@ Route::group('/api', function () {
 // ===== 支付Webhook（无需JWT，需验签） =====
 Route::post('/webhook/payment/{gateway:\w+}', [app\controller\v1\PaymentController::class, 'webhook']);
 
+// ===== 管理后台内部接口（需 X-Admin-Key 共享密钥） =====
+Route::post('/api/admin/refunds/{id:\w+}/execute', [app\controller\v1\AdminOpsController::class, 'executeRefund'])
+    ->middleware([app\middleware\AdminKeyMiddleware::class]);
+
 // ===== 健康检查（无需JWT，供探活/负载均衡） =====
 Route::get('/health', [app\controller\v1\HealthController::class, 'index']);
 

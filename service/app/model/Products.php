@@ -7,9 +7,11 @@ namespace app\model;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Erikwang2013\WebmanScout\Searchable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Products extends BaseModel
 {
+    use SoftDeletes;
     use Searchable;
 
     protected $table = "erik_products";

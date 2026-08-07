@@ -30,6 +30,13 @@ class Jwt
 
     public static function encode(array $payload, int $expire = 0): string
     {
+        $payload['type'] = 'access';
+        return self::instance()->encode($payload, $expire);
+    }
+
+    public static function encodeRefresh(array $payload, int $expire = 0): string
+    {
+        $payload['type'] = 'refresh';
         return self::instance()->encode($payload, $expire);
     }
 

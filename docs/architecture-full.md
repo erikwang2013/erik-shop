@@ -12,11 +12,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 | 组件 | 技术栈 | 规模 |
 |------|--------|------|
-| Service API | PHP 8.3 / webman 2.1 / illuminate database | 36控制器 + 112模型 + 9中间件 |
-| Admin | webman-admin / LayUI / ECharts | 67控制器 + 65模型 + 5中间件 |
-| Flutter | Riverpod / GoRouter / Dio | 25 Dart文件 / 12页面 |
-| HarmonyOS | ArkTS / ArkUI | 12 ETS文件 / 8页面 |
-| 数据库 | MySQL 8.0 + Redis 7 + ES 8 | 110张表 |
+| Service API | PHP 8.3 / webman 2.1 / illuminate database | 39控制器 + 111模型 + 14中间件 |
+| Admin | webman-admin / LayUI / ECharts | 82控制器 + 76模型 + 5中间件 |
+| Flutter | Riverpod / GoRouter / Dio | 25 Dart文件 / 11页面 |
+| HarmonyOS | ArkTS / ArkUI | 14 ETS文件 / 9页面 |
+| 数据库 | MySQL 8.0 + Redis 7 + ES 8 | 117张表 (110 `erik_` + 7 `wa_`) |
 
 ### 1.2 核心指标
 
@@ -25,8 +25,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | API P99 | <200ms |
 | 并发 | 10000+ (32 worker常驻内存) |
 | 表数 | 110 |
-| 端点 | 71 |
-| 中间件 | 12 (service:10全局+2路由 / admin:4全局+1内置) |
+| 端点 | 73 |
+| 中间件 | 14 (service:10全局+2路由+AdminKey+StaticFile / admin:4全局+1内置) |
 | 语言 | zh_CN, zh_HK, en, ja, ko |
 | 币种 | 19种独立定价 |
 | 支付 | Stripe / PayPal / Klarna / Adyen |
@@ -46,8 +46,8 @@ graph TD
         N[Nginx :80/:443]
     end
     subgraph Apps[应用层]
-        S[Service API :8787<br/>36 Controllers 112 Models 9 MW]
-        A[Admin :8787<br/>67 Controllers 65 Models 5 MW]
+        S[Service API :8787<br/>39 Controllers 111 Models 14 MW]
+        A[Admin :8788<br/>82 Controllers 76 Models 5 MW]
     end
     subgraph Data[数据层]
         M[(MySQL 8.0 :3306<br/>110 tables erik_)]
@@ -99,15 +99,15 @@ graph TB
         JWT --> HENC[HashidsEncode]
         HENC --> ENC[Encryption 接口加密]
     end
-    subgraph Controllers["5. 控制器 36个"]
+    subgraph Controllers["5. 控制器 39个"]
         AUTH[Auth] & PROD[Product] & CART[Cart]
         ORD[Order] & PAY[Payment] & SHIP[Shipping]
         TARI[Tariff] & USER[User] & COUP[Coupon]
         RET[Return] & NOTI[Notify] & EXPORT[Export]
     end
-    subgraph Models["6. 模型层 112 Models"]
-        BM[BaseModel: Snowflake+Encryptable+SoftDelete]
-        REL[Relations: hasMany/belongsTo 68FK]
+    subgraph Models["6. 模型层 111 Models"]
+        BM[BaseModel: Snowflake ID 主键]
+        REL[Relations: hasMany/belongsTo]
         SRCH[Searchable: ES同步 多语言分词]
     end
     subgraph Data["7. 数据层"]
@@ -150,8 +150,8 @@ graph TB
 | 2.接入层 | Nginx 按域名分流: api→service, admin→admin |
 | 3.安全层 | SecurityMiddleware 31类攻击检测器, 命中即返回错误码/403 |
 | 4.中间件管道 | 10个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
-| 5.控制器层 | 36个API控制器按功能分组, 处理全部业务逻辑 |
-| 6.模型层 | 112个Eloquent模型, BaseModel提供Snowflake ID/Encryptable/SoftDelete, 68表外键关联 |
+| 5.控制器层 | 39个API控制器按功能分组, 处理全部业务逻辑 |
+| 6.模型层 | 111个Eloquent模型, BaseModel提供Snowflake ID主键, 45个模型按表启用SoftDelete |
 | 7.数据层 | MySQL(110表erik_前缀/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
 | 8.响应返回 | JSON统一格式 → HashidsEncode编码ID → Encryption加密(X-Encrypt-Response) → 返回客户端 |
 
@@ -199,6 +199,7 @@ graph LR
 |---|--------|------|------|
 | 1 | Cors | 全局 | Access-Control-* 响应头, OPTIONS预检返回200 |
 | 2 | SecurityMiddleware | 全局 | XSS/SQL注入/CRLF/路径遍历/Content-Type/请求体10MB |
+| 3 | RateLimitMiddleware | 全局 | 令牌桶限流(Redis ZSET滑动窗口, 6端点规则) |
 | 4 | PlatformMiddleware | 全局 | X-Platform header + UA降级识别8个平台 |
 | 5 | GeoIpMiddleware | 全局 | MaxMind GeoIP2 未登录用户区域/币种/语言识别 |
 | 6 | LocaleMiddleware | 全局 | Accept-Language解析, 5语言精确匹配→降级→默认 |
@@ -207,6 +208,9 @@ graph LR
 | 9 | PosterVerify | 路由 | 注册/下单/支付 Redis验证token |
 | 10 | JwtAuth | 路由 | Bearer Token HS256验签+过期+userId注入 |
 | 11 | HashidsEncode | 全局 | 响应JSON递归遍历, snowflake ID→hashid |
+| 12 | EncryptionMiddleware | 路由 | 接口AES加解密(X-Encrypt-Response/X-Encrypted) |
+| 13 | AdminKeyMiddleware | 路由 | 内部管理操作密钥校验 |
+| 14 | StaticFile | 全局 | webman 静态资源服务 |
 
 ### 3.3 Admin 管道
 
@@ -257,8 +261,8 @@ graph TD
 
 | # | 攻击类型 | 主要检测方式 | Service | Admin | 错误码 |
 |---|---------|------------|---------|-------|--------|
-| 1 | XSS跨站脚本 | 18条正则: script/iframe/object/embed/link/meta/base/javascript:/vbscript:/data:text/html/on事件/svg/img/expression/marquee/applet/form | ✅ | ✅ | 40001 |
-| 2 | SQL注入 | 20条正则: UNION SELECT/DROP/DELETE/EXEC/xp_cmdshell/xp_regread/sp_executesql/benchmark/sleep/pg_sleep/load_file/into outfile/into dumpfile/waitfor/char/OR注入 | ✅ | ✅ | 40002 |
+| 1 | XSS跨站脚本 | 13条正则: script/iframe/on事件/svg+on/style/expression/javascript:/embed/object/link/meta | ✅ | ✅ | 40001 |
+| 2 | SQL注入 | 13条正则: UNION SELECT/SELECT FROM WHERE/sleep/benchmark/pg_sleep/布尔型/字符串型/注释符/MySQL特殊注释/schema枚举/load_file/into outfile/存储过程/waitfor/delay | ✅ | ✅ | 40002 |
 | 3 | CRLF Header注入 | `[\r\n]` in: Authorization/X-Platform/API-Version/X-Forwarded-For/Referer/Origin | ✅ | ✅ | 40003 |
 | 4 | 路径遍历 | `../` + `%2e%2f`编码 + `%252e%252f`二层编码 + null byte `\0` + `.env`/`.git`/`phpmyadmin`/`wp-admin`/`/etc/`/`/proc/`/`composer.json` | ✅ | ✅ | 40004 |
 | 5 | 请求体限制 | Content-Length > 10MB(Service) / 20MB(Admin) | ✅ | ✅ | 40005 |
@@ -330,13 +334,13 @@ Snowflake 64bit: [1bit|42bit时间戳|5bitDC|5bitWID|12bit序号]
 ```
 Illuminate\Database\Eloquent\Model
   └── app\model\BaseModel
-        ├── $incrementing=false, $keyType='string'
+        ├── $incrementing=false, $keyType='string', $guarded=[]
         ├── boot(): Snowflake::nextId()
-        ├── use SoftDeletes
         └── 110业务模型
-              ├── use Encryptable (敏感字段)
+              ├── 45个 use SoftDeletes (对应有 deleted_at 列的表)
+              ├── 部分 use Encryptable (敏感字段: email/mobile/name等)
               ├── use Searchable (Product→ES)
-              └── hasMany/belongsTo (68表含外键)
+              └── hasMany/belongsTo 关联
 ```
 
 ### 5.3 多语言/多币种
@@ -399,26 +403,9 @@ graph LR
 | /api/search | 1s | 10次 | 防爬虫 |
 | 默认 | 60s | 100次 | 通用API |
 
-### 7.2 缓存策略 (Cache Helper)
+### 7.2 Redis 用途
 
-| 策略 | 实现 | 说明 |
-|------|------|------|
-| Cache-Aside | `Cache::remember(key, ttl, callback)` | 缓存未命中时回源DB并写入缓存 |
-| 防雪崩 | 随机TTL ±10% | 避免大量缓存同时过期 |
-| 防穿透 | 空值缓存60s | 防止恶意查询不存在的数据穿透到DB |
-| 标签缓存 | `Cache::setWithTag(key, val, ttl, tag)` | 按标签批量失效 |
-| 分布式锁 | `Cache::lock(key, ttl)` | Redis SETNX + TTL |
-
-### 7.3 热点数据缓存
-
-| 端点 | TTL | 说明 |
-|------|-----|------|
-| /api/countries | 3600s | 国家/货币数据 |
-| /api/categories | 1800s | 分类树 |
-| /api/settings | 3600s | 系统配置 |
-| /api/faq | 3600s | FAQ |
-| /api/banners | 300s | 轮播图 |
-| /api/flash-sales | 60s | 秒杀(高频更新) |
+Redis 用于限流令牌桶、人机验证码与 Session 存储（中间件层）；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）。
 
 ### 7.4 连接池优化
 
@@ -427,15 +414,20 @@ graph LR
 | MySQL | 50 | 10 | 2s | 60s | 45s |
 | Redis | 30 | 5 | — | 60s | — |
 
-### 7.5 异步队列
+### 7.5 慢操作处理
 
-| 操作 | 优化前 | 优化后 |
-|------|--------|--------|
-| 邮件发送 | 同步阻塞 | Redis Queue 异步 |
-| Feed同步 | 同步HTTP | 异步任务 |
-| 推荐计算 | 定时全量 | 增量+异步 |
-| 大数据导出 | 内存溢出风险 | 队列分片 |
-| 操作日志 | 逐条写入 | 批量写入 |
+| 操作 | 实现 |
+|------|------|
+| 汇率更新 | ExchangeRateCron（每小时，外部 API） |
+| Feed 同步 | ProductFeedCron（每 6 小时生成 TSV 并记录日志） |
+| 推荐计算 | RecommendationCron（每日，购买共现） |
+| 支付对账 | PaymentReconcileCron（每 6 小时，Stripe/PayPal） |
+| 分账结算 | SettlementCron（每日） |
+| 物流轨迹 | ShipmentTrackingCron（每 30 分钟，需配置 API） |
+| 平台订单同步 | PlatformOrderSyncCron（每 5 分钟，需配置 API） |
+| 退货超时 | ReturnExpireCron（每小时） |
+| 降价/到货通知 | PriceAlertCron（每 10 分钟） |
+| 合规规则更新 | ComplianceCron（每日，需配置 API） |
 
 ## 8. 部署架构
 
@@ -443,7 +435,7 @@ graph LR
 docker-compose.yml:
   nginx (alpine) :80 :443
   service (php:8.3) :8787 internal, 32 workers
-  admin (php:8.3) :8787 internal
+  admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 网络: erik-net bridge | 数据卷持久化
 路由: api.erik.xyz→service | admin.erik.xyz→admin
@@ -492,14 +484,14 @@ cd service && php vendor/bin/phpunit tests/
 |------|------|
 | PHP源文件 | service:210 + admin:214 = 424 |
 | Dart (Flutter) | 25 |
-| ArkTS (HarmonyOS) | 12 |
+| ArkTS (HarmonyOS) | 14 |
 | 数据库表 | 110 |
-| API端点 | 71 |
-| 中间件 | 11 |
-| 工具类 | 6 |
+| API端点 | 73 |
+| 中间件 | 14 |
+| 工具类 | 8 |
 | 定时任务 | 12 |
 | 配置项 | 35+ |
 | 测试 | 22 tests, 45 assertions |
-| Skills | 13 |
-| 文档 | 6 |
-| **总计** | **~650** |
+| Skills | 38 |
+| 文档 | 9 |
+| **总计** | **~700** |

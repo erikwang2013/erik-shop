@@ -21,6 +21,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         'default' => [60 => 100],       // 默认: 60秒100次
         '/api/auth/login' => [60 => 10], // 登录: 60秒10次
         '/api/auth/register' => [300 => 5], // 注册: 300秒5次
+        '/api/auth/social' => [300 => 5], // 社交登录: 300秒5次（防枚举/爆破）
         '/api/payment' => [60 => 5],     // 支付: 60秒5次
         '/api/orders' => [10 => 3],      // 下单: 10秒3次
         '/api/search' => [1 => 10],      // 搜索: 1秒10次
@@ -32,7 +33,6 @@ class RateLimitMiddleware implements MiddlewareInterface
 
         // 匹配限流规则
         $rule = $this->matchRule($path);
-        if ($rule === null) return $next($request);
 
         [$window, $limit] = $rule;
 
@@ -58,7 +58,11 @@ class RateLimitMiddleware implements MiddlewareInterface
                     'code' => 429,
                     'msg' => "请求过于频繁，请{$retryAfter}秒后重试",
                     'data' => ['retry_after' => max(1, (int) $retryAfter)],
-                ], 429, ['X-RateLimit-Limit' => $limit, 'X-RateLimit-Remaining' => 0, 'Retry-After' => max(1, (int) $retryAfter)]);
+                ])->withStatus(429)->withHeaders([
+                    'X-RateLimit-Limit' => $limit,
+                    'X-RateLimit-Remaining' => 0,
+                    'Retry-After' => max(1, (int) $retryAfter),
+                ]);
             }
 
             // 添加当前请求时间戳到有序集合
@@ -72,7 +76,7 @@ class RateLimitMiddleware implements MiddlewareInterface
     }
 
     /** 匹配限流规则 */
-    private function matchRule(string $path): ?array
+    private function matchRule(string $path): array
     {
         foreach (self::RULES as $prefix => $rule) {
             if ($prefix === 'default') continue;

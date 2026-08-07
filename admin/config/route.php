@@ -14,8 +14,17 @@
 
 use Webman\Route;
 
-
-
+// ===== 健康检查（无需登录，供 Docker healthcheck / 负载均衡探活） =====
+Route::get('/health', function () {
+    return json([
+        'code' => 0,
+        'msg' => 'ok',
+        'data' => [
+            'status' => 'ok',
+            'timestamp' => date('c'),
+        ],
+    ]);
+});
 
 
 

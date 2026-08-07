@@ -53,13 +53,15 @@ class SocialAuthController extends \app\controller\BaseApiController
                     'email' => $user->email,
                     'is_new' => false,
                     'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+                    'refresh_token' => Jwt::encodeRefresh(['sub' => (string)$user->id], config('jwt.refresh_expire', 1209600)),
                     'expires_in' => config('jwt.default_expire', 7200),
                 ], '登录成功');
             }
         }
 
-        // 邮箱匹配已有账号：直接绑定
-        if ($email) {
+        // 邮箱匹配已有账号：仅在平台返回的邮箱已通过验证时才绑定，
+        // 防止攻击者提交他人邮箱接管账户（Apple 隐藏邮箱 / Facebook 未授权时 email 为空，不进入此分支）
+        if ($email !== '' && !empty($verified['email'])) {
             $user = Users::where('email', $email)->first();
             if ($user) {
                 UserSocialAccounts::create([
@@ -76,9 +78,15 @@ class SocialAuthController extends \app\controller\BaseApiController
                     'email' => $user->email,
                     'is_new' => false,
                     'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+                    'refresh_token' => Jwt::encodeRefresh(['sub' => (string)$user->id], config('jwt.refresh_expire', 1209600)),
                     'expires_in' => config('jwt.default_expire', 7200),
                 ], '登录成功');
             }
+        }
+
+        // 新注册：邮箱已被占用且未能通过社交平台验证所有权时拒绝，避免静默接管或唯一键冲突
+        if ($email !== '' && Users::where('email', $email)->exists()) {
+            return ApiResponse::fail('该邮箱已被注册，且无法通过社交平台验证邮箱所有权', 409);
         }
 
         // 新注册
@@ -103,6 +111,7 @@ class SocialAuthController extends \app\controller\BaseApiController
             'email' => $user->email,
             'is_new' => true,
             'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+            'refresh_token' => Jwt::encodeRefresh(['sub' => (string)$user->id], config('jwt.refresh_expire', 1209600)),
             'expires_in' => config('jwt.default_expire', 7200),
         ], '注册成功');
     }

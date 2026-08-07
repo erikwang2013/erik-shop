@@ -5,6 +5,10 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class CmsPages extends BaseModel
-{    protected $table = "erik_cms_pages";
+{
+    use SoftDeletes;
+    protected $table = "erik_cms_pages";
 }

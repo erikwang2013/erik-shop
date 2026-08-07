@@ -5,6 +5,7 @@
 
 namespace app\middleware;
 
+use Erikwang2013\Hashids\HashidsFactory;
 use Erikwang2013\Hashids\HashidsManager;
 use Webman\Http\Request;
 use Webman\Http\Response;
@@ -43,7 +44,7 @@ class HashidsEncode implements MiddlewareInterface
 
     private function encodeIds(array $data): array
     {
-        $instance = new HashidsManager(config('hashids'));
+        $instance = new HashidsManager(config('hashids'), new HashidsFactory());
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 $data[$key] = $this->encodeIds($value);

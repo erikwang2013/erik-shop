@@ -17,17 +17,30 @@ class Snowflake
             $startTimestamp = config('snowflake.start_timestamp', 1700000000000);
             $workerId = config('snowflake.worker_id', 1);
             $datacenterId = config('snowflake.datacenter_id', 1);
-            self::$instance = new SnowflakeSDK($workerId, $datacenterId, $startTimestamp);
+            self::$instance = new SnowflakeSDK(
+                $workerId,
+                $datacenterId,
+                SnowflakeSDK::DEFAULT_WORKER_BITS,
+                SnowflakeSDK::DEFAULT_DATACENTER_BITS,
+                SnowflakeSDK::DEFAULT_SEQUENCE_BITS,
+                $startTimestamp
+            );
         }
     }
 
     public static function nextId(): string
     {
+        if (self::$instance === null) {
+            self::init();
+        }
         return (string) self::$instance->id();
     }
 
     public static function parse(string $id): array
     {
+        if (self::$instance === null) {
+            self::init();
+        }
         return self::$instance->parseId((int) $id);
     }
 }

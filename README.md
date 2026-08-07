@@ -23,7 +23,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 技术栈
 
-**服务端：** PHP 8.1+, webman 2.1, MySQL 8.0, Redis 7, Elasticsearch 8
+**服务端：** PHP 8.3+, webman 2.1, MySQL 8.0, Redis 7, Elasticsearch 8
 **核心包：** snowflake-php, hashids, jwt-webman, encryption, encryptable, poster-php, webman-scout, season
 **支付：** Stripe, PayPal, Klarna, Adyen
 **客户端：** Flutter 3.x (Riverpod + GoRouter + Dio), HarmonyOS API 12+ (ArkTS + ArkUI)
@@ -114,10 +114,10 @@ docker-compose up -d
 ```
 shop-php/
   install.sql       # 一键安装 SQL（117 张表），Web 安装向导自动导入
-  service/          PHP业务API (webman)        — 37控制器 + 63模型 + 10全局中间件
-  admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + ECharts仪表盘 + Web安装向导
-  apps/flutter/     Flutter客户端              — 9页面 + 5语言 + PC自适应
-  apps/harmonyos/   鸿蒙客户端                  — 8页面 + ArkTS
+  service/          PHP业务API (webman)        — 39控制器 + 111模型 + 14中间件
+  admin/            管理后台 (webman-admin)      — 82控制器 + 76模型 + ECharts仪表盘 + Web安装向导
+  apps/flutter/     Flutter客户端              — 11页面 + 5语言 + PC自适应
+  apps/harmonyos/   鸿蒙客户端                  — 9页面 + ArkTS
   docker/           Docker部署                  — Nginx + PHP + MySQL + Redis + ES
   docs/             设计文档
 ```
@@ -137,7 +137,7 @@ shop-php/
 | **供应链** | 供应商评级、采购→质检→入库、库存流水(不可变账本)、调拨 |
 | **风控合规** | 规则引擎(旁路打分)、KYC实名、GDPR/CCPA数据请求、Cookie Consent |
 | **安全防护** | 31类攻击检测(XSS/SQL注入/XXE/SSRF/CRLF/路径遍历/文件上传/暴力破解/HTTP方法/Host/CORS等) |
-| **高并发** | 令牌桶限流、Cache-Aside缓存(防雪崩+防穿透)、熔断器、DB读写分离、连接池优化 |
+| **高并发** | 令牌桶限流、DB读写分离、连接池优化 |
 | **会员增长** | 积分规则、会员等级权益、礼品卡、降价提醒、订阅周期购、AB测试 |
 | **内容管理** | CMS多语言页面、FAQ、知识库、尺码对照表、邮件模板、商品Feed同步 |
 | **客服** | WebSocket实时IM、知识库(表结构已建) |
@@ -151,7 +151,7 @@ shop-php/
 - **Snowflake主键**：117张表全部使用 `erikwang2013/snowflake-php` 生成的bigint ID
 - **Hashids接口**：中间件自动编码/解码，控制器无感知
 - **Encryptable加密**：email/mobile/address等敏感字段数据库级加密
-- **JWT认证**：HS256 + 黑名单 + 自动刷新
+- **JWT认证**：HS256 + access/refresh 双token自动刷新
 - **API版本**：`API-Version` header路由，不在URL中
 - **Poster验证**：敏感操作(注册/下单/支付)随机人机验证
 
@@ -187,6 +187,10 @@ shop-php/
 make test             # 推荐方式
 cd service && php vendor/bin/phpunit tests/   # 原生命令
 # 22 tests, 45 assertions — ALL PASS
+
+# 依赖安全审计（已知 1 个低危 CVE：CVE-2025-45769 firebase/php-jwt <7.0.0，
+# 受 jwt-webman ^6.0 约束无法升级，HS256 对称签名用法不受影响）
+composer audit
 ```
 
 ## 开发工具
@@ -198,7 +202,7 @@ make check            # phpstan 静态分析
 make fix              # php-cs-fixer 代码格式化
 ```
 
-CI/CD: `.github/workflows/ci.yml` — PHP 8.1/8.2/8.3 矩阵测试
+CI/CD: `.github/workflows/ci.yml` — PHP 8.3/8.4 矩阵测试
 
 ## License
 

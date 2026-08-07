@@ -8,8 +8,10 @@ class PriceAlertController extends \app\controller\BaseApiController
 {
     public function index(Request $request): \support\Response
     {
-        $alerts = PriceAlerts::where('user_id', $request->userId)->with('sku.product')->orderBy('id','desc')->get();
-        return ApiResponse::success($alerts);
+        $page = (int) $request->input('page', 1);
+        $perPage = min((int) $request->input('per_page', 10), 50);
+        $paginator = PriceAlerts::where('user_id', $request->userId)->with('sku.product')->orderBy('id','desc')->paginate($perPage, ['*'], 'page', $page);
+        return ApiResponse::paginate($paginator->items(), $paginator->total(), $page, $perPage);
     }
 
     public function store(Request $request): \support\Response

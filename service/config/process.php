@@ -57,4 +57,76 @@ return [
             ],
         ],
     ],
+
+    // ---- 定时任务进程（各一个常驻进程，按自身周期循环执行）----
+
+    // 汇率更新（每小时）
+    'exchange_rate_cron' => [
+        'handler' => app\process\ExchangeRateCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 物流轨迹拉取（每30分钟）
+    'shipment_tracking_cron' => [
+        'handler' => app\process\ShipmentTrackingCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 商品Feed同步（默认每60分钟，config/feed.php 配置）
+    'product_feed_cron' => [
+        'handler' => app\process\ProductFeedCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 推荐计算（每日）
+    'recommendation_cron' => [
+        'handler' => app\process\RecommendationCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 合规规则更新（每日）
+    'compliance_cron' => [
+        'handler' => app\process\ComplianceCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 退货超时关闭（每小时）
+    'return_expire_cron' => [
+        'handler' => app\process\ReturnExpireCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 降价/到货通知（每10分钟）
+    'price_alert_cron' => [
+        'handler' => app\process\PriceAlertCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 支付对账（每6小时）
+    'payment_reconcile_cron' => [
+        'handler' => app\process\PaymentReconcileCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 分账结算（每日）
+    'settlement_cron' => [
+        'handler' => app\process\SettlementCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 多平台订单同步（每5分钟）
+    'platform_order_sync_cron' => [
+        'handler' => app\process\PlatformOrderSyncCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
 ];

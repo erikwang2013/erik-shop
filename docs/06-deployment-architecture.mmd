@@ -13,7 +13,7 @@ graph TB
                 NGX["Nginx :80 :443<br/>alpine<br/>反向代理 + SSL 终端<br/>静态资源缓存"]
 
                 subgraph PHP_Service["Service Container"]
-                    SVC["PHP 8.3 + webman 2.1<br/>:8787 内部端口<br/>32 Worker 常驻内存<br/>OPCache 256MB<br/>Snowflake Worker ID=1"]
+                    SVC["PHP 8.3 + webman 2.1<br/>:8787 内部端口<br/>32 Worker (CPU×4)<br/>OPCache 128MB<br/>Snowflake Worker ID=1"]
                 end
 
                 subgraph PHP_Admin["Admin Container"]
@@ -21,9 +21,9 @@ graph TB
                 end
 
                 subgraph DB["数据库容器"]
-                    MYSQL[("MySQL 8.0 :3306<br/>110 表 erik_ 前缀<br/>erik_data 数据卷<br/>character-set utf8mb4")]
-                    REDIS[("Redis 7 :6379<br/>erik_redis 数据卷<br/>maxmemory 512mb<br/>allkeys-lru 淘汰")]
-                    ES[("Elasticsearch 8 :9200<br/>erik_es 数据卷<br/>多语言分词<br/>IK Analyzer")]
+                    MYSQL[("MySQL 8.0 :3306<br/>117 表 (110 erik_ + 7 wa_)<br/>erik_data 数据卷<br/>character-set utf8mb4")]
+                    REDIS[("Redis 7 :6379<br/>erik_redis 数据卷<br/>appendonly AOF 持久化<br/>requirepass 密码")]
+                    ES[("Elasticsearch 8.11 :9200<br/>erik_es 数据卷<br/>官方镜像 多语言搜索")]
                 end
             end
         end
@@ -40,7 +40,7 @@ graph TB
         Stripe["Stripe API<br/>PaymentIntent + 3DS"]
         PayPal["PayPal REST<br/>Orders API v2"]
         Klarna["Klarna API<br/>BNPL 先买后付"]
-        SMTP["SMTP 邮件<br/>异步队列发送"]
+        SMTP["邮件服务<br/>多语言模板<br/>(email_templates 表)"]
     end
 
     User --> NGX

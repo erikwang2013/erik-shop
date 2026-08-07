@@ -55,6 +55,7 @@ class AuthController extends \app\controller\BaseApiController
             'nickname' => $user->nickname,
             'email' => $user->email,
             'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+            'refresh_token' => Jwt::encodeRefresh(['sub' => (string)$user->id], config('jwt.refresh_expire', 1209600)),
             'expires_in' => config('jwt.default_expire', 7200),
         ], '注册成功');
     }
@@ -98,6 +99,7 @@ class AuthController extends \app\controller\BaseApiController
             'email' => $user->email,
             'level' => $user->level,
             'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+            'refresh_token' => Jwt::encodeRefresh(['sub' => (string)$user->id], config('jwt.refresh_expire', 1209600)),
             'expires_in' => config('jwt.default_expire', 7200),
         ], '登录成功');
     }
@@ -120,15 +122,17 @@ class AuthController extends \app\controller\BaseApiController
         }
         try {
             $payload = Jwt::decode($refreshToken);
-            if (empty($payload['sub'])) {
+            if (empty($payload['sub']) || ($payload['type'] ?? '') !== 'refresh') {
                 return ApiResponse::fail('Token无效', 401);
             }
+            // 刷新轮换：同时签发新的 access_token 与 refresh_token
             return ApiResponse::success([
                 'access_token' => Jwt::encode([
                     'sub' => $payload['sub'],
                     'email' => $payload['email'] ?? '',
                     'level' => $payload['level'] ?? 0,
                 ]),
+                'refresh_token' => Jwt::encodeRefresh(['sub' => $payload['sub']], config('jwt.refresh_expire', 1209600)),
                 'expires_in' => config('jwt.default_expire', 7200),
             ], 'Token已刷新');
         } catch (\Throwable $e) {

@@ -18,24 +18,24 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ```
 shop-php/
-  service/           业务API (178 PHP文件)
-    config/            32配置 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
-    app/controller/v1/ 37控制器 (Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
-    app/model/         112模型 (BaseModel + 110业务模型)
-    app/middleware/     12中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/StaticFile)
-    app/common/          8工具类 (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/Cache/CircuitBreaker/PaymentGateway)
+  service/           业务API (251 PHP文件)
+    config/            35配置 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    app/controller/    39控制器 (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
+    app/model/         111模型 (BaseModel + 110业务模型)
+    app/middleware/     14中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
+    app/common/          8工具类 (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions)
     database/          schema.sql (已被根目录 install.sql 替代) + seeders
     tests/              4测试类 (22 tests, 45 assertions)
-  admin/             管理后台 (137 PHP文件)
-    plugin/admin/app/controller/shop/ 67控制器
-    plugin/admin/app/model/shop/      65模型
+  admin/             管理后台 (239 PHP文件)
+    plugin/admin/app/controller/shop/ 82控制器
+    plugin/admin/app/model/shop/      76模型
     plugin/admin/app/view/shop/       ECharts仪表盘
     app/middleware/    5中间件 (Security/Platform/HashidsDecode/HashidsEncode/StaticFile)
   apps/              客户端
-    flutter/lib/      25 Dart (12页面 + 核心层 + 路由)
-    harmonyos/        13 ArkTS (8页面 + API客户端 + 全局状态)
+    flutter/lib/      25 Dart (11页面 + 核心层 + 路由)
+    harmonyos/        14 ArkTS (9页面 + API客户端 + 全局状态)
   docs/               5个设计文档
-  .claude/skills/     16个开发规范Skills
+  .claude/skills/     38个开发规范Skills
 ```
 
 ## 3. 中间件管道
@@ -57,16 +57,13 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(内置RBAC) �
 ## 5. 高并发
 
 - **限流**: 令牌桶滑动窗口(Redis ZSET), 6端点规则
-- **缓存**: Cache-Aside + 随机TTL防雪崩 + 空值缓存防穿透 + 标签缓存 + 分布式锁
-- **熔断**: 5次失败→熔断60s + 自动恢复 + 降级fallback
 - **DB**: 读写分离(2读副本+sticky) + 连接池(50/10)
-- **热点缓存**: 6端点(60s~3600s)
-- **异步队列**: 邮件/Feed/推荐/导出/日志
+- **慢操作**: 由独立 Cron 进程处理（Feed同步/推荐计算/支付对账/分账结算等）
 
 ## 6. 测试
 
 22 tests / 45 assertions — ALL PASS
-- SecurityTest (16): XSS+SQLi+XXE+SSRF+File+Path
+- SecurityTest (12): XSS+SQLi+XXE+SSRF+Path+数据泄露
 - JwtTest (4): encode/decode validation
 - ApiResponseTest (3): success/fail/paginate
 

@@ -62,9 +62,11 @@ Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台) → G
 
 ### 2.3 端点统计
 
-- 公开接口: 25个 (认证/商品/分类/内容/搜索/服务)
-- 认证接口: 45个 (用户/购物车/订单/支付/退货/评价/营销)
+- 公开接口: 23个 (认证/商品/分类/内容/搜索/服务)
+- 认证接口: 47个 (用户/购物车/订单/支付/退货/评价/营销)
 - Webhook: 1个 (支付回调)
+- Admin: 1个 (退款执行)
+- Health: 1个 (/health 健康检查)
 
 ### 2.4 统一响应
 
@@ -78,7 +80,7 @@ Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台) → G
 
 ## 3. 安全设计
 
-### 3.1 SecurityMiddleware 15类自定义检测
+### 3.1 SecurityMiddleware 封装 security-php 31个检测器
 
 | # | 类型 | 错误码 | Service | Admin |
 |---|------|--------|---------|-------|
@@ -112,25 +114,17 @@ Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台) → G
 
 ### 4.1 限流
 
-令牌桶滑动窗口(Redis ZSET, 经 support\Redis 门面): 登录10次/60s, 注册5次/300s, 支付5次/60s, 下单3次/10s, 搜索10次/1s
+令牌桶滑动窗口(Redis ZSET, 经 support\Redis 门面): 默认60s/100次, 登录10次/60s, 注册5次/300s, 社交登录5次/300s, 支付5次/60s, 下单3次/10s, 搜索10次/1s
 
-### 4.2 缓存策略
+### 4.2 Redis 用途
 
-| 策略 | 实现 |
-|------|------|
-| Cache-Aside | `Cache::remember(key, ttl, callback)` |
-| 防雪崩 | 随机TTL ±10% |
-| 防穿透 | 空值缓存60s |
-| 标签失效 | `Cache::setWithTag/deleteByTag` |
-| 分布式锁 | Redis SETNX + TTL |
+Redis 用于限流令牌桶（`support\Redis` 门面）、人机验证码与 Session 存储；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）。
 
 ### 4.3 连接池
 
 MySQL: 50max/10min/2s超时 | 读写分离: 30max/5min (2读副本, sticky=true) | Redis: 30max/5min
 
-### 4.4 熔断
 
-`CircuitBreaker`: 5次失败→熔断60s→自动恢复→降级fallback
 
 ---
 
@@ -163,7 +157,7 @@ public function login(Request $request) { ... }
 
 ```bash
 cd service && php vendor/bin/phpunit tests/
-# SecurityTest (16) + JwtTest (4) + ApiResponseTest (3)
+# SecurityTest (12) + JwtTest (4) + ApiResponseTest (3) + RedisFacadeTest (3)
 ```
 
 详见: [功能设计文档](features.md) | [完整架构文档](architecture-full.md) | [部署文档](deployment.md)

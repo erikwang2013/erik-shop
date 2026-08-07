@@ -44,6 +44,7 @@ class InstallController extends Base
         $host = $request->post('host');
         $port = (int)$request->post('port') ?: 3306;
         $overwrite = $request->post('overwrite');
+        $confirm = $request->post('confirm');
 
         try {
             $db = $this->getPdo($host, $user, $password, $port);
@@ -111,6 +112,10 @@ class InstallController extends Base
                 return $this->json(1, '以下表 ' . $conflict_list . $more . ' 已经存在，如需覆盖请勾选「强制覆盖」');
             }
         } else {
+            // 二次确认：强制覆盖必须重输数据库名，防止自动化脚本误删业务数据
+            if ($confirm !== $database) {
+                return $this->json(1, '强制覆盖需要二次确认：请在「覆盖确认」输入框中输入数据库名 ' . $database);
+            }
             foreach ($tables_conflict as $table) {
                 $db->exec("DROP TABLE IF EXISTS `$table`");
             }
@@ -261,6 +266,7 @@ EOF;
         $jwtSecret = bin2hex(random_bytes(32));
         $hashidsSalt = bin2hex(random_bytes(8));
         $encryptionKey = bin2hex(random_bytes(16));
+        $adminApiKey = bin2hex(random_bytes(32));
 
         $sid = gethostname();
         $workerId = abs(crc32($sid . '_worker')) % 32;
@@ -280,6 +286,7 @@ EOF;
             'ENCRYPTION_KEY=change_me_32_byte_key_here!!' => 'ENCRYPTION_KEY=' . $encryptionKey,
             'SNOWFLAKE_WORKER_ID=1' => 'SNOWFLAKE_WORKER_ID=' . $workerId,
             'SNOWFLAKE_DATACENTER_ID=1' => 'SNOWFLAKE_DATACENTER_ID=' . $datacenterId,
+            'ADMIN_API_KEY=change_me_admin_api_key_64bit' => 'ADMIN_API_KEY=' . $adminApiKey,
         ];
         $envContent = str_replace(array_keys($replacements), array_values($replacements), $template);
         file_put_contents(base_path(false) . '/service/.env', $envContent);
@@ -295,6 +302,9 @@ DB_PASS={$password}
 HASHIDS_SALT={$hashidsSalt}
 SNOWFLAKE_WORKER_ID={$workerId}
 SNOWFLAKE_DATACENTER_ID={$datacenterId}
+# service 内部接口（执行真实退款等管理操作，与 service/.env 的 ADMIN_API_KEY 同值）
+ADMIN_SERVICE_URL=http://127.0.0.1:8787
+ADMIN_API_KEY={$adminApiKey}
 EOF;
         file_put_contents(base_path() . '/.env', $adminEnv);
     }

@@ -5,6 +5,10 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class GroupBuys extends BaseModel
-{    protected $table = "erik_group_buys";
+{
+    use SoftDeletes;
+    protected $table = "erik_group_buys";
 }

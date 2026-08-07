@@ -33,13 +33,16 @@ class EncryptionMiddleware implements MiddlewareInterface
             }
         }
 
-        // 请求解密
+        // 请求解密（webman 无 setRawBody，解密结果写回 POST 参数供控制器 input() 读取）
         if ($request->header('X-Encrypted') === '1') {
             $body = $request->rawBody();
             if (!empty($body)) {
                 try {
                     $decrypted = Encryption::decrypt($body);
-                    $request->setRawBody(json_encode($decrypted));
+                    $data = is_array($decrypted) ? $decrypted : json_decode((string) $decrypted, true);
+                    if (is_array($data)) {
+                        $request->setPost($data);
+                    }
                 } catch (\Throwable $e) {
                     return json([
                         'code' => 400,
@@ -68,7 +71,7 @@ class EncryptionMiddleware implements MiddlewareInterface
                                     $data[$f] = Encryption::encrypt($data[$f]);
                                 }
                             }
-                        } elseif (isset($data['data']) && $data['data'] !== null) {
+                        } elseif (isset($data['data'])) {
                             $data['data'] = Encryption::encrypt($data['data']);
                             $data['encrypted'] = true;
                         }

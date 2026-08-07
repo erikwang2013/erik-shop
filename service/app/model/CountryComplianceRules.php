@@ -5,6 +5,10 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class CountryComplianceRules extends BaseModel
-{    protected $table = "erik_country_compliance_rules";
+{
+    use SoftDeletes;
+    protected $table = "erik_country_compliance_rules";
 }

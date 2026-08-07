@@ -35,9 +35,6 @@ class HashidsDecode implements MiddlewareInterface
     private function decodeRouteParams(Request $request): void
     {
         $route = $request->route;
-        if (!$route) {
-            return;
-        }
         $params = $route->param();
         $updates = [];
         foreach ($params as $key => $value) {
@@ -70,7 +67,7 @@ class HashidsDecode implements MiddlewareInterface
             }
         }
         if ($updates) {
-            if ($request->isGet() || $request->isOptions()) {
+            if ($request->isGet()) {
                 $request->setGet($updates);
             }
             $request->setPost($updates);

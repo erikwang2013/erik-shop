@@ -6,11 +6,13 @@
 namespace app\model;
 
 use Erik\Encryptable\Encryptable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlatformAccounts extends BaseModel
 {    use Encryptable;
+    use SoftDeletes;
     protected $table = "erik_platform_accounts";
     protected $encryptable = ["account_name", "api_key", "api_secret"];
 

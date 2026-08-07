@@ -25,7 +25,7 @@ shop-php/
     app/middleware/     12中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/StaticFile)
     app/common/          8工具类 (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/Cache/CircuitBreaker/PaymentGateway)
     database/          schema.sql (110表) + seeders
-    tests/              3测试类 (23 tests, 68 assertions)
+    tests/              4测试类 (26 tests, 71 assertions)
   admin/             管理后台 (137 PHP文件)
     plugin/admin/app/controller/shop/ 67控制器
     plugin/admin/app/model/shop/      65模型
@@ -41,16 +41,16 @@ shop-php/
 ## 3. 中间件管道
 
 ```
-Service: Cors → Security(15类攻击检测) → RateLimit(令牌桶限流) → Platform(8平台识别)
+Service: Cors → Security(31类攻击检测) → RateLimit(令牌桶限流) → Platform(8平台识别)
         → GeoIp(区域) → Locale(语言) → HashidsDecode → VersionRoute
-        → (PosterVerify 人机验证) → (JwtAuth Token) → HashidsEncode
+        → (PosterVerify 人机验证) → (JwtAuth Token) → HashidsEncode → Encryption(接口加密)
 
 Admin:  Security → Platform → HashidsDecode → AccessControl(内置RBAC) → HashidsEncode
 ```
 
 ## 4. 安全
 
-- **15类攻击检测**: XSS/SQL注入/CRLF/路径遍历/Body/ContentType/文件上传/安全响应头/暴力破解/XXE/SSRF/HTTP方法/Host/敏感脱敏/CORS
+- **31类攻击检测**: XSS/SQL注入/命令注入/CRLF/路径遍历/Body/ContentType/文件上传/暴力破解/XXE/SSRF/反序列化/LDAP/邮件头/SSTI/NoSQL/开放重定向/JWT攻击/Host/请求走私/GraphQL/XPATH/Log4Shell/SSI/CSV公式/数据泄露/原型污染/WebSocket/CORS/DNS重绑定/HTTP方法/CSRF Origin
 - **三层加密**: 接口层(AES-256-CBC) + 数据库层(Encryptable trait) + ID混淆(Hashids)
 - **平台追踪**: 8平台(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + X-Platform header + 6表记录
 
@@ -65,7 +65,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(内置RBAC) �
 
 ## 6. 测试
 
-23 tests / 68 assertions — ALL PASS
+26 tests / 71 assertions — ALL PASS
 - SecurityTest (16): XSS+SQLi+XXE+SSRF+File+Path
 - JwtTest (4): encode/decode validation
 - ApiResponseTest (3): success/fail/paginate

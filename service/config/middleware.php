@@ -12,14 +12,16 @@
  */
 
 return [
-    app\middleware\Cors::class,            // CORS跨域处理
-    app\middleware\SecurityMiddleware::class, // 安全攻击检测拦截
-    app\middleware\RateLimitMiddleware::class, // 令牌桶限流
-    app\middleware\PlatformMiddleware::class, // 操作来源端识别
-    app\middleware\GeoIpMiddleware::class,  // GeoIP区域识别（未登录用户）
-    app\middleware\LocaleMiddleware::class, // Accept-Language解析
-    app\middleware\HashidsDecode::class,    // 请求hashid→snowflake ID
-    app\middleware\VersionRoute::class,     // API版本路由(API-Version header)
-    app\middleware\HashidsEncode::class,    // 响应snowflake ID→hashid
-    app\middleware\EncryptionMiddleware::class, // 接口数据加解密（X-Encrypt-Response header 触发）
+    '' => [ // 全局中间件（按顺序执行，顺序不可变）
+        app\middleware\Cors::class,            // CORS跨域处理
+        app\middleware\SecurityMiddleware::class, // 安全攻击检测拦截
+        app\middleware\RateLimitMiddleware::class, // 令牌桶限流
+        app\middleware\PlatformMiddleware::class, // 操作来源端识别
+        app\middleware\GeoIpMiddleware::class,  // GeoIP区域识别（未登录用户）
+        app\middleware\LocaleMiddleware::class, // Accept-Language解析
+        app\middleware\HashidsDecode::class,    // 请求hashid→snowflake ID
+        app\middleware\VersionRoute::class,     // API版本路由(API-Version header)
+        app\middleware\HashidsEncode::class,    // 响应snowflake ID→hashid
+        app\middleware\EncryptionMiddleware::class, // 接口数据加解密（X-Encrypt-Response header 触发）
+    ],
 ];

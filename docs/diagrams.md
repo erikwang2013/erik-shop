@@ -49,7 +49,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 层级 | 防线 | 技术/包 | 覆盖范围 |
 |------|------|---------|---------|
 | 第一层 | 网络边界 | Nginx SSL + 反向代理 + Host校验 | Service + Admin |
-| 第二层 | WAF 攻击检测 | `erikwang2013/security-php` 25+检测器 | 11 类攻击: XSS/SQLi/CRLF/路径遍历/XXE/SSRF/文件上传/方法/Host/Content-Type/Body |
+| 第二层 | WAF 攻击检测 | `erikwang2013/security-php` 31个检测器 | XSS/SQLi/CRLF/路径遍历/XXE/SSRF/文件上传/方法/Host/Content-Type/Body 等 |
 | 第三层 | 流量控制 | RateLimitMiddleware + 暴力破解 Redis 计数器 | 令牌桶限流(6端点) + 登录/注册防爆 |
 | 第四层 | 身份认证 | PosterVerify + JwtAuth HS256 | 人机验证(滑块/拼图/点击) + Bearer Token + 黑名单 |
 | 第五层 | 数据安全 | Hashids + AES-256-CBC + Encryptable | 三层加密: ID混淆/传输加密/数据库字段加密 |

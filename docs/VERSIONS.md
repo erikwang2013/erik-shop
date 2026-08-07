@@ -17,6 +17,24 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-07 修复记录
+
+| # | 问题 | 严重度 | 修复 |
+|---|------|--------|------|
+| 1 | API 响应加密未接入中间件 | Medium | 新建 EncryptionMiddleware（X-Encrypt-Response header 驱动），注册为 service 管线第 10 级 |
+| 2 | 类名 Encryption / 文件名 EncryptionHelper.php 不匹配 | Medium | 重命名为 Encryption.php，修复 PSR-4 自动加载 |
+| 3 | JWT_SECRET_KEY 为空 | Low | 生成 32 字节密钥，同时设置 JWT_SECRET 和 JWT_SECRET_KEY |
+| 4 | config/middleware.php 为索引数组导致 "Bad middleware config" 全 worker 崩溃 | Critical | 改为 `'' => [...]` 标准结构（webman 要求 appName => 列表） |
+| 5 | security-php 插件配置缺 enable 键被 Config::loadFromDir 静默跳过 | Critical | service/admin 的插件 app.php 补 `'enable' => true` |
+| 6 | config/bootstrap.php 引用不存在的 support\bootstrap\Db/Redis | Critical | 移除；Eloquent 初始化改由 support/bootstrap.php require vendor/webman/database 的 Db.php |
+| 7 | 全局 redis() 函数不存在（webman 2.x 无此函数），限流/风控静默失效 | High | 新建 support\Redis 门面（illuminate/redis + phpredis），app/functions.php 注册 redis() 辅助函数 |
+| 8 | RedisManager 构造参数缺失（需 3 参：app容器/driver/config） | High | 传 stdClass 容器占位 + phpredis 驱动 + 连接配置 |
+| 9 | 模型引用 Erik\Encryptable\Encryptable trait 不存在（包内是 Maize\Encryptable 命名空间的 CastsAttributes） | Critical | 新建 service/Erik/Encryptable/Encryptable.php 经典 trait 兼容层（底层复用包的 Encryption::php） |
+| 10 | composer 插件 Installer.php 顶层函数重复声明 fatal | Medium | function_exists 幂等守卫（service/admin 两个 vendor 均已修复） |
+| 11 | HashidsEncode getHeader() 返回 string 导致 implode 报错 | High | (array) 强制转换 |
+
+---
+
 ## 功能对比
 
 ### 用户系统
@@ -194,9 +212,9 @@ Standard:  Cors → Security(4类) → Platform → GeoIp → Locale
           → HashidsDecode → VersionRoute
           → (PosterVerify) → (JwtAuth) → HashidsEncode
 
-Full:       Cors → Security(15类) → RateLimit(令牌桶) → Platform → GeoIp
+Full:       Cors → Security(31类) → RateLimit(令牌桶) → Platform → GeoIp
           → Locale → HashidsDecode → VersionRoute
-          → (PosterVerify) → (JwtAuth) → HashidsEncode
+          → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption(接口加密)
 ```
 
 ### 代码规模

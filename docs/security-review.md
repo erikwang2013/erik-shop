@@ -11,7 +11,7 @@
 | Check | Result |
 |---|---|
 | PHP 语法检查（47 个文件） | 全部通过 |
-| PHPUnit（23 tests, 68 assertions） | 全部通过 |
+| PHPUnit（26 tests, 71 assertions） | 全部通过 |
 | SecurityGuard 安全载荷测试 | 正确拦截 XSS + SQLi |
 | SecurityGuard 安全请求测试 | 无误报 |
 | phpstan 静态分析 | 未安装（非阻塞） |
@@ -45,7 +45,7 @@ admin 配置使用 `env('ENCRYPTION_KEY')` 无回退值，当环境变量缺失�
 
 ### 2.4 WAF 中间件重复检测（Critical，第一轮已修复）
 
-自定义 `SecurityMiddleware` 包含 ~200 行内联正则，与 `security-php` 包的 25+ 检测器完全重复。每次请求扫描两次，浪费 CPU 且可能双重拦截。
+自定义 `SecurityMiddleware` 包含 ~200 行内联正则，与 `security-php` 包的 31 个检测器完全重复。每次请求扫描两次，浪费 CPU 且可能双重拦截。
 
 **修复**: 中间件重写为使用 `SecurityGuard::guard()` API，从 341 行减至 ~110 行（service），136 行减至 ~85 行（admin）。暴力破解防护和响应安全头保留。
 

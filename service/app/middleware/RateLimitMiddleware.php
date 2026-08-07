@@ -5,6 +5,7 @@
 
 namespace app\middleware;
 
+use support\Redis;
 use Webman\Http\Request;
 use Webman\Http\Response;
 use Webman\MiddlewareInterface;
@@ -41,7 +42,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         $key = "erik_ratelimit:{$userId}:{$ip}:" . md5($path);
 
         try {
-            $redis = redis();
+            $redis = Redis::connection();
             $now = microtime(true);
             $clearBefore = $now - $window;
 

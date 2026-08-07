@@ -56,8 +56,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ### 2.2 中间件管道
 
 ```
-Cors → Security(15类) → RateLimit(滑动窗口) → Platform(8平台) → GeoIp → Locale
-    → HashidsDecode → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode
+Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台) → GeoIp → Locale
+    → HashidsDecode → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption
 ```
 
 ### 2.3 端点统计
@@ -78,7 +78,7 @@ Cors → Security(15类) → RateLimit(滑动窗口) → Platform(8平台) → G
 
 ## 3. 安全设计
 
-### 3.1 15类攻击检测
+### 3.1 SecurityMiddleware 15类自定义检测
 
 | # | 类型 | 错误码 | Service | Admin |
 |---|------|--------|---------|-------|
@@ -112,7 +112,7 @@ Cors → Security(15类) → RateLimit(滑动窗口) → Platform(8平台) → G
 
 ### 4.1 限流
 
-令牌桶滑动窗口(Redis ZSET): 登录10次/60s, 注册5次/300s, 支付5次/60s, 下单3次/10s, 搜索10次/1s
+令牌桶滑动窗口(Redis ZSET, 经 support\Redis 门面): 登录10次/60s, 注册5次/300s, 支付5次/60s, 下单3次/10s, 搜索10次/1s
 
 ### 4.2 缓存策略
 
@@ -159,7 +159,7 @@ public function login(Request $request) { ... }
 
 ## 7. 测试
 
-23 tests / 68 assertions — ALL PASS
+26 tests / 71 assertions — ALL PASS
 
 ```bash
 cd service && php vendor/bin/phpunit tests/

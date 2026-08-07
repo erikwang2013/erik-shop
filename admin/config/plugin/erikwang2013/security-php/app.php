@@ -10,6 +10,9 @@
  */
 
 return [
+    // webman 插件启用开关（缺失会导致本插件配置被 Config::loadFromDir 静默跳过）
+    'enable' => true,
+
     /*
      * 总开关
      * 设为 false 可以临时关闭所有安全检测功能

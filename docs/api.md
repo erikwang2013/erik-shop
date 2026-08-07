@@ -791,9 +791,9 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ## 附录: 中间件管道
 
 ```
-请求 → Cors → Security(15类) → RateLimit(令牌桶) → Platform(8平台)
+请求 → Cors → Security(31类) → RateLimit(令牌桶) → Platform(8平台)
      → GeoIp → Locale → HashidsDecode → VersionRoute
-     → (PosterVerify) → (JwtAuth) → HashidsEncode → 控制器
+     → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption → 控制器
 ```
 
 标识: `[JWT]` 需认证 | `[PosterVerify]` 需人机验证 | 无标记 = 公开接口

@@ -10,6 +10,6 @@
 
 return [
     support\bootstrap\Session::class,    // Session初始化
-    support\bootstrap\Db::class,         // 数据库连接池
-    support\bootstrap\Redis::class,      // Redis连接池
+    // 注：数据库 Eloquent 初始化由 support/bootstrap.php 中 require support\Db 完成
+    // （webman/database 2.x 在文件加载时执行 Initializer::init，不能放在此处：Db::start() 不存在）
 ];

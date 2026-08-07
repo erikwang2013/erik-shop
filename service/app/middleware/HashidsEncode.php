@@ -29,8 +29,8 @@ class HashidsEncode implements MiddlewareInterface
         $response = $next($request);
 
         // 只处理JSON响应
-        $contentType = $response->getHeader('Content-Type');
-        if (!str_contains(implode(',', $contentType), 'application/json')) {
+        $contentType = implode(',', (array)$response->getHeader('Content-Type'));
+        if (!str_contains($contentType, 'application/json')) {
             return $response;
         }
 

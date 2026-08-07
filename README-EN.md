@@ -134,14 +134,14 @@ shop-php/
 | **Multi-Platform** | Amazon/eBay/Shopee/Lazada/Temu product listings + order aggregation |
 | **Supply Chain** | Supplier ratings, purchase orders, quality inspection, inventory ledger (immutable), transfers |
 | **Risk & Compliance** | Rule engine (scoring pipeline), KYC verification, GDPR/CCPA data requests, Cookie consent |
-| **Security** | 15 attack detection types (XSS/SQLi/XXE/SSRF/CRLF/path traversal/file upload/brute force) |
+| **Security** | 31 attack detection types (XSS/SQLi/XXE/SSRF/CRLF/path traversal/file upload/brute force) |
 | **Performance** | Token bucket rate limiting, cache-aside (avalanche + penetration protection), circuit breaker, DB read/write split |
 | **Membership** | Points rules, membership tiers + benefits, gift cards, price alerts, subscription auto-buy, A/B testing |
 | **Content** | CMS multi-language pages, FAQ, knowledge base, size charts, email templates, product feed sync |
 | **Customer Service** | WebSocket real-time IM, knowledge base (schema ready) |
 | **Infrastructure** | Snowflake distributed IDs, Hashids obfuscation, JWT auth, AES encryption, GeoIP detection |
 | **Multi-Platform Tracking** | 8 source platform identification (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + DB logging |
-| **Testing** | 23 tests / 68 assertions — ALL PASS (Security + JWT + API response) |
+| **Testing** | 26 tests / 71 assertions — ALL PASS (Security + JWT + API response + Redis) |
 
 ## Core Design
 
@@ -171,7 +171,7 @@ shop-php/
 
 ```bash
 cd service && php vendor/bin/phpunit tests/
-# 23 tests, 68 assertions — ALL PASS
+# 26 tests, 71 assertions — ALL PASS
 # SecurityTest(16): XSS + SQL injection + XXE + SSRF + file + path traversal
 # JwtTest(4): encode/decode validation
 # ApiResponseTest(3): success/fail/paginate format

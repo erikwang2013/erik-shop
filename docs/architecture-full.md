@@ -26,7 +26,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 并发 | 10000+ (32 worker常驻内存) |
 | 表数 | 110 |
 | 端点 | 71 |
-| 中间件 | 11 (service:9全局+2路由 / admin:5全局) |
+| 中间件 | 12 (service:10全局+2路由 / admin:4全局+1内置) |
 | 语言 | zh_CN, zh_HK, en, ja, ko |
 | 币种 | 19种独立定价 |
 | 支付 | Stripe / PayPal / Klarna / Adyen |
@@ -86,8 +86,10 @@ graph TB
         CR -->|pass| PT{Path?}
         PT -->|pass| PASS[Pass]
     end
-    subgraph Pipeline["4. 中间件管道 8全局+2路由"]
-        CORS[Cors] --> PLAT[Platform]
+    subgraph Pipeline["4. 中间件管道 10全局+2路由"]
+        CORS[Cors] --> SEC[Security WAF]
+        SEC --> RATE[RateLimit 令牌桶]
+        RATE --> PLAT[Platform]
         PLAT --> GEO[GeoIp]
         GEO --> LOC[Locale]
         LOC --> HDEC[HashidsDecode]
@@ -95,6 +97,7 @@ graph TB
         VER --> POSTV[PosterVerify 路由级]
         POSTV --> JWT[JwtAuth 路由级]
         JWT --> HENC[HashidsEncode]
+        HENC --> ENC[Encryption 接口加密]
     end
     subgraph Controllers["5. 控制器 36个"]
         AUTH[Auth] & PROD[Product] & CART[Cart]
@@ -145,12 +148,12 @@ graph TB
 |----|------|
 | 1.客户端层 | Flutter 5平台 + HarmonyOS + Web Admin, 全部通过 HTTP/JSON 通信 |
 | 2.接入层 | Nginx 按域名分流: api→service, admin→admin |
-| 3.安全层 | SecurityMiddleware 6道检测门, 任一道命中即返回错误码 |
-| 4.中间件管道 | 8个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
+| 3.安全层 | SecurityMiddleware 31类攻击检测器, 命中即返回错误码/403 |
+| 4.中间件管道 | 10个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
 | 5.控制器层 | 36个API控制器按功能分组, 处理全部业务逻辑 |
 | 6.模型层 | 112个Eloquent模型, BaseModel提供Snowflake ID/Encryptable/SoftDelete, 68表外键关联 |
 | 7.数据层 | MySQL(110表erik_前缀/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
-| 8.响应返回 | JSON统一格式 → HashidsEncode编码ID → CORS/X-Platform Headers → 返回客户端 |
+| 8.响应返回 | JSON统一格式 → HashidsEncode编码ID → Encryption加密(X-Encrypt-Response) → 返回客户端 |
 
 ### 2.2 进程模型
 
@@ -250,7 +253,7 @@ graph TD
     style H fill:#cfc
 ```
 
-### 4.2 攻击检测规则详情 (15类)
+### 4.2 SecurityMiddleware 攻击检测规则详情 (15类自定义)
 
 | # | 攻击类型 | 主要检测方式 | Service | Admin | 错误码 |
 |---|---------|------------|---------|-------|--------|
@@ -495,7 +498,7 @@ cd service && php vendor/bin/phpunit tests/
 | 工具类 | 6 |
 | 定时任务 | 12 |
 | 配置项 | 35+ |
-| 测试 | 23 tests, 68 assertions |
+| 测试 | 26 tests, 71 assertions |
 | Skills | 13 |
 | 文档 | 6 |
 | **总计** | **~650** |

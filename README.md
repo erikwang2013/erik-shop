@@ -114,7 +114,7 @@ docker-compose up -d
 ```
 shop-php/
   install.sql       # 一键安装 SQL（70 张表），Web 安装向导自动导入
-  service/          PHP业务API (webman)        — 37控制器 + 63模型 + 9全局中间件
+  service/          PHP业务API (webman)        — 37控制器 + 63模型 + 10全局中间件
   admin/            管理后台 (webman-admin)      — 67控制器 + 65模型 + ECharts仪表盘 + Web安装向导
   apps/flutter/     Flutter客户端              — 9页面 + 5语言 + PC自适应
   apps/harmonyos/   鸿蒙客户端                  — 8页面 + ArkTS
@@ -136,7 +136,7 @@ shop-php/
 | **多平台** | Amazon/eBay/Shopee/Lazada/Temu商品刊登+订单聚合 |
 | **供应链** | 供应商评级、采购→质检→入库、库存流水(不可变账本)、调拨 |
 | **风控合规** | 规则引擎(旁路打分)、KYC实名、GDPR/CCPA数据请求、Cookie Consent |
-| **安全防护** | 15类攻击检测(XSS/SQL注入/XXE/SSRF/CRLF/路径遍历/文件上传/暴力破解/HTTP方法/Host/CORS) |
+| **安全防护** | 31类攻击检测(XSS/SQL注入/XXE/SSRF/CRLF/路径遍历/文件上传/暴力破解/HTTP方法/Host/CORS等) |
 | **高并发** | 令牌桶限流、Cache-Aside缓存(防雪崩+防穿透)、熔断器、DB读写分离、连接池优化 |
 | **会员增长** | 积分规则、会员等级权益、礼品卡、降价提醒、订阅周期购、AB测试 |
 | **内容管理** | CMS多语言页面、FAQ、知识库、尺码对照表、邮件模板、商品Feed同步 |
@@ -144,7 +144,7 @@ shop-php/
 | **基础设施** | Snowflake分布式ID、Hashids接口混淆、JWT认证、AES加密、GeoIP区域识别 |
 | **多端覆盖** | Flutter(iOS/Android/macOS/Windows/Linux/iPadOS)+HarmonyOS(ArkTS)+Web Admin |
 | **平台追踪** | 8平台来源识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+DB记录 |
-| **测试** | 23 tests / 68 assertions — ALL PASS (Security+Jwt+ApiResponse) |
+| **测试** | 26 tests / 71 assertions — ALL PASS (Security+Jwt+ApiResponse+Redis) |
 
 ## 核心设计
 
@@ -186,7 +186,7 @@ shop-php/
 ```bash
 make test             # 推荐方式
 cd service && php vendor/bin/phpunit tests/   # 原生命令
-# 23 tests, 68 assertions — ALL PASS
+# 26 tests, 71 assertions — ALL PASS
 ```
 
 ## 开发工具

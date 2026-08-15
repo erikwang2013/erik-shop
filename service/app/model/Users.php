@@ -17,6 +17,22 @@ class Users extends BaseModel
     protected $encryptable = ["email", "mobile"]; // password用bcrypt哈希，非加密
     protected $hidden = ["password", "salt", "deleted_at"];
 
+    /**
+     * 邮箱可搜索索引值（HMAC-SHA256，小写规范化）
+     *
+     * email 字段为 Encryptable 加密存储（不可直接 where 查询），
+     * 登录/查重统一通过本方法计算索引列 email_hash 精确匹配。
+     * key 使用 JWT_SECRET（32 字节随机值，已 fail-closed）。
+     */
+    public static function emailHash(string $email): string
+    {
+        $key = (string) config('jwt.secret_key', '');
+        if ($key === '') {
+            $key = (string) env('JWT_SECRET', '');
+        }
+        return hash_hmac('sha256', strtolower(trim($email)), $key);
+    }
+
     public function userAddresses(): HasMany
     {
         return $this->hasMany(UserAddresses::class, "user_id");

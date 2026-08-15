@@ -62,7 +62,7 @@ class SocialAuthController extends \app\controller\BaseApiController
         // 邮箱匹配已有账号：仅在平台返回的邮箱已通过验证时才绑定，
         // 防止攻击者提交他人邮箱接管账户（Apple 隐藏邮箱 / Facebook 未授权时 email 为空，不进入此分支）
         if ($email !== '' && !empty($verified['email'])) {
-            $user = Users::where('email', $email)->first();
+            $user = Users::where('email_hash', Users::emailHash($email))->first();
             if ($user) {
                 UserSocialAccounts::create([
                     'user_id' => $user->id,
@@ -85,7 +85,7 @@ class SocialAuthController extends \app\controller\BaseApiController
         }
 
         // 新注册：邮箱已被占用且未能通过社交平台验证所有权时拒绝，避免静默接管或唯一键冲突
-        if ($email !== '' && Users::where('email', $email)->exists()) {
+        if ($email !== '' && Users::where('email_hash', Users::emailHash($email))->exists()) {
             return ApiResponse::fail('该邮箱已被注册，且无法通过社交平台验证邮箱所有权', 409);
         }
 
@@ -93,6 +93,7 @@ class SocialAuthController extends \app\controller\BaseApiController
         $user = Users::create([
             'nickname' => $name ?: ucfirst($provider) . 'User',
             'email' => $email,
+            'email_hash' => Users::emailHash($email),
             'password' => '',
             'salt' => bin2hex(random_bytes(3)),
             'invite_code' => strtoupper(substr(md5(uniqid()), 0, 8)),

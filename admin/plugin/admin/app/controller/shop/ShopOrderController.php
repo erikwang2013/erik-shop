@@ -22,12 +22,12 @@ class ShopOrderController extends Crud
         return $items;
     }
 
-    protected function insertInput($data)
+    protected function insertInput(Request $request): array
     {
         throw new BusinessException("不允许直接创建订单");
     }
 
-    protected function updateInput($data)
+    protected function updateInput(Request $request): array
     {
         throw new BusinessException("不允许直接修改订单，请通过退款/退货流程处理");
     }

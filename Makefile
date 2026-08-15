@@ -22,8 +22,9 @@ lint: ## Lint PHP syntax
 	@errors=$$(find service/app service/config admin/app admin/config -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax" || true); \
 	if [ -n "$$errors" ]; then echo "$$errors"; exit 1; fi; echo "All PHP files pass syntax check"
 
-check: ## Run static analysis
-	cd service && vendor/bin/phpstan analyse
+check: ## Run static analysis & controller smoke check
+	cd service && vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+	php scripts/smoke_controllers.php
 
 fix: ## Fix code style
 	cd service && vendor/bin/php-cs-fixer fix

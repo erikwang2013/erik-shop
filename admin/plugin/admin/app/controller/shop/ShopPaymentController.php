@@ -12,7 +12,7 @@ class ShopPaymentController extends Crud
 {
     protected $model = Payments::class;
 
-    public function insert(Request $request) { return $this->json(1, "支付记录只读，不允许新增"); }
-    public function update(Request $request) { return $this->json(1, "支付记录只读，不允许修改"); }
-    public function delete(Request $request) { return $this->json(1, "支付记录只读，不允许删除"); }
+    public function insert(Request $request): \support\Response { return $this->json(1, "支付记录只读，不允许新增"); }
+    public function update(Request $request): \support\Response { return $this->json(1, "支付记录只读，不允许修改"); }
+    public function delete(Request $request): \support\Response { return $this->json(1, "支付记录只读，不允许删除"); }
 }

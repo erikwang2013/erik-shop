@@ -21,6 +21,10 @@ Route::group('/api', function () {
     Route::post('/auth/refresh', [app\controller\v1\AuthController::class, 'refresh']);
     Route::post('/auth/social', [app\controller\v1\SocialAuthController::class, 'login']);
 
+    // 人机验证（PosterVerify 签发端：注册/下单/支付前先获取 token）
+    Route::get('/poster/challenge', [app\controller\v1\PosterController::class, 'challenge']);
+    Route::post('/poster/verify', [app\controller\v1\PosterController::class, 'verify']);
+
     // 商品与分类
     Route::get('/products', [app\controller\v1\ProductController::class, 'index']);
     Route::get('/products/{id:\w+}', [app\controller\v1\ProductController::class, 'show']);

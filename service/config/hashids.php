@@ -36,7 +36,7 @@ return [
     'connections' => [
 
         'main' => [
-            'salt' => '',
+            'salt' => getenv('HASHIDS_SALT') ?: '',
             'length' => 0,
             // 'alphabet' => 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890',
         ],

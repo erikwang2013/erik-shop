@@ -200,10 +200,12 @@ CREATE TABLE `erik_users` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted_at` DATETIME NULL DEFAULT NULL COMMENT '删除时间',
+    `email_hash` CHAR(64) NOT NULL DEFAULT '' COMMENT '邮箱HMAC-SHA256(小写,用于加密字段精确查询)',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_invite_code` (`invite_code`),
     KEY `idx_status` (`status`),
-    KEY `idx_inviter_id` (`inviter_id`)
+    KEY `idx_inviter_id` (`inviter_id`),
+    KEY `idx_email_hash` (`email_hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
 CREATE TABLE `erik_user_addresses` (

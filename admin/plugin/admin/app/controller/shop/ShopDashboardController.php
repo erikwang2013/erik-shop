@@ -48,7 +48,7 @@ class ShopDashboardController extends Base
                 'new_users' => \plugin\admin\app\model\shop\Users::whereDate('created_at', $date)->count(),
             ];
         }
-        return $this->json(['code' => 0, 'data' => $data]);
+        return $this->json(0, 'ok', $data);
     }
 
     /**
@@ -61,7 +61,7 @@ class ShopDashboardController extends Base
     public function kpi()
     {
         $today = date('Y-m-d');
-        return $this->json(['code' => 0, 'data' => [
+        return $this->json(0, 'ok', [
             'today_orders' => \plugin\admin\app\model\shop\Orders::whereDate('created_at', $today)->count(),
             'today_revenue' => \plugin\admin\app\model\shop\Orders::whereDate('pay_at', $today)->sum('pay_amount') ?? 0,
             'total_users' => \plugin\admin\app\model\shop\Users::count(),
@@ -70,7 +70,7 @@ class ShopDashboardController extends Base
             'pending_returns' => \plugin\admin\app\model\shop\ReturnOrders::where('status', 0)->count(),
             'pending_risk' => \plugin\admin\app\model\shop\RiskLogs::where('result', 'review')->whereDate('created_at', $today)->count(),
             'refund_rate' => $this->calcRefundRate($today),
-        ]]);
+        ]);
     }
 
     private function calcRefundRate(string $today): float

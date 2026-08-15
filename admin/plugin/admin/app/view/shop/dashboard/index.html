@@ -45,7 +45,7 @@ body{font-family:-apple-system,system-ui,sans-serif;background:#f5f7fa;color:#33
 const colors = ['#667eea','#764ba2','#f093fb','#f5576c','#4facfe','#00f2fe','#43e97b','#fa709a'];
 
 // KPI 数据
-fetch('/app/admin/shop/shop-dashboard/kpi').then(r=>r.json()).then(res=>{
+fetch('/app/admin/shop/ShopDashboard/kpi').then(r=>r.json()).then(res=>{
   if(res.code!==0)return;
   const d=res.data;
   document.getElementById('kpi-orders').textContent=d.today_orders||0;
@@ -57,7 +57,7 @@ fetch('/app/admin/shop/shop-dashboard/kpi').then(r=>r.json()).then(res=>{
 });
 
 // 趋势图
-fetch('/app/admin/shop/shop-dashboard/chartData?days=7').then(r=>r.json()).then(res=>{
+fetch('/app/admin/shop/ShopDashboard/chartData?days=7').then(r=>r.json()).then(res=>{
   if(res.code!==0)return;
   const data=res.data;
   const chart=echarts.init(document.getElementById('chart-trend'));

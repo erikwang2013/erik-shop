@@ -36,7 +36,7 @@ class AuthController extends \app\controller\BaseApiController
         if (empty($email) || empty($password)) {
             return ApiResponse::fail('邮箱和密码不能为空', 422);
         }
-        if (Users::where('email', $email)->exists()) {
+        if (Users::where('email_hash', Users::emailHash($email))->exists()) {
             return ApiResponse::fail('该邮箱已注册', 422);
         }
 
@@ -44,6 +44,7 @@ class AuthController extends \app\controller\BaseApiController
         $user = Users::create([
             'nickname' => $nickname ?: 'User' . substr(md5($email), 0, 8),
             'email' => $email,
+            'email_hash' => Users::emailHash($email),
             'password' => password_hash($password . $salt, PASSWORD_BCRYPT),
             'salt' => $salt,
             'invite_code' => strtoupper(substr(md5(uniqid()), 0, 8)),
@@ -83,7 +84,7 @@ class AuthController extends \app\controller\BaseApiController
             return ApiResponse::fail('邮箱和密码不能为空', 422);
         }
 
-        $user = Users::where('email', $email)->where('status', 1)->first();
+        $user = Users::where('email_hash', Users::emailHash($email))->where('status', 1)->first();
         if (!$user || !password_verify($password . $user->salt, $user->password)) {
             return ApiResponse::fail('邮箱或密码错误', 401);
         }

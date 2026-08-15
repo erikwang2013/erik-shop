@@ -162,6 +162,8 @@ shop-php/
 | [README-EN.md](README-EN.md) | English documentation |
 | [INSTALL.md](INSTALL.md) | 安装指南（Web 一键安装 + 手动安装） |
 | [AUDIT-REPORT.md](AUDIT-REPORT.md) | 安装系统审查报告 |
+| [项目规划](docs/PLAN.md) | 团队产出的分阶段项目规划（4 阶段路线图 + 关键风险 + Quick Wins） |
+| [团队调研明细](docs/PLAN-RESEARCH.md) | 7 领域现状调研：已实现 / 差距 / 风险 / 建议 |
 | [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、API端点设计、状态机 |
 | [架构图集](docs/diagrams.md) | 架构图、流程图、功能图、生命周期图、部署图、多币种结算图（8张Mermaid图） |
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |

@@ -67,10 +67,12 @@ class HashidsDecode implements MiddlewareInterface
             }
         }
         if ($updates) {
+            // 注意：setPost/setGet 传数组是整体替换，必须与现有参数合并，
+            // 否则解码任一 _id 字段会丢弃同请求的其他参数（如 coupon_id/weight_grams）
             if ($request->isGet()) {
-                $request->setGet($updates);
+                $request->setGet(array_merge($request->get() ?? [], $updates));
             }
-            $request->setPost($updates);
+            $request->setPost(array_merge($request->post() ?? [], $updates));
         }
     }
 }

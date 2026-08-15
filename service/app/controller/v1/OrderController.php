@@ -11,8 +11,15 @@ use app\model\OrderItems;
 use app\model\OrderLogs;
 use app\model\Carts;
 use app\model\Countries;
+use app\model\Coupons;
+use app\model\UserCoupons;
 use app\model\ProductSkus;
 use app\model\ProductSkuPrices;
+use app\model\ProductHsCodes;
+use app\model\TariffRules;
+use app\model\VatSettings;
+use app\model\ShippingZones;
+use app\model\ShippingZoneRates;
 use app\model\UserAddresses;
 use app\model\UserKyc;
 use support\Db;
@@ -88,6 +95,9 @@ class OrderController extends \app\controller\BaseApiController
         $addressId = $request->input('address_id');
         $currencyCode = $request->input('currency_code', 'USD');
         $remark = $request->input('remark', '');
+        $couponId = $request->input('coupon_id');
+        // 包裹重量（克）；SKU 无重量字段，由客户端按购物车估算，缺省 500g
+        $weightGrams = max(1, (int) $request->input('weight_grams', 500));
 
         // 验证地址
         $address = UserAddresses::where('id', $addressId)->where('user_id', $userId)->first();
@@ -117,7 +127,7 @@ class OrderController extends \app\controller\BaseApiController
 
         // 事务内创建订单 + 明细 + 原子扣库存 + 清购物车，任一步失败整体回滚
         try {
-            $result = Db::transaction(function () use ($userId, $address, $cartItems, $currencyCode, $remark) {
+            $result = Db::transaction(function () use ($userId, $address, $country, $cartItems, $currencyCode, $remark, $couponId, $weightGrams) {
                 // 生成订单号
                 $orderNo = 'ORD' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
 
@@ -178,10 +188,36 @@ class OrderController extends \app\controller\BaseApiController
                     $totalAmount += $subtotal;
                 }
 
-                // 更新订单金额
+                // ===== 真实计费（对齐 api.md 5.3 / features.md 3.3） =====
+                $totalAmount = round($totalAmount, 2);
+                $discountAmount = 0.0;
+                if (!empty($couponId)) {
+                    $discountAmount = $this->applyCoupon($userId, $couponId, $totalAmount);
+                }
+                $shippingFee = $country ? $this->calcShipping($country, $weightGrams) : 0.0;
+                $taxAmount = $country ? $this->calcTax($country, $cartItems, $skus, $priceMap) : 0.0;
+                $payAmount = round($totalAmount - $discountAmount + $shippingFee + $taxAmount, 2);
+
+                // 更新订单金额（discount/shipping/tax 字段已存在，此前从未写入）
                 $order->total_amount = $totalAmount;
-                $order->pay_amount = $totalAmount;
+                $order->discount_amount = $discountAmount;
+                $order->shipping_fee = $shippingFee;
+                $order->tax_amount = $taxAmount;
+                $order->pay_amount = $payAmount;
                 $order->save();
+
+                // 核销优惠券（事务内，与订单同生共死）
+                if (!empty($couponId) && $discountAmount > 0) {
+                    UserCoupons::where('user_id', $userId)
+                        ->where('coupon_id', $couponId)
+                        ->where('status', 0)
+                        ->update([
+                            'status' => 1,
+                            'used_at' => date('Y-m-d H:i:s'),
+                            'used_order_id' => $order->id,
+                        ]);
+                    Coupons::where('id', $couponId)->increment('used_qty');
+                }
 
                 // 记录日志
                 OrderLogs::create([
@@ -198,6 +234,10 @@ class OrderController extends \app\controller\BaseApiController
                     'order_id' => $order->id,
                     'order_no' => $order->order_no,
                     'total_amount' => $totalAmount,
+                    'discount_amount' => $discountAmount,
+                    'shipping_fee' => $shippingFee,
+                    'tax_amount' => $taxAmount,
+                    'pay_amount' => $payAmount,
                     'currency_code' => $currencyCode,
                 ];
             });
@@ -212,6 +252,108 @@ class OrderController extends \app\controller\BaseApiController
         }
 
         return ApiResponse::success($result, '订单创建成功');
+    }
+
+    /**
+     * 优惠券折扣计算（校验 + 计费）
+     * type: 1=满减(value=金额) / 2=折扣(value=折扣率%，如10=减10%) / 3=固定金额(value=金额)
+     */
+    private function applyCoupon(int $userId, string $couponId, float $subtotal): float
+    {
+        $userCoupon = UserCoupons::where('user_id', $userId)
+            ->where('coupon_id', $couponId)
+            ->where('status', 0)
+            ->first();
+        if (!$userCoupon) {
+            throw new \RuntimeException('优惠券不存在或已使用');
+        }
+
+        $coupon = Coupons::find($couponId);
+        if (!$coupon || $coupon->status !== 1) {
+            throw new \RuntimeException('优惠券不可用');
+        }
+        // 有效期
+        $now = date('Y-m-d H:i:s');
+        if (($coupon->start_at && $now < $coupon->start_at) || ($coupon->end_at && $now > $coupon->end_at)) {
+            throw new \RuntimeException('优惠券不在有效期内');
+        }
+        // 满减门槛
+        if ((float) $coupon->min_amount > 0 && $subtotal < (float) $coupon->min_amount) {
+            throw new \RuntimeException('未达到优惠券使用门槛');
+        }
+        // 区域限定（countries JSON 非空时校验目的国——此处由调用方保证 country，简化按全量）
+        $discount = match ((int) $coupon->type) {
+            1 => min((float) $coupon->value, $subtotal),                    // 满减
+            2 => round($subtotal * (float) $coupon->value / 100, 2),        // 折扣率
+            3 => min((float) $coupon->value, $subtotal),                    // 固定金额
+            default => 0.0,
+        };
+        return min($discount, $subtotal);
+    }
+
+    /**
+     * 运费计算：目的国 → 物流分区 → 费率阶梯（取最低价物流商）
+     */
+    private function calcShipping(Countries $country, int $weightGrams): float
+    {
+        $zone = ShippingZones::where('status', 1)
+            ->whereJsonContains('countries', $country->iso_code_2)
+            ->first();
+        if (!$zone) {
+            return 0.0; // 无分区规则时不收运费（订单不阻断，运费后续可补）
+        }
+        $weightKg = $weightGrams / 1000;
+        $rates = ShippingZoneRates::where('zone_id', $zone->id)
+            ->where('weight_from', '<=', $weightKg)
+            ->where(function ($q) use ($weightKg) {
+                $q->where('weight_to', '>=', $weightKg)->orWhereNull('weight_to');
+            })
+            ->get();
+        $minFee = null;
+        foreach ($rates as $rate) {
+            $fee = (float) $rate->price + $weightKg * (float) $rate->per_kg_price;
+            $minFee = ($minFee === null) ? $fee : min($minFee, $fee);
+        }
+        return $minFee === null ? 0.0 : round($minFee, 2);
+    }
+
+    /**
+     * 关税/VAT 估算：商品 HS Code → 目的国税率（无 HS 关联或税率规则则按 0）
+     */
+    private function calcTax(Countries $country, $cartItems, $skus, array $priceMap): float
+    {
+        $destCountryId = $country->id;
+        $vat = VatSettings::where('country_id', $destCountryId)->first();
+        $vatRate = (float) ($vat->vat_rate ?? 0);
+        $dutyFreeThreshold = (float) ($vat->duty_free_threshold ?? 0);
+        $vatFreeThreshold = (float) ($vat->vat_free_threshold ?? 0);
+
+        $taxTotal = 0.0;
+        // 按商品维度聚合申报价值（避免同商品多 SKU 重复查 HS）
+        $productValues = [];
+        foreach ($cartItems as $cart) {
+            $sku = $skus[$cart->sku_id] ?? null;
+            if (!$sku) {
+                continue;
+            }
+            $price = $priceMap[$sku->id] ?? (float) $sku->default_price;
+            $productValues[$sku->product_id] = ($productValues[$sku->product_id] ?? 0) + $price * (int) $cart->quantity;
+        }
+
+        foreach ($productValues as $productId => $value) {
+            $hsCodeIds = ProductHsCodes::where('product_id', $productId)->pluck('hs_code_id');
+            if ($hsCodeIds->isEmpty()) {
+                continue;
+            }
+            $rule = TariffRules::where('dest_country_id', $destCountryId)
+                ->whereIn('hs_code_id', $hsCodeIds)
+                ->first();
+            $dutyRate = (float) ($rule->duty_rate ?? 0);
+            $duty = ($value >= $dutyFreeThreshold) ? round($value * $dutyRate / 100, 2) : 0.0;
+            $vatAmount = (($value + $duty) >= $vatFreeThreshold) ? round(($value + $duty) * $vatRate / 100, 2) : 0.0;
+            $taxTotal += $duty + $vatAmount;
+        }
+        return round($taxTotal, 2);
     }
 
     /**

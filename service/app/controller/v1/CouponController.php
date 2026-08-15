@@ -57,7 +57,7 @@ class CouponController extends \app\controller\BaseApiController
 
                 // 原子门闩：received_qty < total_qty 才递增
                 $affected = Coupons::where('id', $id)
-                    ->where('received_qty', '<', 'total_qty')
+                    ->whereColumn('received_qty', '<', 'total_qty')
                     ->increment('received_qty');
                 if (!$affected) {
                     throw new \RuntimeException('已被抢光');

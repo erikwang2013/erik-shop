@@ -24,7 +24,10 @@
 | Quick Win #3：业务种子数据自动导入 | ✅ | 新增 `service/database/seeders/run.php`（幂等：countries 23 + logistics 3 + shipping zones 3 + rates 3 + gateways 2 + methods 2 + hs_codes 8 + tariff_rules 7）；实测重跑 0 新增 51 跳过；/api/countries、/api/payment/methods、/api/shipping/calculate（北美区 DHL 12.24）、/api/tariff/estimate 全部可用 |
 | 🔄 新发现：模型错误 encryptable（name 类非敏感字段） | ⚠️ 部分修复 | 30+ 模型把 name 等公开字段加密：破坏按名称查询/排序且短字段放不下密文（Countries.phone_code varchar(8) 直接超长）。本轮已修种子涉及 4 模型（Countries/ShippingZones/LogisticsCompanies/PaymentGateways），**其余（Categories/Currencies/Shops/Suppliers 等 ~25 个）待批量处理**（保留 email/mobile/real_name/api_key 等真敏感字段加密） |
 | 🔄 新发现：模型缺失 Eloquent 关联 | ✅ | PaymentGatewayMethods.gateway、ShippingZoneRates.logistics/zone 缺失导致 /api/payment/methods、/api/shipping/calculate 500，已补 |
-| 其余阶段一~四交付物 | ⬜ | 按下方路线图执行 |
+| 阶段一：OrderController 真实计费 | ✅ | store() 接入优惠券（满减/折扣/固定，核销 user_coupons + used_qty）、运费（分区+费率阶梯最低价）、关税/VAT（HS Code→目的国税率）；实测 3×49.99=149.97 满100减20 → discount 20 + shipping 12.24 + tax 0 = pay 142.21，库存/核销/明细/日志全链路验证 |
+| 🔄 新发现 P0：HashidsDecode 参数丢失 | ✅ | 中间件 setPost($updates) 为整体替换，解码任一 _id 字段会丢弃同请求其他参数（coupon_id/weight_grams 等全站受影响）；改为 array_merge 合并，实测多参数下单正常 |
+| 🔄 新发现：下单链路配套 bug | ✅ | CouponController::claim 的 where 列名误写值（改 whereColumn）；Orders.address_snapshot JSON 列缺 cast（补 array cast）；OrderLogs 表无 updated_at（模型 $timestamps=false） |
+| 其余阶段一~四交付物 | ⬜ | 剩余：~25 个模型 name 加密批量清理、InstallController 集成 seeder、Flutter/鸿蒙下单支付与 PosterVerify 前端接入（客户端大块） |
 
 ---
 

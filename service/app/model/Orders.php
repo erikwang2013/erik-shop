@@ -13,6 +13,9 @@ class Orders extends BaseModel
 {
     use SoftDeletes;
     protected $table = "erik_orders";
+    protected $casts = [
+        'address_snapshot' => 'array',   // JSON 列：数组自动序列化/反序列化
+    ];
     public function productReviews(): HasMany
     {
         return $this->hasMany(ProductReviews::class, "order_id");

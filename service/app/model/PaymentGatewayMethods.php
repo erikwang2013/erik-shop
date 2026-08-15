@@ -5,6 +5,13 @@
 
 namespace app\model;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 class PaymentGatewayMethods extends BaseModel
 {    protected $table = "erik_payment_gateway_methods";
+
+    public function gateway(): BelongsTo
+    {
+        return $this->belongsTo(PaymentGateways::class, 'gateway_id');
+    }
 }

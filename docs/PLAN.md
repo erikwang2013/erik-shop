@@ -21,6 +21,9 @@
 | 🔄 新发现 P0：Encryptable 空 IV 阻断注册 | ✅ | 已修复：`app/common/SecureEncrypter.php`（显式 16 字节零 IV，与旧数据字节级兼容）+ `support/bootstrap.php` 注册 resolver；实测注册成功、登录解密正常 |
 | 🔄 新发现 P0：加密字段不可查询（email） | ✅ | 已修复：`erik_users.email_hash`（HMAC-SHA256 索引列，install.sql + ALTER + 回填）；AuthController register/login 与 SocialAuthController 改用 email_hash 查询；实测：注册成功/重复注册 422/登录成功/错误密码 401 |
 | 🔄 新发现 P0：HASHIDS_SALT 占位/未读取 | ✅ | 已修复：`config/hashids.php` main.salt 读 `getenv('HASHIDS_SALT')`；本环境 `.env` 生成随机 salt（原为 change_me 占位，且配置写死空 salt 导致 fail-closed 异常） |
+| Quick Win #3：业务种子数据自动导入 | ✅ | 新增 `service/database/seeders/run.php`（幂等：countries 23 + logistics 3 + shipping zones 3 + rates 3 + gateways 2 + methods 2 + hs_codes 8 + tariff_rules 7）；实测重跑 0 新增 51 跳过；/api/countries、/api/payment/methods、/api/shipping/calculate（北美区 DHL 12.24）、/api/tariff/estimate 全部可用 |
+| 🔄 新发现：模型错误 encryptable（name 类非敏感字段） | ⚠️ 部分修复 | 30+ 模型把 name 等公开字段加密：破坏按名称查询/排序且短字段放不下密文（Countries.phone_code varchar(8) 直接超长）。本轮已修种子涉及 4 模型（Countries/ShippingZones/LogisticsCompanies/PaymentGateways），**其余（Categories/Currencies/Shops/Suppliers 等 ~25 个）待批量处理**（保留 email/mobile/real_name/api_key 等真敏感字段加密） |
+| 🔄 新发现：模型缺失 Eloquent 关联 | ✅ | PaymentGatewayMethods.gateway、ShippingZoneRates.logistics/zone 缺失导致 /api/payment/methods、/api/shipping/calculate 500，已补 |
 | 其余阶段一~四交付物 | ⬜ | 按下方路线图执行 |
 
 ---

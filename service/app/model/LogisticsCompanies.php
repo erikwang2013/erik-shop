@@ -12,6 +12,6 @@ class LogisticsCompanies extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_logistics_companies";
-    protected $encryptable = ["name", "api_key"];
+    protected $encryptable = ["api_key"]; // name 为公开物流商名，加密后查重/查询失效
 
 }

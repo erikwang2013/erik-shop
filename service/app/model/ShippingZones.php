@@ -12,6 +12,6 @@ class ShippingZones extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_shipping_zones";
-    protected $encryptable = ["name"];
+    protected $encryptable = []; // 分区名为运营数据，加密后按 name 查重/查询失效
 
 }

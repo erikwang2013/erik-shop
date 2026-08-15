@@ -1,0 +1,8 @@
+# HarmonyOS 构建产物（不应入库）
+.hvigor/
+**/build/
+**/oh_modules/
+.idea/
+*.hap
+*.app
+local.properties

@@ -1,321 +1,0 @@
-Ôr@Ÿªassertions¤code´customTransformCache¬dependencies¢id¤meta±moduleSideEffects¬originalCode±originalSourcemap«resolvedIds®sourcemapChainµsyntheticNamedExportsµtransformDependencies®transformFiles¨cacheAstÔrAÚ&Uif (!("finalizeConstruction" in ViewPU.prototype)) {
-    Reflect.set(ViewPU.prototype, "finalizeConstruction", () => { });
-}
-/**
- * Copyright (c) 2026 erik <erik@erik.xyz> â€” https://erik.xyz
- */
-import router from "@ohos.router";
-import { ApiClient } from '../common/api/ApiClient';
-class Cart extends ViewPU {
-    constructor(parent, params, __localStorage, elmtId = -1, paramsLambda = undefined, extraInfo) {
-        super(parent, __localStorage, elmtId, extraInfo);
-        if (typeof paramsLambda === "function") {
-            this.paramsGenerator_ = paramsLambda;
-        }
-        this.__items = new ObservedPropertyObjectPU([], this, "items");
-        this.__total = new ObservedPropertySimplePU(0, this, "total");
-        this.api = ApiClient.getInstance();
-        this.setInitiallyProvidedValue(params);
-        this.finalizeConstruction();
-    }
-    setInitiallyProvidedValue(params) {
-        if (params.items !== undefined) {
-            this.items = params.items;
-        }
-        if (params.total !== undefined) {
-            this.total = params.total;
-        }
-        if (params.api !== undefined) {
-            this.api = params.api;
-        }
-    }
-    updateStateVars(params) {
-    }
-    purgeVariableDependenciesOnElmtId(rmElmtId) {
-        this.__items.purgeDependencyOnElmtId(rmElmtId);
-        this.__total.purgeDependencyOnElmtId(rmElmtId);
-    }
-    aboutToBeDeleted() {
-        this.__items.aboutToBeDeleted();
-        this.__total.aboutToBeDeleted();
-        SubscriberManager.Get().delete(this.id__());
-        this.aboutToBeDeletedInternal();
-    }
-    get items() {
-        return this.__items.get();
-    }
-    set items(newValue) {
-        this.__items.set(newValue);
-    }
-    get total() {
-        return this.__total.get();
-    }
-    set total(newValue) {
-        this.__total.set(newValue);
-    }
-    aboutToAppear() { this.loadCart(); }
-    async loadCart() {
-        const res = await this.api.get('/cart');
-        if (res.code === 0) {
-            this.items = res.data ?? [];
-            this.calcTotal();
-        }
-    }
-    calcTotal() {
-        this.total = this.items.reduce((sum, item) => sum + (item['price'] ?? 0) * (item['quantity'] ?? 1), 0);
-    }
-    async removeItem(id) {
-        await this.api.delete(`/cart/${id}`);
-        this.loadCart();
-    }
-    initialRender() {
-        this.observeComponentCreation2((elmtId, isInitialRender) => {
-            Column.create();
-            Column.width('100%');
-            Column.height('100%');
-        }, Column);
-        this.observeComponentCreation2((elmtId, isInitialRender) => {
-            Text.create('è´­ç‰©è½¦');
-            Text.fontSize(20);
-            Text.fontWeight(FontWeight.Bold);
-            Text.width('100%');
-            Text.padding(16);
-        }, Text);
-        Text.pop();
-        this.observeComponentCreation2((elmtId, isInitialRender) => {
-            If.create();
-            if (this.items.length === 0) {
-                this.ifElseBranchUpdateFunction(0, () => {
-                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                        Column.create();
-                        Column.width('100%');
-                        Column.height('60%');
-                        Column.justifyContent(FlexAlign.Center);
-                    }, Column);
-                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                        Image.create({ "id": 16777226, "type": 20000, params: [], "bundleName": "com.erik.shop", "moduleName": "entry" });
-                        Image.width(80);
-                        Image.height(80);
-                        Image.opacity(0.3);
-                    }, Image);
-                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                        Text.create('è´­ç‰©è½¦æ˜¯ç©ºçš„');
-                        Text.fontSize(14);
-                        Text.fontColor('#999');
-                        Text.margin({ top: 8 });
-                    }, Text);
-                    Text.pop();
-                    Column.pop();
-                });
-            }
-            else {
-                this.ifElseBranchUpdateFunction(1, () => {
-                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                        List.create();
-                        List.layoutWeight(1);
-                    }, List);
-                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                        ForEach.create();
-                        const forEachItemGenFunction = _item => {
-                            const item = _item;
-                            {
-                                const itemCreation = (elmtId, isInitialRender) => {
-                                    ViewStackProcessor.StartGetAccessRecordingFor(elmtId);
-                                    ListItem.create(deepRenderFunction, true);
-                                    if (!isInitialRender) {
-                                        ListItem.pop();
-                                    }
-                                    ViewStackProcessor.StopGetAccessRecording();
-                                };
-                                const itemCreation2 = (elmtId, isInitialRender) => {
-                                    ListItem.create(deepRenderFunction, true);
-                                };
-                                const deepRenderFunction = (elmtId, isInitialRender) => {
-                                    itemCreation(elmtId, isInitialRender);
-                                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                                        Row.create();
-                                        Row.width('100%');
-                                        Row.padding(8);
-                                    }, Row);
-                                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                                        Image.create(item['image'] ?? '');
-                                        Image.width(80);
-                                        Image.height(80);
-                                    }, Image);
-                                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                                        Column.create();
-                                        Column.alignItems(HorizontalAlign.Start);
-                                        Column.layoutWeight(1);
-                                        Column.padding(8);
-                                    }, Column);
-                                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                                        Text.create(item['title'] ?? '');
-                                        Text.maxLines(2);
-                                        Text.fontSize(14);
-                                    }, Text);
-                                    Text.pop();
-                                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                                        Text.create(`$${item['price']?.toFixed(2)} x ${item['quantity']}`);
-                                        Text.fontSize(12);
-                                        Text.fontColor('#999');
-                                    }, Text);
-                                    Text.pop();
-                                    Column.pop();
-                                    this.observeComponentCreation2((elmtId, isInitialRender) => {
-                                        Button.createWithLabel('åˆ é™¤');
-                                        Button.fontSize(12);
-                                        Button.onClick(() => this.removeItem(item['id']));
-                                    }, Button);
-                                    Button.pop();
-                                    Row.pop();
-                                    ListItem.pop();
-                                };
-                                this.observeComponentCreation2(itemCreation2, ListItem);
-                                ListItem.pop();
-                            }
-                        };
-                        this.forEachUpdateFunction(elmtId, this.items, forEachItemGenFunction);
-                    }, ForEach);
-                    ForEach.pop();
-                    List.pop();
-                });
-            }
-        }, If);
-        If.pop();
-        this.observeComponentCreation2((elmtId, isInitialRender) => {
-            Row.create();
-            Row.width('100%');
-            Row.padding(16);
-            Row.justifyContent(FlexAlign.SpaceBetween);
-        }, Row);
-        this.observeComponentCreation2((elmtId, isInitialRender) => {
-            Text.create(`åˆè®¡: $${this.total.toFixed(2)}`);
-            Text.fontSize(18);
-            Text.fontWeight(FontWeight.Bold);
-        }, Text);
-        Text.pop();
-        this.observeComponentCreation2((elmtId, isInitialRender) => {
-            Button.createWithLabel('å»ç»“ç®—');
-            Button.onClick(() => router.pushUrl({ url: 'pages/Checkout' }));
-        }, Button);
-        Button.pop();
-        Row.pop();
-        Column.pop();
-    }
-    rerender() {
-        this.updateDirtyElements();
-    }
-    static getEntryName() {
-        return "Cart";
-    }
-}
-registerNamedRoute(() => new Cart(undefined, {}), "", { bundleName: "com.erik.shop", moduleName: "entry", pagePath: "pages/Cart", pageFullPath: "entry/src/main/ets/pages/Cart", integratedHsp: "false", moduleType: "followWithHap" });
-//# sourceMappingURL=Cart.js.mapÂ’Ùc hvigor_ignore__home_component_command-line-tools_sdk_default_openharmony_ets_api_@ohos.router.d.tsÙQ/home/wwwroot/shop-php/apps/harmonyos/entry/src/main/ets/common/api/ApiClient.etsÙG/home/wwwroot/shop-php/apps/harmonyos/entry/src/main/ets/pages/Cart.etsÔrBšªmoduleName±isLocalDependency¯isNodeEntryFile§pkgPath±belongProjectPath§pkgNameªpkgVersion±dependencyPkgInfo°belongModulePath¬shouldEmitJs¥entryÃÂÙ+/home/wwwroot/shop-php/apps/harmonyos/entryÙ%/home/wwwroot/shop-php/apps/harmonyos¥entry¥1.0.0Ô  Ù+/home/wwwroot/shop-php/apps/harmonyos/entryÃÃÚ		/**
- * Copyright (c) 2026 erik <erik@erik.xyz> â€” https://erik.xyz
- */
-import { router } from '@kit.ArkUI';
-import { ApiClient } from '../common/api/ApiClient';
-
-@Entry
-@Component
-struct Cart {
-  @State items: Array<Record<string, Object>> = [];
-  @State total: number = 0;
-  private api: ApiClient = ApiClient.getInstance();
-
-  aboutToAppear() { this.loadCart(); }
-
-  async loadCart() {
-    const res = await this.api.get('/cart');
-    if (res.code === 0) {
-      this.items = (res.data as Array<Record<string, Object>>) ?? [];
-      this.calcTotal();
-    }
-  }
-
-  calcTotal() {
-    this.total = this.items.reduce((sum, item) =>
-      sum + ((item['price'] as number) ?? 0) * ((item['quantity'] as number) ?? 1), 0);
-  }
-
-  async removeItem(id: string) {
-    await this.api.delete(`/cart/${id}`);
-    this.loadCart();
-  }
-
-  build() {
-    Column() {
-      Text('è´­ç‰©è½¦').fontSize(20).fontWeight(FontWeight.Bold).width('100%').padding(16)
-
-      if (this.items.length === 0) {
-        Column() {
-          Image($r('app.media.empty_cart')).width(80).height(80).opacity(0.3)
-          Text('è´­ç‰©è½¦æ˜¯ç©ºçš„').fontSize(14).fontColor('#999').margin({ top: 8 })
-        }
-        .width('100%').height('60%').justifyContent(FlexAlign.Center)
-      } else {
-        List() {
-          ForEach(this.items, (item: Record<string, Object>) => {
-            ListItem() {
-              Row() {
-                Image((item['image'] as string) ?? '').width(80).height(80)
-                Column() {
-                  Text((item['title'] as string) ?? '').maxLines(2).fontSize(14)
-                  Text(`$${(item['price'] as number)?.toFixed(2)} x ${item['quantity']}`)
-                    .fontSize(12).fontColor('#999')
-                }.alignItems(HorizontalAlign.Start).layoutWeight(1).padding(8)
-                Button('åˆ é™¤').fontSize(12).onClick(() => this.removeItem(item['id'] as string))
-              }.width('100%').padding(8)
-            }
-          })
-        }.layoutWeight(1)
-      }
-
-      Row() {
-        Text(`åˆè®¡: $${this.total.toFixed(2)}`).fontSize(18).fontWeight(FontWeight.Bold)
-        Button('å»ç»“ç®—').onClick(() => router.pushUrl({ url: 'pages/Checkout' }))
-      }
-      .width('100%').padding(16).justifyContent(FlexAlign.SpaceBetween)
-    }
-    .width('100%').height('100%')
-  }
-}
-ÀÔrC’¬@ohos.router·../common/api/ApiClientÔrD—ªassertions¨external¢id¤meta±moduleSideEffectsªresolvedByµsyntheticNamedExportsAÃÙc hvigor_ignore__home_component_command-line-tools_sdk_default_openharmony_ets_api_@ohos.router.d.tsAÃªoh-resolveÂDAÂÙQ/home/wwwroot/shop-php/apps/harmonyos/entry/src/main/ets/common/api/ApiClient.etsAÃªoh-resolveÂ“ÔrE–§version¤fileªsourceRoot§sources¥names¨mappings§Cart.js ‘¨Cart.etsÜ Ì‘”    ‘” –”   ” 	” ” ”! #”" $˜”   ” ”	 	” ” ” ”3 3”4 4’” ”
- ‘”  ’”4 	0”6 	2’”4 
-”5 
-•” ” $” %”( 0”* 2‘” 4’” 		” 	’” 		” 	’” 
-	” 
-’” 
-	” 
-š” ” ” ” ” ”# !”% #”& $”' %”( &”” ”	 ”
- ” ” ” 
-” ” ” ” ” ”" ”# ”& "”' #”. *”/ +”0 ,˜” ” ” ” ” ” ” ” ›” ” 
-” ” ” ” ” ”! >”% ÌB”' ÌD”( ÌE–” ” 
-” ” ” ” ‘”	 ’” ” ’” ” Ü )” ” ” 	” ” ” ” ” ”  ”& "”' #”( $”+ '”- )”1 -”3 /”5 1”6 ”9 	”< ”= ”ÌA ”ÌB ”ÌI ”ÌJ &”ÌN *”ÌO +”ÌP ,”ÌS /”ÌT 1”ÌX 5”ÌY 6”Ìc Ì@”Ìd ÌL”Ìh ÌP”Ìi ÌQ”Ìj ÌR”Ìl ÌT”Ìm ÌU”Ìn ÌV”Ìo ÌW’” ” –” ”	 ”
- ” ” ” ” ” 
-” ” ” ” ” ” ”' #”) %”+ '”, (”- )–” ” ” 	” ” ” ’” ” ‘” !’” "” "
-–” "” "
-” ÌC” ÌC
-” ÌC” ÌC–” "” "
-” ÌC” ÌC” ÌC”  ÌC ”” #” #
-” #” #–” #” #
-” #” #” #” #˜” #” #
-” #” #)” #*”& #4”' #5”+ #9–” #” #
-” #;” #Ì@” #ÌA” #ÌG–” #” #
-” #ÌI” #ÌP” #ÌQ” #ÌS’” #” #
-š” %” %
-” %” %” %” %”! %”& % ”' %!”) %#’” &” &–” &” &” *	”$ *”% *”+ *–” &” &” *”% *”& *”+ *#˜” &” &” *%”- *3”. *4”7 *=”8 *>”> *ÌD’” '
-” '–” '
-” '” ',”# '1”$ '2”& '4–” '
-” '” '6”$ '<”% '=”' '?–” '
-” '” 'ÌA”% 'ÌH”& 'ÌI”) 'ÌL”” (
-” (”$ (”, (–” (
-” (” (”% (!”& ("”( ($–” (
-” (” (&”& (/”' (0”- (6š” (
-” (” (8”# (>”$ (?”& (ÌA”) (ÌD”+ (ÌF”, (ÌG”. (ÌI’” (
-” (’” &” &‘” +‘” +’” ,” ,–” ,” ,” :
-”) :”* :”+ :’” -
-” -’”( .”0 .’”( /”+ /–”( /”+ /”, 7”1 7”2 7”8 7–”( /”+ /”, 7”3 7%”4 7&”5 7'™”( 0”- 0”5 0”9 0”: 0”ÌA 0#”ÌB 0/”ÌF 03”ÌH 05–”( 0”- 0”. 07”3 0<”4 0=”6 0?–”( 0”- 0”. 0ÌA”4 0ÌG”5 0ÌH”7 0ÌJ’”( 1”. 1˜”( 1”. 1”/ 5”9 5”: 5”ÌI 5,”ÌJ 5-”ÌO 52–”( 1”. 1”/ 54”; 5Ì@”< 5ÌA”= 5ÌB–”( 1”. 1”/ 5ÌD”6 5ÌK”7 5ÌL”8 5ÌM™”( 2”, 2”4 2”8 2”9 2”Ì@ 2$”ÌA 20”ÌE 24”ÌG 26–”( 2”, 2”- 28”5 2Ì@”6 2ÌA”7 2ÌB–”( 2”, 2”- 2ÌD”5 2ÌL”6 2ÌM”8 2ÌO’”$ 2”( 2Ü ”( 3”, 3”4 3”8 3”< 3 ”= 3!”ÌD 3(”ÌE 34”ÌG 36”ÌN 3=”ÌO 3>”ÌP 3?”ÌQ 3Ì@”ÌW 3ÌF”Ì[ 3ÌJ”Ì\ 3ÌK”Ìf 3ÌU”Ìg 3ÌV”Ìi 3ÌX–”( 3”, 3”- 4”5 4”6 4”8 4 –”( 3”, 3”- 4"”6 4+”7 4,”= 42’”$ 3”( 3’”$ 1”* 1””( 6”. 6”? 6”ÌC 6–”( 6”. 6”/ 6”7 6%”8 6&”: 6(Ü ”( 6”. 6”/ 6*”6 61”7 62”: 65”< 67”= 68”ÌA 6<”ÌB 6=”ÌL 6ÌG”ÌM 6ÌH”ÌQ 6ÌL”ÌR 6ÌM”ÌV 6ÌQ”ÌW 6Ì\”ÌX 6Ì]’”$ 6”* 6’”$ /”' /’”$ .”, .’”  .”( .””; -”? -”Ì@ -”ÌE -’” -
-” -’” ,” ,‘” ;’” =” =	–” =” =	” ÌA” ÌA” ÌA” ÌA–” =” =	” ÌA” ÌA” ÌA” ÌA˜” =” =	” ÌA!” ÌA/” ÌA0”( ÌA9”) ÌA:”5 ÌAÌF” >” >” >”  >”$ >”% >”* >”+ > ”2 >'”3 >(”4 >)”5 >*”7 >,–” >” >” >.” >6” >7” >9˜” >” >” >;” >ÌE” >ÌF”& >ÌP”' >ÌQ”+ >ÌU’” >” >”” ?” ?”# ?”( ?Ü ” ?” ?” ?” ?” ?” ?!”  ?#”! ?$”' ?*”( ?+”/ ?2”0 ?3”2 ?5”5 ?8”7 ?:”ÌG ?ÌJ”ÌI ?ÌL”ÌJ ?ÌM’” ?” ?’” =” =	’” "” "
-‘” ÌDÔrF–§version¤file§sources®sourcesContent¥names¨mappingsÀ‘À‘ÀÜ Õ‘”    ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”  	 ‘”  
- ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”   ‘”    ‘”  ! ‘”  " ‘”  # ‘”  $ ‘”  % ‘”  & ‘”  ' ‘”  ( ‘”  ) ‘”  * ‘”  + ‘”  , ‘”  - ‘”  . ‘”  / ‘”  0 ‘”  1 ‘”  2 ‘”  3 ‘”  4 ‘”  5 ‘”  6 ‘”  7 ‘”  8 ‘”  9 ‘”  : ‘”  ; ‘”  < ‘”  = ‘”  > ‘”  ? ‘”  Ì@ ‘”  ÌA ‘”  ÌB ‘”  ÌC ‘”  ÌD ‘”  ÌE ‘”  ÌF ‘”  ÌG ‘”  ÌH ‘”  ÌI ‘”  ÌJ ‘”  ÌK ‘”  ÌL ‘”  ÌM ‘”  ÌN ‘”  ÌO ‘”  ÌP ‘”  ÌQ ‘”  ÌR ‘”  ÌS ‘”  ÌT ‘”  ÌU ‘”  ÌV ‘”  ÌW ‘”  ÌX ‘”  ÌY ‘”  ÌZ ‘”  Ì[ ‘”  Ì\ ‘”  Ì] ‘”  Ì^ ‘”  Ì_ ‘”  Ì` ‘”  Ìa ‘”  Ìb ‘”  Ìc ‘”  Ìd ‘”  Ìe ‘”  Ìf ‘”  Ìg ‘”  Ìh ‘”  Ìi ‘”  Ìj ‘”  Ìk ‘”  Ìl ‘”  Ìm ‘”  Ìn ‘”  Ìo ‘”  Ìp ‘”  Ìq ‘”  Ìr ‘”  Ìs ‘”  Ìt ‘”  Ìu ‘”  Ìv ‘”  Ìw ‘”  Ìx ‘”  Ìy ‘”  Ìz ‘”  Ì{ ‘”  Ì| ‘”  Ì} ‘”  Ì~ ‘”  Ì ‘”  Ì€ ‘”  Ì ‘”  Ì‚ ‘”  Ìƒ ‘”  Ì„ ‘”  Ì… ‘”  Ì† ‘”  Ì‡ ‘”  Ìˆ ‘”  Ì‰ ‘”  ÌŠ ‘”  Ì‹ ‘”  ÌŒ ‘”  Ì ‘”  Ì ‘”  Ì ‘”  Ì ‘”  Ì‘ ‘”  Ì’ ‘”  Ì“ ‘”  Ì” ‘”  Ì• ‘”  Ì– ‘”  Ì— ‘”  Ì˜ ‘”  Ì™ ‘”  Ìš ‘”  Ì› ‘”  Ìœ ‘”  Ì ‘”  Ì ‘”  ÌŸ ‘”  Ì  ‘”  Ì¡ ‘”  Ì¢ ‘”  Ì£ ‘”  Ì¤ ‘”  Ì¥ ‘”  Ì¦ ‘”  Ì§ ‘”  Ì¨ ‘”  Ì© ‘”  Ìª ‘”  Ì« ‘”  Ì¬ ‘”  Ì­ ‘”  Ì® ‘”  Ì¯ ‘”  Ì° ‘”  Ì± ‘”  Ì² ‘”  Ì³ ‘”  Ì´ ‘”  Ìµ ‘”  Ì¶ ‘”  Ì· ‘”  Ì¸ ‘”  Ì¹ ‘”  Ìº ‘”  Ì» ‘”  Ì¼ ‘”  Ì½ ‘”  Ì¾ ‘”  Ì¿ ‘”  ÌÀ ‘”  ÌÁ ‘”  ÌÂ ‘”  ÌÃ ‘”  ÌÄ ‘”  ÌÅ ‘”  ÌÆ ‘”  ÌÇ ‘”  ÌÈ ‘”  ÌÉ ‘”  ÌÊ ‘”  ÌË ‘”  ÌÌ ‘”  ÌÍ ‘”  ÌÎ ‘”  ÌÏ ‘”  ÌĞ ‘”  ÌÑ ‘”  ÌÒ ‘”  ÌÓ ‘”  ÌÔ ÔrG’§missing¦pluginÃ¦genAbcÂÔ  ÔrH”²dynamicImportCache¹exportAllDeclarationCache»exportNamedDeclarationCache«importCache’ÔrI•¤type¥start£endªspecifiers¦source±ImportDeclarationÌÉÌë‘ÔrJ”¤type¥start£end¥local¶ImportDefaultSpecifierÌĞÌÖÔrK”¤type¥start£end¤nameªIdentifierÌĞÌÖ¦routerÔrL•¤type¥start£end¥value£raw§LiteralÌÜÌê¬@ohos.router®"@ohos.router"I±ImportDeclarationÌíÍ!‘ÔrM•¤type¥start£end¨imported¥local¯ImportSpecifierÌöÌÿKªIdentifierÌöÌÿ©ApiClientKªIdentifierÌöÌÿ©ApiClientL§LiteralÍÍ ·../common/api/ApiClient¹'../common/api/ApiClient'

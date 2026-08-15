@@ -12,6 +12,6 @@ class MembershipLevels extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_membership_levels";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
 }

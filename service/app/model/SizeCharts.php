@@ -12,6 +12,6 @@ class SizeCharts extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_size_charts";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
 }

@@ -12,6 +12,6 @@ class ProductAttrs extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_product_attrs";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
 }

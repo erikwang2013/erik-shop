@@ -10,6 +10,6 @@ use Erik\Encryptable\Encryptable;
 class PointRules extends BaseModel
 {    use Encryptable;
     protected $table = "erik_point_rules";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
 }

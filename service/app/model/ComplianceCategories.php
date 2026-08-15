@@ -12,6 +12,6 @@ class ComplianceCategories extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_compliance_categories";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
 }

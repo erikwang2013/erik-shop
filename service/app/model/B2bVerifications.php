@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class B2bVerifications extends BaseModel
 {    use Encryptable;
     protected $table = "erik_b2b_verifications";
-    protected $encryptable = ["company_name"];
+    protected $encryptable = [];
 
     public function user(): BelongsTo
     {

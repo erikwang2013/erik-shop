@@ -14,7 +14,7 @@ class Warehouses extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_warehouses";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
     public function shipments(): HasMany
     {

@@ -12,6 +12,6 @@ class Currencies extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_currencies";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
 }

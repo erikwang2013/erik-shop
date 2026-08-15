@@ -10,6 +10,6 @@ use Erik\Encryptable\Encryptable;
 class RiskRules extends BaseModel
 {    use Encryptable;
     protected $table = "erik_risk_rules";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
 }

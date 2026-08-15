@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AbTestVariants extends BaseModel
 {    use Encryptable;
     protected $table = "erik_ab_test_variants";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
     public function abTest(): BelongsTo
     {

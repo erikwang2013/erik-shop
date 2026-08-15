@@ -14,7 +14,7 @@ class Merchants extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_merchants";
-    protected $encryptable = ["store_name", "email", "phone"];
+    protected $encryptable = ["email", "phone"];
 
     public function shop(): BelongsTo
     {

@@ -14,7 +14,7 @@ class Categories extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_categories";
-    protected $encryptable = ["name"];
+    protected $encryptable = [];
 
     public function parent(): BelongsTo
     {

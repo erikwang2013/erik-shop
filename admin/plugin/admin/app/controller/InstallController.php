@@ -121,8 +121,8 @@ class InstallController extends Base
             }
         }
 
-        // 导入项目根目录 install.sql
-        $sql_file = base_path(false) . '/install.sql';
+        // 导入项目根目录 install.sql（admin/ 的上级 = shop-php 项目根）
+        $sql_file = dirname(base_path(false)) . '/install.sql';
         if (!is_file($sql_file)) {
             return $this->json(1, '安装SQL文件不存在: ' . $sql_file);
         }
@@ -134,6 +134,17 @@ class InstallController extends Base
             $sql = trim($sql);
             if ($sql === '') continue;
             $db->exec($sql);
+        }
+
+        // 导入业务种子数据（service/database/seeders/run.php，独立子进程避免 autoload 冲突）
+        $seeder = dirname(base_path(false)) . '/service/database/seeders/run.php';
+        if (is_file($seeder)) {
+            $seederOutput = [];
+            $seederExit = 0;
+            exec(escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg($seeder) . ' 2>&1', $seederOutput, $seederExit);
+            if ($seederExit !== 0) {
+                \support\Log::warning('业务种子数据导入失败: ' . implode("\n", $seederOutput));
+            }
         }
 
         // 导入菜单

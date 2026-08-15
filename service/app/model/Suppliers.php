@@ -14,7 +14,7 @@ class Suppliers extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_suppliers";
-    protected $encryptable = ["name", "email", "phone"];
+    protected $encryptable = ["email", "phone"];
 
     public function supplierSettlements(): HasMany
     {

@@ -14,7 +14,7 @@ export interface QueryParams {
   sort?: string;
   keyword?: string;
   status?: number;
-  dest_country_id?: number;
+  dest_country_id?: string;
   weight?: number;
   country?: string;
   currency?: string;
@@ -28,6 +28,13 @@ export interface RequestBody {
   sku_id?: string;
   quantity?: number;
   currency_code?: string;
+  address_id?: string;
+  coupon_id?: string;
+  weight_grams?: number;
+  gateway?: string;
+  order_id?: string;
+  token?: string;
+  answer?: string;
 }
 
 export class ApiClient {
@@ -76,7 +83,7 @@ export class ApiClient {
     return JSON.parse(response.result as string) as ApiResponse;
   }
 
-  async post(path: string, data?: RequestBody): Promise<ApiResponse> {
+  async post(path: string, data?: RequestBody, extraHeaders?: Record<string, string>): Promise<ApiResponse> {
     const url = this.baseUrl + path;
     const request = http.createHttp();
 
@@ -89,6 +96,11 @@ export class ApiClient {
     };
     if (this.token) {
       headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    if (extraHeaders) {
+      Object.keys(extraHeaders).forEach((key: string) => {
+        headers[key] = extraHeaders[key] as string;
+      });
     }
 
     const response = await request.request(url, {

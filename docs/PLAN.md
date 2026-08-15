@@ -27,7 +27,10 @@
 | 阶段一：OrderController 真实计费 | ✅ | store() 接入优惠券（满减/折扣/固定，核销 user_coupons + used_qty）、运费（分区+费率阶梯最低价）、关税/VAT（HS Code→目的国税率）；实测 3×49.99=149.97 满100减20 → discount 20 + shipping 12.24 + tax 0 = pay 142.21，库存/核销/明细/日志全链路验证 |
 | 🔄 新发现 P0：HashidsDecode 参数丢失 | ✅ | 中间件 setPost($updates) 为整体替换，解码任一 _id 字段会丢弃同请求其他参数（coupon_id/weight_grams 等全站受影响）；改为 array_merge 合并，实测多参数下单正常 |
 | 🔄 新发现：下单链路配套 bug | ✅ | CouponController::claim 的 where 列名误写值（改 whereColumn）；Orders.address_snapshot JSON 列缺 cast（补 array cast）；OrderLogs 表无 updated_at（模型 $timestamps=false） |
-| 其余阶段一~四交付物 | ⬜ | 剩余：Flutter/鸿蒙下单支付与 PosterVerify 前端接入（客户端大块，需客户端工具链） |
+| 阶段一：InstallController 集成 seeder | ✅ | 安装向导导入 install.sql 后自动执行 service/database/seeders/run.php（独立子进程隔离 autoload，失败仅告警）；同时修复 install.sql 路径 bug（原 base_path(false) 指向 admin/ 找不到上级根目录的 install.sql，改 dirname） |
+| 阶段一：鸿蒙下单支付接入 | ✅ | Checkout.ets 接入地址选择、PosterVerify（challenge→verify）、完整下单参数 + X-Poster-Token、支付发起（payment/create）；ApiClient 扩展 headers/参数；**hvigor assembleHap 编译通过** |
+| 阶段一：Flutter 下单支付接入 | ⚠️ 已编码待编译验证 | checkout_screen 接入地址/人机验证/完整下单/支付发起；register_screen 接入 PosterVerify；api_client post 支持 headers。**本环境 flutter SDK 缓存只读无法编译**，需本地 `flutter analyze`/`flutter test` 验证（括号/结构静态检查已过） |
+| 其余阶段一~四交付物 | ⬜ | 剩余：鸿蒙 token 安全存储（KeyStore）、Stripe/鸿蒙真实支付 SDK 集成、支付完成页与轮询 UI、InstallController 双源表清单校验脚本等（P1-P2） |
 
 ---
 

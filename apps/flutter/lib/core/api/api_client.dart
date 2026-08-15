@@ -34,8 +34,10 @@ class ApiClient {
     return ApiResponse.fromJson<T>(res.data);
   }
 
-  Future<ApiResponse<T>> post<T>(String path, {dynamic data}) async {
-    final res = await dio.post(path, data: data);
+  Future<ApiResponse<T>> post<T>(String path, {dynamic data, Map<String, dynamic>? headers}) async {
+    final res = await dio.post(path,
+        data: data,
+        options: headers != null ? Options(headers: headers) : null);
     return ApiResponse.fromJson<T>(res.data);
   }
 

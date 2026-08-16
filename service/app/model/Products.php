@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Products extends BaseModel
 {
+    protected $connection = 'mysql_rw';   // 读写分离：读走 read 副本（sticky 写后读主库）
     use SoftDeletes;
     use Searchable;
 

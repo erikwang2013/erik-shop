@@ -53,6 +53,11 @@
 | 阶段四 P2：cron 三 URL env 化 | ✅ | `config/cron.php` 三 *_url 改读 env（TRACKING/COMPLIANCE/PLATFORM_URL）；三个 cron 拉取逻辑已完整；未连真实外部 API |
 | 阶段四 P2：鸿蒙 KeyStore + 客户端 AES + 支付完成页 | ✅ | 鸿蒙 `SecureStore.ets`（Asset Kit 替代 preferences）+ Flutter/鸿蒙 `SecureCrypto.ets`/`_SecureCrypto`（AES-256-CBC，X-Encrypted/X-Encrypt-Response，密钥留空走明文）+ 两端支付完成页；**未编译验证**（无工具链），待 `flutter pub get`/hvigor 编译 |
 | 文档收敛 | ✅ | README/VERSIONS/admin-CLAUDE.md 修正 8 项过度声明（HS 申报→规划中、订单导出列按实际、i18n 切换按钮→规划中等）；装箱单/轨迹追踪确认已实现保留 |
+| 第二轮：JWT 吊销 + 密码重置 + 邮箱验证 | ✅ | Jwt 增加 `revoke()`/`isRevoked()`（Redis 黑名单），JwtAuth 中间件校验；AuthController logout/changePassword/passwordReset/emailVerify + 路由；install.sql 补 `email_verified_at`；JwtTest 单测通过 |
+| 第二轮：部分退款 + webhook 事件补全 | ✅ | RefundHelper 支持部分退款金额校验；AdminOpsController::executeRefund；PaymentController webhook 事件分发（refunded/failed）；RefundHelperTest 通过 |
+| 第二轮：DevOps 收敛 | ✅ | docker-compose 端口收敛 127.0.0.1、.dockerignore×2、.gitignore 鸿蒙构建产物、CI 加 Flutter/hvigor jobs、download-geoip.php 脚本 |
+| 第二轮：集成测试 + admin P0 UI | ✅ | IntegrationTestCase（MySQL 可用性跳过 + 默认测试库每用例清库）+ OrderFlow/StripeWebhook/Hashids 测试（phpunit 40 tests / 155 assertions 全绿）；ShopOrder/ShopPayment 模型初始化修复；admin 订单/支付 LayUI 列表页 |
+| 🔴 新发现 bug：webhook 分账写入被 NOT NULL 列阻断 | ✅ | PaymentController::handlePaymentSucceeded 的 PlatformSettlements::create 缺 supplier_amount/affiliate_amount（schema NOT NULL 无默认值→webhook 恒 500）；已补 max(0, 总额-平台费-网关费) 计算（与 SettlementCron 同源）；StripeWebhook 集成测试 5/5 通过 |
 | 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证、WS 客服端鉴权/会话关闭、Flutter/鸿蒙编译验证、鸿蒙安全存储真机验证 |
 
 ---

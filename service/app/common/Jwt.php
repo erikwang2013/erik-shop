@@ -8,6 +8,7 @@
 namespace app\common;
 
 use ErikJwt\JWT as ErikJwtInstance;
+use support\Redis;
 
 class Jwt
 {
@@ -47,5 +48,41 @@ class Jwt
         } catch (\Throwable $e) {
             return null;
         }
+    }
+
+    /**
+     * 吊销令牌（按 jti 加入 Redis 黑名单，TTL = 令牌剩余有效期）
+     */
+    public static function revoke(string $token): bool
+    {
+        $payload = self::decode($token);
+        $ttl = ($payload['exp'] ?? 0) - time();
+        if (empty($payload['jti']) || $ttl <= 0) {
+            return false;
+        }
+        try {
+            return (bool)Redis::setex(self::blacklistKey($payload['jti']), $ttl, '1');
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    public static function isRevoked(string $token): bool
+    {
+        $payload = self::decode($token);
+        if (empty($payload['jti'])) {
+            return false;
+        }
+        try {
+            return (bool)Redis::exists(self::blacklistKey($payload['jti']));
+        } catch (\Throwable $e) {
+            // ponytail: Redis 不可用时 fail-open，已吊销 token 最多存活至自身 exp；需强一致改为注入 RedisTokenStorage（fail-closed）
+            return false;
+        }
+    }
+
+    private static function blacklistKey(string $jti): string
+    {
+        return 'erik:jwt_blacklist:' . $jti;
     }
 }

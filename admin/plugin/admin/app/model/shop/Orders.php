@@ -11,6 +11,11 @@ class Orders extends Base
 {
     protected $table = "erik_orders";
 
+    public function user()
+    {
+        return $this->belongsTo(Users::class, 'user_id');
+    }
+
     public function items()
     {
         return $this->hasMany(OrderItems::class, 'order_id', 'id');

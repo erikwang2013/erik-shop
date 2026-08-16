@@ -86,3 +86,45 @@ jobs:
           REDIS_HOST: 127.0.0.1
           REDIS_PORT: 6379
           JWT_SECRET: ci-test-secret-key-do-not-use-in-production
+
+  flutter:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/flutter
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze
+
+      - name: Test
+        run: flutter test
+
+  # 注：GitHub 托管 runner 无 HarmonyOS 工具链（ohpm/hvigor/DevEco SDK），
+  # 本 job 为官方 action 骨架，需在自备工具链的 runner（如自托管 + DevEco
+  # Studio command-line-tools）上启用；hvigor 任务名以实际 DevEco 工程为准。
+  harmonyos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ohpm
+        uses: huawei/ohpm-action@v1
+
+      - name: Install dependencies
+        working-directory: apps/harmonyos
+        run: ohpm install --all
+
+      - name: Build HAP
+        uses: huawei/hvigor-action@v1
+        with:
+          working-directory: apps/harmonyos
+          task: assembleHap

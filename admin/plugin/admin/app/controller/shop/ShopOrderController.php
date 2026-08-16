@@ -13,6 +13,12 @@ class ShopOrderController extends Crud
 {
     protected $model = Orders::class;
 
+    // Crud 基类不实例化 $model，需在构造时把类名转为模型实例，否则 select() 报 getTable() on string
+    public function __construct()
+    {
+        $this->model = new ($this->model)();
+    }
+
     protected function afterQuery($items)
     {
         $items->load(["user", "items"]);

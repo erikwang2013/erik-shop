@@ -8,6 +8,7 @@ namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\common\HashidsHelper;
 use app\common\PaymentGateway as Gateway;
+use app\common\RefundHelper;
 use app\model\OrderLogs;
 use app\model\Orders;
 use app\model\Payments;
@@ -23,9 +24,10 @@ use Webman\Http\Request;
 class AdminOpsController extends \app\controller\BaseApiController
 {
     /**
-     * 执行真实退款
+     * 执行真实退款（支持部分退款）
      * POST /api/admin/refunds/{id}/execute
-     * 仅处理待审(0)/通过(1)的退款单，驳回(2)/已退款(3)拒绝执行
+     * 仅处理待审(0)/通过(1)的退款单，驳回(2)/已退款(3)拒绝执行；
+     * 退款金额 ≤ 可退余额（实付 - 累计已退），全额退完订单置已退款(7)，部分退置退款中(6)
      */
     public function executeRefund(Request $request, string $id): \support\Response
     {
@@ -48,8 +50,12 @@ class AdminOpsController extends \app\controller\BaseApiController
             return ApiResponse::fail('该订单无已支付记录，无法退款', 422);
         }
 
-        $amount = min((float) $refund->amount, (float) $payment->amount);
-        $oldOrderStatus = (int) $order->status;
+        // 部分退款校验：可退余额 = 实付金额 - 累计已退金额
+        $refundable = round((float) $payment->amount - (float) $payment->refunded_amount, 2);
+        $amount = (float) $refund->amount;
+        if ($amount <= 0 || $amount > $refundable + 0.01) {
+            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max($refundable, 0.0), 2) . '）', 422);
+        }
 
         try {
             $gatewayObj = Gateway::make($payment->gateway);
@@ -73,27 +79,17 @@ class AdminOpsController extends \app\controller\BaseApiController
 
         // 事务落库：退款单 + 支付记录 + 订单状态 + 操作日志
         try {
-            Db::transaction(function () use ($refund, $payment, $order, $amount, $result, $oldOrderStatus) {
-                $refund->status = 3;
-                $refund->refunded_at = date('Y-m-d H:i:s');
-                $refund->save();
-
-                $payment->status = 2;
-                $payment->refunded_amount = $amount;
-                $payment->save();
-
-                $order->status = 7;
-                $order->refunded_at = date('Y-m-d H:i:s');
-                $order->save();
-
-                OrderLogs::create([
-                    'order_id' => $order->id,
-                    'from_status' => $oldOrderStatus,
-                    'to_status' => 7,
-                    'operator' => 'admin',
-                    'remark' => '退款执行完成，网关交易号 ' . ($result['refund_id'] ?? ''),
-                ]);
+            Db::transaction(function () use ($refund, $payment, $amount, $result) {
+                // 原子门闩：仅待审/通过可流转，防止并发重复执行退款
+                $affected = Refunds::where('id', $refund->id)->whereIn('status', [0, 1])
+                    ->update(['status' => 3, 'refunded_at' => date('Y-m-d H:i:s')]);
+                if (!$affected) {
+                    throw new \RuntimeException('退款单状态已变化，请刷新重试');
+                }
+                RefundHelper::markRefunded($refund, $payment, $amount, 'admin', '退款执行完成，网关交易号 ' . ($result['refund_id'] ?? ''));
             });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail($e->getMessage(), 422);
         } catch (\Throwable $e) {
             \support\Log::error('退款落库失败: ' . $e->getMessage(), [
                 'refund_id' => $refund->id,

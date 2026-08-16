@@ -74,4 +74,27 @@ class JwtTest extends TestCase
         $result = \app\common\Jwt::decode('');
         $this->assertNull($result, 'Empty token should return null');
     }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function it_revokes_token_and_flips_revoked_state(): void
+    {
+        $token = \app\common\Jwt::encode(['sub' => '1234567890']);
+
+        try {
+            \support\Redis::ping();
+        } catch (\Throwable $e) {
+            $this->markTestSkipped('Redis 不可用: ' . $e->getMessage());
+            return;
+        }
+
+        $this->assertFalse(\app\common\Jwt::isRevoked($token), 'Fresh token must not be revoked');
+        $this->assertTrue(\app\common\Jwt::revoke($token), 'Revoke must succeed');
+        $this->assertTrue(\app\common\Jwt::isRevoked($token), 'Revoked token must be flagged');
+    }
+
+    #[\PHPUnit\Framework\Attributes\Test]
+    public function it_never_revokes_an_invalid_token(): void
+    {
+        $this->assertFalse(\app\common\Jwt::revoke('invalid.token.here'));
+    }
 }

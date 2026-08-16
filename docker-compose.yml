@@ -54,7 +54,6 @@ services:
       - ENCRYPTION_CIPHER=${ENCRYPTION_CIPHER:-AES-256-CBC}
       - ENCRYPTION_PREVIOUS_KEYS=${ENCRYPTION_PREVIOUS_KEYS:-}
     volumes:
-      - ./service:/app
       - /app/runtime
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8787/health"]
@@ -95,7 +94,6 @@ services:
       - ENCRYPTION_CIPHER=${ENCRYPTION_CIPHER:-AES-256-CBC}
       - ENCRYPTION_PREVIOUS_KEYS=${ENCRYPTION_PREVIOUS_KEYS:-}
     volumes:
-      - ./admin:/app
       - /app/runtime
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8788/health"]
@@ -122,7 +120,7 @@ services:
       MYSQL_USER: erik
       MYSQL_PASSWORD: ${DB_PASS:-change_me}
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
       - ./install.sql:/docker-entrypoint-initdb.d/01-install.sql:ro
@@ -145,7 +143,7 @@ services:
     container_name: erik-redis
     restart: unless-stopped
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -167,7 +165,7 @@ services:
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
-      - "9200:9200"
+      - "127.0.0.1:9200:9200"
     healthcheck:
       test: ["CMD", "curl", "-fs", "http://127.0.0.1:9200/_cluster/health"]
       interval: 30s

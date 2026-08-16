@@ -201,6 +201,7 @@ CREATE TABLE `erik_users` (
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     `deleted_at` DATETIME NULL DEFAULT NULL COMMENT '删除时间',
     `email_hash` CHAR(64) NOT NULL DEFAULT '' COMMENT '邮箱HMAC-SHA256(小写,用于加密字段精确查询)',
+    `email_verified_at` DATETIME NULL DEFAULT NULL COMMENT '邮箱验证时间',
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_invite_code` (`invite_code`),
     KEY `idx_status` (`status`),

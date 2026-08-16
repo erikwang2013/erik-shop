@@ -24,6 +24,9 @@ class JwtAuth implements MiddlewareInterface
         if (($payload['type'] ?? '') !== 'access') {
             return json(['code' => 401, 'msg' => 'Token类型不正确', 'data' => null]);
         }
+        if (Jwt::isRevoked($token)) {
+            return json(['code' => 401, 'msg' => 'Token已失效，请重新登录', 'data' => null]);
+        }
         $request->userId = $payload['sub'] ?? null;
 
         return $next($request);

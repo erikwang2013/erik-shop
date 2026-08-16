@@ -20,6 +20,9 @@ Route::group('/api', function () {
     Route::post('/auth/login', [app\controller\v1\AuthController::class, 'login']);
     Route::post('/auth/refresh', [app\controller\v1\AuthController::class, 'refresh']);
     Route::post('/auth/social', [app\controller\v1\SocialAuthController::class, 'login']);
+    Route::post('/auth/password/reset', [app\controller\v1\AuthController::class, 'passwordResetRequest']);
+    Route::post('/auth/password/reset/confirm', [app\controller\v1\AuthController::class, 'passwordResetConfirm']);
+    Route::post('/auth/email/verify', [app\controller\v1\AuthController::class, 'emailVerify']);
 
     // 人机验证（PosterVerify 签发端：注册/下单/支付前先获取 token）
     Route::get('/poster/challenge', [app\controller\v1\PosterController::class, 'challenge']);
@@ -60,6 +63,10 @@ Route::group('/api', function () {
 
 // ===== 认证路由（需要JWT） =====
 Route::group('/api', function () {
+
+    // 认证会话
+    Route::post('/auth/logout', [app\controller\v1\AuthController::class, 'logout']);
+    Route::post('/auth/password/change', [app\controller\v1\AuthController::class, 'changePassword']);
 
     // 用户个人
     Route::get('/user/profile', [app\controller\v1\UserController::class, 'profile']);

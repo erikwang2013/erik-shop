@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\RiskEngine;
 use app\model\Orders;
 use app\model\OrderItems;
 use app\model\OrderLogs;
@@ -21,6 +22,7 @@ use app\model\VatSettings;
 use app\model\ShippingZones;
 use app\model\ShippingZoneRates;
 use app\model\UserAddresses;
+use app\model\Users;
 use app\model\UserKyc;
 use support\Db;
 use Webman\Http\Request;
@@ -127,7 +129,7 @@ class OrderController extends \app\controller\BaseApiController
 
         // 事务内创建订单 + 明细 + 原子扣库存 + 清购物车，任一步失败整体回滚
         try {
-            $result = Db::transaction(function () use ($userId, $address, $country, $cartItems, $currencyCode, $remark, $couponId, $weightGrams) {
+            $result = Db::transaction(function () use ($userId, $address, $country, $cartItems, $currencyCode, $remark, $couponId, $weightGrams, $request) {
                 // 生成订单号
                 $orderNo = 'ORD' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
 
@@ -204,6 +206,32 @@ class OrderController extends \app\controller\BaseApiController
                 $order->shipping_fee = $shippingFee;
                 $order->tax_amount = $taxAmount;
                 $order->pay_amount = $payAmount;
+                $order->save();
+
+                // ===== 风控旁路打分（config/risk.php，高分订单置 status=8 待审核） =====
+                $userEmail = Users::where('id', $userId)->value('email') ?? '';
+                $riskContext = [
+                    'user_id' => $userId,
+                    'ip' => $request->getRealIp(),
+                    'email' => $userEmail,
+                    'amount' => $payAmount,
+                    'order_id' => $order->id,
+                    'address_country_iso' => $country->iso_code_2 ?? '',
+                    'ip_country' => $request->geoCountry ?? '',
+                ];
+                $risk = RiskEngine::score('order_create', $riskContext);
+                RiskEngine::log('order_create', $riskContext, $risk);
+                $order->risk_score = $risk['score'];
+                $order->risk_result = $risk['result'];
+                if ($risk['result'] === 'review') {
+                    $order->status = 8;   // 待审核（人工审核通过前不可支付）
+                    OrderLogs::create([
+                        'order_id' => $order->id,
+                        'to_status' => 8,
+                        'operator' => 'risk',
+                        'remark' => '风控标记：' . ($risk['score'] . '分 ' . json_encode($risk['details'], JSON_UNESCAPED_UNICODE)),
+                    ]);
+                }
                 $order->save();
 
                 // 核销优惠券（事务内，与订单同生共死）

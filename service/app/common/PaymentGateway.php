@@ -48,6 +48,10 @@ class StripeGateway implements PaymentGatewayInterface
             'amount' => (int) round($data['amount'] * 100),
             'currency' => strtolower($data['currency']),
             'payment_method_types' => $data['methods'] ?? ['card'],
+            // 显式开启 3DS（automatic：按 Stripe 风控/卡组织要求自动触发），与 README「3DS验证」声明对齐
+            'payment_method_options' => [
+                'card' => ['request_three_d_secure' => 'automatic'],
+            ],
             'metadata' => [
                 'order_id' => (string) ($data['order_id'] ?? ''),
                 'order_no' => $data['order_no'] ?? '',

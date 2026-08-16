@@ -102,6 +102,10 @@ Route::group('/api', function () {
     Route::post('/returns', [app\controller\v1\ReturnController::class, 'create']);
     Route::get('/returns/{id:\w+}/label', [app\controller\v1\ReturnController::class, 'label']);
 
+    // KYC 实名认证
+    Route::post('/kyc', [app\controller\v1\KycController::class, 'submit']);
+    Route::get('/kyc/status', [app\controller\v1\KycController::class, 'status']);
+
     // 评价
     Route::post('/reviews', [app\controller\v1\ReviewController::class, 'store']);
 
@@ -156,6 +160,8 @@ Route::post('/webhook/payment/{gateway:\w+}', [app\controller\v1\PaymentControll
 
 // ===== 管理后台内部接口（需 X-Admin-Key 共享密钥） =====
 Route::post('/api/admin/refunds/{id:\w+}/execute', [app\controller\v1\AdminOpsController::class, 'executeRefund'])
+    ->middleware([app\middleware\AdminKeyMiddleware::class]);
+Route::post('/api/admin/orders/{id:\w+}/review', [app\controller\v1\AdminOpsController::class, 'reviewOrder'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
 
 // ===== 健康检查（无需JWT，供探活/负载均衡） =====

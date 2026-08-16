@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\RiskEngine;
 use app\model\Payments;
 use app\model\Orders;
 use app\model\PaymentGateways;
@@ -77,6 +78,15 @@ class PaymentController extends \app\controller\BaseApiController
             'currency_code' => $order->currency_code,
             'status' => 0,  // 待支付
         ]);
+
+        // 风控旁路打分（支付事件，bypass 模式不阻断）
+        $riskContext = [
+            'user_id' => $userId,
+            'ip' => $request->getRealIp(),
+            'amount' => (float) $order->pay_amount,
+            'order_id' => $order->id,
+        ];
+        RiskEngine::log('payment_create', $riskContext, RiskEngine::score('payment_create', $riskContext));
 
         // 调用支付网关
         try {

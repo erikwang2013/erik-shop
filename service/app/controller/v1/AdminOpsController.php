@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\HashidsHelper;
 use app\common\PaymentGateway as Gateway;
 use app\model\OrderLogs;
 use app\model\Orders;
@@ -105,5 +106,56 @@ class AdminOpsController extends \app\controller\BaseApiController
             'refund_amount' => $amount,
             'gateway_refund_id' => $result['refund_id'] ?? '',
         ], '退款执行成功');
+    }
+
+    /**
+     * 风控订单审核（放行/驳回）
+     * POST /api/admin/orders/{id}/review  {action: approve|reject, remark?}
+     * 仅 status=8（待审核）订单可流转：approve → 0（待付款）/ reject → 5（已取消）
+     */
+    public function reviewOrder(Request $request, string $id): \support\Response
+    {
+        $action = $request->input('action', 'approve');
+        $remark = (string) $request->input('remark', '');
+        if (!in_array($action, ['approve', 'reject'], true)) {
+            return ApiResponse::fail('action 仅支持 approve/reject', 422);
+        }
+
+        // 注意：HashidsDecode 中间件的 setParams 对 webman 控制器方法参数不生效，
+        // 路由参数 {id} 传入的是 hashid，此处需显式解码
+        $id = HashidsHelper::decode($id) ?: $id;
+
+        $order = Orders::where('id', $id)->first();
+        if (!$order) {
+            return ApiResponse::fail('订单不存在', 404);
+        }
+        if ((int) $order->status !== 8) {
+            return ApiResponse::fail('订单不在待审核状态', 422);
+        }
+
+        try {
+            Db::transaction(function () use ($order, $action, $remark) {
+                $toStatus = $action === 'approve' ? 0 : 5;
+                // 原子流转：仅 status=8 可流转，防并发重复审核
+                $affected = Orders::where('id', $order->id)->where('status', 8)->update(['status' => $toStatus]);
+                if (!$affected) {
+                    throw new \RuntimeException('订单状态已变化，请刷新重试');
+                }
+                OrderLogs::create([
+                    'order_id' => $order->id,
+                    'from_status' => 8,
+                    'to_status' => $toStatus,
+                    'operator' => 'admin',
+                    'remark' => ($action === 'approve' ? '风控审核通过' : '风控审核驳回') . ($remark !== '' ? '：' . $remark : ''),
+                ]);
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail($e->getMessage(), 422);
+        } catch (\Throwable $e) {
+            \support\Log::error('风控审核失败: ' . $e->getMessage(), ['order_id' => $id, 'trace' => $e->getTraceAsString()]);
+            return ApiResponse::fail('审核失败，请稍后重试', 500);
+        }
+
+        return ApiResponse::success(null, $action === 'approve' ? '已放行，订单进入待付款' : '已驳回，订单已取消');
     }
 }

@@ -3,6 +3,7 @@ namespace app\controller\v1;
 
 use app\common\ApiResponse;
 use app\common\HashidsHelper;
+use app\common\RiskEngine;
 use app\model\Users;
 use app\common\Jwt;
 use Webman\Http\Request;
@@ -50,6 +51,10 @@ class AuthController extends \app\controller\BaseApiController
             'invite_code' => strtoupper(substr(md5(uniqid()), 0, 8)),
             'status' => 1,
         ]);
+
+        // 风控旁路打分（注册事件，bypass 模式不阻断）
+        $riskContext = ['user_id' => $user->id, 'ip' => $request->getRealIp(), 'email' => $email];
+        RiskEngine::log('user_register', $riskContext, RiskEngine::score('user_register', $riskContext));
 
         return ApiResponse::success([
             'user_id' => HashidsHelper::encode($user->id),

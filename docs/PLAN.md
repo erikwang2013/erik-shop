@@ -30,7 +30,12 @@
 | 阶段一：InstallController 集成 seeder | ✅ | 安装向导导入 install.sql 后自动执行 service/database/seeders/run.php（独立子进程隔离 autoload，失败仅告警）；同时修复 install.sql 路径 bug（原 base_path(false) 指向 admin/ 找不到上级根目录的 install.sql，改 dirname） |
 | 阶段一：鸿蒙下单支付接入 | ✅ | Checkout.ets 接入地址选择、PosterVerify（challenge→verify）、完整下单参数 + X-Poster-Token、支付发起（payment/create）；ApiClient 扩展 headers/参数；**hvigor assembleHap 编译通过** |
 | 阶段一：Flutter 下单支付接入 | ⚠️ 已编码待编译验证 | checkout_screen 接入地址/人机验证/完整下单/支付发起；register_screen 接入 PosterVerify；api_client post 支持 headers。**本环境 flutter SDK 缓存只读无法编译**，需本地 `flutter analyze`/`flutter test` 验证（括号/结构静态检查已过） |
-| 其余阶段一~四交付物 | ⬜ | 剩余：鸿蒙 token 安全存储（KeyStore）、Stripe/鸿蒙真实支付 SDK 集成、支付完成页与轮询 UI、InstallController 双源表清单校验脚本等（P1-P2） |
+| 阶段二 P1：风控引擎 RiskEngine | ✅ | 新增 `app/common/RiskEngine.php`（email_domain 临时邮箱/velocity 频率/amount 大额/address_mismatch/ip_reputation，Redis 计数）；接入下单/注册/支付旁路打分 + RiskLogs；**实测**：临时邮箱+大额订单 → 80 分 review → 订单 status=8 待审核、risk_score/risk_result/OrderLog 风控标记齐全 |
+| 阶段二 P1：风控审核出口 | ✅ | 新增 `POST /api/admin/orders/{id}/review`（AdminKeyMiddleware；approve→0 放行/reject→5 驳回，status=8 原子流转 + OrderLogs）；**实测** approve/reject/错误 key 403/重复审核 422 全部正确 |
+| 阶段二 P1：KYC 用户侧闭环 | ✅ | 新增 KycController（POST /api/kyc 提交 + GET /api/kyc/status 查询，real_name/id_number Encryptable 加密，status 0待审/1通过/2驳回）；**实测**提交/查询正常 |
+| 阶段二 P1：支付加固 | ✅ | StripeGateway 显式 `request_three_d_secure=automatic`（3DS）；Klarna/Adyen 维持 `PaymentGateway::make` throw 占位（文档修正待做） |
+| 🔴 **新发现全局 bug：HashidsDecode 路由参数解码无效** | ⚠️ 部分修复 | webman 控制器方法参数来自 findRoute 时捕获的 `$args`（原始 hashid），中间件 `setParams` 不生效 → **所有 {id} 路由参数接口实际都拿到 hashid 原文**（订单详情/取消/商品详情/review 等）。本轮 reviewOrder 已手动 decode 修复，**其余受影响控制器待统一处理**（候选方案：控制器入口统一 decode 或改造中间件注入） |
+| 其余阶段一~四交付物 | ⬜ | 剩余：四线分账统一费率+Merchant/Supplier/Affiliate 写入、GDPR/CCPA 执行层+cookie-consent、Klarna/Adyen 文档修正、hashid 路由参数全局修复、鸿蒙 KeyStore、真实支付 SDK 等 |
 
 ---
 

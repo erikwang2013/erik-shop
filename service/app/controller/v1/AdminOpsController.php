@@ -28,6 +28,7 @@ class AdminOpsController extends \app\controller\BaseApiController
      */
     public function executeRefund(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $refund = Refunds::where('id', $id)->first();
         if (!$refund) {
             return ApiResponse::fail('退款单不存在', 404);

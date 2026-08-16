@@ -24,6 +24,7 @@ class ComparisonController extends \app\controller\BaseApiController
 
     public function destroy(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         ProductComparisons::where('id',$id)->where('user_id',$request->userId)->delete();
         return ApiResponse::success(null, '已移除');
     }

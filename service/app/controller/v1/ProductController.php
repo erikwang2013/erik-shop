@@ -91,6 +91,7 @@ class ProductController extends \app\controller\BaseApiController
      */
     public function show(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $locale = $request->locale ?? 'en';
         $currencyCode = $request->input('currency', 'USD');
         $destCountryCode = $request->input('dest_country', 'US');

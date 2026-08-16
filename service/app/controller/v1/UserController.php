@@ -41,6 +41,7 @@ class UserController extends \app\controller\BaseApiController
 
     public function updateAddress(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $addr = UserAddresses::where('id',$id)->where('user_id',$request->userId)->first();
         if (!$addr) return ApiResponse::fail('地址不存在', 404);
         $data = $request->only(['name','phone','country_id','province','city','district','detail','postal_code','is_default','tag']);
@@ -53,6 +54,7 @@ class UserController extends \app\controller\BaseApiController
 
     public function deleteAddress(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         UserAddresses::where('id',$id)->where('user_id',$request->userId)->delete();
         return ApiResponse::success(null, '已删除');
     }

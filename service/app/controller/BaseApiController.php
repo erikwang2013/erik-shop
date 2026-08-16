@@ -36,4 +36,17 @@ class BaseApiController
     {
         return ApiResponse::paginate($items, $total, $page, $perPage);
     }
+
+    /**
+     * 路由参数 hashid → snowflake ID 解码
+     *
+     * 背景：HashidsDecode 中间件的 setParams 对 webman 控制器方法参数不生效
+     * （方法参数来自 findRoute 捕获的原始 $args），所有 {id} 路由参数传入的是 hashid。
+     * 控制器方法入口统一调用本方法解码；非 hashid（如 snowflake/纯数字）原样返回。
+     */
+    protected function decodedId(string $id): string
+    {
+        $decoded = \app\common\HashidsHelper::decode($id);
+        return $decoded ?? $id;
+    }
 }

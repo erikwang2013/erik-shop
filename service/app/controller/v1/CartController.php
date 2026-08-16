@@ -91,6 +91,7 @@ class CartController extends \app\controller\BaseApiController
      */
     public function update(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $userId = $request->userId;
         $quantity = max(0, (int) $request->input('quantity', 1));
 
@@ -121,6 +122,7 @@ class CartController extends \app\controller\BaseApiController
      */
     public function destroy(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $userId = $request->userId;
 
         Carts::where('id', $id)->where('user_id', $userId)->delete();

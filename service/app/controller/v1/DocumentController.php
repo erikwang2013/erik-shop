@@ -9,6 +9,7 @@ class DocumentController extends \app\controller\BaseApiController
 {
     public function invoice(Request $request, string $orderId): \support\Response
     {
+        $orderId = $this->decodedId($orderId);
         $order = Orders::with(['items','addressSnapshot'])->where('id',$orderId)->where('user_id',$request->userId)->first();
         if (!$order) return ApiResponse::fail('订单不存在', 404);
 
@@ -20,6 +21,7 @@ class DocumentController extends \app\controller\BaseApiController
 
     public function packingList(Request $request, string $orderId): \support\Response
     {
+        $orderId = $this->decodedId($orderId);
         $order = Orders::where('id',$orderId)->where('user_id',$request->userId)->first();
         if (!$order) return ApiResponse::fail('订单不存在', 404);
 

@@ -73,6 +73,7 @@ class OrderController extends \app\controller\BaseApiController
      */
     public function show(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $userId = $request->userId;
 
         $order = Orders::with(['items', 'logs', 'documents'])
@@ -390,6 +391,7 @@ class OrderController extends \app\controller\BaseApiController
      */
     public function cancel(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $userId = $request->userId;
 
         $order = Orders::where('id', $id)->where('user_id', $userId)->first();

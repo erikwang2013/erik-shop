@@ -134,6 +134,7 @@ class PaymentController extends \app\controller\BaseApiController
      */
     public function status(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         // 限定当前用户，防止越权查询他人支付记录
         $payment = Payments::where('id', $id)->where('user_id', $request->userId)->first();
         if (!$payment) {

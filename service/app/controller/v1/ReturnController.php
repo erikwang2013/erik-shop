@@ -45,6 +45,7 @@ class ReturnController extends \app\controller\BaseApiController
 
     public function label(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $return = ReturnOrders::where('id',$id)->where('user_id',$request->userId)->first();
         if (!$return) return ApiResponse::fail('退货单不存在', 404);
 

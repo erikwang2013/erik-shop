@@ -33,6 +33,7 @@ class CouponController extends \app\controller\BaseApiController
 
     public function claim(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         $userId = $request->userId;
 
         try {

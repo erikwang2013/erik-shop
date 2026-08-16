@@ -23,4 +23,9 @@ class Carts extends BaseModel
         return $this->belongsTo(Products::class, "product_id");
     }
 
+    public function sku(): BelongsTo
+    {
+        return $this->belongsTo(ProductSkus::class, "sku_id");
+    }
+
 }

@@ -20,6 +20,7 @@ class NotificationController extends \app\controller\BaseApiController
 
     public function read(Request $request, string $id): \support\Response
     {
+        $id = $this->decodedId($id);
         Notifications::where('id', $id)
             ->where(function ($q) use ($request) {
                 $q->where('user_id', $request->userId)->orWhere('user_id', 0);

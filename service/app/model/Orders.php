@@ -31,6 +31,30 @@ class Orders extends BaseModel
         return $this->hasMany(OrderItems::class, "order_id");
     }
 
+    /**
+     * items 别名（OrderController::show 等使用 with('items')）
+     */
+    public function items(): HasMany
+    {
+        return $this->hasMany(OrderItems::class, "order_id");
+    }
+
+    /**
+     * 订单操作日志（with('logs')）
+     */
+    public function logs(): HasMany
+    {
+        return $this->hasMany(OrderLogs::class, "order_id");
+    }
+
+    /**
+     * 订单单据（发票/装箱单，with('documents')）
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(OrderDocuments::class, "order_id");
+    }
+
     public function orderLogs(): HasMany
     {
         return $this->hasMany(OrderLogs::class, "order_id");

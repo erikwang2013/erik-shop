@@ -10,6 +10,7 @@ class ReviewController extends \app\controller\BaseApiController
 {
     public function index(Request $request, string $productId): \support\Response
     {
+        $productId = $this->decodedId($productId);
         $page = (int) $request->input('page', 1);
         $perPage = min((int) $request->input('per_page', 10), 50);
         $rating = $request->input('rating');

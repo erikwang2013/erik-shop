@@ -106,6 +106,11 @@ Route::group('/api', function () {
     Route::post('/kyc', [app\controller\v1\KycController::class, 'submit']);
     Route::get('/kyc/status', [app\controller\v1\KycController::class, 'status']);
 
+    // 订阅周期购
+    Route::get('/subscriptions', [app\controller\v1\SubscriptionController::class, 'index']);
+    Route::post('/subscriptions', [app\controller\v1\SubscriptionController::class, 'store']);
+    Route::post('/subscriptions/{id:\w+}/cancel', [app\controller\v1\SubscriptionController::class, 'cancel']);
+
     // 评价
     Route::post('/reviews', [app\controller\v1\ReviewController::class, 'store']);
 
@@ -163,6 +168,8 @@ Route::post('/webhook/payment/{gateway:\w+}', [app\controller\v1\PaymentControll
 Route::post('/api/admin/refunds/{id:\w+}/execute', [app\controller\v1\AdminOpsController::class, 'executeRefund'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
 Route::post('/api/admin/orders/{id:\w+}/review', [app\controller\v1\AdminOpsController::class, 'reviewOrder'])
+    ->middleware([app\middleware\AdminKeyMiddleware::class]);
+Route::post('/api/admin/platform/listings', [app\controller\v1\AdminOpsController::class, 'createListing'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
 
 // ===== 健康检查（无需JWT，供探活/负载均衡） =====

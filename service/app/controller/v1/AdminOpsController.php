@@ -11,6 +11,7 @@ use app\common\PaymentGateway as Gateway;
 use app\model\OrderLogs;
 use app\model\Orders;
 use app\model\Payments;
+use app\model\PlatformListings;
 use app\model\Refunds;
 use support\Db;
 use Webman\Http\Request;
@@ -158,5 +159,45 @@ class AdminOpsController extends \app\controller\BaseApiController
         }
 
         return ApiResponse::success(null, $action === 'approve' ? '已放行，订单进入待付款' : '已驳回，订单已取消');
+    }
+
+    /**
+     * 商品刊登到平台（多平台刊登）
+     * POST /api/admin/platform/listings  {product_id, platform_account_id, platform_product_id?}
+     * 写入 erik_platform_listings（draft/listed），供后续平台同步流程使用
+     */
+    public function createListing(Request $request): \support\Response
+    {
+        $productId = $request->input('product_id');
+        $accountId = $request->input('platform_account_id');
+        $platformProductId = (string) $request->input('platform_product_id', '');
+        $status = $request->input('status', 'draft');
+
+        if (empty($productId) || empty($accountId)) {
+            return ApiResponse::fail('product_id 与 platform_account_id 不能为空', 422);
+        }
+        if (!in_array($status, ['draft', 'listed', 'error'], true)) {
+            return ApiResponse::fail('status 仅支持 draft/listed/error', 422);
+        }
+
+        $listing = PlatformListings::where('product_id', $productId)
+            ->where('platform_account_id', $accountId)
+            ->first();
+        if ($listing) {
+            $listing->platform_product_id = $platformProductId;
+            $listing->status = $status;
+            $listing->last_synced_at = date('Y-m-d H:i:s');
+            $listing->save();
+        } else {
+            $listing = PlatformListings::create([
+                'product_id' => $productId,
+                'platform_account_id' => $accountId,
+                'platform_product_id' => $platformProductId,
+                'status' => $status,
+                'last_synced_at' => date('Y-m-d H:i:s'),
+            ]);
+        }
+
+        return ApiResponse::success(['listing_id' => $listing->id, 'status' => $listing->status], '刊登记录已保存');
     }
 }

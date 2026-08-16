@@ -40,7 +40,13 @@
 | 阶段二 P1：InstallController 双源表清单校验 | ✅ | 新增 `scripts/check_install_tables.php`（解析 install.sql 表名 vs InstallController $tables_to_install，wa_ 插件表豁免），接入 Makefile check；**实测** 110 vs 110 一致 OK |
 | 阶段二 P1：GDPR/CCPA 执行层 | ✅ | 新增 `PrivacyComplianceTask`（每小时）：data_delete 宽限期后匿名化用户（清空 email/email_hash/mobile、昵称"已注销用户"、status=0，税务字段保留）、data_access/data_portability 生成导出 JSON、opt_out 标记；新增 `POST /api/privacy/cookie-consent`（CookieConsents 写入，version/preferences JSON）；**实测**：31 天前 data_delete 请求 → 用户匿名化 + 请求 completed；cookie-consent 记录完整 |
 | 阶段二 P1：Klarna/Adyen 文档修正 | ✅ | README.md（支付行/原币扣款/功能表）与 docs/VERSIONS.md 将 Klarna/Adyen/BNPL 标注为占位，与实际 `PaymentGateway::make` throw 一致 |
-| 其余阶段一~四交付物 | ⬜ | 剩余：四线分账统一费率+Merchant/Supplier/Affiliate 写入、GDPR/CCPA 执行层+cookie-consent、Klarna/Adyen 文档修正、hashid 路由参数全局修复、鸿蒙 KeyStore、真实支付 SDK 等 |
+| 阶段四 P2：库存流水不可变账本 | ✅ | `InventoryLogger` 接入下单扣减(outbound)/取消恢复(inbound)，写 erik_inventory_logs（balance_after 快照）；**实测**下单 -2/取消 +2 流水完整 |
+| 阶段四 P2：商业发票/装箱单 PDF | ✅ | DocumentController 重写：dompdf 按需生成 PDF（明细+金额+海关声明）落 public/documents/ + erik_order_documents（幂等）；修复参数名与路由 {id} 不匹配；**实测**两 PDF 生成成功 |
+| 阶段三 P1：admin 质量门禁 | ✅ | admin/phpunit.xml + tests/UtilTest.php（2/7 通过）、phpstan.neon（level 5）、.php-cs-fixer.php（修复 fix 卡死）、composer 加 phpstan、CI 加 admin 步骤、Makefile test 双项目 |
+| 阶段四 P2：DB 读写分离 | ✅ | 6 个纯查询模型启用 `$connection='mysql_rw'`（Eloquent 自动读写分流 + sticky）；**实测**查询连接=mysql_rw、写入正常；生产配 DB_READ_HOST_1/2 生效 |
+| 阶段四 P2：订阅周期购 API | ✅ | SubscriptionController（创建订阅+首期订单、我的订阅、取消）；**实测**创建/列表/取消全通过；SubscriptionOrders/Logs 补 `$timestamps=false` |
+| 阶段四 P2：多平台刊登写入 | ✅ | `POST /api/admin/platform/listings`（AdminKeyMiddleware，PlatformListings draft/listed upsert）；**实测**刊登记录写入成功 |
+| 其余阶段一~四交付物 | ⬜ | 剩余：鸿蒙 KeyStore、真实支付 SDK 集成、支付完成页、WS 客服、ES 多语言搜索、自动续费 SubscriptionCron 等 |
 
 ---
 

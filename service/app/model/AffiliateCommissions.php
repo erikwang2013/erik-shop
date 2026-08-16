@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AffiliateCommissions extends BaseModel
 {    protected $table = "erik_affiliate_commissions";
+    public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
     public function affiliateLink(): BelongsTo
     {
         return $this->belongsTo(AffiliateLinks::class, "affiliate_link_id");

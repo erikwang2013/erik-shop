@@ -12,6 +12,10 @@ use app\model\PlatformSettlements;
 use app\model\MerchantSettlements;
 use app\model\MerchantProducts;
 use app\model\Merchants;
+use app\model\SupplierSettlements;
+use app\model\AffiliateCommissions;
+use app\model\AffiliateLinks;
+use app\model\Products;
 use support\Log;
 use Workerman\Worker;
 
@@ -77,6 +81,12 @@ class SettlementCron
 
             // 卖家分账：订单商品 → 卖家商品关系(approved) → 卖家抽成 → MerchantSettlements
             self::createMerchantSettlements($order);
+
+            // 供应商周期结算：商品 supplier_id → 当月 SupplierSettlements 汇总
+            self::createSupplierSettlements($order);
+
+            // 分销佣金：订单 affiliate_link_id → AffiliateCommissions
+            self::createAffiliateCommission($order);
             $created++;
         }
         Log::info("SettlementCron 完成，生成 {$created} 笔平台结算单");
@@ -129,5 +139,90 @@ class SettlementCron
                 'status' => 0,
             ]);
         }
+    }
+
+    /**
+     * 供应商周期结算（erik_supplier_settlements，按月汇总）
+     * 数据链：order_items.product_id → erik_products.supplier_id → 当月周期行（upsert）
+     */
+    private static function createSupplierSettlements(Orders $order): void
+    {
+        $items = OrderItems::where('order_id', $order->id)->get();
+        $productIds = $items->pluck('product_id')->unique();
+        if ($productIds->isEmpty()) {
+            return;
+        }
+        $supplierIds = Products::whereIn('id', $productIds)
+            ->pluck('supplier_id', 'id')
+            ->filter(fn($v) => (int) $v > 0);
+        if ($supplierIds->isEmpty()) {
+            return;
+        }
+
+        $bySupplier = [];
+        foreach ($items as $item) {
+            $sid = (int) ($supplierIds[$item->product_id] ?? 0);
+            if ($sid > 0) {
+                $bySupplier[$sid] = ($bySupplier[$sid] ?? 0) + (float) $item->subtotal;
+            }
+        }
+
+        $monthStart = date('Y-m-01');
+        $monthEnd = date('Y-m-t');
+        foreach ($bySupplier as $sid => $amount) {
+            $row = SupplierSettlements::where('supplier_id', $sid)
+                ->where('period_start', $monthStart)
+                ->first();
+            if (!$row) {
+                SupplierSettlements::create([
+                    'supplier_id' => $sid,
+                    'period_start' => $monthStart,
+                    'period_end' => $monthEnd,
+                    'total_orders' => 1,
+                    'total_amount' => round($amount, 2),
+                    'platform_fee_deducted' => 0,
+                    'net_amount' => round($amount, 2),
+                    'currency_code' => $order->currency_code ?: 'USD',
+                    'status' => 0,
+                ]);
+            } else {
+                $row->total_orders = (int) $row->total_orders + 1;
+                $row->total_amount = round((float) $row->total_amount + $amount, 2);
+                $row->net_amount = $row->total_amount;
+                $row->save();
+            }
+        }
+    }
+
+    /**
+     * 分销佣金（erik_affiliate_commissions）
+     * 数据链：erik_orders.affiliate_link_id → erik_affiliate_links.commission_rate
+     */
+    private static function createAffiliateCommission(Orders $order): void
+    {
+        if ((int) $order->affiliate_link_id <= 0) {
+            return;
+        }
+        if (AffiliateCommissions::where('order_id', $order->id)->exists()) {
+            return;
+        }
+        $link = AffiliateLinks::find($order->affiliate_link_id);
+        if (!$link || (int) $link->status !== 1) {
+            return;
+        }
+        $rate = (float) $link->commission_rate;
+        $amount = round((float) $order->pay_amount * $rate / 100, 2);
+
+        AffiliateCommissions::create([
+            'affiliate_link_id' => $link->id,
+            'order_id' => $order->id,
+            'amount' => $amount,
+            'rate' => $rate,
+            'status' => 0,   // 待确认
+        ]);
+        // 更新推广链接统计
+        $link->total_orders = (int) $link->total_orders + 1;
+        $link->total_commission = round((float) $link->total_commission + $amount, 2);
+        $link->save();
     }
 }

@@ -25,6 +25,7 @@ lint: ## Lint PHP syntax
 check: ## Run static analysis & controller smoke check
 	cd service && vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 	php scripts/smoke_controllers.php
+	php scripts/check_install_tables.php
 
 fix: ## Fix code style
 	cd service && vendor/bin/php-cs-fixer fix

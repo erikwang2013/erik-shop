@@ -49,6 +49,14 @@ return [
         'mode' => getenv('KLARNA_MODE') ?: 'sandbox',
     ],
 
+    // Adyen
+    'adyen' => [
+        'api_key' => getenv('ADYEN_API_KEY') ?: '',
+        'hmac_key' => getenv('ADYEN_HMAC_KEY') ?: '',  // Webhook 验签 HMAC 密钥
+        'merchant_account' => getenv('ADYEN_MERCHANT_ACCOUNT') ?: '',
+        'mode' => getenv('ADYEN_MODE') ?: 'sandbox',   // sandbox/live
+    ],
+
     // 支付手续费率配置（用于分账计算）
     'gateway_fee' => [
         'stripe' => ['rate' => 2.9, 'fixed' => 0.30],   // 2.9% + $0.30

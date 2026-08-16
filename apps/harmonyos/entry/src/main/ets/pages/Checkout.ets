@@ -136,15 +136,18 @@ struct Checkout {
     if (res.code === 0) {
       const d = res.data as Record<string, Object>;
       const orderId = (d['order_id'] as string) ?? '';
+      const orderNo = (d['order_no'] as string) ?? orderId;
+      const payAmount = (d['pay_amount'] as number) ?? (this.total + this.shippingFee);
       promptAction.showToast({ message: '下单成功' });
       // 发起支付（真实 Stripe SDK 支付需后续集成，此处先创建支付单）
       const payRes = await this.api.post('/payment/create', { order_id: orderId, gateway: 'stripe' });
       if (payRes.code === 0) {
         promptAction.showToast({ message: '支付已创建，请完成支付' });
+        router.pushUrl({ url: 'pages/PaymentSuccess?order_no=' + orderNo + '&amount=' + payAmount.toFixed(2) + '&currency=USD' });
       } else {
         promptAction.showToast({ message: payRes.msg });
+        router.pushUrl({ url: 'pages/OrderList' });
       }
-      router.pushUrl({ url: 'pages/OrderList' });
     } else {
       promptAction.showToast({ message: res.msg });
     }

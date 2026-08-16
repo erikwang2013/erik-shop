@@ -262,12 +262,23 @@ return [
 
 
     'elasticsearch' => [
-        'hosts' => [
-            'http://127.0.0.1:9200'
-        ],
+        // ES 地址从 env 读取（ELASTICSEARCH_HOST，兼容旧 ES_HOST/ES_PORT）；未配置时为空数组 → SearchController 直接走 SQL 降级
+        'hosts' => array_values(array_filter([
+            (function () {
+                $host = getenv('ELASTICSEARCH_HOST') ?: getenv('ES_HOST') ?: '';
+                if ($host === '') {
+                    return '';
+                }
+                if (str_contains($host, '://')) {
+                    return $host;
+                }
+                $port = getenv('ELASTICSEARCH_PORT') ?: getenv('ES_PORT') ?: '';
+                return 'http://' . $host . ($port !== '' ? ':' . $port : '');
+            })(),
+        ])),
         'auth' => [
-            'user'   =>  null,
-            'pass'   =>  null,
+            'user'   =>  getenv('ES_USER') ?: null,
+            'pass'   =>  getenv('ES_PASS') ?: null,
             'api_id' => null,
             'api_key' => null,
             'cloud_id' => null

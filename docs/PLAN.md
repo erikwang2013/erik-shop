@@ -46,7 +46,14 @@
 | 阶段四 P2：DB 读写分离 | ✅ | 6 个纯查询模型启用 `$connection='mysql_rw'`（Eloquent 自动读写分流 + sticky）；**实测**查询连接=mysql_rw、写入正常；生产配 DB_READ_HOST_1/2 生效 |
 | 阶段四 P2：订阅周期购 API | ✅ | SubscriptionController（创建订阅+首期订单、我的订阅、取消）；**实测**创建/列表/取消全通过；SubscriptionOrders/Logs 补 `$timestamps=false` |
 | 阶段四 P2：多平台刊登写入 | ✅ | `POST /api/admin/platform/listings`（AdminKeyMiddleware，PlatformListings draft/listed upsert）；**实测**刊登记录写入成功 |
-| 其余阶段一~四交付物 | ⬜ | 剩余：鸿蒙 KeyStore、真实支付 SDK 集成、支付完成页、WS 客服、ES 多语言搜索、自动续费 SubscriptionCron 等 |
+| 阶段四 P2：SubscriptionCron 自动续费 | ✅ | `service/app/process/SubscriptionCron.php`（每日）：到期订阅→事务生成续费订单/周期数+1→更新 next_billing→日志；SKU 下架/库存不足置 paused；**实测**冒烟 7 断言全过 |
+| 阶段四 P2：WS 客服实时 IM | ✅ | `ChatController`（REST 会话/消息）+ `ChatWs`（WebSocket 8788，JWT+会话归属鉴权，双通道同源写入）；**实测**端到端 5 项（握手/广播/入库/非法 token/他人会话拒绝）；已知：无客服端鉴权、会话关闭动作未做 |
+| 阶段四 P2：ES 多语言搜索 | ✅ | webman-scout hosts 改 `ELASTICSEARCH_HOST` env；Products `toSearchableArray()` 多语言字段 + `scripts/es-index-products.php` 批量索引器；未配置时 SQL 降级；**实测**降级路径/数据形状（无 ES 服务，线上查询未实测） |
+| 阶段四 P2：Klarna/Adyen 支付骨架 | ✅ | `KlarnaGateway/AdyenGateway`（Guzzle 直连：创建/查询/退款/Webhook HMAC 验签），密钥缺失抛异常指明 env；`PaymentGatewayInterface` 拆出；**实测**验签算法双向 + phpstan/phpunit 全过；需真实密钥接入后才可用 |
+| 阶段四 P2：cron 三 URL env 化 | ✅ | `config/cron.php` 三 *_url 改读 env（TRACKING/COMPLIANCE/PLATFORM_URL）；三个 cron 拉取逻辑已完整；未连真实外部 API |
+| 阶段四 P2：鸿蒙 KeyStore + 客户端 AES + 支付完成页 | ✅ | 鸿蒙 `SecureStore.ets`（Asset Kit 替代 preferences）+ Flutter/鸿蒙 `SecureCrypto.ets`/`_SecureCrypto`（AES-256-CBC，X-Encrypted/X-Encrypt-Response，密钥留空走明文）+ 两端支付完成页；**未编译验证**（无工具链），待 `flutter pub get`/hvigor 编译 |
+| 文档收敛 | ✅ | README/VERSIONS/admin-CLAUDE.md 修正 8 项过度声明（HS 申报→规划中、订单导出列按实际、i18n 切换按钮→规划中等）；装箱单/轨迹追踪确认已实现保留 |
+| 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证、WS 客服端鉴权/会话关闭、Flutter/鸿蒙编译验证、鸿蒙安全存储真机验证 |
 
 ---
 
@@ -136,7 +143,7 @@ Erik Shop 基础设施骨架扎实（117 张表、39 控制器、Stripe/PayPal �
 - Klarna/Adyen 完整实现（按需排期，验收条件：沙箱支付成功 + webhook 验签 + 退款闭环）
 - 🔄 评审新增：支付部分退款能力（Refunds 状态机 2/3 流转、部分退款金额与订单状态联动）与 webhook 事件覆盖扩展（payment_intent.refunded/failed 等非成功事件的显式处理策略，当前静默忽略依赖 PaymentReconcileCron 兜底）
 - 🔄 评审新增：认证加固——JWT 吊销（Redis 黑名单或 token 版本号，改密/登出后失效）、密码重置/邮箱验证流程（研究 §5 建议，路线图此前遗漏）
-- 🔄 评审新增：客户端 AES 接口加密接入（Flutter/HarmonyOS 支持 X-Encrypted/X-Encrypt-Response）+ 鸿蒙 token 安全存储（KeyStore/security.asset 替代 preferences 明文），未完成前修正 README/VERSIONS 的"三层加密"声明
+- ✅ 评审新增：客户端 AES 接口加密接入（Flutter/HarmonyOS 支持 X-Encrypted/X-Encrypt-Response）+ 鸿蒙 token 安全存储（KeyStore/security.asset 替代 preferences 明文）——见下「阶段四 P2：鸿蒙 KeyStore + 客户端 AES + 支付完成页」（已编码，待编译验证）
 
 **负责角色**：后端工程师、后台全栈、支付结算、跨境 i18n、QA
 

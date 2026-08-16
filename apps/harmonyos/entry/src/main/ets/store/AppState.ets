@@ -4,6 +4,7 @@
  */
 import preferences from '@ohos.data.preferences';
 import { ApiClient } from '../common/api/ApiClient';
+import { SecureStore } from '../common/security/SecureStore';
 
 export class AppState {
   private static instance: AppState;
@@ -20,7 +21,7 @@ export class AppState {
 
   async init(context: Context): Promise<void> {
     this.prefs = await preferences.getPreferences(context, 'erik_shop');
-    this.token = this.prefs.getSync('access_token', '') as string;
+    this.token = await SecureStore.get('access_token');
     this.locale = this.prefs.getSync('locale', 'en') as string;
     this.currency = this.prefs.getSync('currency', 'USD') as string;
     ApiClient.getInstance().setToken(this.token);
@@ -30,8 +31,7 @@ export class AppState {
 
   async setToken(token: string): Promise<void> {
     this.token = token;
-    await this.prefs?.put('access_token', token);
-    await this.prefs?.flush();
+    await SecureStore.put('access_token', token);
     ApiClient.getInstance().setToken(token);
   }
 
@@ -60,9 +60,8 @@ export class AppState {
 
   async logout(): Promise<void> {
     this.token = '';
-    await this.prefs?.delete('access_token');
-    await this.prefs?.delete('refresh_token');
-    await this.prefs?.flush();
+    await SecureStore.remove('access_token');
+    await SecureStore.remove('refresh_token');
     ApiClient.getInstance().setToken('');
   }
 

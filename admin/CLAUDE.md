@@ -105,9 +105,9 @@ class ShopProductController extends Crud
 ### 跨境管理菜单结构
 ```
 商城管理
-  商品管理（+多语言编辑 + 分币种定价）
+  商品管理（多语言编辑 + 分币种定价：规划中）
   分类管理
-  SKU管理（+ 分币种价格）
+  SKU管理（分币种价格：规划中）
   品牌管理
   评价管理
 订单管理
@@ -124,7 +124,7 @@ class ShopProductController extends Crud
   物流分区（按国家分组）
   分区费率阶梯
   海外仓管理
-  发货管理（+ HS申报 + 轨迹）
+  发货管理（HS申报 + 轨迹：规划中）
   清关单据（商业发票/装箱单）
 营销管理
   优惠券（支持分区限定）
@@ -138,17 +138,17 @@ class ShopProductController extends Crud
   通知推送
   操作日志
 数据分析
-  跨境面板（区域销售热力图 + 币种收入占比 + 物流时效）
-  订单导出（含HS Code/关税/币种）
-  商业发票PDF
-  装箱单PDF
-  财务报表PDF（分币种汇总）
+  跨境面板（区域销售分布 + 币种收入占比；物流时效：规划中）
+  订单导出（订单号/日期/状态/币种/金额/优惠/运费/实付 + 商业发票PDF）
+  商业发票PDF（service 端 DocumentController 生成）
+  装箱单PDF（service 端 DocumentController 生成）
+  财务报表PDF（分币种汇总：规划中）
 ```
 ## 国际化 (i18n)
-- 翻译文件位于 `plugin/admin/resource/translations/`
+- 翻译文件位于 `resource/translations/`
 - 支持语言：`zh_CN`（默认）、`zh_HK`、`en`、`ja`、`ko`
-- LayUI 界面文本通过 `trans()` 函数翻译
-- 语言切换按钮位于管理后台顶部导航栏
+- LayUI 界面文本通过 `trans()` 函数翻译（规划中：翻译文件已建，界面未接线）
+- 语言切换按钮位于管理后台顶部导航栏（规划中）
 
 ## 数据库表
 

@@ -136,4 +136,19 @@ return [
         'count' => 1,
         'reloadable' => false,
     ],
+
+    // 订阅周期购自动续费（每日）
+    'subscription_cron' => [
+        'handler' => app\process\SubscriptionCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
+
+    // 客服实时 IM WebSocket（客户端以 ?token=JWT&session_id=xxx 连接）
+    'chat_ws' => [
+        'handler' => app\process\ChatWs::class,
+        'listen' => 'websocket://0.0.0.0:8788',
+        'count' => 1,
+        'reloadable' => false,
+    ],
 ];

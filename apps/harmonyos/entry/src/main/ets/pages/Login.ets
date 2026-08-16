@@ -3,7 +3,8 @@
  */
 import { router } from '@kit.ArkUI';
 import { ApiClient } from '../common/api/ApiClient';
-import preferences from '@ohos.data.preferences';
+import { AppState } from '../store/AppState';
+import { SecureStore } from '../common/security/SecureStore';
 
 @Entry
 @Component
@@ -16,10 +17,8 @@ struct Login {
     const res = await this.api.post('/auth/login', { email: this.email, password: this.password });
     if (res.code === 0) {
       const data = res.data as Record<string, string>;
-      this.api.setToken(data['access_token'] as string);
-      const prefs = await preferences.getPreferences(getContext(), 'erik_shop');
-      await prefs.put('access_token', data['access_token']);
-      await prefs.put('refresh_token', data['refresh_token']);
+      await AppState.getInstance().setToken(data['access_token'] as string);
+      await SecureStore.put('refresh_token', data['refresh_token'] as string);
       router.pushUrl({ url: 'pages/Index' });
     } else {
       AlertDialog.show({ message: res.msg });

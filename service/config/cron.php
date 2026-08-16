@@ -12,14 +12,14 @@ return [
     // 汇率更新源（{base} 为基准币种占位，默认 USD）
     'exchange_rate_source' => 'https://open.er-api.com/v6/latest/USD',
 
-    // 物流轨迹查询 API 模板（{tracking_no} 占位符），需与 erik_logistics_companies.api_key 配合
-    'tracking_api_url' => '',
+    // 物流轨迹查询 API 模板（{tracking_no} 占位符），需与 erik_logistics_companies.api_key 配合；env TRACKING_API_URL 可空
+    'tracking_api_url' => getenv('TRACKING_API_URL') ?: '',
 
-    // 合规规则外部源 URL（返回 [{country_id, compliance_category_id, rule, restriction_reason}]）
-    'compliance_source_url' => '',
+    // 合规规则外部源 URL（返回 [{country_id, compliance_category_id, rule, restriction_reason}]）；env COMPLIANCE_SOURCE_URL 可空
+    'compliance_source_url' => getenv('COMPLIANCE_SOURCE_URL') ?: '',
 
-    // 平台订单同步 API 模板（{account_id} 占位符），需与 erik_platform_accounts.api_key 配合
-    'platform_sync_url' => '',
+    // 平台订单同步 API 模板（{account_id} 占位符），需与 erik_platform_accounts.api_key 配合；env PLATFORM_SYNC_URL 可空
+    'platform_sync_url' => getenv('PLATFORM_SYNC_URL') ?: '',
 
     // 退货超时自动关闭天数
     'return_expire_days' => 7,

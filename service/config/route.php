@@ -111,6 +111,12 @@ Route::group('/api', function () {
     Route::post('/subscriptions', [app\controller\v1\SubscriptionController::class, 'store']);
     Route::post('/subscriptions/{id:\w+}/cancel', [app\controller\v1\SubscriptionController::class, 'cancel']);
 
+    // 客服会话
+    Route::get('/chat/sessions', [app\controller\v1\ChatController::class, 'index']);
+    Route::post('/chat/sessions', [app\controller\v1\ChatController::class, 'store']);
+    Route::get('/chat/sessions/{id:\w+}/messages', [app\controller\v1\ChatController::class, 'messages']);
+    Route::post('/chat/sessions/{id:\w+}/messages', [app\controller\v1\ChatController::class, 'send']);
+
     // 评价
     Route::post('/reviews', [app\controller\v1\ReviewController::class, 'store']);
 

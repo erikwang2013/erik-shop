@@ -10,15 +10,6 @@ use Stripe\StripeClient;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
 
-interface PaymentGatewayInterface
-{
-    public function createPayment(array $data): array;
-    public function capturePayment(string $txnId): array;
-    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array;
-    public function verifyWebhook(string $payload, string $signature, array $headers = []): bool;
-    public function resolveCaptureId(string $txnId): string;
-}
-
 class PaymentGateway
 {
     public static function make(string $code): PaymentGatewayInterface
@@ -26,6 +17,8 @@ class PaymentGateway
         return match ($code) {
             'stripe' => new StripeGateway(),
             'paypal' => new PayPalGateway(),
+            'klarna' => new KlarnaGateway(),
+            'adyen' => new AdyenGateway(),
             default => throw new \InvalidArgumentException("Unknown gateway: {$code}"),
         };
     }

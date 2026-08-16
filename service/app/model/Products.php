@@ -45,7 +45,22 @@ class Products extends BaseModel
             'is_recommend' => (bool) $this->is_recommend,
             'weight' => (float) $this->weight,
             'created_at' => $this->created_at?->format('Y-m-d H:i:s'),
+            // 多语言字段（zh_CN/zh_HK/en/ja/ko），搜索时按当前 locale 命中对应语言内容
+            'translations' => $this->translation->map(fn ($t) => [
+                'locale' => $t->locale,
+                'title' => $t->title,
+                'subtitle' => $t->subtitle,
+                'description' => $t->description,
+            ])->values()->all(),
         ];
+    }
+
+    /**
+     * 批量导入 ES 时预加载多语言，避免 toSearchableArray 内 N+1 查询
+     */
+    protected function makeAllSearchableUsing($query)
+    {
+        return $query->with('translation');
     }
 
     /**
@@ -80,6 +95,15 @@ class Products extends BaseModel
                 'is_recommend' => ['type' => 'boolean'],
                 'weight' => ['type' => 'float'],
                 'created_at' => ['type' => 'date'],
+                'translations' => [
+                    'type' => 'object',
+                    'properties' => [
+                        'locale' => ['type' => 'keyword'],
+                        'title' => ['type' => 'text', 'analyzer' => 'multilingual'],
+                        'subtitle' => ['type' => 'text', 'analyzer' => 'multilingual'],
+                        'description' => ['type' => 'text', 'analyzer' => 'multilingual'],
+                    ],
+                ],
             ],
         ];
     }

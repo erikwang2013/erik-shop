@@ -138,12 +138,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       if (res.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order placed!')));
         // 发起支付（真实 Stripe SDK 支付需后续集成）
-        final orderId = (res.data as Map<String, dynamic>)['order_id'] as String? ?? '';
+        final d = res.data as Map<String, dynamic>;
+        final orderId = d['order_id'] as String? ?? '';
+        final orderNo = d['order_no'] as String? ?? orderId;
+        final payAmount = (d['pay_amount'] as num?)?.toDouble() ?? (_total + _shippingFee);
+        final currency = d['currency_code'] as String? ?? 'USD';
         final payRes = await ApiClient.instance.post('/payment/create', data: {'order_id': orderId, 'gateway': 'stripe'});
-        if (mounted && !payRes.isSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(payRes.msg)));
+        if (mounted) {
+          if (payRes.isSuccess) {
+            context.go('/payment-success?order_no=$orderNo&amount=${payAmount.toStringAsFixed(2)}&currency=$currency');
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(payRes.msg)));
+            context.go('/orders');
+          }
         }
-        context.go('/orders');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(res.msg)));
       }

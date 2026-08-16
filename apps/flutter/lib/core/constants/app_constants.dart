@@ -14,4 +14,10 @@ class AppConstants {
   static const String apiVersion = '2026-05-20';
   static const String appName = 'Erik Shop';
   static const int pageSize = 20;
+
+  /// 接口 AES 密钥：与后端 ENCRYPTION_KEY 一致的 32 字节密钥（如后端为 base64: 前缀
+  /// 则取 base64 解码后的原文）。留空时接口走明文，不发送加密头。
+  static const String encryptionKey = '';
+
+  static bool get apiEncryptionEnabled => encryptionKey.isNotEmpty;
 }

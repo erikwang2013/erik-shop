@@ -5,6 +5,7 @@
     "pages/Cart",
     "pages/OrderList",
     "pages/Checkout",
+    "pages/PaymentSuccess",
     "pages/Profile",
     "pages/Login",
     "pages/Register",

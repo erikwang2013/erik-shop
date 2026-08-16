@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io' show Platform;
 import 'package:dio/dio.dart';
+import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -30,25 +32,81 @@ class ApiClient {
   }
 
   Future<ApiResponse<T>> get<T>(String path, {Map<String, dynamic>? params}) async {
-    final res = await dio.get(path, queryParameters: params);
-    return ApiResponse.fromJson<T>(res.data);
+    final res = await dio.get(path,
+        queryParameters: params,
+        options: AppConstants.apiEncryptionEnabled ? Options(headers: {'X-Encrypt-Response': '1'}) : null);
+    return ApiResponse.fromJson<T>(_decryptResponse(res.data));
   }
 
   Future<ApiResponse<T>> post<T>(String path, {dynamic data, Map<String, dynamic>? headers}) async {
+    var sendData = data;
+    Map<String, dynamic>? sendHeaders = headers;
+    if (AppConstants.apiEncryptionEnabled) {
+      sendHeaders = {...?headers, 'X-Encrypt-Response': '1'};
+      if (data != null) {
+        sendHeaders = {...sendHeaders, 'X-Encrypted': '1'};
+        sendData = _SecureCrypto.encrypt(jsonEncode(data));
+      }
+    }
     final res = await dio.post(path,
-        data: data,
-        options: headers != null ? Options(headers: headers) : null);
-    return ApiResponse.fromJson<T>(res.data);
+        data: sendData,
+        options: sendHeaders != null ? Options(headers: sendHeaders) : null);
+    return ApiResponse.fromJson<T>(_decryptResponse(res.data));
   }
 
   Future<ApiResponse<T>> put<T>(String path, {dynamic data}) async {
-    final res = await dio.put(path, data: data);
-    return ApiResponse.fromJson<T>(res.data);
+    var sendData = data;
+    Map<String, dynamic>? sendHeaders;
+    if (AppConstants.apiEncryptionEnabled) {
+      sendHeaders = {'X-Encrypt-Response': '1'};
+      if (data != null) {
+        sendHeaders = {...sendHeaders, 'X-Encrypted': '1'};
+        sendData = _SecureCrypto.encrypt(jsonEncode(data));
+      }
+    }
+    final res = await dio.put(path,
+        data: sendData,
+        options: sendHeaders != null ? Options(headers: sendHeaders) : null);
+    return ApiResponse.fromJson<T>(_decryptResponse(res.data));
   }
 
   Future<ApiResponse<T>> delete<T>(String path) async {
-    final res = await dio.delete(path);
-    return ApiResponse.fromJson<T>(res.data);
+    final res = await dio.delete(path,
+        options: AppConstants.apiEncryptionEnabled ? Options(headers: {'X-Encrypt-Response': '1'}) : null);
+    return ApiResponse.fromJson<T>(_decryptResponse(res.data));
+  }
+
+  /// 响应解密：后端加密 data 字段时（encrypted=true）先解密再交给 ApiResponse 解析
+  dynamic _decryptResponse(dynamic json) {
+    if (!AppConstants.apiEncryptionEnabled) return json;
+    if (json is Map<String, dynamic> && json['encrypted'] == true && json['data'] is String) {
+      try {
+        json['data'] = jsonDecode(_SecureCrypto.decrypt(json['data'] as String));
+      } catch (_) {}
+    }
+    return json;
+  }
+}
+
+/// 接口 AES 加解密：与后端 app/common/Encryption.php 协议一致
+/// 协议：AES-256-CBC/PKCS7 + 随机 16 字节 IV，密文 = base64(iv + ciphertext)
+class _SecureCrypto {
+  static const int _ivLength = 16;
+
+  static enc.Encrypter get _encrypter =>
+      enc.Encrypter(enc.AES(enc.Key.fromUtf8(AppConstants.encryptionKey), mode: enc.AESMode.cbc));
+
+  static String encrypt(String jsonStr) {
+    final iv = enc.IV.fromSecureRandom(_ivLength);
+    final encrypted = _encrypter.encrypt(jsonStr, iv: iv);
+    return base64Encode([...iv.bytes, ...encrypted.bytes]);
+  }
+
+  static String decrypt(String payload) {
+    final decoded = base64Decode(payload);
+    final iv = enc.IV(decoded.sublist(0, _ivLength));
+    final cipherText = decoded.sublist(_ivLength);
+    return _encrypter.decryptBytes(enc.Encrypted(cipherText), iv: iv);
   }
 }
 

@@ -19,8 +19,12 @@ class SearchController extends \app\controller\BaseApiController
             return ApiResponse::fail('请输入搜索关键词', 422);
         }
 
-        // ES 搜索（erikwang2013/webman-scout），降级到 MySQL LIKE
+        // ES 搜索（erikwang2013/webman-scout）：未配置 ELASTICSEARCH_HOST 或查询异常时降级到 MySQL LIKE
+        $esHosts = config('plugin.erikwang2013.webman-scout.app.elasticsearch.hosts', []);
         try {
+            if (empty($esHosts)) {
+                throw new \RuntimeException('ES 未配置');
+            }
             $esResults = Products::search($keyword)->where('status', 2);
             if ($categoryId) $esResults->where('category_id', (int) $categoryId);
             $paginator = $esResults->paginate($perPage, 'page', $page);

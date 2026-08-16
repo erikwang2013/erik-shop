@@ -11,6 +11,7 @@ import '../features/auth/register_screen.dart';
 import '../features/product/product_list_screen.dart';
 import '../features/profile/address_list_screen.dart';
 import '../features/order/order_detail_screen.dart';
+import '../features/order/payment_success_screen.dart';
 
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -29,5 +30,13 @@ final appRouter = GoRouter(
     GoRoute(path: '/login', builder: (c, s) => const LoginScreen()),
     GoRoute(path: '/register', builder: (c, s) => const RegisterScreen()),
     GoRoute(path: '/order/:id', builder: (c, s) => OrderDetailScreen(orderId: s.pathParameters['id']!)),
+    GoRoute(
+      path: '/payment-success',
+      builder: (c, s) => PaymentSuccessScreen(
+        orderNo: s.uri.queryParameters['order_no'] ?? '',
+        amount: s.uri.queryParameters['amount'] ?? '0.00',
+        currency: s.uri.queryParameters['currency'] ?? 'USD',
+      ),
+    ),
   ],
 );

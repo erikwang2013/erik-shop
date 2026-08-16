@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\InventoryLogger;
 use app\common\RiskEngine;
 use app\model\Orders;
 use app\model\OrderItems;
@@ -172,6 +173,18 @@ class OrderController extends \app\controller\BaseApiController
                     if (!$affected) {
                         throw new \RuntimeException("SKU {$cart->sku_id} 库存不足");
                     }
+
+                    // 库存流水（不可变账本：下单出库）
+                    InventoryLogger::log(
+                        (int) $sku->id,
+                        'outbound',
+                        -(int) $cart->quantity,
+                        (int) ProductSkus::where('id', $sku->id)->value('stock'),
+                        'order',
+                        (int) $order->id,
+                        $userId,
+                        '下单扣减'
+                    );
 
                     $price = $priceMap[$sku->id] ?? (float) $sku->default_price;
                     $subtotal = round($price * $cart->quantity, 2);
@@ -404,7 +417,7 @@ class OrderController extends \app\controller\BaseApiController
         }
 
         try {
-            Db::transaction(function () use ($order) {
+            Db::transaction(function () use ($order, $userId) {
                 // 原子门闩：仅待付款订单可被本次取消，防止并发重复取消导致库存重复恢复
                 $updated = Orders::where('id', $order->id)
                     ->where('status', 0)
@@ -420,6 +433,17 @@ class OrderController extends \app\controller\BaseApiController
                 $items = OrderItems::where('order_id', $order->id)->get();
                 foreach ($items as $item) {
                     ProductSkus::where('id', $item->sku_id)->increment('stock', $item->quantity);
+                    // 库存流水（不可变账本：取消回库）
+                    InventoryLogger::log(
+                        (int) $item->sku_id,
+                        'inbound',
+                        (int) $item->quantity,
+                        (int) ProductSkus::where('id', $item->sku_id)->value('stock'),
+                        'order',
+                        (int) $order->id,
+                        $userId,
+                        '取消订单恢复库存'
+                    );
                 }
 
                 OrderLogs::create([

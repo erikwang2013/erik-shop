@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderDocuments extends BaseModel
 {    protected $table = "erik_order_documents";
+    public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
     public function order(): BelongsTo
     {
         return $this->belongsTo(Orders::class, "order_id");

@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+ */
+
 namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\AffiliateLinks;
@@ -15,8 +19,7 @@ class AffiliateController extends \app\controller\BaseApiController
 
     public function commissions(Request $request): \support\Response
     {
-        $page = (int) $request->input('page', 1);
-        $perPage = min((int) $request->input('per_page', 20), 100);
+        [$page, $perPage] = $this->clampPage($request);
 
         $paginator = AffiliateCommissions::whereHas('link', fn($q) => $q->where('user_id', $request->userId))
             ->orderBy('id', 'desc')->paginate($perPage, ['*'], 'page', $page);

@@ -317,8 +317,8 @@ class UploadController extends Crud
         }
 
         $ext = strtolower($ext);
-        $ext_forbidden_map = ['php', 'php3', 'php4', 'php5', 'php7', 'phtml', 'pht', 'phar', 'css', 'js', 'html', 'htm', 'shtml', 'svg', 'swf', 'asp', 'jsp'];
-        if (in_array($ext, $ext_forbidden_map)) {
+        $ext_allow_map = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'txt', 'csv', 'zip', 'rar', '7z', 'mp4'];
+        if (!in_array($ext, $ext_allow_map)) {
             throw new BusinessException('不支持该格式的文件上传', 400);
         }
 

@@ -2,3 +2,6 @@ vendor
 runtime
 .git
 .env
+tests
+docs
+*.md

@@ -38,7 +38,7 @@ class ExchangeRateCron
         $sourceUrl = config('cron.exchange_rate_source', 'https://open.er-api.com/v6/latest/USD');
         $http = new HttpClient(['timeout' => 15]);
         $response = $http->get($sourceUrl);
-        $body = json_decode($response->getBody(), true);
+        $body = json_decode($response->getBody(), true) ?: [];
         if (empty($body['result']) || $body['result'] !== 'success' || empty($body['rates'])) {
             Log::error('ExchangeRateCron 汇率源返回异常: ' . substr($response->getBody(), 0, 200));
             return;

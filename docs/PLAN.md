@@ -52,7 +52,7 @@
 | 阶段四 P2：Klarna/Adyen 支付骨架 | ✅ | `KlarnaGateway/AdyenGateway`（Guzzle 直连：创建/查询/退款/Webhook HMAC 验签），密钥缺失抛异常指明 env；`PaymentGatewayInterface` 拆出；**实测**验签算法双向 + phpstan/phpunit 全过；需真实密钥接入后才可用 |
 | 阶段四 P2：cron 三 URL env 化 | ✅ | `config/cron.php` 三 *_url 改读 env（TRACKING/COMPLIANCE/PLATFORM_URL）；三个 cron 拉取逻辑已完整；未连真实外部 API |
 | 阶段四 P2：鸿蒙 KeyStore + 客户端 AES + 支付完成页 | ✅ | 鸿蒙 `SecureStore.ets`（Asset Kit 替代 preferences）+ Flutter/鸿蒙 `SecureCrypto.ets`/`_SecureCrypto`（AES-256-CBC，X-Encrypted/X-Encrypt-Response，密钥留空走明文）+ 两端支付完成页；**未编译验证**（无工具链），待 `flutter pub get`/hvigor 编译 |
-| 文档收敛 | ✅ | README/VERSIONS/admin-CLAUDE.md 修正 8 项过度声明（HS 申报→规划中、订单导出列按实际、i18n 切换按钮→规划中等）；装箱单/轨迹追踪确认已实现保留 |
+| 文档收敛 | ✅ | README/VERSIONS/admin-CLAUDE.md 修正 8 项过度声明（HS 申报→规划中、订单导出列按实际、i18n 切换按钮→规划中等）；装箱单/轨迹追踪确认已实现保留；VERSIONS.md 中 7 项（AB测试/采购/质检/调拨/保险/知识库/积分）标注"表结构已建"（◐），与代码实际一致（仅有表+模型，无业务代码） |
 | 第二轮：JWT 吊销 + 密码重置 + 邮箱验证 | ✅ | Jwt 增加 `revoke()`/`isRevoked()`（Redis 黑名单），JwtAuth 中间件校验；AuthController logout/changePassword/passwordReset/emailVerify + 路由；install.sql 补 `email_verified_at`；JwtTest 单测通过 |
 | 第二轮：部分退款 + webhook 事件补全 | ✅ | RefundHelper 支持部分退款金额校验；AdminOpsController::executeRefund；PaymentController webhook 事件分发（refunded/failed）；RefundHelperTest 通过 |
 | 第二轮：DevOps 收敛 | ✅ | docker-compose 端口收敛 127.0.0.1、.dockerignore×2、.gitignore 鸿蒙构建产物、CI 加 Flutter/hvigor jobs、download-geoip.php 脚本 |
@@ -62,7 +62,13 @@
 | 第三轮：WS 客服补全 | ✅ | ChatWs 客服端鉴权（首帧 {type:'auth',role:'agent',key} + hash_equals 恒定时间比较，握手 pending 角色）+ 会话关闭（REST close/adminClose + WS close 帧，closed 拦截 REST 409/WS error，closeSession 幂等 + 广播）；ChatWs 测试 5/21 |
 | 第三轮：admin 核心管理页 | ✅ | 商品/用户/退款/优惠券/分类 5 页（LayUI 对齐 order/payment，列表+分页+搜索+状态筛选+审核弹窗）；Crud.php 3 处根因修复（doFormat items() 包回 Collection 覆盖 ShopOrder/ShopReturn 同款 latent bug、string 模型实例化、视图路径推导）+ ShopProduct afterQuery 库存聚合；ShopUserController 新增 |
 | 第三轮：QA 固化 | ✅ | SubscriptionCron（续费订单/billing_cycle+1/next_billing 顺延/库存不足与下架 paused）+ ES 降级（SQL LIKE + SearchLogs 记录）测试；🔴 新发现修复：SearchLogs 缺 $timestamps=false → 搜索写日志 SQLSTATE 1054 500；全套 54 tests / 256 assertions 0 失败 |
-| 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证（无 ES 服务）、Flutter/鸿蒙编译验证（无工具链）、鸿蒙安全存储真机验证 |
+| 第四轮：输入边界修复 | ✅ | BaseApiController::clampPage（page≥1 / perPage∈[1,50]）统一 8 控制器（Order/B2b/PriceAlert/Affiliate/Privacy/Notification/Return/Review，Search 由 fix-search 单改）；AdminOps reason/remark ≤500 + createListing intval；json_decode 空值兜底 5 处（SocialAuth×3/ExchangeRateCron/ComplianceCron）；删 4 个真未用导入（审计列其余 11 个经 grep 证实被使用） |
+| 第四轮：搜索注入防护 | ✅ | SearchController：Lucene 特殊字符 preg_replace 转义（防 ES 语法注入 DoS）+ keyword >64 → 422 + LIKE `%`/`_` addcslashes + per_page 钳制；24 行 diff |
+| 第四轮：DevOps 卫生 | ✅ | admin composer.lock 同步（phpstan 入库）+ service `--lock` 刷新；ci.yml audit 改为"仅放行 CVE-2025-45769"健壮版（保留退出码，实测输出格式匹配）+ workflow_dispatch；autoload `""` 空前缀 ×2 删除并补 5 显式前缀（dump-autoload 验证）；35 个 Copyright 头补齐；LICENSE 声明 proprietary（保留 webman MIT 原文）；dockerignore 补 tests/docs；compose 占位密钥守卫（production + change_me → exit 1，实测三分支）；**跳过**：cs-fixer CI 步骤（238/247 文件不合规，需先格式化提交）与 admin audit（25 条预存告警，需依赖升级） |
+| 第四轮：文档/索引一致性 | ✅ | VERSIONS 7 项虚标 ✅→◐（实测仅表+模型）+ 规模表（Cron 11、工具类 15、测试 54/256）；api.md 补 DELETE /api/comparisons/{id}；payment.php 补 adyen 费率 2.99/0.30；install.sql 补 6 索引（refunds/return_orders idx_user_id、platform_listings idx_account_product、group_buys/flash_sales/coupons idx_status_time）+ scripts/index-fixes.sql（未执行，供存量库）；🔴 待办：service/CLAUDE.md 工具类 8→15、PHPUnit 22→54 计数过期 |
+| 第四轮：安全加固 | ✅ | BaseModel `$guarded=['id','money','score','level','created_at','updated_at']`（审计原清单含 user_id/status 等 6 列，grep 证实 40+ 处 create() 批量赋值→封死即数据损坏，按最小可破坏清单执行）；admin 5 页 table.render 加 `escape: true`；UploadController 黑名单→19 种扩展名白名单；InstallController 双校验（配置文件 + wa_options installed=1 标记，DB 不可达 fail-closed）；🔴 另报预存 bug：product/index.html 库存列 templet 无 return 显示 undefined |
+| 第四轮：测试补强 | ✅ | SubscriptionController 4/33（周期校验/越权/取消幂等）+ Kyc 6/27（Encryptable 解密还原/驳回重提/通过禁提）+ RiskEngine 6/22（临时邮箱/大额/地址不匹配/velocity/ip_reputation）集成测试；Kyc 测试方法改名规避 PHPUnit 12 final status() 覆写致命错误；全套 70 tests / 338 assertions 0 失败（1 个既有 vendor warning：encryptable 空 IV）|
+| 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证（无 ES 服务）、Flutter/鸿蒙编译验证（无工具链）、鸿蒙安全存储真机验证、cs-fixer 格式化提交后 CI 加步骤、admin 依赖升级后加 audit 步骤 |
 
 ---
 

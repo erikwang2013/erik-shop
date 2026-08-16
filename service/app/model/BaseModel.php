@@ -13,8 +13,9 @@ class BaseModel extends Model
     public $incrementing = false;
     protected $keyType = 'string';
     protected $dateFormat = 'Y-m-d H:i:s';
-    // 所有模型均显式构造写入字段（无 request 全量直传），放宽批量赋值默认限制
-    protected $guarded = [];
+    // 封锁敏感列批量赋值；status/user_id/password 等列在注册/下单等流程中经 create() 批量赋值，
+    // 纳入 guarded 会被 Eloquent 静默丢弃导致数据损坏，故仅封锁未参与批量赋值的敏感列
+    protected $guarded = ['id', 'money', 'score', 'level', 'created_at', 'updated_at'];
     const CREATED_AT = 'created_at';
     const UPDATED_AT = 'updated_at';
     const DELETED_AT = 'deleted_at';

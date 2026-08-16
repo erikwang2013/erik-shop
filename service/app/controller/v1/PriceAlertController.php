@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+ */
+
 namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\PriceAlerts;
@@ -8,8 +12,7 @@ class PriceAlertController extends \app\controller\BaseApiController
 {
     public function index(Request $request): \support\Response
     {
-        $page = (int) $request->input('page', 1);
-        $perPage = min((int) $request->input('per_page', 10), 50);
+        [$page, $perPage] = $this->clampPage($request);
         $paginator = PriceAlerts::where('user_id', $request->userId)->with('sku.product')->orderBy('id','desc')->paginate($perPage, ['*'], 'page', $page);
         return ApiResponse::paginate($paginator->items(), $paginator->total(), $page, $perPage);
     }

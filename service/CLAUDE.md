@@ -62,7 +62,7 @@ shop-php/
         ...
     model/            # 模型（extends BaseModel，110张业务表）
     middleware/       # 中间件（含 VersionRoute, PosterVerify, LocaleMiddleware, GeoIpMiddleware）
-    common/           # 工具类（8个）
+    common/           # 工具类（15个）
       Snowflake.php         # Snowflake分布式ID生成
       HashidsHelper.php     # Hashids ID 混淆
       ApiResponse.php       # 统一响应格式
@@ -212,7 +212,7 @@ php vendor/bin/phpunit      # 运行测试
 
 | 工具 | 配置 | 用途 |
 |------|------|------|
-| PHPUnit 12.5 | `phpunit.xml` | 单元测试（22 tests, 45 assertions） |
+| PHPUnit 12.5 | `phpunit.xml` | 单元+集成测试（70 tests, 338 assertions） |
 | phpstan | `phpstan.neon` (level 5) | 静态分析 |
 | php-cs-fixer | `.php-cs-fixer.php` | PSR-12 代码格式化 |
 | CI/CD | `.github/workflows/ci.yml` | PHP 8.3/8.4 矩阵测试 |

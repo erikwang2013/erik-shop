@@ -50,10 +50,12 @@
   },
   "autoload": {
     "psr-4": {
-      "": "./",
       "app\\": "./app",
       "App\\": "./app",
-      "app\\View\\Components\\": "./app/view/components"
+      "app\\View\\Components\\": "./app/view/components",
+      "support\\": "./support",
+      "tests\\": "./tests",
+      "Erik\\": "./Erik"
     }
   },
   "scripts": {

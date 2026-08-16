@@ -681,7 +681,8 @@ CREATE TABLE `erik_refunds` (
     `deleted_at` DATETIME NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_refund_no` (`refund_no`),
-    KEY `idx_order_id` (`order_id`)
+    KEY `idx_order_id` (`order_id`),
+    KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退款记录';
 
 CREATE TABLE `erik_return_orders` (
@@ -699,7 +700,8 @@ CREATE TABLE `erik_return_orders` (
     `deleted_at` DATETIME NULL DEFAULT NULL,
     PRIMARY KEY (`id`),
     UNIQUE KEY `uk_return_no` (`return_no`),
-    KEY `idx_order_id` (`order_id`)
+    KEY `idx_order_id` (`order_id`),
+    KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退货单';
 
 CREATE TABLE `erik_return_labels` (
@@ -1083,7 +1085,8 @@ CREATE TABLE `erik_coupons` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` DATETIME NULL DEFAULT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `idx_status_time` (`status`, `start_at`, `end_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='优惠券';
 
 CREATE TABLE `erik_user_coupons` (
@@ -1108,7 +1111,8 @@ CREATE TABLE `erik_flash_sales` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` DATETIME NULL DEFAULT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `idx_status_time` (`status`, `start_at`, `end_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秒杀活动';
 
 CREATE TABLE `erik_flash_sale_skus` (
@@ -1136,7 +1140,8 @@ CREATE TABLE `erik_group_buys` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` DATETIME NULL DEFAULT NULL,
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    KEY `idx_status_time` (`status`, `start_at`, `end_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='拼团活动';
 
 CREATE TABLE `erik_affiliate_links` (
@@ -1395,7 +1400,8 @@ CREATE TABLE `erik_platform_listings` (
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    KEY `idx_product_id` (`product_id`)
+    KEY `idx_product_id` (`product_id`),
+    KEY `idx_account_product` (`platform_account_id`, `product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台刊登记录';
 
 CREATE TABLE `erik_platform_orders` (

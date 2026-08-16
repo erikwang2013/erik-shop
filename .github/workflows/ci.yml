@@ -5,6 +5,7 @@ on:
     branches: [main]
   pull_request:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -53,7 +54,13 @@ jobs:
 
       - name: Dependency security audit
         working-directory: service
-        run: composer audit --no-interaction || echo "Known low-severity CVE tracked - CVE-2025-45769 (firebase/php-jwt <7.0.0, constrained by jwt-webman ^6.0)"
+        # 已知低危 CVE-2025-45769（firebase/php-jwt <7.0.0，受 webman jwt 约束无法直接升级）
+        # 单独放行；其余安全告警一律 fail。输出写入文件以保留 composer 退出码。
+        run: |
+          composer audit --no-interaction --format=plain > /tmp/audit.txt
+          rc=$?
+          grep -v 'CVE-2025-45769' /tmp/audit.txt || true
+          [ $rc -eq 0 ] || { [ "$(grep -c '^CVE:' /tmp/audit.txt || true)" = 1 ] && grep -q '^CVE: CVE-2025-45769$' /tmp/audit.txt; }
 
       - name: PHPStan static analysis
         working-directory: service

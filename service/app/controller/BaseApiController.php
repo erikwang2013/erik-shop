@@ -6,6 +6,7 @@
 namespace app\controller;
 
 use app\common\ApiResponse;
+use Webman\Http\Request;
 
 /**
  * API 控制器基类
@@ -48,5 +49,16 @@ class BaseApiController
     {
         $decoded = \app\common\HashidsHelper::decode($id);
         return $decoded ?? $id;
+    }
+
+    /**
+     * 分页参数钳制：page ≥ 1，perPage ∈ [1, 50]
+     * 防止 per_page=0/负数导致分页器除零或 LIMIT 非法
+     */
+    protected function clampPage(Request $request): array
+    {
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = min(50, max(1, (int) $request->input('per_page', 10)));
+        return [$page, $perPage];
     }
 }

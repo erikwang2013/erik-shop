@@ -683,6 +683,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 13.4 商品对比 `GET/POST/DELETE /api/comparisons[/{id}]` `[JWT]`
 
+DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对比记录 ID，必填）
+
 ### 13.5 个性化推荐 `GET /api/recommendations` `[JWT]`
 
 ### 13.6 降价提醒 `GET/POST /api/price-alerts` `[JWT]`

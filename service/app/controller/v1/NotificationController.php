@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+ */
+
 namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\Notifications;
@@ -8,8 +12,7 @@ class NotificationController extends \app\controller\BaseApiController
 {
     public function index(Request $request): \support\Response
     {
-        $page = (int) $request->input('page', 1);
-        $perPage = min((int) $request->input('per_page', 20), 50);
+        [$page, $perPage] = $this->clampPage($request);
 
         $paginator = Notifications::where(function ($q) use ($request) {
             $q->where('user_id', $request->userId)->orWhere('user_id', 0);

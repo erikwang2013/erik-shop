@@ -1,8 +1,11 @@
 <?php
+/**
+ * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+ */
+
 namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\FlashSales;
-use app\model\FlashSaleSkus;
 use Webman\Http\Request;
 
 class FlashSaleController extends \app\controller\BaseApiController

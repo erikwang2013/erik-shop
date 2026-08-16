@@ -169,6 +169,9 @@ class AdminOpsController extends \app\controller\BaseApiController
             return ApiResponse::fail('退款单不存在', 404);
         }
         $reason = (string) $request->input('reason', $request->input('remark', ''));
+        if (mb_strlen($reason) > 500) {
+            return ApiResponse::fail('驳回原因不能超过500字', 422);
+        }
 
         try {
             Db::transaction(function () use ($refund, $reason) {
@@ -203,6 +206,9 @@ class AdminOpsController extends \app\controller\BaseApiController
         $remark = (string) $request->input('remark', '');
         if (!in_array($action, ['approve', 'reject'], true)) {
             return ApiResponse::fail('action 仅支持 approve/reject', 422);
+        }
+        if (mb_strlen($remark) > 500) {
+            return ApiResponse::fail('备注不能超过500字', 422);
         }
 
         // 注意：HashidsDecode 中间件的 setParams 对 webman 控制器方法参数不生效，
@@ -250,13 +256,13 @@ class AdminOpsController extends \app\controller\BaseApiController
      */
     public function createListing(Request $request): \support\Response
     {
-        $productId = $request->input('product_id');
-        $accountId = $request->input('platform_account_id');
+        $productId = (int) $request->input('product_id');
+        $accountId = (int) $request->input('platform_account_id');
         $platformProductId = (string) $request->input('platform_product_id', '');
         $status = $request->input('status', 'draft');
 
-        if (empty($productId) || empty($accountId)) {
-            return ApiResponse::fail('product_id 与 platform_account_id 不能为空', 422);
+        if ($productId <= 0 || $accountId <= 0) {
+            return ApiResponse::fail('product_id 与 platform_account_id 必须为正整数', 422);
         }
         if (!in_array($status, ['draft', 'listed', 'error'], true)) {
             return ApiResponse::fail('status 仅支持 draft/listed/error', 422);

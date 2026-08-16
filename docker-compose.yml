@@ -36,6 +36,9 @@ services:
       dockerfile: Dockerfile
     container_name: erik-service
     restart: unless-stopped
+    # 生产环境占位密钥守卫：APP_ENV=production 且检测到 change_me 占位值时拒绝启动
+    command: >-
+      sh -c 'if [ "$$APP_ENV" = "production" ]; then for v in "$$JWT_SECRET" "$$JWT_SECRET_KEY" "$$ENCRYPTION_KEY"; do case "$$v" in *change_me*|*Y2hhbmdlX21l*) echo "错误：检测到占位密钥（change_me），请通过 .env 配置 JWT_SECRET/JWT_SECRET_KEY/ENCRYPTION_KEY 后重启" >&2; exit 1 ;; esac; done; fi; exec php start.php start'
     environment:
       - APP_ENV=production
       - DB_HOST=mysql
@@ -78,6 +81,9 @@ services:
       dockerfile: Dockerfile
     container_name: erik-admin
     restart: unless-stopped
+    # 生产环境占位密钥守卫：APP_ENV=production 且检测到 change_me 占位值时拒绝启动
+    command: >-
+      sh -c 'if [ "$$APP_ENV" = "production" ]; then for v in "$$JWT_SECRET" "$$JWT_SECRET_KEY" "$$ENCRYPTION_KEY"; do case "$$v" in *change_me*|*Y2hhbmdlX21l*) echo "错误：检测到占位密钥（change_me），请通过 .env 配置 ENCRYPTION_KEY 后重启" >&2; exit 1 ;; esac; done; fi; exec php start.php start'
     environment:
       - APP_ENV=production
       - DB_HOST=mysql

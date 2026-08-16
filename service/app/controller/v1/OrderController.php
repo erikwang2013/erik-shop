@@ -38,8 +38,7 @@ class OrderController extends \app\controller\BaseApiController
     {
         $userId = $request->userId;
         $status = $request->input('status');
-        $page = (int) $request->input('page', 1);
-        $perPage = min((int) $request->input('per_page', 10), 50);
+        [$page, $perPage] = $this->clampPage($request);
 
         $query = Orders::where('user_id', $userId);
         if ($status !== null && $status !== '') {

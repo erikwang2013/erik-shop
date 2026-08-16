@@ -43,8 +43,8 @@ class ComplianceCron
 
         $http = new HttpClient(['timeout' => 15]);
         $response = $http->get($sourceUrl);
-        $rules = json_decode($response->getBody(), true);
-        if (!is_array($rules)) {
+        $rules = json_decode($response->getBody(), true) ?: [];
+        if (empty($rules)) {
             Log::error('ComplianceCron 规则源返回数据格式错误');
             return;
         }

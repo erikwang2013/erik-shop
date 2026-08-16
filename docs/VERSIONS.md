@@ -50,6 +50,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ## 功能对比
 
+> 注：◐ = 表结构已建，业务待实现（当前仅有数据表与模型，无 API/业务代码或仅部分实现）
+
 ### 用户系统
 
 | 功能 | Lite | Standard | Full |
@@ -57,7 +59,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 邮箱注册/登录 (JWT) | ✅ | ✅ | ✅ |
 | 社交登录 (Google/Apple/Facebook) | — | ✅ | ✅ |
 | 地址管理 | ✅ | ✅ | ✅ |
-| 会员等级 + 积分 | — | — | ✅ |
+| 会员等级 + 积分 | — | — | ◐ |
 | 礼品卡 | — | — | ✅ |
 | KYC实名认证 | — | — | ✅ |
 
@@ -89,7 +91,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 退款 | ✅ | ✅ | ✅ |
 | 退货管理 | — | ✅ | ✅ |
 | 商业发票/装箱单 | — | ✅ | ✅ |
-| 物流保险 | — | — | ✅ |
+| 物流保险 | — | — | ◐ |
 
 ### 跨境物流
 
@@ -128,10 +130,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 供应商管理 | — | — | ✅ |
-| 采购单 | — | — | ✅ |
-| 质检 (入库+出库门禁) | — | — | ✅ |
+| 采购单 | — | — | ◐ |
+| 质检 (入库+出库门禁) | — | — | ◐ |
 | 库存流水 (不可变账本) | — | — | ✅ |
-| 库存调拨 | — | — | ✅ |
+| 库存调拨 | — | — | ◐ |
 
 ### 平台扩展
 
@@ -164,7 +166,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | DB连接池 | ✅ | ✅ | ✅ |
 | 令牌桶限流 | — | — | ✅ |
 | DB读写分离 | — | — | ✅ |
-| Cron 定时任务 (10个) | — | — | ✅ |
+| Cron 定时任务 (11个) | — | — | ✅ |
 
 ### 内容与增长
 
@@ -173,9 +175,9 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 系统通知 | ✅ | ✅ | ✅ |
 | 邮件模板 | — | — | ✅ |
 | CMS多语言页面 | — | — | ✅ |
-| FAQ + 知识库 | — | — | ✅ |
+| FAQ + 知识库 | — | — | ◐ |
 | 订阅周期购 | — | — | ✅ |
-| AB测试 | — | — | ✅ |
+| AB测试 | — | — | ◐ |
 | 实时客服 (WebSocket IM) | — | — | ✅ |
 
 ### 客户端
@@ -236,12 +238,12 @@ Full:       Cors → Security(31类) → RateLimit(令牌桶) → Platform → G
 | Service 模型 | 26 | 55 | 111 |
 | Service 控制器 | 15 | 24 | 39 |
 | Service 中间件 | 7 | 9+2 | 12+2 |
-| Service 工具类 | 5 | 5 | 8 |
+| Service 工具类 | 5 | 5 | 15 |
 | Admin 模型 | 15 | 34 | 76 |
 | Admin 控制器 | 15 | 27 | 82 |
 | Flutter 页面 | 11 | 11 | 11 |
 | HarmonyOS | — | — | 9页面 |
-| PHPUnit测试 | 22 | 22 | 22 |
+| PHPUnit测试 | 22 | 22 | 54 |
 
 ### 技术栈
 

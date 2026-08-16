@@ -62,6 +62,7 @@ return [
         'stripe' => ['rate' => 2.9, 'fixed' => 0.30],   // 2.9% + $0.30
         'paypal' => ['rate' => 3.49, 'fixed' => 0.49],  // 3.49% + $0.49
         'klarna' => ['rate' => 2.99, 'fixed' => 0.30],
+        'adyen' => ['rate' => 2.99, 'fixed' => 0.30],   // 与 KlarnaGateway 同档欧洲收单费率档位
     ],
 
     // 平台佣金率（用于分账）

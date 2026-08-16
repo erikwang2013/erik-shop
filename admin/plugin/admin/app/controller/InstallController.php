@@ -30,8 +30,13 @@ class InstallController extends Base
     {
         $database_config_file = base_path() . '/plugin/admin/config/database.php';
         clearstatcache();
-        if (is_file($database_config_file)) {
-            return $this->json(1, '管理后台已经安装！如需重新安装，请删除 ' . $database_config_file . ' 并重启');
+        $installed = is_file($database_config_file);
+        if ($installed) {
+            // 双校验：配置文件存在 + 数据库 installed 标记，仅删除文件无法重装
+            $installed = $this->checkInstalledFlag($database_config_file);
+        }
+        if ($installed) {
+            return $this->json(1, '管理后台已经安装！如需重新安装，请删除 ' . $database_config_file . ' 并清除数据库 wa_options 表中的 installed 标记，然后重启');
         }
 
         if (!class_exists(CaptchaBuilder::class) || !class_exists(Manager::class)) {
@@ -210,6 +215,10 @@ EOF;
         // 生成 service/.env
         $this->generateEnvFiles($host, $port, $database, $user, $password);
 
+        // 写入 installed 标记（重装需删除配置文件并清除该标记）
+        $time = date('Y-m-d H:i:s');
+        $db->exec("insert into `wa_options` (`name`, `value`, `created_at`, `updated_at`) values ('installed', '1', '$time', '$time') on duplicate key update `value` = '1', `updated_at` = '$time'");
+
         // 尝试reload
         if (function_exists('posix_kill')) {
             set_error_handler(function () {});
@@ -267,6 +276,26 @@ EOF;
 
         $request->session()->flush();
         return $this->json(0);
+    }
+
+    /**
+     * 校验数据库 installed 标记（配置文件存在 + DB 标记同时满足才算已安装）
+     * @param string $config_file
+     * @return bool
+     */
+    protected function checkInstalledFlag(string $config_file): bool
+    {
+        try {
+            $config = include $config_file;
+            $connection = $config['connections']['mysql'];
+            $pdo = $this->getPdo($connection['host'], $connection['username'], $connection['password'], $connection['port'], $connection['database']);
+            $smt = $pdo->query("select `value` from `wa_options` where `name` = 'installed' limit 1");
+            $row = $smt->fetch();
+            return (bool)$row && $row['value'] === '1';
+        } catch (\Throwable $e) {
+            // DB 不可达时按已安装处理（fail closed），不放开重装
+            return true;
+        }
     }
 
     /**

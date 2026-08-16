@@ -11,7 +11,6 @@ use app\common\RefundHelper;
 use app\common\RiskEngine;
 use app\model\OrderLogs;
 use app\model\Orders;
-use app\model\PaymentGateways;
 use app\model\PaymentGatewayMethods;
 use app\model\Payments;
 use app\model\PlatformSettlements;

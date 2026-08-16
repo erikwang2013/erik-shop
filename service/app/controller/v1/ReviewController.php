@@ -1,4 +1,8 @@
 <?php
+/**
+ * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+ */
+
 namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\model\OrderItems;
@@ -11,8 +15,7 @@ class ReviewController extends \app\controller\BaseApiController
     public function index(Request $request, string $productId): \support\Response
     {
         $productId = $this->decodedId($productId);
-        $page = (int) $request->input('page', 1);
-        $perPage = min((int) $request->input('per_page', 10), 50);
+        [$page, $perPage] = $this->clampPage($request);
         $rating = $request->input('rating');
 
         $query = ProductReviews::where('product_id', $productId)->where('status', 1);

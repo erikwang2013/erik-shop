@@ -43,8 +43,8 @@ class SocialAuth
     {
         $clientId = config('social.google.client_id', '');
         $resp = self::http()->get('https://oauth2.googleapis.com/tokeninfo', ['query' => ['id_token' => $idToken]]);
-        $info = json_decode((string)$resp->getBody(), true);
-        if (!is_array($info) || empty($info['sub'])) {
+        $info = json_decode((string)$resp->getBody(), true) ?: [];
+        if (empty($info['sub'])) {
             throw new \RuntimeException('Google id_token 无效');
         }
         if ($clientId !== '' && !empty($info['aud']) && $info['aud'] !== $clientId) {
@@ -60,8 +60,8 @@ class SocialAuth
     {
         $clientId = config('social.apple.client_id', '');
         $resp = self::http()->get('https://appleid.apple.com/auth/keys');
-        $keys = json_decode((string)$resp->getBody(), true);
-        if (!is_array($keys) || empty($keys['keys'])) {
+        $keys = json_decode((string)$resp->getBody(), true) ?: [];
+        if (empty($keys['keys'])) {
             throw new \RuntimeException('Apple 公钥获取失败');
         }
         try {
@@ -97,8 +97,8 @@ class SocialAuth
             'input_token' => $idToken,
             'access_token' => $appId . '|' . $appSecret,
         ]]);
-        $data = json_decode((string)$resp->getBody(), true);
-        if (!is_array($data) || empty($data['data']['is_valid'])) {
+        $data = json_decode((string)$resp->getBody(), true) ?: [];
+        if (empty($data['data']['is_valid'])) {
             throw new \RuntimeException('Facebook token 无效');
         }
         if (empty($data['data']['user_id'])) {

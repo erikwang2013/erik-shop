@@ -1,6 +1,7 @@
 <?php
 namespace app\controller\v1;
 use app\common\ApiResponse;
+use app\model\CookieConsents;
 use app\model\PrivacyRequests;
 use Webman\Http\Request;
 
@@ -28,5 +29,32 @@ class PrivacyController extends \app\controller\BaseApiController
         ]);
 
         return ApiResponse::success(null, '隐私请求已提交，我们将在30天内处理');
+    }
+
+    /**
+     * 提交 Cookie 偏好（GDPR/CCPA Consent）
+     * POST /api/privacy/cookie-consent
+     * {preferences: {necessary:true, analytics:bool, marketing:bool}, session_id?}
+     */
+    public function cookieConsent(Request $request): \support\Response
+    {
+        $preferences = $request->input('preferences', []);
+        $sessionId = (string) $request->input('session_id', '');
+        if (!is_array($preferences) || empty($preferences)) {
+            return ApiResponse::fail('preferences 不能为空', 422);
+        }
+
+        $version = (string) config('privacy.cookie_consent.version', '1.0');
+        $userId = $request->userId ?? 0;
+
+        CookieConsents::create([
+            'user_id' => $userId,
+            'session_id' => $sessionId,
+            'version' => $version,
+            'preferences' => json_encode($preferences),
+            'ip_address' => $request->getRealIp(),
+        ]);
+
+        return ApiResponse::success(['version' => $version], '已记录 Cookie 偏好');
     }
 }

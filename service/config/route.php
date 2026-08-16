@@ -132,6 +132,7 @@ Route::group('/api', function () {
     // 隐私
     Route::get('/privacy/request', [app\controller\v1\PrivacyController::class, 'index']);
     Route::post('/privacy/request', [app\controller\v1\PrivacyController::class, 'create']);
+    Route::post('/privacy/cookie-consent', [app\controller\v1\PrivacyController::class, 'cookieConsent']);
 
     // 会员
     Route::get('/membership', [app\controller\v1\MembershipController::class, 'index']);

@@ -129,4 +129,11 @@ return [
         'count' => 1,
         'reloadable' => false,
     ],
+
+    // 隐私合规执行（每小时：数据删除宽限期/导出/opt-out）
+    'privacy_compliance_cron' => [
+        'handler' => app\process\PrivacyComplianceTask::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
 ];

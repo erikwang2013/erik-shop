@@ -83,8 +83,9 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 购物车 | ✅ | ✅ | ✅ |
 | 订单管理 | ✅ | ✅ | ✅ |
 | 支付 (Stripe) | ✅ | ✅ | ✅ |
-| 支付 (PayPal/Klarna/Adyen) | — | ✅ | ✅ |
-| BNPL先买后付 | — | ✅ | ✅ |
+| 支付 (PayPal) | ✅ | ✅ | ✅ |
+| 支付 (Klarna/Adyen) | — | 占位 | 占位 |
+| BNPL先买后付 | — | 占位 | 占位 |
 | 退款 | ✅ | ✅ | ✅ |
 | 退货管理 | — | ✅ | ✅ |
 | 商业发票/装箱单 | — | ✅ | ✅ |

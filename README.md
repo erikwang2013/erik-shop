@@ -25,7 +25,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 **服务端：** PHP 8.3+, webman 2.1, MySQL 8.0, Redis 7, Elasticsearch 8
 **核心包：** snowflake-php, hashids, jwt-webman, encryption, encryptable, poster-php, webman-scout, season
-**支付：** Stripe, PayPal, Klarna, Adyen
+**支付：** Stripe, PayPal（完整）；Klarna, Adyen（占位，`PaymentGateway::make` 未实现，见 docs/PLAN.md）
 **客户端：** Flutter 3.x (Riverpod + GoRouter + Dio), HarmonyOS API 12+ (ArkTS + ArkUI)
 
 ## 架构图集
@@ -64,7 +64,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 **汇率服务**：`erik_exchange_rates` 汇率表支持 manual 手动维护与 exchangerate-api 自动拉取，按 `effective_at` 生效时间版本化管理，结算时取支付时点汇率快照。
 
-**原币扣款**：Stripe / PayPal / Klarna / Adyen 按订单币种原币扣款，Webhook 验签确认到账后更新支付与订单状态。
+**原币扣款**：Stripe / PayPal 按订单币种原币扣款（Klarna/Adyen 为占位，未接入），Webhook 验签确认到账后更新支付与订单状态。
 
 **分账结算**：支付成功后自动生成 `PlatformSettlements` 平台分账（订单总额 + 平台佣金 + 支付网关手续费，按订单币种记账）；卖家结算 `MerchantSettlements`（订单金额 → 抽成率 → 结算金额）、供应商结算 `SupplierSettlements`、分销佣金提现 `AffiliatePayouts` 四线独立结算，状态 0 待结算 / 1 已结算。
 
@@ -131,7 +131,7 @@ shop-php/
 | **多商家入驻** | 卖家审核、商品审核、分成分账 |
 | **跨境合规** | HS Code编码库、关税规则、VAT/IOSS、各国合规标签(FDA/CE/RoHS) |
 | **国际物流** | 物流分区运费、海外仓(发货仓+退货仓)、HS申报、商业发票/装箱单 |
-| **支付** | Stripe/PayPal/Klarna/Adyen、BNPL先买后付、3DS验证 |
+| **支付** | Stripe/PayPal（完整）、Klarna/Adyen（占位）、BNPL先买后付（占位）、3DS验证 |
 | **营销** | 优惠券(分区+新老客)、轮播图(区域可见)、秒杀、拼团、分销(链接+佣金+提现) |
 | **多平台** | Amazon/eBay/Shopee/Lazada/Temu商品刊登+订单聚合 |
 | **供应链** | 供应商评级、采购→质检→入库、库存流水(不可变账本)、调拨 |

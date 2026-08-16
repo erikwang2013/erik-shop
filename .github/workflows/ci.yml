@@ -47,6 +47,10 @@ jobs:
         working-directory: service
         run: composer install --no-progress --prefer-dist
 
+      - name: Install admin dependencies
+        working-directory: admin
+        run: composer install --no-progress --prefer-dist
+
       - name: Dependency security audit
         working-directory: service
         run: composer audit --no-interaction || echo "Known low-severity CVE tracked - CVE-2025-45769 (firebase/php-jwt <7.0.0, constrained by jwt-webman ^6.0)"
@@ -57,6 +61,14 @@ jobs:
 
       - name: Controller smoke check (admin)
         run: php scripts/smoke_controllers.php
+
+      - name: Admin PHPStan static analysis
+        working-directory: admin
+        run: vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+      - name: Admin PHPUnit tests
+        working-directory: admin
+        run: php vendor/bin/phpunit
 
       - name: PHP syntax check
         run: |

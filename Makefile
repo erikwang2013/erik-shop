@@ -15,8 +15,9 @@ reload: ## Graceful reload
 	cd service && php start.php reload
 	cd admin && php start.php reload
 
-test: ## Run PHPUnit tests
+test: ## Run PHPUnit tests (service + admin)
 	cd service && php vendor/bin/phpunit
+	cd admin && php vendor/bin/phpunit
 
 lint: ## Lint PHP syntax
 	@errors=$$(find service/app service/config admin/app admin/config -name "*.php" -exec php -l {} \; 2>&1 | grep -v "No syntax" || true); \

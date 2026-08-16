@@ -1,0 +1,17 @@
+parameters:
+    level: 5
+    paths:
+        - app
+        - plugin/admin/app
+    excludePaths:
+        - vendor
+        - runtime
+        - tests
+    ignoreErrors:
+        # Eloquent 魔法方法（__call 动态分发）
+        - '#Call to an undefined (static )?method (static )?plugin\\admin\\app\\model\\[A-Za-z0-9_]+::#'
+        - '#Call to an undefined (static )?method (static )?plugin\\admin\\app\\api\\[A-Za-z0-9_]+::#'
+        # Eloquent 数据库列动态属性
+        - '#Access to an undefined property plugin\\admin\\app\\model\\[A-Za-z0-9_]+::#'
+        # webman Request 动态属性
+        - '#Access to an undefined property Webman\\Http\\Request::#'

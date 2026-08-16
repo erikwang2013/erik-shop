@@ -109,6 +109,11 @@ Route::group('/api', function () {
     Route::post('/returns', [app\controller\v1\ReturnController::class, 'create']);
     Route::get('/returns/{id:\w+}/label', [app\controller\v1\ReturnController::class, 'label']);
 
+    // 退款申请
+    Route::post('/refunds', [app\controller\v1\RefundController::class, 'apply']);
+    Route::get('/refunds', [app\controller\v1\RefundController::class, 'index']);
+    Route::get('/refunds/{id:\w+}', [app\controller\v1\RefundController::class, 'show']);
+
     // KYC 实名认证
     Route::post('/kyc', [app\controller\v1\KycController::class, 'submit']);
     Route::get('/kyc/status', [app\controller\v1\KycController::class, 'status']);
@@ -123,6 +128,7 @@ Route::group('/api', function () {
     Route::post('/chat/sessions', [app\controller\v1\ChatController::class, 'store']);
     Route::get('/chat/sessions/{id:\w+}/messages', [app\controller\v1\ChatController::class, 'messages']);
     Route::post('/chat/sessions/{id:\w+}/messages', [app\controller\v1\ChatController::class, 'send']);
+    Route::post('/chat/sessions/{id:\w+}/close', [app\controller\v1\ChatController::class, 'close']);
 
     // 评价
     Route::post('/reviews', [app\controller\v1\ReviewController::class, 'store']);
@@ -180,9 +186,15 @@ Route::post('/webhook/payment/{gateway:\w+}', [app\controller\v1\PaymentControll
 // ===== 管理后台内部接口（需 X-Admin-Key 共享密钥） =====
 Route::post('/api/admin/refunds/{id:\w+}/execute', [app\controller\v1\AdminOpsController::class, 'executeRefund'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
+Route::post('/api/admin/refunds/{id:\w+}/approve', [app\controller\v1\AdminOpsController::class, 'approve'])
+    ->middleware([app\middleware\AdminKeyMiddleware::class]);
+Route::post('/api/admin/refunds/{id:\w+}/reject', [app\controller\v1\AdminOpsController::class, 'reject'])
+    ->middleware([app\middleware\AdminKeyMiddleware::class]);
 Route::post('/api/admin/orders/{id:\w+}/review', [app\controller\v1\AdminOpsController::class, 'reviewOrder'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
 Route::post('/api/admin/platform/listings', [app\controller\v1\AdminOpsController::class, 'createListing'])
+    ->middleware([app\middleware\AdminKeyMiddleware::class]);
+Route::post('/api/admin/chat/sessions/{id:\w+}/close', [app\controller\v1\ChatController::class, 'adminClose'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
 
 // ===== 健康检查（无需JWT，供探活/负载均衡） =====

@@ -55,6 +55,13 @@ return [
         'type' => 0,
         'children' => [
             [
+                'title' => '商城用户',
+                'key' => 'plugin\\admin\\app\\controller\\shop\\ShopUserController',
+                'href' => '/app/admin/shop/ShopUser/index',
+                'type' => 1,
+                'weight' => 810,
+            ],
+            [
                 'title' => '用户',
                 'key' => 'plugin\\admin\\app\\controller\\UserController',
                 'href' => '/app/admin/user/index',

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <title>退款管理</title>
+        <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
+        <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
+    </head>
+    <body class="pear-container">
+
+        <!-- 顶部查询表单 -->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <form class="layui-form top-search-from">
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">退款单号</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="refund_no" value="" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-block">
+                            <select name="status">
+                                <option value="">全部</option>
+                                <option value="0">待审</option>
+                                <option value="1">通过</option>
+                                <option value="2">驳回</option>
+                                <option value="3">已退款</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label"></label>
+                        <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
+                            <i class="layui-icon layui-icon-search"></i>查询
+                        </button>
+                        <button type="reset" class="pear-btn pear-btn-md" lay-submit lay-filter="table-reset">
+                            <i class="layui-icon layui-icon-refresh"></i>重置
+                        </button>
+                    </div>
+                    <div class="toggle-btn">
+                        <a class="layui-hide">展开<i class="layui-icon layui-icon-down"></i></a>
+                        <a class="layui-hide">收起<i class="layui-icon layui-icon-up"></i></a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <table id="data-table" lay-filter="data-table"></table>
+            </div>
+        </div>
+
+        <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
+        <script src="/app/admin/component/pear/pear.js"></script>
+        <script src="/app/admin/admin/js/permission.js"></script>
+        <script src="/app/admin/admin/js/common.js"></script>
+        <script>
+
+            // 相关常量
+            const PRIMARY_KEY = "id";
+            const SELECT_API = "/app/admin/shop/ShopRefund/select";
+            const UPDATE_API = "/app/admin/shop/ShopRefund/update";
+            const STATUS_TEXT = ["待审", "通过", "驳回", "已退款"];
+
+            // 表格渲染
+            layui.use(["table", "form", "common", "popup", "util", "layer"], function() {
+                let table = layui.table;
+                let form = layui.form;
+                let $ = layui.$;
+                let common = layui.common;
+                let util = layui.util;
+                let layer = layui.layer;
+
+                // 表头参数
+                let cols = [
+                    {
+                        type: "checkbox"
+                    },{
+                        title: "ID",
+                        field: "id",
+                    },{
+                        title: "退款单号",
+                        field: "refund_no",
+                    },{
+                        title: "订单ID",
+                        field: "order_id",
+                    },{
+                        title: "用户ID",
+                        field: "user_id",
+                    },{
+                        title: "类型",
+                        field: "type",
+                        templet: function (d) {
+                            let text = d["type"] == 1 ? "仅退款" : (d["type"] == 2 ? "退货退款" : "未知");
+                            return util.escape(text);
+                        }
+                    },{
+                        title: "金额",
+                        field: "amount",
+                        sort: true,
+                    },{
+                        title: "状态",
+                        field: "status",
+                        templet: function (d) {
+                            return util.escape(STATUS_TEXT[d["status"]] ?? "未知");
+                        }
+                    },{
+                        title: "申请时间",
+                        field: "created_at",
+                        sort: true,
+                    },{
+                        title: "操作",
+                        width: 100,
+                        templet: function (d) {
+                            if (d["status"] == 0) {
+                                return '<a class="layui-btn layui-btn-sm" lay-event="audit">审核</a>';
+                            }
+                            return '<span class="layui-badge layui-bg-gray">已处理</span>';
+                        }
+                    }
+                ];
+
+                // 渲染表格
+                function render()
+                {
+                    table.render({
+                        elem: "#data-table",
+                        url: SELECT_API,
+                        page: true,
+                        cols: [cols],
+                        skin: "line",
+                        size: "lg",
+                        autoSort: false,
+                        defaultToolbar: [{
+                            title: "刷新",
+                            layEvent: "refresh",
+                            icon: "layui-icon-refresh",
+                        }, "filter", "print", "exports"],
+                    });
+                }
+
+                render();
+
+                // 查询
+                form.on("submit(table-query)", function (data) {
+                    let where = {};
+                    let field = data.field;
+                    if (field.refund_no) {
+                        where["refund_no"] = {like: field.refund_no};
+                    }
+                    if (field.status !== "") {
+                        where["status"] = field.status;
+                    }
+                    table.reload("data-table", {
+                        where: where,
+                        page: {curr: 1}
+                    });
+                    return false;
+                });
+
+                // 重置
+                form.on("submit(table-reset)", function () {
+                    $("form.top-search-from")[0].reset();
+                    form.render();
+                    table.reload("data-table", {
+                        where: {},
+                        page: {curr: 1}
+                    });
+                    return false;
+                });
+
+                // 刷新按钮
+                table.on("toolbar(data-table)", function (obj) {
+                    if (obj.event === "refresh") {
+                        common.refresh();
+                    }
+                });
+
+                // 审核弹窗：1通过 / 2驳回(需原因) / 3已退款(调用真实网关退款)
+                table.on("tool(data-table)", function (obj) {
+                    if (obj.event === "audit") {
+                        openAudit(obj.data);
+                    }
+                });
+
+                function openAudit(row)
+                {
+                    layer.open({
+                        type: 1,
+                        title: "退款审核 - " + row["refund_no"],
+                        area: ["420px", "300px"],
+                        content: '<div class="layui-form" style="padding:20px 20px 0 0">' +
+                            '<div class="layui-form-item">' +
+                            '<label class="layui-form-label">状态</label>' +
+                            '<div class="layui-input-block">' +
+                            '<select name="status" lay-filter="audit-status">' +
+                            '<option value="1">通过（待退款）</option>' +
+                            '<option value="3">已退款（执行网关退款）</option>' +
+                            '<option value="2">驳回</option>' +
+                            '</select>' +
+                            '</div></div>' +
+                            '<div class="layui-form-item" id="reject-box" style="display:none">' +
+                            '<label class="layui-form-label">驳回原因</label>' +
+                            '<div class="layui-input-block"><textarea name="reject_reason" class="layui-textarea"></textarea></div>' +
+                            '</div>' +
+                            '</div>',
+                        btn: ["提交", "取消"],
+                        success: function (layero) {
+                            form.render();
+                            form.on("select(audit-status)", function (data) {
+                                $("#reject-box", layero).toggle(data.value === "2");
+                            });
+                        },
+                        yes: function (index, layero) {
+                            let status = $("select[name=status]", layero).val();
+                            let rejectReason = $("textarea[name=reject_reason]", layero).val();
+                            if (status === "2" && !rejectReason) {
+                                layui.popup.warning("驳回时必须填写原因");
+                                return false;
+                            }
+                            let loading = layer.load();
+                            $.ajax({
+                                url: UPDATE_API,
+                                data: {id: row.id, status: status, reject_reason: rejectReason},
+                                dataType: "json",
+                                type: "post",
+                                success: function (res) {
+                                    layer.close(loading);
+                                    if (res.code) {
+                                        return layui.popup.failure(res.msg);
+                                    }
+                                    layer.close(index);
+                                    layui.popup.success("操作成功", function () {
+                                        table.reloadData("data-table", {scrollPos: "fixed"});
+                                    });
+                                }
+                            });
+                        }
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>

@@ -21,6 +21,34 @@ class Crud extends Base
     protected $model = null;
 
     /**
+     * 子类常以类名常量声明 $model，这里统一实例化，避免 select() 中 getTable() on string
+     */
+    public function __construct()
+    {
+        if (is_string($this->model) && class_exists($this->model)) {
+            $this->model = new ($this->model)();
+        }
+    }
+
+    /**
+     * 列表页视图：菜单 href 指向 index，但 Crud 无此方法会 404。
+     * 视图目录约定为 view/shop/{控制器名小写}/index.html（如 ShopOrderController -> shop/order）。
+     */
+    public function index()
+    {
+        $class = str_replace('\\', '/', static::class);
+        $pos = strrpos($class, '/controller/');
+        $name = substr($class, $pos + strlen('/controller/'), -strlen('Controller'));
+        // 去掉子命名空间前缀（shop/ShopCategory -> ShopCategory）
+        $name = basename($name);
+        // 商城控制器约定：ShopCategoryController -> view/shop/category/index.html
+        if (str_starts_with($name, 'Shop')) {
+            $name = 'shop/' . substr($name, 4);
+        }
+        return view(strtolower($name) . '/index');
+    }
+
+    /**
      * 查询
      * @param Request $request
      * @return Response
@@ -183,7 +211,8 @@ class Crud extends Base
         ];
         $paginator = $query->paginate($limit);
         $total = $paginator->total();
-        $items = $paginator->items();
+        // illuminate 12 下 paginate()->items() 返回模型数组，包回 Eloquent\Collection 供 afterQuery 里 load() 使用
+        $items = new \Illuminate\Database\Eloquent\Collection($paginator->items());
         if (method_exists($this, "afterQuery")) {
             $items = call_user_func([$this, "afterQuery"], $items);
         }

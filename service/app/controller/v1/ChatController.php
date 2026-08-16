@@ -83,11 +83,50 @@ class ChatController extends \app\controller\BaseApiController
      * 发送消息
      * POST /api/chat/sessions/{id}/messages  {content, content_type?}
      */
+    /**
+     * 关闭会话（用户本人）
+     * POST /api/chat/sessions/{id}/close
+     */
+    public function close(Request $request, string $id): \support\Response
+    {
+        $session = $this->ownedSession($request->userId, $id);
+        if (!$session) {
+            return ApiResponse::fail('会话不存在', 404);
+        }
+        $closed = ChatWs::closeSession($session->id);
+        return ApiResponse::success([
+            'id' => $closed->id,
+            'status' => $closed->status,
+            'closed_at' => $closed->closed_at,
+        ], '会话已关闭');
+    }
+
+    /**
+     * 关闭任意会话（客服，X-Admin-Key 鉴权由 AdminKeyMiddleware 完成）
+     * POST /api/admin/chat/sessions/{id}/close
+     */
+    public function adminClose(Request $request, string $id): \support\Response
+    {
+        $session = ChatSessions::where('id', $this->decodedId($id))->first();
+        if (!$session) {
+            return ApiResponse::fail('会话不存在', 404);
+        }
+        $closed = ChatWs::closeSession($session->id);
+        return ApiResponse::success([
+            'id' => $closed->id,
+            'status' => $closed->status,
+            'closed_at' => $closed->closed_at,
+        ], '会话已关闭');
+    }
+
     public function send(Request $request, string $id): \support\Response
     {
         $session = $this->ownedSession($request->userId, $id);
         if (!$session) {
             return ApiResponse::fail('会话不存在', 404);
+        }
+        if ($session->status === 'closed') {
+            return ApiResponse::fail('会话已关闭，无法发送消息', 409);
         }
         $content = trim((string) $request->input('content', ''));
         if ($content === '') {

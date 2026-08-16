@@ -1,0 +1,106 @@
+<?php
+/**
+ * Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+ */
+
+namespace app\controller\v1;
+
+use app\common\ApiResponse;
+use app\model\Orders;
+use app\model\Payments;
+use app\model\Refunds;
+use Webman\Http\Request;
+
+/**
+ * 用户退款申请（仅已付款订单，写入待审退款单，由 admin 审核）
+ */
+class RefundController extends \app\controller\BaseApiController
+{
+    /**
+     * 申请退款
+     * POST /api/refunds  {order_id, amount, reason}
+     * 仅已付款(status=1)订单可申请；退款金额 ≤ 可退余额（实付 - 已退 - 在审）
+     */
+    public function apply(Request $request): \support\Response
+    {
+        $userId = (int) $request->userId;
+        $orderId = $this->decodedId((string) $request->input('order_id', ''));
+        $amount = (float) $request->input('amount', 0);
+        $reason = (string) $request->input('reason', '');
+
+        if ($orderId === '' || $amount <= 0) {
+            return ApiResponse::fail('订单与退款金额不能为空', 422);
+        }
+        if (mb_strlen($reason) > 256) {
+            return ApiResponse::fail('退款原因过长', 422);
+        }
+
+        $order = Orders::where('id', $orderId)->where('user_id', $userId)->first();
+        if (!$order) {
+            return ApiResponse::fail('订单不存在', 404);
+        }
+        // 已付款(1)或部分退款中(6)可继续申请剩余额度；已退款(7)由可退余额校验兜底
+        if (!in_array((int) $order->status, [1, 6], true)) {
+            return ApiResponse::fail('仅已付款订单可申请退款', 422);
+        }
+
+        $payment = Payments::where('order_id', $order->id)->where('status', 1)->first();
+        if (!$payment) {
+            return ApiResponse::fail('该订单无已支付记录，无法退款', 422);
+        }
+
+        // 可退余额 = 实付 - 已退(status=3) - 在审(status=0/1)，驳回(status=2)不占额度
+        $pending = (float) Refunds::where('order_id', $order->id)->whereIn('status', [0, 1])->sum('amount');
+        $refundable = round((float) $payment->amount - (float) $payment->refunded_amount - $pending, 2);
+        if ($amount > $refundable + 0.01) {
+            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max($refundable, 0.0), 2) . '）', 422);
+        }
+
+        $refund = Refunds::create([
+            'order_id' => $order->id,
+            'user_id' => $userId,
+            'refund_no' => 'R' . date('YmdHis') . strtoupper(substr(md5(uniqid('', true)), 0, 6)),
+            'type' => 1,
+            'amount' => $amount,
+            'reason' => $reason,
+            'status' => 0, // 待审
+        ]);
+
+        return ApiResponse::success([
+            'refund_id' => $refund->id,
+            'refund_no' => $refund->refund_no,
+        ], '退款申请已提交，等待审核');
+    }
+
+    /**
+     * 我的退款申请列表（分页）
+     * GET /api/refunds?page=&per_page=
+     */
+    public function index(Request $request): \support\Response
+    {
+        $userId = (int) $request->userId;
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = min(50, max(1, (int) $request->input('per_page', 20)));
+
+        $query = Refunds::where('user_id', $userId);
+        $total = (clone $query)->count();
+        $items = $query->orderByDesc('id')->forPage($page, $perPage)->get()->toArray();
+
+        return ApiResponse::paginate($items, $total, $page, $perPage);
+    }
+
+    /**
+     * 退款申请详情（限本人）
+     * GET /api/refunds/{id}
+     */
+    public function show(Request $request, string $id): \support\Response
+    {
+        $userId = (int) $request->userId;
+        $refund = Refunds::where('id', $this->decodedId($id))->where('user_id', $userId)->first();
+        if (!$refund) {
+            return ApiResponse::fail('退款记录不存在', 404);
+        }
+
+        return ApiResponse::success($refund->toArray());
+    }
+}

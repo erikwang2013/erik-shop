@@ -3,6 +3,7 @@ namespace plugin\admin\app\controller\shop;
 use plugin\admin\app\controller\Crud;
 use plugin\admin\app\model\shop\Products;
 use plugin\admin\app\model\shop\Categories;
+use plugin\admin\app\model\shop\ProductSkus;
 
 /**
  * @Apidoc\Group("product")
@@ -14,9 +15,17 @@ class ShopProductController extends Crud
 
     protected function afterQuery($items)
     {
-        $items->load(["skus", "images", "translations"]);
+        if ($items->isEmpty()) {
+            return $items;
+        }
+        $skuStock = ProductSkus::whereIn('product_id', $items->pluck('id'))
+            ->selectRaw('product_id, SUM(stock) AS stock')->groupBy('product_id')
+            ->pluck('stock', 'product_id');
+        $catNames = Categories::whereIn('id', $items->pluck('category_id')->filter()->unique())
+            ->pluck('name', 'id');
         foreach ($items as $item) {
-            $item->category_name = Categories::find($item->category_id)->name ?? "";
+            $item->stock = (int)($skuStock[$item->id] ?? 0);
+            $item->category_name = $catNames[$item->category_id] ?? "";
         }
         return $items;
     }

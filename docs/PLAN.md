@@ -58,7 +58,11 @@
 | 第二轮：DevOps 收敛 | ✅ | docker-compose 端口收敛 127.0.0.1、.dockerignore×2、.gitignore 鸿蒙构建产物、CI 加 Flutter/hvigor jobs、download-geoip.php 脚本 |
 | 第二轮：集成测试 + admin P0 UI | ✅ | IntegrationTestCase（MySQL 可用性跳过 + 默认测试库每用例清库）+ OrderFlow/StripeWebhook/Hashids 测试（phpunit 40 tests / 155 assertions 全绿）；ShopOrder/ShopPayment 模型初始化修复；admin 订单/支付 LayUI 列表页 |
 | 🔴 新发现 bug：webhook 分账写入被 NOT NULL 列阻断 | ✅ | PaymentController::handlePaymentSucceeded 的 PlatformSettlements::create 缺 supplier_amount/affiliate_amount（schema NOT NULL 无默认值→webhook 恒 500）；已补 max(0, 总额-平台费-网关费) 计算（与 SettlementCron 同源）；StripeWebhook 集成测试 5/5 通过 |
-| 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证、WS 客服端鉴权/会话关闭、Flutter/鸿蒙编译验证、鸿蒙安全存储真机验证 |
+| 第三轮：退款申请闭环 | ✅ | RefundController（POST /api/refunds 申请 + 列表/详情，可退余额=实付-已退-在审）+ AdminOps approve（0→3 原子门闩 + RefundHelper 联动）/reject（0→2）；Refunds status 语义按 schema：0待审/2驳回/3已退；RefundFlow 集成测试 3/34 |
+| 第三轮：WS 客服补全 | ✅ | ChatWs 客服端鉴权（首帧 {type:'auth',role:'agent',key} + hash_equals 恒定时间比较，握手 pending 角色）+ 会话关闭（REST close/adminClose + WS close 帧，closed 拦截 REST 409/WS error，closeSession 幂等 + 广播）；ChatWs 测试 5/21 |
+| 第三轮：admin 核心管理页 | ✅ | 商品/用户/退款/优惠券/分类 5 页（LayUI 对齐 order/payment，列表+分页+搜索+状态筛选+审核弹窗）；Crud.php 3 处根因修复（doFormat items() 包回 Collection 覆盖 ShopOrder/ShopReturn 同款 latent bug、string 模型实例化、视图路径推导）+ ShopProduct afterQuery 库存聚合；ShopUserController 新增 |
+| 第三轮：QA 固化 | ✅ | SubscriptionCron（续费订单/billing_cycle+1/next_billing 顺延/库存不足与下架 paused）+ ES 降级（SQL LIKE + SearchLogs 记录）测试；🔴 新发现修复：SearchLogs 缺 $timestamps=false → 搜索写日志 SQLSTATE 1054 500；全套 54 tests / 256 assertions 0 失败 |
+| 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证（无 ES 服务）、Flutter/鸿蒙编译验证（无工具链）、鸿蒙安全存储真机验证 |
 
 ---
 

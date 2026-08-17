@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\model\Orders;
 use app\model\OrderItems;
 use app\model\ProductSkus;
@@ -45,7 +46,8 @@ class SubscriptionController extends \app\controller\BaseApiController
         }
 
         try {
-            $result = Db::transaction(function () use ($userId, $sku, $intervalDays, $quantity) {
+            // 用户粒度防重锁：同用户并发创建订阅会生成重复订阅+首期订单
+            $result = DistributedLock::run("lock:subscribe:{$userId}", fn () => Db::transaction(function () use ($userId, $sku, $intervalDays, $quantity) {
                 // 创建订阅
                 $subscription = Subscriptions::create([
                     'user_id' => $userId,
@@ -99,7 +101,9 @@ class SubscriptionController extends \app\controller\BaseApiController
                     'next_billing_at' => $subscription->next_billing_at,
                     'first_amount' => $subtotal,
                 ];
-            });
+            }));
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
         } catch (\Throwable $e) {
             \support\Log::error('创建订阅失败: ' . $e->getMessage(), ['user_id' => $userId, 'trace' => $e->getTraceAsString()]);
             return ApiResponse::fail('创建订阅失败，请稍后重试', 500);
@@ -140,23 +144,30 @@ class SubscriptionController extends \app\controller\BaseApiController
         $id = $this->decodedId($id);
         $userId = $request->userId;
 
-        $subscription = Subscriptions::where('id', $id)->where('user_id', $userId)->first();
-        if (!$subscription) {
-            return ApiResponse::fail('订阅不存在', 404);
-        }
-        if ($subscription->status !== 'active') {
-            return ApiResponse::fail('仅进行中的订阅可取消', 422);
-        }
+        // 订阅粒度锁：串行化取消/续订等状态变更，防止并发双取消重复写日志
+        try {
+            return DistributedLock::run("lock:subscribe:{$id}", function () use ($id, $userId) {
+                $subscription = Subscriptions::where('id', $id)->where('user_id', $userId)->first();
+                if (!$subscription) {
+                    return ApiResponse::fail('订阅不存在', 404);
+                }
+                if ($subscription->status !== 'active') {
+                    return ApiResponse::fail('仅进行中的订阅可取消', 422);
+                }
 
-        $subscription->status = 'cancelled';
-        $subscription->cancelled_at = date('Y-m-d H:i:s');
-        $subscription->save();
-        SubscriptionLogs::create([
-            'subscription_id' => $subscription->id,
-            'action' => 'cancel',
-            'remark' => '用户取消订阅',
-        ]);
+                $subscription->status = 'cancelled';
+                $subscription->cancelled_at = date('Y-m-d H:i:s');
+                $subscription->save();
+                SubscriptionLogs::create([
+                    'subscription_id' => $subscription->id,
+                    'action' => 'cancel',
+                    'remark' => '用户取消订阅',
+                ]);
 
-        return ApiResponse::success(null, '订阅已取消');
+                return ApiResponse::success(null, '订阅已取消');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
+        }
     }
 }

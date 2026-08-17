@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\common\InventoryLogger;
 use app\common\RiskEngine;
 use app\model\Orders;
@@ -129,8 +130,9 @@ class OrderController extends \app\controller\BaseApiController
         }
 
         // 事务内创建订单 + 明细 + 原子扣库存 + 清购物车，任一步失败整体回滚
+        // 用户粒度防重锁：同用户串行下单，杜绝连点重复创建订单
         try {
-            $result = Db::transaction(function () use ($userId, $address, $country, $cartItems, $currencyCode, $remark, $couponId, $weightGrams, $request) {
+            $result = DistributedLock::run("lock:order:{$userId}", fn () => Db::transaction(function () use ($userId, $address, $country, $cartItems, $currencyCode, $remark, $couponId, $weightGrams, $request) {
                 // 生成订单号
                 $orderNo = 'ORD' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
 
@@ -281,8 +283,12 @@ class OrderController extends \app\controller\BaseApiController
                     'pay_amount' => $payAmount,
                     'currency_code' => $currencyCode,
                 ];
-            });
+            }));
         } catch (\RuntimeException $e) {
+            // 锁超时/未获取 → 429；SKU 不存在/库存不足等业务异常维持 422
+            if (str_contains($e->getMessage(), '操作繁忙')) {
+                return ApiResponse::fail('操作太快，请稍后重试', 429);
+            }
             return ApiResponse::fail($e->getMessage(), 422);
         } catch (\Throwable $e) {
             \support\Log::error('订单创建失败: ' . $e->getMessage(), [

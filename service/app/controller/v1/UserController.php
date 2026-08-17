@@ -5,6 +5,7 @@
 
 namespace app\controller\v1;
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\model\Users;
 use app\model\UserAddresses;
 use Webman\Http\Request;
@@ -36,24 +37,37 @@ class UserController extends \app\controller\BaseApiController
     {
         $data = $request->only(['name','phone','country_id','province','city','district','detail','postal_code','is_default','tag']);
         $data['user_id'] = $request->userId;
-        if ($request->input('is_default')) {
-            UserAddresses::where('user_id', $request->userId)->update(['is_default' => 0]);
+        // 用户粒度锁：is_default 先清后设，并发设置会留下多个默认地址
+        try {
+            return DistributedLock::run("lock:address:{$request->userId}", function () use ($request, $data) {
+                if ($request->input('is_default')) {
+                    UserAddresses::where('user_id', $request->userId)->update(['is_default' => 0]);
+                }
+                $addr = UserAddresses::create($data);
+                return ApiResponse::success($addr, '添加成功');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
         }
-        $addr = UserAddresses::create($data);
-        return ApiResponse::success($addr, '添加成功');
     }
 
     public function updateAddress(Request $request, string $id): \support\Response
     {
         $id = $this->decodedId($id);
-        $addr = UserAddresses::where('id',$id)->where('user_id',$request->userId)->first();
-        if (!$addr) return ApiResponse::fail('地址不存在', 404);
-        $data = $request->only(['name','phone','country_id','province','city','district','detail','postal_code','is_default','tag']);
-        if ($request->input('is_default')) {
-            UserAddresses::where('user_id', $request->userId)->update(['is_default' => 0]);
+        try {
+            return DistributedLock::run("lock:address:{$request->userId}", function () use ($request, $id) {
+                $addr = UserAddresses::where('id',$id)->where('user_id',$request->userId)->first();
+                if (!$addr) return ApiResponse::fail('地址不存在', 404);
+                $data = $request->only(['name','phone','country_id','province','city','district','detail','postal_code','is_default','tag']);
+                if ($request->input('is_default')) {
+                    UserAddresses::where('user_id', $request->userId)->update(['is_default' => 0]);
+                }
+                $addr->fill(array_filter($data))->save();
+                return ApiResponse::success($addr, '更新成功');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
         }
-        $addr->fill(array_filter($data))->save();
-        return ApiResponse::success($addr, '更新成功');
     }
 
     public function deleteAddress(Request $request, string $id): \support\Response

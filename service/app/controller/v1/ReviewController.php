@@ -5,6 +5,7 @@
 
 namespace app\controller\v1;
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\model\OrderItems;
 use app\model\Orders;
 use app\model\ProductReviews;
@@ -50,26 +51,34 @@ class ReviewController extends \app\controller\BaseApiController
             if (!$hasItem) {
                 return ApiResponse::fail('该订单未包含此商品', 422);
             }
-            $dup = ProductReviews::where('user_id', $userId)
-                ->where('product_id', $productId)
-                ->where('order_id', $orderId)
-                ->exists();
-            if ($dup) {
-                return ApiResponse::fail('该订单商品已评价过', 422);
-            }
         }
 
-        $review = ProductReviews::create([
-            'user_id' => $userId,
-            'product_id' => $productId,
-            'order_id' => $orderId,
-            'sku_id' => $skuId,
-            'rating' => $rating,
-            'content' => $content,
-            'images' => $images,
-            'status' => 1,
-        ]);
+        // 用户+商品+订单粒度锁：并发重复评价会绕过 exists 检查（表无唯一索引兜底）
+        try {
+            return DistributedLock::run("lock:review:{$userId}:{$productId}:{$orderId}", function () use ($userId, $productId, $orderId, $skuId, $rating, $content, $images) {
+                $dup = ProductReviews::where('user_id', $userId)
+                    ->where('product_id', $productId)
+                    ->where('order_id', $orderId)
+                    ->exists();
+                if ($dup) {
+                    return ApiResponse::fail('该订单商品已评价过', 422);
+                }
 
-        return ApiResponse::success($review, '评价发表成功');
+                $review = ProductReviews::create([
+                    'user_id' => $userId,
+                    'product_id' => $productId,
+                    'order_id' => $orderId,
+                    'sku_id' => $skuId,
+                    'rating' => $rating,
+                    'content' => $content,
+                    'images' => $images,
+                    'status' => 1,
+                ]);
+
+                return ApiResponse::success($review, '评价发表成功');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
+        }
     }
 }

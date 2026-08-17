@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\model\Orders;
 use app\model\Payments;
 use app\model\Refunds;
@@ -35,41 +36,49 @@ class RefundController extends \app\controller\BaseApiController
             return ApiResponse::fail('退款原因过长', 422);
         }
 
-        $order = Orders::where('id', $orderId)->where('user_id', $userId)->first();
-        if (!$order) {
-            return ApiResponse::fail('订单不存在', 404);
-        }
-        // 已付款(1)或部分退款中(6)可继续申请剩余额度；已退款(7)由可退余额校验兜底
-        if (!in_array((int) $order->status, [1, 6], true)) {
-            return ApiResponse::fail('仅已付款订单可申请退款', 422);
-        }
+        // 并发锁：查支付记录、算可退余额、校验与创建退款单需在同一订单锁内完成，防止并发申请各自读到同一在审余额
+        try {
+            return DistributedLock::run('lock:refund:' . $orderId, function () use ($userId, $orderId, $amount, $reason) {
+                // 锁内重查订单，防止锁前读到旧状态
+                $order = Orders::where('id', $orderId)->where('user_id', $userId)->first();
+                if (!$order) {
+                    return ApiResponse::fail('订单不存在', 404);
+                }
+                // 已付款(1)或部分退款中(6)可继续申请剩余额度；已退款(7)由可退余额校验兜底
+                if (!in_array((int) $order->status, [1, 6], true)) {
+                    return ApiResponse::fail('仅已付款订单可申请退款', 422);
+                }
 
-        $payment = Payments::where('order_id', $order->id)->where('status', 1)->first();
-        if (!$payment) {
-            return ApiResponse::fail('该订单无已支付记录，无法退款', 422);
+                $payment = Payments::where('order_id', $order->id)->where('status', 1)->first();
+                if (!$payment) {
+                    return ApiResponse::fail('该订单无已支付记录，无法退款', 422);
+                }
+
+                // 可退余额 = 实付 - 已退(status=3) - 在审(status=0/1)，驳回(status=2)不占额度
+                $pending = (float) Refunds::where('order_id', $order->id)->whereIn('status', [0, 1])->sum('amount');
+                $refundable = round((float) $payment->amount - (float) $payment->refunded_amount - $pending, 2);
+                if ($amount > $refundable + 0.01) {
+                    return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max($refundable, 0.0), 2) . '）', 422);
+                }
+
+                $refund = Refunds::create([
+                    'order_id' => $order->id,
+                    'user_id' => $userId,
+                    'refund_no' => 'R' . date('YmdHis') . strtoupper(substr(md5(uniqid('', true)), 0, 6)),
+                    'type' => 1,
+                    'amount' => $amount,
+                    'reason' => $reason,
+                    'status' => 0, // 待审
+                ]);
+
+                return ApiResponse::success([
+                    'refund_id' => $refund->id,
+                    'refund_no' => $refund->refund_no,
+                ], '退款申请已提交，等待审核');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
         }
-
-        // 可退余额 = 实付 - 已退(status=3) - 在审(status=0/1)，驳回(status=2)不占额度
-        $pending = (float) Refunds::where('order_id', $order->id)->whereIn('status', [0, 1])->sum('amount');
-        $refundable = round((float) $payment->amount - (float) $payment->refunded_amount - $pending, 2);
-        if ($amount > $refundable + 0.01) {
-            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max($refundable, 0.0), 2) . '）', 422);
-        }
-
-        $refund = Refunds::create([
-            'order_id' => $order->id,
-            'user_id' => $userId,
-            'refund_no' => 'R' . date('YmdHis') . strtoupper(substr(md5(uniqid('', true)), 0, 6)),
-            'type' => 1,
-            'amount' => $amount,
-            'reason' => $reason,
-            'status' => 0, // 待审
-        ]);
-
-        return ApiResponse::success([
-            'refund_id' => $refund->id,
-            'refund_no' => $refund->refund_no,
-        ], '退款申请已提交，等待审核');
     }
 
     /**

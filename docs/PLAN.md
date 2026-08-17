@@ -68,7 +68,10 @@
 | 第四轮：文档/索引一致性 | ✅ | VERSIONS 7 项虚标 ✅→◐（实测仅表+模型）+ 规模表（Cron 11、工具类 15、测试 54/256）；api.md 补 DELETE /api/comparisons/{id}；payment.php 补 adyen 费率 2.99/0.30；install.sql 补 6 索引（refunds/return_orders idx_user_id、platform_listings idx_account_product、group_buys/flash_sales/coupons idx_status_time）+ scripts/index-fixes.sql（未执行，供存量库）；🔴 待办：service/CLAUDE.md 工具类 8→15、PHPUnit 22→54 计数过期 |
 | 第四轮：安全加固 | ✅ | BaseModel `$guarded=['id','money','score','level','created_at','updated_at']`（审计原清单含 user_id/status 等 6 列，grep 证实 40+ 处 create() 批量赋值→封死即数据损坏，按最小可破坏清单执行）；admin 5 页 table.render 加 `escape: true`；UploadController 黑名单→19 种扩展名白名单；InstallController 双校验（配置文件 + wa_options installed=1 标记，DB 不可达 fail-closed）；🔴 另报预存 bug：product/index.html 库存列 templet 无 return 显示 undefined |
 | 第四轮：测试补强 | ✅ | SubscriptionController 4/33（周期校验/越权/取消幂等）+ Kyc 6/27（Encryptable 解密还原/驳回重提/通过禁提）+ RiskEngine 6/22（临时邮箱/大额/地址不匹配/velocity/ip_reputation）集成测试；Kyc 测试方法改名规避 PHPUnit 12 final status() 覆写致命错误；全套 70 tests / 338 assertions 0 失败（1 个既有 vendor warning：encryptable 空 IV）|
-| 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证（无 ES 服务）、Flutter/鸿蒙编译验证（无工具链）、鸿蒙安全存储真机验证、cs-fixer 格式化提交后 CI 加步骤、admin 依赖升级后加 audit 步骤 |
+| 第五轮：并发锁基础设施 | ✅ | 新增 app/common/DistributedLock.php（Redis SET NX EX 自旋锁，Lua 原子释放仅删自持锁，fail-closed：Redis 异常不裸奔；单机/分布式一条路径）；webman/redis-queue v2.1.1 接入（db=2 prefix=erik_queue:，消费进程 count=8，consumer_dir=app/queue/redis）；组件 5 项验证脚本全过（双进程竞争/超时/防误删） |
+| 第五轮：写操作加锁 | ✅ | 下单防重 lock:order:{userId}（OrderController store 事务整体入锁，锁超时 429/业务异常 422）；支付幂等 lock:payment:{orderId}（锁内查待支付记录命中即返，防重复待支付单）；退款申请 lock:refund:{orderId}（锁内重查订单+可退余额，防并发超额申请）；订阅 store/cancel、地址 is_default 先清后设、社交登录绑定、收藏、加购读改写、评价（无唯一索引，锁为唯一防线）、注册（email_hash 非 UNIQUE）各按场景补锁；B2b 询价纯追加判定无需锁 |
+| 第五轮：PDF 生成异步化 | ✅ | DocumentController 改推队列立即返回 processing；DocumentPdfConsumer（app/queue/redis/，队列 document_pdf，payload order_id/type/user_id，消费内原 dompdf 逻辑整体搬入，幂等落库，失败记日志不重试——用户重新请求即天然重试）；状态判断：记录存在且文件存在=done，否则 processing |
+| 其余交付物 | ⬜ | 剩余：真实支付 SDK 线上接入（需密钥）、ES 线上验证（无 ES 服务）、Flutter/鸿蒙编译验证（无工具链）、鸿蒙安全存储真机验证、cs-fixer 格式化提交后 CI 加步骤、admin 依赖升级后加 audit 步骤、PDF 异步端到端验证（需队列进程运行） |
 
 ---
 

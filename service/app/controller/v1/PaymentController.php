@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\common\PaymentGateway as Gateway;
 use app\common\RefundHelper;
 use app\common\RiskEngine;
@@ -70,64 +71,85 @@ class PaymentController extends \app\controller\BaseApiController
             return ApiResponse::fail('订单状态不可支付', 422);
         }
 
-        // 创建支付记录
-        $payment = Payments::create([
-            'order_id' => $order->id,
-            'user_id' => $userId,
-            'gateway' => $gateway,
-            'method' => $method,
-            'amount' => $order->pay_amount,
-            'currency_code' => $order->currency_code,
-            'status' => 0,  // 待支付
-        ]);
-
-        // 风控旁路打分（支付事件，bypass 模式不阻断）
-        $riskContext = [
-            'user_id' => $userId,
-            'ip' => $request->getRealIp(),
-            'amount' => (float) $order->pay_amount,
-            'order_id' => $order->id,
-        ];
-        RiskEngine::log('payment_create', $riskContext, RiskEngine::score('payment_create', $riskContext));
-
-        // 调用支付网关
+        // 幂等：订单粒度锁内查待支付记录，重复请求复用同一支付单，不再重复创建/调网关
         try {
-            $gatewayObj = Gateway::make($gateway);
-            $result = $gatewayObj->createPayment([
-                'amount' => $order->pay_amount,
-                'currency' => $order->currency_code,
-                'order_id' => $order->id,
-                'order_no' => $order->order_no,
-                'methods' => [$method],
-            ]);
-        } catch (\InvalidArgumentException $e) {
-            $payment->status = 3;
-            $payment->save();
-            return ApiResponse::fail('不支持的支付网关: ' . $gateway, 422);
-        } catch (\Throwable $e) {
-            $payment->status = 3;
-            $payment->save();
-            \support\Log::error('支付创建失败 [gateway=' . $gateway . ', order=' . $order->order_no . ']: ' . $e->getMessage(), [
-                'payment_id' => $payment->id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return ApiResponse::fail('支付网关错误，请稍后重试', 500);
+            return DistributedLock::run('lock:payment:' . $order->id, function () use ($order, $userId, $gateway, $method, $request) {
+                $existing = Payments::where('order_id', $order->id)->where('status', 0)->first();
+                if ($existing) {
+                    return ApiResponse::success([
+                        'payment_id' => $existing->id,
+                        'order_no' => $order->order_no,
+                        'amount' => $existing->amount,
+                        'currency' => $existing->currency_code,
+                        'gateway' => $existing->gateway,
+                        'method' => $existing->method,
+                        'client_secret' => '',
+                        'txn_id' => (string) $existing->transaction_no,
+                    ], '支付创建成功');
+                }
+
+                // 创建支付记录
+                $payment = Payments::create([
+                    'order_id' => $order->id,
+                    'user_id' => $userId,
+                    'gateway' => $gateway,
+                    'method' => $method,
+                    'amount' => $order->pay_amount,
+                    'currency_code' => $order->currency_code,
+                    'status' => 0,  // 待支付
+                ]);
+
+                // 风控旁路打分（支付事件，bypass 模式不阻断）
+                $riskContext = [
+                    'user_id' => $userId,
+                    'ip' => $request->getRealIp(),
+                    'amount' => (float) $order->pay_amount,
+                    'order_id' => $order->id,
+                ];
+                RiskEngine::log('payment_create', $riskContext, RiskEngine::score('payment_create', $riskContext));
+
+                // 调用支付网关
+                try {
+                    $gatewayObj = Gateway::make($gateway);
+                    $result = $gatewayObj->createPayment([
+                        'amount' => $order->pay_amount,
+                        'currency' => $order->currency_code,
+                        'order_id' => $order->id,
+                        'order_no' => $order->order_no,
+                        'methods' => [$method],
+                    ]);
+                } catch (\InvalidArgumentException $e) {
+                    $payment->status = 3;
+                    $payment->save();
+                    return ApiResponse::fail('不支持的支付网关: ' . $gateway, 422);
+                } catch (\Throwable $e) {
+                    $payment->status = 3;
+                    $payment->save();
+                    \support\Log::error('支付创建失败 [gateway=' . $gateway . ', order=' . $order->order_no . ']: ' . $e->getMessage(), [
+                        'payment_id' => $payment->id,
+                        'trace' => $e->getTraceAsString(),
+                    ]);
+                    return ApiResponse::fail('支付网关错误，请稍后重试', 500);
+                }
+
+                // 记录网关交易号
+                $payment->transaction_no = $result['txn_id'];
+                $payment->save();
+
+                return ApiResponse::success([
+                    'payment_id' => $payment->id,
+                    'order_no' => $order->order_no,
+                    'amount' => $order->pay_amount,
+                    'currency' => $order->currency_code,
+                    'gateway' => $gateway,
+                    'method' => $method,
+                    'client_secret' => $result['client_secret'] ?? '',
+                    'txn_id' => $result['txn_id'],
+                ], '支付创建成功');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
         }
-
-        // 记录网关交易号
-        $payment->transaction_no = $result['txn_id'];
-        $payment->save();
-
-        return ApiResponse::success([
-            'payment_id' => $payment->id,
-            'order_no' => $order->order_no,
-            'amount' => $order->pay_amount,
-            'currency' => $order->currency_code,
-            'gateway' => $gateway,
-            'method' => $method,
-            'client_secret' => $result['client_secret'] ?? '',
-            'txn_id' => $result['txn_id'],
-        ], '支付创建成功');
     }
 
     /**

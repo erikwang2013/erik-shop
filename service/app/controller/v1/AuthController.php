@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\common\HashidsHelper;
 use app\common\RiskEngine;
 use app\model\Users;
@@ -42,43 +43,50 @@ class AuthController extends \app\controller\BaseApiController
         if (empty($email) || empty($password)) {
             return ApiResponse::fail('邮箱和密码不能为空', 422);
         }
-        if (Users::where('email_hash', Users::emailHash($email))->exists()) {
-            return ApiResponse::fail('该邮箱已注册', 422);
-        }
-
-        $salt = bin2hex(random_bytes(3));
-        $user = Users::create([
-            'nickname' => $nickname ?: 'User' . substr(md5($email), 0, 8),
-            'email' => $email,
-            'email_hash' => Users::emailHash($email),
-            'password' => password_hash($password . $salt, PASSWORD_BCRYPT),
-            'salt' => $salt,
-            'invite_code' => strtoupper(substr(md5(uniqid()), 0, 8)),
-            'status' => 1,
-        ]);
-
-        // 生成邮箱验证 token（Redis 24h 过期，邮件占位发送）
+        // 邮箱粒度锁：email_hash 无唯一索引，并发注册同一邮箱会创建重复账号
         try {
-            $verifyToken = bin2hex(random_bytes(16));
-            Redis::setex("erik:email_verify:{$verifyToken}", 86400, (string)$user->id);
-            self::logMail($email, '验证您的邮箱', "验证链接: /api/email/verify token={$verifyToken}");
-        } catch (\Throwable $e) {
-            // Redis 不可用时降级：注册成功但暂不发验证邮件（与限流中间件 fail-open 策略一致）
-            \support\Log::warning('邮箱验证token生成失败: ' . $e->getMessage());
+            return DistributedLock::run("lock:register:" . Users::emailHash($email), function () use ($email, $password, $nickname, $request) {
+                if (Users::where('email_hash', Users::emailHash($email))->exists()) {
+                    return ApiResponse::fail('该邮箱已注册', 422);
+                }
+
+                $salt = bin2hex(random_bytes(3));
+                $user = Users::create([
+                    'nickname' => $nickname ?: 'User' . substr(md5($email), 0, 8),
+                    'email' => $email,
+                    'email_hash' => Users::emailHash($email),
+                    'password' => password_hash($password . $salt, PASSWORD_BCRYPT),
+                    'salt' => $salt,
+                    'invite_code' => strtoupper(substr(md5(uniqid()), 0, 8)),
+                    'status' => 1,
+                ]);
+
+                // 生成邮箱验证 token（Redis 24h 过期，邮件占位发送）
+                try {
+                    $verifyToken = bin2hex(random_bytes(16));
+                    Redis::setex("erik:email_verify:{$verifyToken}", 86400, (string)$user->id);
+                    self::logMail($email, '验证您的邮箱', "验证链接: /api/email/verify token={$verifyToken}");
+                } catch (\Throwable $e) {
+                    // Redis 不可用时降级：注册成功但暂不发验证邮件（与限流中间件 fail-open 策略一致）
+                    \support\Log::warning('邮箱验证token生成失败: ' . $e->getMessage());
+                }
+
+                // 风控旁路打分（注册事件，bypass 模式不阻断）
+                $riskContext = ['user_id' => $user->id, 'ip' => $request->getRealIp(), 'email' => $email];
+                RiskEngine::log('user_register', $riskContext, RiskEngine::score('user_register', $riskContext));
+
+                return ApiResponse::success([
+                    'user_id' => HashidsHelper::encode($user->id),
+                    'nickname' => $user->nickname,
+                    'email' => $user->email,
+                    'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
+                    'refresh_token' => Jwt::encodeRefresh(['sub' => (string)$user->id], config('jwt.refresh_expire', 1209600)),
+                    'expires_in' => config('jwt.default_expire', 7200),
+                ], '注册成功');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
         }
-
-        // 风控旁路打分（注册事件，bypass 模式不阻断）
-        $riskContext = ['user_id' => $user->id, 'ip' => $request->getRealIp(), 'email' => $email];
-        RiskEngine::log('user_register', $riskContext, RiskEngine::score('user_register', $riskContext));
-
-        return ApiResponse::success([
-            'user_id' => HashidsHelper::encode($user->id),
-            'nickname' => $user->nickname,
-            'email' => $user->email,
-            'access_token' => Jwt::encode(['sub' => (string)$user->id, 'email' => $user->email, 'level' => $user->level]),
-            'refresh_token' => Jwt::encodeRefresh(['sub' => (string)$user->id], config('jwt.refresh_expire', 1209600)),
-            'expires_in' => config('jwt.default_expire', 7200),
-        ], '注册成功');
     }
 
     /**

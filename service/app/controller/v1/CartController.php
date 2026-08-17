@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\DistributedLock;
 use app\model\Carts;
 use app\model\ProductSkus;
 use Webman\Http\Request;
@@ -65,24 +66,32 @@ class CartController extends \app\controller\BaseApiController
             return ApiResponse::fail('库存不足', 422);
         }
 
-        $existing = Carts::where('user_id', $userId)->where('sku_id', $skuId)->first();
-        if ($existing) {
-            $newQty = $existing->quantity + $quantity;
-            if ($sku->stock < $newQty) {
-                return ApiResponse::fail('库存不足', 422);
-            }
-            $existing->quantity = $newQty;
-            $existing->save();
-        } else {
-            Carts::create([
-                'user_id' => $userId,
-                'sku_id' => $skuId,
-                'product_id' => $sku->product_id,
-                'quantity' => $quantity,
-            ]);
-        }
+        // 用户+SKU粒度锁：并发加购同 SKU 会丢失累加（读改写竞态）
+        try {
+            $result = DistributedLock::run("lock:cart:{$userId}:{$skuId}", function () use ($userId, $skuId, $quantity, $sku) {
+                $existing = Carts::where('user_id', $userId)->where('sku_id', $skuId)->first();
+                if ($existing) {
+                    $newQty = $existing->quantity + $quantity;
+                    if ($sku->stock < $newQty) {
+                        return ApiResponse::fail('库存不足', 422);
+                    }
+                    $existing->quantity = $newQty;
+                    $existing->save();
+                } else {
+                    Carts::create([
+                        'user_id' => $userId,
+                        'sku_id' => $skuId,
+                        'product_id' => $sku->product_id,
+                        'quantity' => $quantity,
+                    ]);
+                }
 
-        return ApiResponse::success(null, '已添加到购物车');
+                return ApiResponse::success(null, '已添加到购物车');
+            });
+        } catch (\RuntimeException $e) {
+            return ApiResponse::fail('操作繁忙，请稍后重试', 429);
+        }
+        return $result;
     }
 
     /**

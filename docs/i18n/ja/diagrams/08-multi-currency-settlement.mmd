@@ -1,0 +1,28 @@
+flowchart TD
+    A["商品の通貨別価格設定<br/>SKU を currency_code 単位で価格設定<br/>(USD/EUR/GBP/CNY…)"] --> B["カート/注文<br/>注文で決済通貨をロック"]
+    B --> C["為替レートサービス erik_exchange_rates<br/>manual 手動メンテナンス / exchangerate-api 自動取得<br/>有効時刻 effective_at バージョン管理"]
+
+    C --> D["決済を開始<br/>Stripe / PayPal / Klarna / Adyen<br/>決済通貨で元通貨引き落とし"]
+    D --> E["決済コールバック Webhook<br/>payment_intent.succeeded<br/>署名検証 Gateway::verifyWebhook"]
+
+    E --> F["決済/注文を更新<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["プラットフォーム按分 PlatformSettlements<br/>注文総額 total_amount<br/>プラットフォーム手数料 platform_fee<br/>決済ゲートウェイ手数料 payment_gateway_fee<br/>currency_code = 注文通貨"]
+
+    G --> H1["セラー決済 MerchantSettlements<br/>注文金額 → 抽成率 → 決済金額<br/>0未決済 / 1決済済み"]
+    G --> H2["サプライヤー決済 SupplierSettlements<br/>サプライヤーへの支払額"]
+    G --> H3["販売代理店決済 AffiliatePayouts<br/>コミッション + 引き出し"]
+    G --> H4["プラットフォーム収益<br/>プラットフォーム手数料 + 決済手数料"]
+
+    H1 --> I["為替差損益追跡 CurrencyExchangeGainsLosses<br/>受取金額/通貨 ↔ 決済金額/通貨<br/>決済時の為替レート vs 決済時の為替レート<br/>正=為替益 / 負=為替損"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["決済完了 settled_at<br/>対照消込 / 監査トレーサビリティ"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

@@ -1,0 +1,68 @@
+graph TB
+    START(["HTTP Request Tiba"]) --> CORS["① Cors<br/>Header respons Access-Control-*<br/>Preflight OPTIONS mengembalikan 200"]
+
+    CORS --> SEC["② Security Deteksi Serangan<br/>━━━━━━━━━━━━━━━"]
+    SEC --> SEC1{"Content-Type<br/>Valid?"}
+    SEC1 -->|Tidak| E403["403 Forbidden"]
+    SEC1 -->|Ya| SEC2{"Body Size<br/>≤ 10MB?"}
+    SEC2 -->|Tidak| E413["413 Too Large"]
+    SEC2 -->|Ya| SEC3{"Deteksi XSS<br/>13 aturan"}
+    SEC3 -->|Terkena| E40001["40001 XSS Diblokir"]
+    SEC3 -->|Lolos| SEC4{"Deteksi SQLi<br/>13 aturan"}
+    SEC4 -->|Terkena| E40002["40002 SQLi Diblokir"]
+    SEC4 -->|Lolos| SEC5{"Deteksi CRLF<br/>Injeksi Header"}
+    SEC5 -->|Terkena| E40003["40003 CRLF Diblokir"]
+    SEC5 -->|Lolos| SEC6{"Deteksi<br/>Path Traversal"}
+    SEC6 -->|Terkena| E40004["40004 Path Diblokir"]
+    SEC6 -->|Lolos| SEC_PASS["Deteksi keamanan lolos"]
+
+    SEC_PASS --> PLAT["③ Platform<br/>Header X-Platform<br/>+ Identifikasi degradasi UA<br/>8 sumber platform"]
+
+    PLAT --> GEO["④ GeoIp<br/>MaxMind GeoIP2<br/>Pengguna belum login<br/>Identifikasi wilayah/mata uang/bahasa"]
+
+    GEO --> LOCALE["⑤ Locale<br/>Parsing Accept-Language<br/>Pencocokan presisi 5 bahasa → degradasi → default"]
+
+    LOCALE --> HDEC["⑥ HashidsDecode<br/>Field *_id dalam permintaan<br/>hashid → snowflake ID"]
+
+    HDEC --> VER["⑦ VersionRoute<br/>Header API-Version<br/>→ rute namespace v1/v2"]
+
+    VER --> RATE["⑧ RateLimit<br/>Jendela geser Redis ZSET<br/>Rate limiting token bucket"]
+
+    RATE -->|Melebihi batas| E429["429 Too Many Requests<br/>Header respons Retry-After"]
+    RATE -->|Lolos| ROUTE_CHECK{"Cocok dengan rute?"}
+
+    ROUTE_CHECK -->|Operasi sensitif<br/>registrasi/pesan/bayar| POSTER["⑨ PosterVerify<br/>Verifikasi token Redis<br/>Slider/teka-teki/klik"]
+    ROUTE_CHECK -->|Perlu autentikasi| JWT_START["⑩ JwtAuth"]
+    ROUTE_CHECK -->|Antarmuka publik| HENC
+
+    POSTER --> JWT_START
+
+    JWT_START --> JWT_CHECK{"Bearer Token<br/>Verifikasi tanda tangan HS256"}
+    JWT_CHECK -->|Tidak valid/kedaluwarsa| E401["401 Unauthorized"]
+    JWT_CHECK -->|Valid| JWT_INJECT["Injeksi request→userId"]
+
+    JWT_INJECT --> HENC["⑪ HashidsEncode<br/>Melintasi JSON respons secara rekursif<br/>snowflake ID → hashid"]
+
+    HENC --> CTRL["Controller<br/>Pemrosesan logika bisnis<br/>Kueri Model · validasi · kalkulasi"]
+
+    CTRL --> ENC_RESP{"Respons perlu dienkripsi?"}
+
+    ENC_RESP -->|Ya| ENC["⑫ Encryption<br/>Enkripsi AES-256-CBC<br/>Header X-Encrypted: 1"]
+    ENC_RESP -->|Tidak| RESP
+    ENC --> RESP(["JSON Response<br/>{code, msg, data}<br/>+ CORS Headers<br/>+ X-Platform Header"])
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style POSTER fill:#ffe0b2
+    style JWT_START fill:#c8e6c9
+    style CTRL fill:#bbdefb
+    style START fill:#e8eaf6
+    style RESP fill:#e8eaf6
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style E401 fill:#ff5252,color:#fff

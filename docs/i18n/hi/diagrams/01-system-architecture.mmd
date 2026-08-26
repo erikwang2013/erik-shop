@@ -1,0 +1,63 @@
+graph TB
+    subgraph Clients["क्लाइंट परत Client Layer"]
+        direction LR
+        FL["Flutter App<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>Riverpod + GoRouter + Dio"]
+        HM["HarmonyOS App<br/>ArkTS + ArkUI<br/>API 12+"]
+        WB["Web Admin<br/>LayUI + ECharts<br/>प्रशासन पैनल"]
+    end
+
+    subgraph Gateway["गेटवे परत Gateway"]
+        NG["Nginx :80 / :443<br/>api.erik.xyz → Service<br/>admin.erik.xyz → Admin<br/>स्टैटिक एसेट + SSL टर्मिनेशन"]
+    end
+
+    subgraph Apps["एप्लिकेशन परत Application"]
+        subgraph Service["Service API (webman) :8787"]
+            direction TB
+            MW["ग्लोबल मिडलवेयर 10<br/>Cors → Security → RateLimit<br/>→ Platform → GeoIp → Locale<br/>→ HashidsDecode → VersionRoute<br/>→ HashidsEncode → Encryption"]
+            RT["रूट मिडलवेयर 2<br/>PosterVerify · JwtAuth"]
+            CTRL["39 कंट्रोलर<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · Affiliate<br/>B2b · Cms · Faq · FlashSale<br/>GroupBuy · GiftCard · Review<br/>Search · SocialAuth · Settings"]
+            MDL["111 मॉडल Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable एन्क्रिप्शन<br/>+ Searchable ES सिंक<br/>+ SoftDelete सॉफ्ट डिलीट<br/>45 टेबल सॉफ्ट डिलीट के साथ"]
+        end
+        subgraph Admin["Admin (webman-admin) :8788"]
+            direction TB
+            AMW["मिडलवेयर 5<br/>Security → Platform<br/>→ HashidsDecode<br/>→ AccessControl RBAC<br/>→ HashidsEncode"]
+            ACTRL["82 कंट्रोलर<br/>उत्पाद · ऑर्डर · उपयोगकर्ता · मार्केटिंग<br/>लॉजिस्टिक्स · आपूर्ति श्रृंखला · जोखिम नियंत्रण<br/>CMS · ग्राहक सहायता · सिस्टम"]
+            AMDL["76 मॉडल"]
+        end
+    end
+
+    subgraph Data["डेटा परत Data"]
+        direction LR
+        MySQL[("MySQL 8.0 :3306<br/>117 टेबल · erik_ उपसर्ग<br/>Snowflake bigint PK<br/>रीड/राइट स्प्लिटिंग 2 रीड रेप्लिका")]
+        Redis[("Redis 7 :6379<br/>रेट लिमिट टोकन बकेट<br/>Session · Poster सत्यापन")]
+        ES[("Elasticsearch 8 :9200<br/>बहुभाषी टोकनाइज़्ड खोज<br/>उत्पाद · श्रेणी · CMS")]
+    end
+
+    subgraph External["बाहरी सेवाएँ External"]
+        direction LR
+        Pay["भुगतानगेटवे<br/>Stripe · PayPal<br/>Klarna · Adyen<br/>Webhook एसिंक्रोनस नोटिफिकेशन"]
+        Geo["GeoIP<br/>MaxMind GeoIP2<br/>क्षेत्र · मुद्रा पहचान"]
+        Email["ईमेल सेवा<br/>बहुभाषी टेम्पलेट<br/>（email_templates तालिका）"]
+    end
+
+    FL --> NG
+    HM --> NG
+    WB --> NG
+    NG --> Service
+    NG --> Admin
+    Service --> MySQL
+    Service --> Redis
+    Service --> ES
+    Service --> Pay
+    Service --> Geo
+    Service --> Email
+    Admin --> MySQL
+    Admin --> Redis
+
+    style Clients fill:#e1f5fe
+    style Gateway fill:#fff3e0
+    style Apps fill:#f3e5f5
+    style Service fill:#e8f5e9
+    style Admin fill:#fff9c4
+    style Data fill:#fce4ec
+    style External fill:#e0f2f1

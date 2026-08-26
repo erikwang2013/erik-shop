@@ -1,0 +1,109 @@
+graph TB
+    subgraph Request["エントリ"]
+        REQ["HTTP Request"]
+    end
+
+    subgraph L1["第一層：ネットワーク境界"]
+        direction TB
+        NG["Nginx リバースプロキシ<br/>· SSL/TLS 終端<br/>· リクエストボディサイズ制限<br/>· 素の IP 直結を拒否"]
+        CORS_W["CORS ホワイトリスト<br/>· Access-Control-Allow-Origin<br/>· 設定可能な origin 制限"]
+    end
+
+    subgraph L2["第二層：WAF 攻撃検出<br/>(SecurityMiddleware)"]
+        direction TB
+        CT{"Content-Type<br/>検証"}
+        BS{"Body Size<br/>≤ 10MB"}
+        XSS{"XSS 検出<br/>13 条の正規表現"}
+        SQLI{"SQLi 検出<br/>13 条の正規表現"}
+        CRLF{"CRLF 注入<br/>Header 検出"}
+        PATH_T{"パストラバーサル<br/>エンコード/null byte"}
+        XXE{"XXE エンティティ注入<br/>ENTITY/DOCTYPE"}
+        SSRF{"SSRF 偽造<br/>内部 IP 検出"}
+        FILE_CHK{"ファイルアップロード<br/>ブラックリスト/二重拡張子"}
+        METHOD{"HTTP メソッド<br/>ホワイトリスト検証"}
+        HOST{"Host ヘッダー<br/>検証"}
+
+        CT -->|非法| E403["403"]
+        CT -->|通過| BS
+        BS -->|超限| E413["413"]
+        BS -->|通過| XSS
+        XSS -->|命中| E40001["40001"]
+        XSS -->|通過| SQLI
+        SQLI -->|命中| E40002["40002"]
+        SQLI -->|通過| CRLF
+        CRLF -->|命中| E40003["40003"]
+        CRLF -->|通過| PATH_T
+        PATH_T -->|命中| E40004["40004"]
+        PATH_T -->|通過| XXE
+        XXE -->|命中| E40010["40010"]
+        XXE -->|通過| SSRF
+        SSRF -->|命中| E40011["40011"]
+        SSRF -->|通過| FILE_CHK
+        FILE_CHK -->|命中| E40009["40009"]
+        FILE_CHK -->|通過| METHOD
+        METHOD -->|非法| E40012["40012"]
+        METHOD -->|通過| HOST
+    end
+
+    subgraph L3["第三層：トラフィック制御"]
+        direction TB
+        BRUTE["ブルートフォース防護<br/>Redis カウンター<br/>API: 10回/60s<br/>Admin: 5回/300s"]
+        RATE["トークンバケット限流<br/>Redis ZSET スライディングウィンドウ<br/>6 エンドポイント独立ルール"]
+        BRUTE --> RATE
+    end
+
+    subgraph L4["第四層：本人認証"]
+        direction TB
+        POSTER["PosterVerify 人機認証<br/>· スライダー · パズル · クリック<br/>· 登録/注文/決済で発動"]
+        JWT_AUTH["JWT 認証<br/>· HS256 署名<br/>· 期限チェック<br/>· ダブルトークンリフレッシュ<br/>· request→userId 注入"]
+        POSTER --> JWT_AUTH
+    end
+
+    subgraph L5["第五層：データセキュリティ"]
+        direction TB
+        HASHIDS["Hashids ID 難読化<br/>· リクエスト: hashid→snowflake<br/>· レスポンス: snowflake→hashid<br/>· ID 列挙を防止"]
+        AES_ENC["AES-256-CBC 暗号化<br/>· 転送層: POST body 機密フィールド<br/>· レスポンス層: X-Encrypted header<br/>· データベース: Encryptable trait<br/>email/mobile/name/tax_id"]
+        SENS_MASK["機密データのマスキング<br/>· ログから password/token/secret をフィルタリング<br/>· エラーレスポンスのマスキング<br/>· 内部情報を漏らさない"]
+    end
+
+    subgraph L6["第六層：レスポンスセキュリティ"]
+        direction TB
+        SEC_HEADERS["HTTP セキュリティレスポンスヘッダー<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· Server 非表示<br/>· Cache-Control"]
+    end
+
+    subgraph Audit["監査トレーサビリティ"]
+        direction LR
+        PLATFORM["プラットフォーム追跡<br/>X-Platform header<br/>8 プラットフォーム識別<br/>6 テーブル記録"]
+        OP_LOG["操作ログ<br/>erik_operation_logs<br/>platform · user_id<br/>action · ip · ua"]
+    end
+
+    REQ --> NG
+    NG --> CORS_W
+    CORS_W --> L2
+    HOST --> BRUTE
+    RATE --> POSTER
+
+    L5 --> L6
+    L6 --> RESP(["安全レスポンス"])
+
+    PLATFORM -.-> OP_LOG
+    L2 -.-> PLATFORM
+    L4 -.-> PLATFORM
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+    style Audit fill:#f5f5f5
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E40009 fill:#ff5252,color:#fff
+    style E40010 fill:#ff5252,color:#fff
+    style E40011 fill:#ff5252,color:#fff
+    style E40012 fill:#ff5252,color:#fff

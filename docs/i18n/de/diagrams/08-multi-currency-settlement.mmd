@@ -1,0 +1,28 @@
+flowchart TD
+    A["Preise pro Währung<br/>SKU nach currency_code bepreist<br/>(USD/EUR/GBP/CNY…)"] --> B["Warenkorb/Bestellung<br/>Bestellung fixiert Zahlungswährung"]
+    B --> C["Wechselkursservice erik_exchange_rates<br/>manual / automatisch über exchangerate-api<br/>versioniert über effective_at"]
+
+    C --> D["Zahlung starten<br/>Stripe / PayPal / Klarna / Adyen<br/>Belastung in Originalwährung"]
+    D --> E["Webhook-Rückmeldung<br/>payment_intent.succeeded<br/>Signaturprüfung Gateway::verifyWebhook"]
+
+    E --> F["Zahlung/Bestellung aktualisieren<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["Plattform-Settlement PlatformSettlements<br/>Bestellsumme total_amount<br/>Plattformprovision platform_fee<br/>Gateway-Gebühr payment_gateway_fee<br/>currency_code = Bestellwährung"]
+
+    G --> H1["Verkäufer-Settlement MerchantSettlements<br/>Bestellbetrag → Provisionssatz → Settlementbetrag<br/>0 ausstehend / 1 abgerechnet"]
+    G --> H2["Lieferanten-Settlement SupplierSettlements<br/>fälliger Betrag an Lieferanten"]
+    G --> H3["Affiliate-Settlement AffiliatePayouts<br/>Provision + Auszahlung"]
+    G --> H4["Plattform-Einnahmen<br/>Plattformprovision + Zahlungsgebühren"]
+
+    H1 --> I["Wechselkurs-Gewinne/-Verluste CurrencyExchangeGainsLosses<br/>Eingangsbetrag/Währung ↔ Settlementbetrag/Währung<br/>Kurs bei Zahlung vs. Kurs bei Settlement<br/>positiv = Gewinn / negativ = Verlust"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["Settlement abgeschlossen settled_at<br/>Abgleich/Verrechnung · Audit-Trail"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

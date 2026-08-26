@@ -1,0 +1,109 @@
+graph TB
+    subgraph Request["Entrada"]
+        REQ["HTTP Request"]
+    end
+
+    subgraph L1["Camada 1: fronteira de rede"]
+        direction TB
+        NG["Nginx proxy reverso<br/>· término SSL/TLS<br/>· limite de tamanho do corpo da requisição<br/>· rejeita acesso direto por IP"]
+        CORS_W["whitelist CORS<br/>· Access-Control-Allow-Origin<br/>· restrição de origin configurável"]
+    end
+
+    subgraph L2["Camada 2: detecção de ataques WAF<br/>(SecurityMiddleware)"]
+        direction TB
+        CT{"Content-Type<br/>validação"}
+        BS{"Body Size<br/>≤ 10MB"}
+        XSS{"detecção XSS<br/>13 regexes"}
+        SQLI{"detecção SQLi<br/>13 regexes"}
+        CRLF{"injeção CRLF<br/>detecção em header"}
+        PATH_T{"path traversal<br/>encoding/null byte"}
+        XXE{"injeção de entidades XXE<br/>ENTITY/DOCTYPE"}
+        SSRF{"falsificação SSRF<br/>detecção de IP interno"}
+        FILE_CHK{"upload de arquivos<br/>blacklist/extensão dupla"}
+        METHOD{"métodos HTTP<br/>validação por whitelist"}
+        HOST{"header Host<br/>validação"}
+
+        CT -->|inválido| E403["403"]
+        CT -->|válido| BS
+        BS -->|excedido| E413["413"]
+        BS -->|válido| XSS
+        XSS -->|atingido| E40001["40001"]
+        XSS -->|válido| SQLI
+        SQLI -->|atingido| E40002["40002"]
+        SQLI -->|válido| CRLF
+        CRLF -->|atingido| E40003["40003"]
+        CRLF -->|válido| PATH_T
+        PATH_T -->|atingido| E40004["40004"]
+        PATH_T -->|válido| XXE
+        XXE -->|atingido| E40010["40010"]
+        XXE -->|válido| SSRF
+        SSRF -->|atingido| E40011["40011"]
+        SSRF -->|válido| FILE_CHK
+        FILE_CHK -->|atingido| E40009["40009"]
+        FILE_CHK -->|válido| METHOD
+        METHOD -->|inválido| E40012["40012"]
+        METHOD -->|válido| HOST
+    end
+
+    subgraph L3["Camada 3: controle de tráfego"]
+        direction TB
+        BRUTE["proteção contra força bruta<br/>contador Redis<br/>API: 10 vezes/60s<br/>Admin: 5 vezes/300s"]
+        RATE["limitação por token bucket<br/>janela deslizante Redis ZSET<br/>regras independentes em 6 endpoints"]
+        BRUTE --> RATE
+    end
+
+    subgraph L4["Camada 4: autenticação de identidade"]
+        direction TB
+        POSTER["PosterVerify verificação humano<br/>· slider · quebra-cabeça · clique<br/>· disparado em registro/pedido/pagamento"]
+        JWT_AUTH["autenticação JWT<br/>· assinatura HS256<br/>· checagem de expiração<br/>· renovação com dois tokens<br/>· injeção request→userId"]
+        POSTER --> JWT_AUTH
+    end
+
+    subgraph L5["Camada 5: segurança de dados"]
+        direction TB
+        HASHIDS["ofuscação de ID Hashids<br/>· requisição: hashid→snowflake<br/>· resposta: snowflake→hashid<br/>· previne enumeração de IDs"]
+        AES_ENC["criptografia AES-256-CBC<br/>· transporte: campos sensíveis no body POST<br/>· resposta: header X-Encrypted<br/>· banco: trait Encryptable<br/>email/mobile/name/tax_id"]
+        SENS_MASK["mascaramento de dados sensíveis<br/>· filtro em logs de password/token/secret<br/>· mascaramento em respostas de erro<br/>· sem vazamento de informações internas"]
+    end
+
+    subgraph L6["Camada 6: segurança da resposta"]
+        direction TB
+        SEC_HEADERS["cabeçalhos de segurança HTTP<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· ocultar Server<br/>· Cache-Control"]
+    end
+
+    subgraph Audit["Rastreabilidade de auditoria"]
+        direction LR
+        PLATFORM["rastreamento de plataforma<br/>header X-Platform<br/>identificação de 8 plataformas<br/>registro em 6 tabelas"]
+        OP_LOG["logs de operação<br/>erik_operation_logs<br/>platform · user_id<br/>action · ip · ua"]
+    end
+
+    REQ --> NG
+    NG --> CORS_W
+    CORS_W --> L2
+    HOST --> BRUTE
+    RATE --> POSTER
+
+    L5 --> L6
+    L6 --> RESP(["resposta segura"])
+
+    PLATFORM -.-> OP_LOG
+    L2 -.-> PLATFORM
+    L4 -.-> PLATFORM
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+    style Audit fill:#f5f5f5
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E40009 fill:#ff5252,color:#fff
+    style E40010 fill:#ff5252,color:#fff
+    style E40011 fill:#ff5252,color:#fff
+    style E40012 fill:#ff5252,color:#fff

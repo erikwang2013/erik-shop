@@ -799,3 +799,128 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 ```
 
 标识: `[JWT]` 需认证 | `[PosterVerify]` 需人机验证 | 无标记 = 公开接口
+
+---
+
+## 附录: 端点统计总览
+
+### A.1 公开接口 (23端点)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /api/auth/register | 注册(PosterVerify) |
+| POST | /api/auth/login | 登录 |
+| POST | /api/auth/refresh | 刷新Token |
+| POST | /api/auth/social | 社交登录 |
+| GET | /api/products | 商品列表(分页+筛选+排序) |
+| GET | /api/products/{id} | 商品详情(多语言+多币种+合规+HS) |
+| GET | /api/categories | 分类列表 |
+| GET | /api/categories/tree | 分类树 |
+| GET | /api/banners | 轮播图(按位置+区域) |
+| GET | /api/countries | 国家/货币/汇率列表 |
+| GET | /api/search | ES多语言搜索 |
+| GET | /api/reviews/{productId} | 商品评价列表 |
+| GET | /api/flash-sales | 当前秒杀 |
+| GET | /api/group-buys | 当前拼团 |
+| GET | /api/faq | FAQ(按语言+分类) |
+| GET | /api/cms/{slug} | CMS页面 |
+| GET | /api/settings | 公开配置 |
+| GET | /api/size-charts | 尺码对照表 |
+| GET | /api/tariff/estimate | 关税估算 |
+| GET | /api/shipping/calculate | 运费计算 |
+| GET | /api/payment/methods | 可用支付方式 |
+| GET | /api/geoip/detect | GeoIP检测 |
+| GET | /api/compliance/check | 合规检查 |
+
+### A.2 认证接口 (47端点)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET/PUT | /api/user/profile | 个人信息 |
+| GET/POST/PUT/DELETE | /api/user/addresses[/{id}] | 地址CRUD |
+| PUT | /api/user/locale | 更新语言/币种 |
+| GET/POST | /api/wishlist[/{id}] | 收藏夹 |
+| GET/POST | /api/price-alerts | 降价提醒 |
+| GET/POST/PUT/DELETE | /api/cart[/{id}] | 购物车 |
+| GET/POST | /api/orders | 订单列表/创建(PosterVerify) |
+| GET | /api/orders/{id} | 订单详情 |
+| POST | /api/orders/{id}/cancel | 取消订单 |
+| GET | /api/orders/{id}/documents/invoice | 商业发票 |
+| GET | /api/orders/{id}/documents/packing-list | 装箱单 |
+| POST | /api/payment/create | 创建支付(PosterVerify) |
+| GET | /api/payment/status/{id} | 支付状态 |
+| GET/POST | /api/returns[/{id}] | 退货 |
+| GET | /api/returns/{id}/label | 退货面单 |
+| POST | /api/reviews | 发表评价 |
+| GET/POST | /api/coupons[/{id}/claim] | 优惠券 |
+| GET/PUT | /api/notifications[/{id}/read] | 通知 |
+| GET/POST/DELETE | /api/comparisons[/{id}] | 商品对比 |
+| GET | /api/recommendations | 个性化推荐 |
+| GET | /api/affiliate/links | 分销链接 |
+| GET | /api/affiliate/commissions | 分销佣金 |
+| GET | /api/membership | 会员等级 |
+| GET | /api/points | 积分流水 |
+| GET/POST | /api/gift-cards | 礼品卡 |
+| GET/POST | /api/b2b/quotes | B2B询价 |
+| GET/POST | /api/privacy/request | GDPR请求 |
+| GET | /api/export/orders | 导出订单 |
+
+### A.3 Webhook (1端点)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /webhook/payment/{gateway} | 支付异步通知(验签) |
+
+### A.4 Admin 与健康检查 (2端点)
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | /api/admin/refunds/{id}/execute | 后台退款执行 |
+| GET | /health | 健康检查 |
+
+---
+
+## 附录: API 设计规范
+
+### 版本控制
+
+版本通过 `API-Version: 2026-05-20` header传递，不在URL中。VersionRoute中间件映射。
+
+### 中间件管道
+
+```
+Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台) → GeoIp → Locale
+    → HashidsDecode → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption
+```
+
+### 端点统计
+
+- 公开接口: 23个 (认证/商品/分类/内容/搜索/服务)
+- 认证接口: 47个 (用户/购物车/订单/支付/退货/评价/营销)
+- Webhook: 1个 (支付回调)
+- Admin: 1个 (退款执行)
+- Health: 1个 (/health 健康检查)
+
+### 统一响应
+
+```json
+{"code": 0, "msg": "ok", "data": {}}
+{"code": 1, "msg": "error", "data": null}
+{"code": 0, "msg": "ok", "data": {"list":[], "total":100, "page":1, "per_page":20}}
+```
+
+### hg/apidoc 动态文档
+
+使用 hg/apidoc 根据控制器注解自动生成。启动后访问 `/apidoc/`。
+
+注解示例:
+```php
+/**
+ * @Apidoc\Title("用户登录")
+ * @Apidoc\Method("POST")
+ * @Apidoc\Url("/api/auth/login")
+ * @Apidoc\Param(name="email", type="string", require=true)
+ * @Apidoc\Returned(name="access_token", type="string")
+ */
+public function login(Request $request) { ... }
+```

@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as Klien<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as Pipa Middleware<br/>10 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as Distribusi Rute
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: Meneruskan permintaan
+
+    rect rgb(255, 205, 210)
+        Note over Security: Tahap deteksi keamanan
+        Security->>Security: ① Validasi Content-Type
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ Deteksi XSS 13 aturan
+        Security->>Security: ④ Deteksi SQLi 13 aturan
+        Security->>Security: ⑤ Injeksi CRLF Header
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt Serangan terdeteksi
+        Security-->>Client: Respons kesalahan 4xxxx
+    end
+
+    Security->>Pipeline: Keamanan lolos
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: Tahap pra-pemrosesan permintaan
+        Pipeline->>Pipeline: ⑦ Pengaturan header respons Cors
+        Pipeline->>Pipeline: ⑧ Identifikasi sumber Platform
+        Pipeline->>Pipeline: ⑨ GeoIp wilayah/mata uang
+        Pipeline->>Pipeline: ⑩ Pengaturan bahasa Locale
+        Pipeline->>Pipeline: ⑪ HashidsDecode dekode ID
+        Pipeline->>Pipeline: ⑫ VersionRoute versi API
+    end
+
+    Pipeline->>RateLimit: Pemeriksaan rate limit
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: Rate limiting token bucket
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>Penghitungan jendela geser
+        Redis-->>RateLimit: Jumlah permintaan jendela saat ini
+    end
+
+    alt Melebihi batas
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: Lolos
+
+    Route->>Route: API-Version → namespace<br/>Pencocokan Controller
+
+    alt Operasi sensitif registrasi/pesan/bayar
+        Route->>Poster: Verifikasi manusia
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt Verifikasi gagal
+            Poster-->>Client: 40007 Verifikasi gagal
+        end
+    end
+
+    alt Antarmuka perlu autentikasi
+        Route->>JWT: Bearer Token
+        JWT->>JWT: Verifikasi tanda tangan HS256 + pemeriksaan kedaluwarsa
+        alt Token tidak valid
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: Pemrosesan bisnis
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: Pemrosesan logika bisnis
+        Controller->>Model: Memanggil Model
+        Model->>Model: Pembuatan Snowflake ID
+        Model->>Model: Enkripsi/dekripsi Encryptable
+        Model->>MySQL: Operasi baca/tulis
+        MySQL-->>Model: Hasil
+        Model->>ES: Pencarian/indeks
+        ES-->>Model: Hasil pencarian
+        Model-->>Controller: Data bisnis
+    end
+
+    Controller->>Response: Mengembalikan data
+
+    rect rgb(187, 222, 251)
+        Note over Response: Pemrosesan pasca-respons
+        Response->>Response: HashidsEncode enkripsi ID
+        Response->>Response: Enkripsi AES field sensitif
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

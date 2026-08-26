@@ -49,32 +49,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ## 2. API设计
 
-### 2.1 版本控制
-
-版本通过 `API-Version: 2026-05-20` header传递，不在URL中。VersionRoute中间件映射。
-
-### 2.2 中间件管道
-
-```
-Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台) → GeoIp → Locale
-    → HashidsDecode → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption
-```
-
-### 2.3 端点统计
-
-- 公开接口: 23个 (认证/商品/分类/内容/搜索/服务)
-- 认证接口: 47个 (用户/购物车/订单/支付/退货/评价/营销)
-- Webhook: 1个 (支付回调)
-- Admin: 1个 (退款执行)
-- Health: 1个 (/health 健康检查)
-
-### 2.4 统一响应
-
-```json
-{"code": 0, "msg": "ok", "data": {}}
-{"code": 1, "msg": "error", "data": null}
-{"code": 0, "msg": "ok", "data": {"list":[], "total":100, "page":1, "per_page":20}}
-```
+API 版本控制、中间件管道、端点统计与统一响应规范，详见 [API接口文档](api.md)。
 
 ---
 
@@ -137,19 +112,7 @@ MySQL: 50max/10min/2s超时 | 读写分离: 30max/5min (2读副本, sticky=true)
 
 ## 6. API文档
 
-使用 hg/apidoc 根据控制器注解自动生成。启动后访问 `/apidoc/`。
-
-注解示例:
-```php
-/**
- * @Apidoc\Title("用户登录")
- * @Apidoc\Method("POST")
- * @Apidoc\Url("/api/auth/login")
- * @Apidoc\Param(name="email", type="string", require=true)
- * @Apidoc\Returned(name="access_token", type="string")
- */
-public function login(Request $request) { ... }
-```
+使用 hg/apidoc 根据控制器注解自动生成，详见 [API接口文档](api.md)。启动后访问 `/apidoc/`。
 
 ## 7. 测试
 

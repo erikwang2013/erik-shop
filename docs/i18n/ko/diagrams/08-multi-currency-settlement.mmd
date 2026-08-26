@@ -1,0 +1,28 @@
+flowchart TD
+    A["상품 통화별 가격 책정<br/>SKU를 currency_code 기준 가격 책정<br/>(USD/EUR/GBP/CNY…)"] --> B["장바구니/주문<br/>주문 결제 통화 고정"]
+    B --> C["환율 서비스 erik_exchange_rates<br/>manual 수동 유지 / exchangerate-api 자동 가져오기<br/>적용 시간 effective_at 버전 관리"]
+
+    C --> D["결제 시작<br/>Stripe / PayPal / Klarna / Adyen<br/>결제 통화 원화로 차감"]
+    D --> E["결제 콜백 Webhook<br/>payment_intent.succeeded<br/>서명 검증 Gateway::verifyWebhook"]
+
+    E --> F["결제/주문 업데이트<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["플랫폼 정산 PlatformSettlements<br/>주문 총액 total_amount<br/>플랫폼 수수료 platform_fee<br/>결제 게이트웨이 수수료 payment_gateway_fee<br/>currency_code = 주문 통화"]
+
+    G --> H1["셀러 정산 MerchantSettlements<br/>주문 금액 → 수수료율 → 정산 금액<br/>0 미정산 / 1 정산 완료"]
+    G --> H2["공급업체 정산 SupplierSettlements<br/>지급할 공급업체 대금"]
+    G --> H3["유통 정산 AffiliatePayouts<br/>커미션 + 출금"]
+    G --> H4["플랫폼 수익<br/>플랫폼 수수료 + 결제 수수료"]
+
+    H1 --> I["환차손익 추적 CurrencyExchangeGainsLosses<br/>수취 금액/통화 ↔ 정산 금액/통화<br/>결제 시 환율 vs 정산 시 환율<br/>양수=환차익 / 음수=환차손"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["정산 완료 settled_at<br/>대사 확인 / 감사 추적"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

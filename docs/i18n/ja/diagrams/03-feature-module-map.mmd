@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br/>越境ECプラットフォーム Full"]
+
+    CENTER --> B2C["B2C 小売"]
+    CENTER --> B2B["B2B 卸売"]
+    CENTER --> MART["多セラー出店"]
+    CENTER --> CROSS["越境コンプライアンス"]
+    CENTER --> LOGISTICS["国際物流"]
+    CENTER --> PAY["決済システム"]
+    CENTER --> MKT["マーケティングセンター"]
+    CENTER --> MULTI["多プラットフォーム管理"]
+    CENTER --> SUPPLY["サプライチェーン"]
+    CENTER --> RISK["風控コンプライアンス"]
+    CENTER --> SECURITY["セキュリティ防護"]
+    CENTER --> PERF["高並行処理"]
+    CENTER --> GROWTH["会員成長"]
+    CENTER --> CMS["コンテンツ管理"]
+    CENTER --> CS["カスタマーサポートシステム"]
+    CENTER --> INFRA["インフラ基盤"]
+    CENTER --> CLIENTS["マルチエンドカバー"]
+
+    B2C --> B2C_DETAIL["多言語商品 · 通貨別価格設定<br/>SKU 在庫 · カート<br/>注文 · 返金 · 返品"]
+
+    B2B --> B2B_DETAIL["段階価格 MOQ<br/>企業認証 税号/営業許可証<br/>見積照会 見積回答"]
+
+    MART --> MART_DETAIL["セラー審査出店<br/>商品審査出品<br/>按分決済"]
+
+    CROSS --> CROSS_DETAIL["HS Code コード庫<br/>関税ルール 仕向国+HS→税率<br/>VAT/IOSS 欧州<br/>コンプライアンスラベル FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["物流分区運賃 重量段階<br/>DHL/UPS/FedEx/EMS<br/>海外倉庫 発送+返品<br/>商業インボイス/梱包明細 PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL 後払い<br/>Adyen グローバル決済<br/>3DS 検証 · Webhook 按分"]
+
+    MKT --> MKT_DETAIL["クーポン 分区+新規/既存顧客<br/>カルーセル 地域表示<br/>タイムセール 時間限定・数量限定<br/>グループ購入 人数+有効期限<br/>販売代理店 リンク+コミッション+引き出し"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br/>Shopee · Lazada · Temu<br/>商品刊登 · 注文集約<br/>多店舗管理"]
+
+    SUPPLY --> SUPPLY_DETAIL["サプライヤー台帳+格付け<br/>購買注文 審査→入荷→品質検査<br/>在庫台帳 不変台帳<br/>調撥管理"]
+
+    RISK --> RISK_DETAIL["ルールエンジン バイパス採点<br/>KYC 実名認証<br/>GDPR/CCPA データリクエスト<br/>Cookie Consent バージョン管理"]
+
+    SECURITY --> SECURITY_DETAIL["31類の攻撃検出<br/>XSS · SQL注入 · CRLF<br/>パストラバーサル · XXE · SSRF<br/>ファイルアップロード · ブルートフォース<br/>Host · CORS · マスキング"]
+
+    PERF --> PERF_DETAIL["トークンバケット限流 スライディングウィンドウ<br/>6エンドポイント限流ルール<br/>DB読み書き分離 読み取りレプリカ2台+sticky<br/>コネクションプール DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["会員レベル+特典<br/>ポイントルール+台帳<br/>ギフトカード 残高+交換<br/>値下げ/入荷リマインダー<br/>ABテスト トラフィック配分+信頼度"]
+
+    CMS --> CMS_DETAIL["CMS 多言語ページ<br/>FAQ · 知識庫<br/>サイズ換算表 アパレル/シューズ<br/>メールテンプレート 多言語<br/>商品Feed Google/Meta"]
+
+    CS --> CS_DETAIL["WebSocket リアルタイム IM<br/>chat_sessions<br/>chat_messages<br/>知識庫多言語"]
+
+    INFRA --> INFRA_DETAIL["Snowflake 分散 ID<br/>Hashids インターフェース難読化<br/>JWT HS256 ダブルトークンリフレッシュ<br/>AES-256-CBC 暗号化<br/>Encryptable データベース暗号化<br/>Poster 人機認証<br/>GeoIP 地域識別"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter 5プラットフォーム<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

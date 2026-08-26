@@ -2,7 +2,7 @@
 
 > Cross-border E-Commerce Platform Installation Guide
 >
-> [中文 README](README.md) | [English README](README-EN.md) | [审查报告](AUDIT-REPORT.md)
+> [中文 README](../README.md) | [English README](README-EN.md) | [审查报告](AUDIT-REPORT.md)
 
 ---
 

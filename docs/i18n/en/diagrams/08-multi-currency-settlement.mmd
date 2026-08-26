@@ -1,0 +1,28 @@
+flowchart TD
+    A["Per-Currency Product Pricing<br/>SKU Priced by currency_code<br/>(USD/EUR/GBP/CNY…)"] --> B["Cart/Place Order<br/>Order Locks Receiving Currency"]
+    B --> C["FX Service erik_exchange_rates<br/>manual Maintenance / exchangerate-api Auto Fetch<br/>Versioned by Effective Time effective_at"]
+
+    C --> D["Initiate Payment<br/>Stripe / PayPal / Klarna / Adyen<br/>Charged in Order Currency"]
+    D --> E["Payment Callback Webhook<br/>payment_intent.succeeded<br/>Signature Verification Gateway::verifyWebhook"]
+
+    E --> F["Update Payment/Order<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["Platform Settlement PlatformSettlements<br/>Order Total total_amount<br/>Platform Commission platform_fee<br/>Payment Gateway Fee payment_gateway_fee<br/>currency_code = Order Currency"]
+
+    G --> H1["Merchant Settlement MerchantSettlements<br/>Order Amount → Commission Rate → Settlement Amount<br/>0 Pending / 1 Settled"]
+    G --> H2["Supplier Settlement SupplierSettlements<br/>Payable to Supplier"]
+    G --> H3["Affiliate Settlement AffiliatePayouts<br/>Commissions + Withdrawals"]
+    G --> H4["Platform Revenue<br/>Platform Commission + Payment Fees"]
+
+    H1 --> I["FX Gain/Loss Tracking CurrencyExchangeGainsLosses<br/>Received Amount/Currency ↔ Settlement Amount/Currency<br/>Payment FX Rate vs Settlement FX Rate<br/>Positive=FX Gain / Negative=FX Loss"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["Settlement Complete settled_at<br/>Reconciliation Write-off / Audit Trail"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

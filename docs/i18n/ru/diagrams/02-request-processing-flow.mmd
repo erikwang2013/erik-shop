@@ -1,0 +1,68 @@
+graph TB
+    START(["HTTP-запрос поступил"]) --> CORS["① Cors<br/>Заголовки ответа Access-Control-*<br/>Предварительный запрос OPTIONS возвращает 200"]
+
+    CORS --> SEC["② Security, обнаружение атак<br/>━━━━━━━━━━━━━━━"]
+    SEC --> SEC1{"Content-Type<br/>корректен?"}
+    SEC1 -->|Нет| E403["403 Forbidden"]
+    SEC1 -->|Да| SEC2{"Body Size<br/>≤ 10MB?"}
+    SEC2 -->|Нет| E413["413 Too Large"]
+    SEC2 -->|Да| SEC3{"XSS-проверка<br/>13 правил"}
+    SEC3 -->|Сработало| E40001["40001 XSS перехвачен"]
+    SEC3 -->|Пройдено| SEC4{"SQLi-проверка<br/>13 правил"}
+    SEC4 -->|Сработало| E40002["40002 SQLi перехвачен"]
+    SEC4 -->|Пройдено| SEC5{"CRLF-проверка<br/>инъекция в Header"}
+    SEC5 -->|Сработало| E40003["40003 CRLF перехвачен"]
+    SEC5 -->|Пройдено| SEC6{"Обход пути<br/>проверка"}
+    SEC6 -->|Сработало| E40004["40004 Path перехвачен"]
+    SEC6 -->|Пройдено| SEC_PASS["Проверка безопасности пройдена"]
+
+    SEC_PASS --> PLAT["③ Platform<br/>Header X-Platform<br/>+ понижение по UA<br/>Источники 8 платформ"]
+
+    PLAT --> GEO["④ GeoIp<br/>MaxMind GeoIP2<br/>Для неавторизованных пользователей<br/>определение региона/валюты/языка"]
+
+    GEO --> LOCALE["⑤ Locale<br/>Разбор Accept-Language<br/>Точное совпадение 5 языков → понижение → по умолчанию"]
+
+    LOCALE --> HDEC["⑥ HashidsDecode<br/>Поля *_id в запросе<br/>hashid → snowflake ID"]
+
+    HDEC --> VER["⑦ VersionRoute<br/>Header API-Version<br/>→ маршрутизация в пространства имён v1/v2"]
+
+    VER --> RATE["⑧ RateLimit<br/>ZSET Redis, скользящее окно<br/>Лимитирование токен-бакетом"]
+
+    RATE -->|Превышение| E429["429 Too Many Requests<br/>Заголовок ответа Retry-After"]
+    RATE -->|Пройдено| ROUTE_CHECK{"Совпадение маршрута?"}
+
+    ROUTE_CHECK -->|Чувствительные операции<br/>регистрация/заказ/оплата| POSTER["⑨ PosterVerify<br/>Проверка token в Redis<br/>Слайдер/пазл/клик"]
+    ROUTE_CHECK -->|Требуется аутентификация| JWT_START["⑩ JwtAuth"]
+    ROUTE_CHECK -->|Публичные интерфейсы| HENC
+
+    POSTER --> JWT_START
+
+    JWT_START --> JWT_CHECK{"Bearer Token<br/>проверка HS256"}
+    JWT_CHECK -->|Недействителен/истёк| E401["401 Unauthorized"]
+    JWT_CHECK -->|Действителен| JWT_INJECT["Внедрение request→userId"]
+
+    JWT_INJECT --> HENC["⑪ HashidsEncode<br/>Рекурсивный обход JSON ответа<br/>snowflake ID → hashid"]
+
+    HENC --> CTRL["Controller<br/>Обработка бизнес-логики<br/>Запросы Model · валидация · расчёты"]
+
+    CTRL --> ENC_RESP{"Нужно шифровать ответ?"}
+
+    ENC_RESP -->|Да| ENC["⑫ Encryption<br/>Шифрование AES-256-CBC<br/>Header X-Encrypted: 1"]
+    ENC_RESP -->|Нет| RESP
+    ENC --> RESP(["JSON Response<br/>{code, msg, data}<br/>+ CORS Headers<br/>+ X-Platform Header"])
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style POSTER fill:#ffe0b2
+    style JWT_START fill:#c8e6c9
+    style CTRL fill:#bbdefb
+    style START fill:#e8eaf6
+    style RESP fill:#e8eaf6
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style E401 fill:#ff5252,color:#fff

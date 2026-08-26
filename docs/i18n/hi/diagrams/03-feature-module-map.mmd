@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br/>क्रॉस-बॉर्डर ई-कॉमर्स प्लेटफ़ॉर्म Full"]
+
+    CENTER --> B2C["B2C खुदरा"]
+    CENTER --> B2B["B2B थोक"]
+    CENTER --> MART["मल्टी-विक्रेता ऑनबोर्डिंग"]
+    CENTER --> CROSS["क्रॉस-बॉर्डर अनुपालन"]
+    CENTER --> LOGISTICS["अंतर्राष्ट्रीय लॉजिस्टिक्स"]
+    CENTER --> PAY["भुगतान प्रणाली"]
+    CENTER --> MKT["मार्केटिंग सेंटर"]
+    CENTER --> MULTI["मल्टी-प्लेटफ़ॉर्म प्रबंधन"]
+    CENTER --> SUPPLY["आपूर्ति श्रृंखला"]
+    CENTER --> RISK["जोखिम नियंत्रणअनुपालन"]
+    CENTER --> SECURITY["सुरक्षा"]
+    CENTER --> PERF["उच्च समवर्ती"]
+    CENTER --> GROWTH["सदस्य वृद्धि"]
+    CENTER --> CMS["सामग्री प्रबंधन"]
+    CENTER --> CS["ग्राहक सहायता प्रणाली"]
+    CENTER --> INFRA["बुनियादी ढाँचा"]
+    CENTER --> CLIENTS["मल्टी-प्लेटफ़ॉर्म कवरेज"]
+
+    B2C --> B2C_DETAIL["बहुभाषी उत्पाद · मुद्रा-वार मूल्य निर्धारण<br/>SKU स्टॉक · कार्ट<br/>ऑर्डर · रिफंड · रिटर्न"]
+
+    B2B --> B2B_DETAIL["टियर प्राइसिंग MOQ<br/>उद्यम सत्यापन कर ID/व्यवसाय लाइसेंस<br/>मूल्य पूछताछ कोटेशन"]
+
+    MART --> MART_DETAIL["विक्रेता समीक्षा ऑनबोर्डिंग<br/>उत्पाद समीक्षा प्रकाशन<br/>कमीशन सेटलमेंट"]
+
+    CROSS --> CROSS_DETAIL["HS Code कोड लाइब्रेरी<br/>टैरिफ नियम गंतव्य देश+HS→कर दर<br/>VAT/IOSS यूरोपीय संघ<br/>अनुपालन लेबल FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["शिपिंग ज़ोन शुल्क वज़न टियर<br/>DHL/UPS/FedEx/EMS<br/>ओवरसीज़ वेयरहाउस शिपमेंट+रिटर्न<br/>वाणिज्यिक इनवॉइस/पैकिंग लिस्ट PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL अभी खरीदें बाद में भुगतान<br/>Adyen वैश्विक भुगतान<br/>3DS सत्यापन · Webhook सेटलमेंट"]
+
+    MKT --> MKT_DETAIL["कूपन ज़ोन+नए/पुराने ग्राहक<br/>बैनर क्षेत्र-दृश्य<br/>फ़्लैश सेल समय-सीमित मात्रा-सीमित<br/>ग्रुप बाय न्यूनतम सदस्य+वैधता<br/>एफिलिएट लिंक+कमीशन+निकासी"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br/>Shopee · Lazada · Temu<br/>उत्पाद लिस्टिंग · ऑर्डर एग्रीगेशन<br/>मल्टी-स्टोर प्रबंधन"]
+
+    SUPPLY --> SUPPLY_DETAIL["आपूर्तिकर्ता प्रोफ़ाइल+रेटिंग<br/>पर्चेज़ ऑर्डर समीक्षा→प्राप्ति→गुणवत्ता जाँच<br/>इन्वेंट्री लेज़र अपरिवर्तनीय बही<br/>ट्रांसफ़र प्रबंधन"]
+
+    RISK --> RISK_DETAIL["रूल इंजन बाईपास स्कोरिंग<br/>KYC सत्यापन<br/>GDPR/CCPA डेटा अनुरोध<br/>Cookie Consent संस्करण प्रबंधन"]
+
+    SECURITY --> SECURITY_DETAIL["31 प्रकार की हमले पहचान<br/>XSS · SQLइंजेक्शन · CRLF<br/>पाथ ट्रैवर्सल · XXE · SSRF<br/>फ़ाइल अपलोड · ब्रूट फ़ोर्स<br/>Host · CORS · मास्किंग"]
+
+    PERF --> PERF_DETAIL["टोकन बकेट रेट लिमिट स्लाइडिंग विंडो<br/>6एंडपॉइंटरेट लिमिटनियम<br/>DB रीड/राइट स्प्लिटिंग 2 रीड रेप्लिका+sticky<br/>कनेक्शन पूल DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["सदस्य स्तर+लाभ<br/>पॉइंट नियम+इतिहास<br/>गिफ्ट कार्ड शेष+रिडीम<br/>मूल्य कमी/स्टॉक अलर्ट<br/>AB टेस्ट ट्रैफ़िक विभाजन+कॉन्फ़िडेंस"]
+
+    CMS --> CMS_DETAIL["CMS बहुभाषी पृष्ठ<br/>FAQ · नॉलेज बेस<br/>साइज़ चार्ट कपड़े/जूते<br/>ईमेल टेम्पलेट बहुभाषी<br/>उत्पाद फ़ीड Google/Meta"]
+
+    CS --> CS_DETAIL["WebSocket रीयल-टाइम IM<br/>chat_sessions<br/>chat_messages<br/>नॉलेज बेस बहुभाषी"]
+
+    INFRA --> INFRA_DETAIL["Snowflake वितरित ID<br/>Hashids इंटरफ़ेस अस्पष्टीकरण<br/>JWT HS256 डबल-टोकन रिफ़्रेश<br/>AES-256-CBC एन्क्रिप्शन<br/>Encryptable डेटाबेस एन्क्रिप्शन<br/>Poster मानव-सत्यापन<br/>GeoIP क्षेत्र पहचान"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter 5 प्लेटफ़ॉर्म<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

@@ -1,0 +1,28 @@
+flowchart TD
+    A["उत्पाद मुद्रा-वार मूल्य निर्धारण<br/>SKU currency_code के अनुसार मूल्यित<br/>(USD/EUR/GBP/CNY…)"] --> B["कार्ट/ऑर्डर<br/>ऑर्डर स्वीकृति मुद्रा लॉक करता है"]
+    B --> C["विनिमय दर सेवा erik_exchange_rates<br/>manual मैनुअल रखरखाव / exchangerate-api स्वचालित फ़ेच<br/>प्रभावी समय effective_at संस्करणित"]
+
+    C --> D["भुगतान आरंभ<br/>Stripe / PayPal / Klarna / Adyen<br/>स्वीकृति मुद्रा में मूल मुद्रा कटौती"]
+    D --> E["भुगतान कॉलबैक Webhook<br/>payment_intent.succeeded<br/>हस्ताक्षर सत्यापन Gateway::verifyWebhook"]
+
+    E --> F["भुगतान/ऑर्डर अपडेट<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["प्लेटफ़ॉर्म सेटलमेंट PlatformSettlements<br/>ऑर्डर कुल total_amount<br/>प्लेटफ़ॉर्म कमीशन platform_fee<br/>भुगतान गेटवे शुल्क payment_gateway_fee<br/>currency_code = ऑर्डर मुद्रा"]
+
+    G --> H1["विक्रेता सेटलमेंट MerchantSettlements<br/>ऑर्डर राशि → कमीशन दर → सेटलमेंट राशि<br/>0सेटलमेंट लंबित / 1सेटलमेंट किया गया"]
+    G --> H2["आपूर्तिकर्ता सेटलमेंट SupplierSettlements<br/>आपूर्तिकर्ता को देय राशि"]
+    G --> H3["एफिलिएट सेटलमेंट AffiliatePayouts<br/>कमीशन + निकासी"]
+    G --> H4["प्लेटफ़ॉर्म राजस्व<br/>प्लेटफ़ॉर्म कमीशन + भुगतान शुल्क"]
+
+    H1 --> I["विनिमय लाभ/हानि ट्रैकिंग CurrencyExchangeGainsLosses<br/>प्राप्त राशि/मुद्रा ↔ सेटलमेंट राशि/मुद्रा<br/>भुगतान समय दर vs सेटलमेंट समय दर<br/>धनात्मक=विनिमय लाभ / ऋणात्मक=विनिमय हानि"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["सेटलमेंट पूर्ण settled_at<br/>समाधान मिलान / लेखा-परीक्षा ट्रेसबिलिटी"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

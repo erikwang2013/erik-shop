@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br/>Platform E-Commerce Lintas Batas Full"]
+
+    CENTER --> B2C["B2C Ritel"]
+    CENTER --> B2B["B2B Grosir"]
+    CENTER --> MART["Onboarding Multi-Penjual"]
+    CENTER --> CROSS["Kepatuhan Lintas Batas"]
+    CENTER --> LOGISTICS["Logistik Internasional"]
+    CENTER --> PAY["Sistem Pembayaran"]
+    CENTER --> MKT["Pusat Pemasaran"]
+    CENTER --> MULTI["Manajemen Multi-Platform"]
+    CENTER --> SUPPLY["Rantai Pasok"]
+    CENTER --> RISK["Risiko & Kepatuhan"]
+    CENTER --> SECURITY["Perlindungan Keamanan"]
+    CENTER --> PERF["Konkurensi Tinggi"]
+    CENTER --> GROWTH["Pertumbuhan Member"]
+    CENTER --> CMS["Manajemen Konten"]
+    CENTER --> CS["Sistem Layanan Pelanggan"]
+    CENTER --> INFRA["Infrastruktur"]
+    CENTER --> CLIENTS["Cakupan Multi-Platform"]
+
+    B2C --> B2C_DETAIL["Produk multibahasa · harga per mata uang<br/>Stok SKU · keranjang belanja<br/>Pesanan · refund · retur"]
+
+    B2B --> B2B_DETAIL["Penetapan harga berjenjang MOQ<br/>Sertifikasi perusahaan nomor pajak/licensi usaha<br/>Permintaan penawaran · penawaran"]
+
+    MART --> MART_DETAIL["Review pendaftaran penjual<br/>Review listing produk<br/>Pembagian komisi & penyelesaian dana"]
+
+    CROSS --> CROSS_DETAIL["Pustaka kode HS Code<br/>Aturan bea masuk negara tujuan+HS→tarif<br/>VAT/IOSS Uni Eropa<br/>Label kepatuhan FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["Ongkir zonal logistik bertingkat berat<br/>DHL/UPS/FedEx/EMS<br/>Gudang luar negeri kirim+retur<br/>Faktur komersial/daftar pengepakan PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL beli-sekarang-bayar-nanti<br/>Adyen pembayaran global<br/>Verifikasi 3DS · pembagian dana Webhook"]
+
+    MKT --> MKT_DETAIL["Kupon zona+pelanggan baru/lama<br/>Banner karusel terlihat per wilayah<br/>Flash sale terbatas waktu & jumlah<br/>Beli grup jumlah anggota+masa berlaku<br/>Afiliasi tautan+komisi+penarikan"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br/>Shopee · Lazada · Temu<br/>Listing produk · agregasi pesanan<br/>Manajemen multi-toko"]
+
+    SUPPLY --> SUPPLY_DETAIL["Profil+peringkat pemasok<br/>Purchase order review→penerimaan→pemeriksaan kualitas<br/>Riwayat stok buku besar tidak berubah<br/>Manajemen transfer"]
+
+    RISK --> RISK_DETAIL["Mesin aturan penilaian bypass<br/>KYC verifikasi identitas<br/>Permintaan data GDPR/CCPA<br/>Manajemen versi Cookie Consent"]
+
+    SECURITY --> SECURITY_DETAIL["31 jenis deteksi serangan<br/>XSS · Injeksi SQL · CRLF<br/>Path traversal · XXE · SSRF<br/>Unggah file · Brute force<br/>Host · CORS · Desensitisasi"]
+
+    PERF --> PERF_DETAIL["Rate limiting token bucket jendela geser<br/>6 aturan rate limiting endpoint<br/>Pemisahan baca/tulis DB 2 replika baca+sticky<br/>Kumpulan koneksi DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["Level member+hak akses<br/>Aturan+buku besar poin<br/>Kartu hadiah saldo+penukaran<br/>Pengingat penurunan harga/kedatangan<br/>Pengujian AB alokasi lalu lintas+tingkat kepercayaan"]
+
+    CMS --> CMS_DETAIL["Halaman CMS multibahasa<br/>FAQ · basis pengetahuan<br/>Tabel konversi ukuran pakaian/sepatu<br/>Template email multibahasa<br/>Feed produk Google/Meta"]
+
+    CS --> CS_DETAIL["IM real-time WebSocket<br/>chat_sessions<br/>chat_messages<br/>Basis pengetahuan multibahasa"]
+
+    INFRA --> INFRA_DETAIL["Snowflake ID terdistribusi<br/>Hashids obfuskasi antarmuka<br/>JWT HS256 refresh token ganda<br/>Enkripsi AES-256-CBC<br/>Encryptable enkripsi database<br/>Poster verifikasi manusia<br/>GeoIP identifikasi wilayah"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter 5 platform<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

@@ -1,0 +1,68 @@
+graph TB
+    START(["HTTP-Anfrage trifft ein"]) --> CORS["① Cors<br/>Access-Control-*-Header<br/>OPTIONS-Preflight → 200"]
+
+    CORS --> SEC["② Security-Angriffserkennung<br/>━━━━━━━━━━━━━━━"]
+    SEC --> SEC1{"Content-Type<br/>gültig?"}
+    SEC1 -->|Nein| E403["403 Forbidden"]
+    SEC1 -->|Ja| SEC2{"Body Size<br/>≤ 10MB?"}
+    SEC2 -->|Nein| E413["413 Too Large"]
+    SEC2 -->|Ja| SEC3{"XSS-Erkennung<br/>13 Regeln"}
+    SEC3 -->|Treffer| E40001["40001 XSS blockiert"]
+    SEC3 -->|Pass| SEC4{"SQLi-Erkennung<br/>13 Regeln"}
+    SEC4 -->|Treffer| E40002["40002 SQLi blockiert"]
+    SEC4 -->|Pass| SEC5{"CRLF-Erkennung<br/>Header-Injection"}
+    SEC5 -->|Treffer| E40003["40003 CRLF blockiert"]
+    SEC5 -->|Pass| SEC6{"Pfad-Traversal<br/>Erkennung"}
+    SEC6 -->|Treffer| E40004["40004 Path blockiert"]
+    SEC6 -->|Pass| SEC_PASS["Sicherheitsprüfung bestanden"]
+
+    SEC_PASS --> PLAT["③ Platform<br/>X-Platform-Header<br/>+ UA-Fallback-Erkennung<br/>8 Plattformquellen"]
+
+    PLAT --> GEO["④ GeoIp<br/>MaxMind GeoIP2<br/>nicht eingeloggte Benutzer<br/>Region/Währung/Sprache"]
+
+    GEO --> LOCALE["⑤ Locale<br/>Accept-Language-Parsing<br/>5 Sprachen: exakt → Fallback → Standard"]
+
+    LOCALE --> HDEC["⑥ HashidsDecode<br/>*_id-Felder in Anfragen<br/>hashid → Snowflake-ID"]
+
+    HDEC --> VER["⑦ VersionRoute<br/>API-Version-Header<br/>→ v1/v2-Namespace-Routing"]
+
+    VER --> RATE["⑧ RateLimit<br/>Redis ZSET Sliding Window<br/>Token-Bucket-Limiting"]
+
+    RATE -->|Limit überschritten| E429["429 Too Many Requests<br/>Retry-After-Header"]
+    RATE -->|Pass| ROUTE_CHECK{"Route gefunden?"}
+
+    ROUTE_CHECK -->|Sensible Aktionen<br/>Registrierung/Bestellung/Zahlung| POSTER["⑨ PosterVerify<br/>Redis-Validierungstoken<br/>Schieberegler/Puzzle/Klick"]
+    ROUTE_CHECK -->|Auth erforderlich| JWT_START["⑩ JwtAuth"]
+    ROUTE_CHECK -->|Öffentliche API| HENC
+
+    POSTER --> JWT_START
+
+    JWT_START --> JWT_CHECK{"Bearer Token<br/>HS256-Signaturprüfung"}
+    JWT_CHECK -->|Ungültig/abgelaufen| E401["401 Unauthorized"]
+    JWT_CHECK -->|Gültig| JWT_INJECT["Injiziert request→userId"]
+
+    JWT_INJECT --> HENC["⑪ HashidsEncode<br/>rekursive JSON-Antwort-Traversierung<br/>Snowflake-ID → hashid"]
+
+    HENC --> CTRL["Controller<br/>Geschäftslogik<br/>Model-Abfragen · Validierung · Berechnung"]
+
+    CTRL --> ENC_RESP{"Verschlüsselung nötig?"}
+
+    ENC_RESP -->|Ja| ENC["⑫ Encryption<br/>AES-256-CBC-Verschlüsselung<br/>X-Encrypted: 1 Header"]
+    ENC_RESP -->|Nein| RESP
+    ENC --> RESP(["JSON Response<br/>{code, msg, data}<br/>+ CORS Headers<br/>+ X-Platform Header"])
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style POSTER fill:#ffe0b2
+    style JWT_START fill:#c8e6c9
+    style CTRL fill:#bbdefb
+    style START fill:#e8eaf6
+    style RESP fill:#e8eaf6
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style E401 fill:#ff5252,color:#fff

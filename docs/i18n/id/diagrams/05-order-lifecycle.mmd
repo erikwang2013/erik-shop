@@ -1,0 +1,56 @@
+stateDiagram-v2
+    [*] --> Keranjang: Tambah produk
+
+    Keranjang --> MenungguPembayaran: Kirim pesanan<br/>POST /api/orders
+    Keranjang --> [*]: Kosongkan/kedaluwarsa
+
+    MenungguPembayaran --> Dibatalkan: Tidak dibayar tepat waktu<br/>Auto-cancel 30 menit
+    MenungguPembayaran --> Dibatalkan: Dibatalkan pengguna
+    MenungguPembayaran --> PembayaranBerlangsung: Mulai pembayaran<br/>POST /api/payment/create
+
+    PembayaranBerlangsung --> MenungguPembayaran: Pembayaran gagal
+    PembayaranBerlangsung --> Dibayar: Pembayaran sukses<br/>Konfirmasi Webhook
+
+    Dibayar --> MenungguReview: Review risiko<br/>Penilaian mesin aturan
+    Dibayar --> Pengepakan: Review lolos
+
+    MenungguReview --> Pengepakan: Review lolos
+    MenungguReview --> Dibatalkan: Review ditolak → refund
+
+    Pengepakan --> Dikirim: Selesai pengeluaran gudang<br/>Pembuatan nomor resi
+
+    Dikirim --> DalamPengiriman: Dijemput logistik
+    Dikirim --> Dikirim: Perbarui lintasan logistik
+
+    DalamPengiriman --> PemeriksaanBeaCukai: Tiba di negara tujuan
+    PemeriksaanBeaCukai --> DalamPengiriman: Dilepas setelah pemeriksaan
+    PemeriksaanBeaCukai --> DitahanBeaCukai: Anomali pemeriksaan
+    DitahanBeaCukai --> DalamPengiriman: Lolos setelah melengkapi dokumen
+
+    DalamPengiriman --> Diterima: Diterima pelanggan
+    DalamPengiriman --> AnomaliPengiriman: Alamat/kontak gagal
+
+    AnomaliPengiriman --> DalamPengiriman: Pengiriman ulang
+    AnomaliPengiriman --> Dikembalikan: Dikembalikan ke pengirim
+
+    Diterima --> Selesai: Konfirmasi otomatis<br/>7 hari tanpa purna jual
+
+    Diterima --> RefundBerlangsung: Ajukan retur & refund
+    RefundBerlangsung --> MenungguRetur: Disetujui penjual
+
+    MenungguRetur --> ReturBerlangsung: Pelanggan kirim
+    ReturBerlangsung --> Dikembalikan: Diterima gudang
+    Dikembalikan --> RefundBerlangsung: Pemeriksaan kualitas lolos
+    Dikembalikan --> Diterima: Pemeriksaan kualitas gagal → dikembalikan ke pelanggan
+
+    RefundBerlangsung --> RefundSelesai: Refund selesai<br/>Kembali ke sumber
+
+    Selesai --> [*]
+    Dibatalkan --> [*]
+    RefundSelesai --> [*]
+
+    note right of MenungguPembayaran: Pre-reservasi stok 30 menit
+    note right of PembayaranBerlangsung: Stripe/PayPal/Klarna/Adyen
+    note right of Dibayar: Pengurangan stok permanen
+    note right of DalamPengiriman: Update push Webhook
+    note right of Diterima: Konfirmasi penerimaan otomatis 7 hari

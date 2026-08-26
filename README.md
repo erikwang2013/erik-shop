@@ -8,6 +8,24 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 >
 > 商业授权联系: **erik@erik.xyz** | 版本对比: [docs/VERSIONS.md]
 
+## 语言 / Languages
+
+| 语言 | 链接 |
+|------|------|
+| 中文 | [README.md](README.md) |
+| English | [docs/i18n/en/README.md](docs/i18n/en/README.md) |
+| 한국어 | [docs/i18n/ko/README.md](docs/i18n/ko/README.md) |
+| Русский | [docs/i18n/ru/README.md](docs/i18n/ru/README.md) |
+| Deutsch | [docs/i18n/de/README.md](docs/i18n/de/README.md) |
+| Français | [docs/i18n/fr/README.md](docs/i18n/fr/README.md) |
+| Español | [docs/i18n/es/README.md](docs/i18n/es/README.md) |
+| Português | [docs/i18n/pt/README.md](docs/i18n/pt/README.md) |
+| हिन्दी | [docs/i18n/hi/README.md](docs/i18n/hi/README.md) |
+| العربية | [docs/i18n/ar/README.md](docs/i18n/ar/README.md) |
+| বাংলা | [docs/i18n/bn/README.md](docs/i18n/bn/README.md) |
+| Bahasa Indonesia | [docs/i18n/id/README.md](docs/i18n/id/README.md) |
+| 日本語 | [docs/i18n/ja/README.md](docs/i18n/ja/README.md) |
+
 ## 项目简介
 
 基于 webman 全家桶构建的全栈跨境电商平台，覆盖 B2C/B2B 场景和第三方卖家入驻。
@@ -93,7 +111,7 @@ cd ../service && composer install && php start.php start -d
 
 ### 方式二：命令行手动安装
 
-详见 [INSTALL.md](INSTALL.md)
+详见 [INSTALL.md](docs/INSTALL.md)
 
 ### Docker 部署
 
@@ -159,12 +177,12 @@ shop-php/
 
 | 文档 | 说明 |
 |------|------|
-| [README-EN.md](README-EN.md) | English documentation |
-| [INSTALL.md](INSTALL.md) | 安装指南（Web 一键安装 + 手动安装） |
-| [AUDIT-REPORT.md](AUDIT-REPORT.md) | 安装系统审查报告 |
+| [README-EN.md](docs/README-EN.md) | English documentation |
+| [INSTALL.md](docs/INSTALL.md) | 安装指南（Web 一键安装 + 手动安装） |
+| [AUDIT-REPORT.md](docs/AUDIT-REPORT.md) | 安装系统审查报告 |
 | [项目规划](docs/PLAN.md) | 团队产出的分阶段项目规划（4 阶段路线图 + 关键风险 + Quick Wins） |
 | [团队调研明细](docs/PLAN-RESEARCH.md) | 7 领域现状调研：已实现 / 差距 / 风险 / 建议 |
-| [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、API端点设计、状态机 |
+| [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、状态机 |
 | [架构图集](docs/diagrams.md) | 架构图、流程图、功能图、生命周期图、部署图、多币种结算图（8张Mermaid图） |
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
@@ -179,6 +197,36 @@ shop-php/
 | 微信 | 支付宝 |
 |:---:|:---:|
 | ![微信](./docs/weixinpay.png "微信") | ![支付宝](./docs/alipay.png "支付宝") |
+
+### 全球银行转账 (ZA Bank)
+
+**收款人信息**
+
+- 收款人姓名：WANG KEXUN
+- 收款账户号码：881015918251
+
+**收款银行**
+
+- SWIFT Code：AABLHKHHXXX
+- 银行名称：ZA Bank Limited
+- 银行编号：387
+- 银行地址：Core F, Cyberport 3, 100 Cyberport Road, Hong Kong
+
+**跨境汇款代理银行（如需）**
+
+> 此为跨境汇款代理银行（中转银行）信息，非收款银行信息。请向汇款银行查询是否需要提供。
+
+- **汇入港元、人民币及美元**（代理银行 Citibank）：
+  - 银行名称：Citibank N.A. Hong Kong
+  - SWIFT Code：CITIHKHXXXX
+  - 银行编号：006
+  - 分行名称：Hong Kong Branch
+  - 分行编号：391
+  - 银行地址：Citibank Tower, Citibank Plaza, 3 Garden Road, Central, Hong Kong
+- **汇入其他币种**（代理银行 BNY Mellon）：
+  - 银行名称：THE BANK OF NEW YORK MELLON
+  - SWIFT Code：IRVTUS3NXXX
+  - 银行地址：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
 
 ---
 

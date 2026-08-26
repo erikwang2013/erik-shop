@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as クライアント<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as ミドルウェアパイプライン<br/>10 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as ルート振り分け
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: リクエスト転送
+
+    rect rgb(255, 205, 210)
+        Note over Security: 安全検出フェーズ
+        Security->>Security: ① Content-Type 検証
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ XSS 検出 13ルール
+        Security->>Security: ④ SQLi 検出 13ルール
+        Security->>Security: ⑤ CRLF Header 注入
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt 攻撃ヒット
+        Security-->>Client: 4xxxx エラーレスポンス
+    end
+
+    Security->>Pipeline: 安全検出を通過
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: リクエスト前処理フェーズ
+        Pipeline->>Pipeline: ⑦ Cors レスポンスヘッダー設定
+        Pipeline->>Pipeline: ⑧ Platform 出所識別
+        Pipeline->>Pipeline: ⑨ GeoIp 地域/通貨
+        Pipeline->>Pipeline: ⑩ Locale 言語設定
+        Pipeline->>Pipeline: ⑪ HashidsDecode IDデコード
+        Pipeline->>Pipeline: ⑫ VersionRoute APIバージョン
+    end
+
+    Pipeline->>RateLimit: 限流チェック
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: トークンバケット限流
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>スライディングウィンドウ集計
+        Redis-->>RateLimit: 現在のウィンドウのリクエスト数
+    end
+
+    alt 超過
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: 通過
+
+    Route->>Route: API-Version → 名前空間<br/>Controller マッチ
+
+    alt 敏感操作 登録/注文/決済
+        Route->>Poster: 人機認証
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt 検証失敗
+            Poster-->>Client: 40007 検証失敗
+        end
+    end
+
+    alt 認証が必要なインターフェース
+        Route->>JWT: Bearer Token
+        JWT->>JWT: HS256 署名検証 + 期限チェック
+        alt Token 無効
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: 業務処理
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: 業務ロジック処理
+        Controller->>Model: Model 呼び出し
+        Model->>Model: Snowflake ID 生成
+        Model->>Model: Encryptable 暗号化/復号
+        Model->>MySQL: 読み書き操作
+        MySQL-->>Model: 結果
+        Model->>ES: 検索/インデックス
+        ES-->>Model: 検索結果
+        Model-->>Controller: 業務データ
+    end
+
+    Controller->>Response: データ返却
+
+    rect rgb(187, 222, 251)
+        Note over Response: レスポンス後処理
+        Response->>Response: HashidsEncode IDエンコード
+        Response->>Response: AES 機密フィールド暗号化
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

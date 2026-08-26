@@ -1,0 +1,56 @@
+stateDiagram-v2
+    [*] --> Cart: Add Product
+
+    Cart --> Pending Payment: Place Order<br/>POST /api/orders
+    Cart --> [*]: Clear/Expire
+
+    Pending Payment --> Cancelled: Payment Timeout<br/>Auto-Cancel After 30min
+    Pending Payment --> Cancelled: User Cancelled
+    Pending Payment --> Paying: Initiate Payment<br/>POST /api/payment/create
+
+    Paying --> Pending Payment: Payment Failed
+    Paying --> Paid: Payment Succeeded<br/>Webhook Confirmed
+
+    Paid --> Pending Review: Risk Review<br/>Rule Engine Scoring
+    Paid --> Picking: Approved
+
+    Pending Review --> Picking: Approved
+    Pending Review --> Cancelled: Rejected → Refund
+
+    Picking --> Shipped: Picked Out<br/>Tracking Number Generated
+
+    Shipped --> In Transit: Courier Pickup
+    Shipped --> Shipped: Update Tracking
+
+    In Transit --> Customs Inspection: Arrived in Destination Country
+    Customs Inspection --> In Transit: Cleared After Inspection
+    Customs Inspection --> Customs Detention: Inspection Exception
+    Customs Detention --> In Transit: Docs Submitted · Cleared
+
+    In Transit --> Delivered: Customer Signed
+    In Transit --> Delivery Exception: Address/Contact Failure
+
+    Delivery Exception --> In Transit: Redelivery
+    Delivery Exception --> Returned: Returned to Sender
+
+    Delivered --> Completed: Auto Confirm<br/>No After-Sales in 7 Days
+
+    Delivered --> Refunding: Request Return/Refund
+    Refunding --> Return Pending: Merchant Approved
+
+    Return Pending --> Returning: Customer Ships
+    Returning --> Returned: Warehouse Received
+    Returned --> Refunding: QC Passed
+    Returned --> Delivered: QC Failed → Returned to Customer
+
+    Refunding --> Refunded: Refund Complete<br/>Original Payment Method
+
+    Completed --> [*]
+    Cancelled --> [*]
+    Refunded --> [*]
+
+    note right of Pending Payment: Stock Reserved 30min
+    note right of Paying: Stripe/PayPal/Klarna/Adyen
+    note right of Paid: Stock Deducted Permanently
+    note right of In Transit: Webhook Push Updates
+    note right of Delivered: Auto-Confirm Receipt in 7 Days

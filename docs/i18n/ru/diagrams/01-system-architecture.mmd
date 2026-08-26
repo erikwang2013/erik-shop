@@ -1,0 +1,63 @@
+graph TB
+    subgraph Clients["Клиентский слой Client Layer"]
+        direction LR
+        FL["Flutter App<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>Riverpod + GoRouter + Dio"]
+        HM["HarmonyOS App<br/>ArkTS + ArkUI<br/>API 12+"]
+        WB["Web Admin<br/>LayUI + ECharts<br/>Панель управления"]
+    end
+
+    subgraph Gateway["Слой доступа Gateway"]
+        NG["Nginx :80 / :443<br/>api.erik.xyz → Service<br/>admin.erik.xyz → Admin<br/>Статические ресурсы + SSL-терминатор"]
+    end
+
+    subgraph Apps["Прикладной уровень Application"]
+        subgraph Service["Service API (webman) :8787"]
+            direction TB
+            MW["Глобальные MW, 10<br/>Cors → Security → RateLimit<br/>→ Platform → GeoIp → Locale<br/>→ HashidsDecode → VersionRoute<br/>→ HashidsEncode → Encryption"]
+            RT["Маршрутные MW, 2<br/>PosterVerify · JwtAuth"]
+            CTRL["39 контроллеров<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · Affiliate<br/>B2b · Cms · Faq · FlashSale<br/>GroupBuy · GiftCard · Review<br/>Search · SocialAuth · Settings"]
+            MDL["111 моделей Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable шифрование<br/>+ Searchable синхронизация ES<br/>+ SoftDelete мягкое удаление<br/>Мягкое удаление включено для 45 таблиц"]
+        end
+        subgraph Admin["Admin (webman-admin) :8788"]
+            direction TB
+            AMW["MW, 5<br/>Security → Platform<br/>→ HashidsDecode<br/>→ AccessControl RBAC<br/>→ HashidsEncode"]
+            ACTRL["82 контроллера<br/>Товары · Заказы · Пользователи · Маркетинг<br/>Логистика · Цепочка поставок · Риски<br/>CMS · Поддержка · Система"]
+            AMDL["76 моделей"]
+        end
+    end
+
+    subgraph Data["Слой данных Data"]
+        direction LR
+        MySQL[("MySQL 8.0 :3306<br/>117 таблиц · префикс erik_<br/>Snowflake bigint PK<br/>Разделение чтения/записи, 2 читающих реплики")]
+        Redis[("Redis 7 :6379<br/>Токен-бакет лимитирования<br/>Session · проверка Poster")]
+        ES[("Elasticsearch 8 :9200<br/>Многоязычный поиск с токенизацией<br/>Товары · Категории · CMS")]
+    end
+
+    subgraph External["Внешние сервисы External"]
+        direction LR
+        Pay["Платёжные шлюзы<br/>Stripe · PayPal<br/>Klarna · Adyen<br/>Webhook асинхронные уведомления"]
+        Geo["GeoIP<br/>MaxMind GeoIP2<br/>Определение региона · валюты"]
+        Email["Почтовый сервис<br/>Многоязычные шаблоны<br/>(таблица email_templates)"]
+    end
+
+    FL --> NG
+    HM --> NG
+    WB --> NG
+    NG --> Service
+    NG --> Admin
+    Service --> MySQL
+    Service --> Redis
+    Service --> ES
+    Service --> Pay
+    Service --> Geo
+    Service --> Email
+    Admin --> MySQL
+    Admin --> Redis
+
+    style Clients fill:#e1f5fe
+    style Gateway fill:#fff3e0
+    style Apps fill:#f3e5f5
+    style Service fill:#e8f5e9
+    style Admin fill:#fff9c4
+    style Data fill:#fce4ec
+    style External fill:#e0f2f1

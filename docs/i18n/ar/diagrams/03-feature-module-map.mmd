@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br/>منصة التجارة الإلكترونية عبر الحدود Full"]
+
+    CENTER --> B2C["B2C البيع بالتجزئة"]
+    CENTER --> B2B["B2B البيع بالجملة"]
+    CENTER --> MART["استضافة البائعين المتعددين"]
+    CENTER --> CROSS["الامتثال عبر الحدود"]
+    CENTER --> LOGISTICS["اللوجستيات الدولية"]
+    CENTER --> PAY["نظام الدفع"]
+    CENTER --> MKT["مركز التسويق"]
+    CENTER --> MULTI["إدارة المنصات المتعددة"]
+    CENTER --> SUPPLY["سلسلة التوريد"]
+    CENTER --> RISK["إدارة المخاطر والامتثال"]
+    CENTER --> SECURITY["الحماية الأمنية"]
+    CENTER --> PERF["الالتزام العالي"]
+    CENTER --> GROWTH["نمو الأعضاء"]
+    CENTER --> CMS["إدارة المحتوى"]
+    CENTER --> CS["نظام خدمة العملاء"]
+    CENTER --> INFRA["البنية التحتية"]
+    CENTER --> CLIENTS["تغطية الأطراف المتعددة"]
+
+    B2C --> B2C_DETAIL["منتجات متعددة اللغات · تسعير لكل عملة<br/>مخزون SKU · سلة التسوق<br/>الطلبات · الاسترداد · الإرجاع"]
+
+    B2B --> B2B_DETAIL["تسعير متدرج MOQ<br/>تحقق الشركات رقم ضريبي/سجل تجاري<br/>استفسار السعر · عرض السعر"]
+
+    MART --> MART_DETAIL["مراجعة البائع والقبول<br/>مراجعة المنتج قبل العرض<br/>التقسيم والتسوية"]
+
+    CROSS --> CROSS_DETAIL["مكتبة رموز HS Code<br/>قواعد الرسوم الجمركية الدولة+HS→النسبة<br/>VAT/IOSS الاتحاد الأوروبي<br/>ملصقات الامتثال FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["مناطق الشحن وأسعار متدرجة بالوزن<br/>DHL/UPS/FedEx/EMS<br/>مستودعات خارجية شحن + إرجاع<br/>الفاتورة التجارية/قائمة التعبئة PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL اشترِ الآن وادفع لاحقًا<br/>Adyen الدفع العالمي<br/>التحقق 3DS · تقسيم Webhook"]
+
+    MKT --> MKT_DETAIL["القسائم حسب المنطقة + عملاء جدد/قدامى<br/>الصور الدائرية مرئية إقليميًا<br/>البيع الخاطف بوقت وكمية محدودين<br/>الشراء الجماعي عدد الأعضاء + صلاحية<br/>التوزيع رابط + عمولة + سحب"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br/>Shopee · Lazada · Temu<br/>إدراج المنتجات · تجميع الطلبات<br/>إدارة المتاجر المتعددة"]
+
+    SUPPLY --> SUPPLY_DETAIL["ملفات الموردين + التقييم<br/>أوامر الشراء مراجعة→استلام→فحص جودة<br/>سجل المخزون دفتر غير قابل للتغيير<br/>إدارة التحويل"]
+
+    RISK --> RISK_DETAIL["محرك القواعد تقييم جانبي<br/>KYC التحقق من الهوية<br/>طلبات بيانات GDPR/CCPA<br/>إدارة إصدارات Cookie Consent"]
+
+    SECURITY --> SECURITY_DETAIL["كشف هجمات 31 نوعًا<br/>XSS · حقن SQL · CRLF<br/>عبور المسار · XXE · SSRF<br/>رفع الملفات · القوة الغاشمة<br/>Host · CORS · إخفاء البيانات"]
+
+    PERF --> PERF_DETAIL["تحديد المعدل بدلو الرموز نافذة منزلقة<br/>6 قواعد تحديد معدل نقاط النهاية<br/>فصل قراءة/كتابة DB بنسختي قراءة + sticky<br/>تجمع الاتصالات DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["مستويات العضوية + الامتيازات<br/>قواعد النقاط + السجل<br/>بطاقات الهدايا رصيد + استبدال<br/>تنبيهات انخفاض السعر/توفر المنتج<br/>اختبار AB توزيع الحركة + الثقة"]
+
+    CMS --> CMS_DETAIL["صفحات CMS متعددة اللغات<br/>FAQ · قاعدة المعرفة<br/>جداول مقاسات الملابس/الأحذية<br/>قوالب البريد متعددة اللغات<br/>خلاصات المنتجات Google/Meta"]
+
+    CS --> CS_DETAIL["WebSocket IM فوري<br/>chat_sessions<br/>chat_messages<br/>قاعدة المعرفة متعددة اللغات"]
+
+    INFRA --> INFRA_DETAIL["Snowflake معرف موزع<br/>Hashids إخفاء الواجهات<br/>JWT HS256 رمزان للتحديث<br/>تشفير AES-256-CBC<br/>Encryptable تشفير قاعدة البيانات<br/>Poster التحقق البشري<br/>GeoIP تحديد المنطقة"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter 5 منصات<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

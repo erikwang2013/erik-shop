@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as Client<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as Middleware-Pipeline<br/>10 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as Routenverteilung
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: Anfrage weiterleiten
+
+    rect rgb(255, 205, 210)
+        Note over Security: Sicherheitsprüfungsphase
+        Security->>Security: ① Content-Type-Prüfung
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ XSS-Erkennung, 13 Regeln
+        Security->>Security: ④ SQLi-Erkennung, 13 Regeln
+        Security->>Security: ⑤ CRLF-Header-Injection
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt Angriff erkannt
+        Security-->>Client: 4xxxx-Fehlerantwort
+    end
+
+    Security->>Pipeline: Sicherheit bestanden
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: Anfrage-Vorverarbeitung
+        Pipeline->>Pipeline: ⑦ Cors-Header setzen
+        Pipeline->>Pipeline: ⑧ Plattform-Erkennung
+        Pipeline->>Pipeline: ⑨ GeoIp Region/Währung
+        Pipeline->>Pipeline: ⑩ Locale-Spracheinstellung
+        Pipeline->>Pipeline: ⑪ HashidsDecode ID-Dekodierung
+        Pipeline->>Pipeline: ⑫ VersionRoute API-Version
+    end
+
+    Pipeline->>RateLimit: Rate-Limit-Prüfung
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: Token-Bucket-Limiting
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>Sliding-Window-Zähler
+        Redis-->>RateLimit: Anfragen im aktuellen Fenster
+    end
+
+    alt Limit überschritten
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: Pass
+
+    Route->>Route: API-Version → Namespace<br/>Controller-Matching
+
+    alt Sensible Aktion: Registrierung/Bestellung/Zahlung
+        Route->>Poster: CAPTCHA
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt Validierung fehlgeschlagen
+            Poster-->>Client: 40007 Validierung fehlgeschlagen
+        end
+    end
+
+    alt Auth erforderlich
+        Route->>JWT: Bearer Token
+        JWT->>JWT: HS256-Signaturprüfung + Ablaufprüfung
+        alt Token ungültig
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: Geschäftsverarbeitung
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: Geschäftslogik-Verarbeitung
+        Controller->>Model: Model aufrufen
+        Model->>Model: Snowflake-ID-Generierung
+        Model->>Model: Encryptable verschlüsseln/entschlüsseln
+        Model->>MySQL: Lese-/Schreiboperationen
+        MySQL-->>Model: Ergebnis
+        Model->>ES: Suche/Index
+        ES-->>Model: Suchergebnisse
+        Model-->>Controller: Geschäftsdaten
+    end
+
+    Controller->>Response: Rückgabedaten
+
+    rect rgb(187, 222, 251)
+        Note over Response: Antwort-Nachbearbeitung
+        Response->>Response: HashidsEncode ID-Kodierung
+        Response->>Response: AES-Verschlüsselung sensibler Felder
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

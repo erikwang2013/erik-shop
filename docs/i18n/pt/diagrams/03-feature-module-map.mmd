@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br/>plataforma de e-commerce transfronteiriço Full"]
+
+    CENTER --> B2C["B2C varejo"]
+    CENTER --> B2B["B2B atacado"]
+    CENTER --> MART["integração de múltiplos vendedores"]
+    CENTER --> CROSS["conformidade transfronteiriça"]
+    CENTER --> LOGISTICS["logística internacional"]
+    CENTER --> PAY["sistema de pagamento"]
+    CENTER --> MKT["central de marketing"]
+    CENTER --> MULTI["gestão multi-plataforma"]
+    CENTER --> SUPPLY["cadeia de suprimentos"]
+    CENTER --> RISK["gestão de risco e conformidade"]
+    CENTER --> SECURITY["proteção de segurança"]
+    CENTER --> PERF["alta concorrência"]
+    CENTER --> GROWTH["crescimento de membros"]
+    CENTER --> CMS["gestão de conteúdo"]
+    CENTER --> CS["sistema de atendimento"]
+    CENTER --> INFRA["infraestrutura"]
+    CENTER --> CLIENTS["cobertura multi-dispositivo"]
+
+    B2C --> B2C_DETAIL["produtos multilíngues · preços por moeda<br/>estoque SKU · carrinho<br/>pedidos · reembolsos · devoluções"]
+
+    B2B --> B2B_DETAIL["preços escalonados MOQ<br/>certificação empresarial: nº fiscal/licença comercial<br/>consultas e cotações"]
+
+    MART --> MART_DETAIL["revisão de vendedores para ingresso<br/>revisão e publicação de produtos<br/>liquidação com divisão de receita"]
+
+    CROSS --> CROSS_DETAIL["biblioteca de códigos HS<br/>regras tarifárias: país de destino + HS → alíquota<br/>VAT/IOSS UE<br/>rótulos de conformidade FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["frete por zona logística · faixas de peso<br/>DHL/UPS/FedEx/EMS<br/>armazém no exterior: envio + devolução<br/>fatura comercial/lista de embalagem PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL compre agora pague depois<br/>Adyen pagamento global<br/>verificação 3DS · divisão via Webhook"]
+
+    MKT --> MKT_DETAIL["cupons por zona + novos/antigos clientes<br/>banners visíveis por região<br/>vendas relâmpago com limite de tempo e quantidade<br/>compra em grupo: nº de participantes + validade<br/>distribuição: link + comissão + saque"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br/>Shopee · Lazada · Temu<br/>publicação de produtos · agregação de pedidos<br/>gestão de múltiplas lojas"]
+
+    SUPPLY --> SUPPLY_DETAIL["perfil + classificação de fornecedores<br/>ordens de compra: revisão → recebimento → inspeção<br/>registro de estoque: livro-razão imutável<br/>gestão de transferências"]
+
+    RISK --> RISK_DETAIL["motor de regras com pontuação em bypass<br/>verificação KYC<br/>solicitações de dados GDPR/CCPA<br/>gestão de versões de Cookie Consent"]
+
+    SECURITY --> SECURITY_DETAIL["detecção de 31 tipos de ataque<br/>XSS · injeção SQL · CRLF<br/>path traversal · XXE · SSRF<br/>upload de arquivos · força bruta<br/>Host · CORS · mascaramento de dados"]
+
+    PERF --> PERF_DETAIL["limitação por token bucket em janela deslizante<br/>regras de limitação em 6 endpoints<br/>separação leitura/escrita do DB: 2 réplicas + sticky<br/>pool de conexões DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["níveis de membro + benefícios<br/>regras + extrato de pontos<br/>cartões-presente: saldo + resgate<br/>alertas de redução de preço/disponibilidade<br/>testes AB: distribuição de tráfego + confiança"]
+
+    CMS --> CMS_DETAIL["páginas CMS multilíngues<br/>FAQ · base de conhecimento<br/>tabela de tamanhos: vestuário/calçados<br/>modelos de e-mail multilíngues<br/>feed de produtos Google/Meta"]
+
+    CS --> CS_DETAIL["IM em tempo real via WebSocket<br/>chat_sessions<br/>chat_messages<br/>base de conhecimento multilíngue"]
+
+    INFRA --> INFRA_DETAIL["IDs distribuídos Snowflake<br/>ofuscação de interface Hashids<br/>JWT HS256 com renovação de dois tokens<br/>criptografia AES-256-CBC<br/>criptografia de banco Encryptable<br/>verificação humano Poster<br/>reconhecimento regional GeoIP"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter 5 plataformas<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

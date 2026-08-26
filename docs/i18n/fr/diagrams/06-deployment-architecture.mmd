@@ -1,0 +1,71 @@
+graph TB
+    subgraph Internet["Internet"]
+        User["Utilisateurs — accès mondial"]
+    end
+
+    subgraph VPS["Serveur cloud / VPS"]
+        subgraph Docker["Docker Compose"]
+            direction TB
+
+            subgraph Net["erik-net Bridge Network"]
+                direction TB
+
+                NGX["Nginx :80 :443<br>alpine<br>Reverse proxy + terminaison SSL<br>Cache des fichiers statiques"]
+
+                subgraph PHP_Service["Service Container"]
+                    SVC["PHP 8.3 + webman 2.1<br>:8787 port interne<br>32 workers (CPU×4)<br>OPCache 128MB<br>Snowflake Worker ID=1"]
+                end
+
+                subgraph PHP_Admin["Admin Container"]
+                    ADM["PHP 8.3 + webman-admin<br>:8788 port interne<br>LayUI + ECharts<br>RBAC intégré<br>Snowflake Worker ID=2"]
+                end
+
+                subgraph DB["Conteneurs de bases de données"]
+                    MYSQL[("MySQL 8.0 :3306<br>117 tables (110 erik_ + 7 wa_)<br>Volume erik_data<br>character-set utf8mb4")]
+                    REDIS[("Redis 7 :6379<br>Volume erik_redis<br>Persistance appendonly AOF<br>Mot de passe requirepass")]
+                    ES[("Elasticsearch 8.11 :9200<br>Volume erik_es<br>Image officielle — recherche multilingue")]
+                end
+            end
+        end
+
+        subgraph Volumes["Volumes de données persistants"]
+            V1["erik_data — données MySQL"]
+            V2["erik_redis — données Redis"]
+            V3["erik_es — index ES"]
+            V4["erik_logs — journaux applicatifs"]
+        end
+    end
+
+    subgraph External["Services externes"]
+        Stripe["Stripe API<br>PaymentIntent + 3DS"]
+        PayPal["PayPal REST<br>Orders API v2"]
+        Klarna["Klarna API<br>BNPL — payer plus tard"]
+        SMTP["Service e-mail<br>Modèles multilingues<br>(table email_templates)"]
+    end
+
+    User --> NGX
+    NGX -->|api.erik.xyz| SVC
+    NGX -->|admin.erik.xyz| ADM
+    SVC --> MYSQL
+    SVC --> REDIS
+    SVC --> ES
+    SVC --> Stripe
+    SVC --> PayPal
+    SVC --> Klarna
+    SVC --> SMTP
+    ADM --> MYSQL
+    ADM --> REDIS
+    MYSQL -.-> V1
+    REDIS -.-> V2
+    ES -.-> V3
+    SVC -.-> V4
+
+    style Internet fill:#e8eaf6
+    style VPS fill:#e8f5e9
+    style Docker fill:#f3e5f5
+    style Net fill:#e1f5fe
+    style PHP_Service fill:#c8e6c9
+    style PHP_Admin fill:#fff9c4
+    style DB fill:#fce4ec
+    style Volumes fill:#efebe9
+    style External fill:#e0f2f1

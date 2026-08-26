@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as ক্লায়েন্ট<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as মিডলওয়্যার পাইপলাইন<br/>10 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as রাউট ডিসপ্যাচ
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: রিকোয়েস্ট ফরওয়ার্ড
+
+    rect rgb(255, 205, 210)
+        Note over Security: নিরাপত্তা ডিটেকশন ফেজ
+        Security->>Security: ① Content-Type ভ্যালিডেশন
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ XSS ডিটেকশন 13 রুল
+        Security->>Security: ④ SQLi ডিটেকশন 13 রুল
+        Security->>Security: ⑤ CRLF Header ইনজেকশন
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt অ্যাটাক হিট
+        Security-->>Client: 4xxxx এরর রেসপন্স
+    end
+
+    Security->>Pipeline: নিরাপত্তা পাস
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: রিকোয়েস্ট প্রি-প্রসেসিং ফেজ
+        Pipeline->>Pipeline: ⑦ Cors রেসপন্স হেডার সেটিং
+        Pipeline->>Pipeline: ⑧ Platform উৎস সনাক্তকরণ
+        Pipeline->>Pipeline: ⑨ GeoIp অঞ্চল/মুদ্রা
+        Pipeline->>Pipeline: ⑩ Locale ভাষা সেটিং
+        Pipeline->>Pipeline: ⑪ HashidsDecode ID ডিকোড
+        Pipeline->>Pipeline: ⑫ VersionRoute API ভার্সন
+    end
+
+    Pipeline->>RateLimit: রেট লিমিট চেক
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: টোকেন বাকেট রেট লিমিট
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>স্লাইডিং উইন্ডো কাউন্ট
+        Redis-->>RateLimit: বর্তমান উইন্ডো রিকোয়েস্ট সংখ্যা
+    end
+
+    alt লিমিট অতিক্রম
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: পাস
+
+    Route->>Route: API-Version → নেমস্পেস<br/>Controller ম্যাচ
+
+    alt সংবেদনশীল অপারেশন রেজিস্ট্রেশন/অর্ডার/পেমেন্ট
+        Route->>Poster: হিউম্যান ভেরিফিকেশন
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt ভেরিফিকেশন ব্যর্থ
+            Poster-->>Client: 40007 ভেরিফিকেশন ব্যর্থ
+        end
+    end
+
+    alt অথেনটিকেশন-প্রয়োজন API
+        Route->>JWT: Bearer Token
+        JWT->>JWT: HS256 ভেরিফিকেশন + মেয়াদোত্তীর্ণতা চেক
+        alt Token অবৈধ
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: বিজনেস প্রসেসিং
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: বিজনেস লজিক প্রসেসিং
+        Controller->>Model: Model কল
+        Model->>Model: Snowflake ID জেনারেশন
+        Model->>Model: Encryptable এনক্রিপশন/ডিক্রিপশন
+        Model->>MySQL: রিড-রাইট অপারেশন
+        MySQL-->>Model: রেজাল্ট
+        Model->>ES: সার্চ/ইনডেক্স
+        ES-->>Model: সার্চ রেজাল্ট
+        Model-->>Controller: বিজনেস ডেটা
+    end
+
+    Controller->>Response: ডেটা রিটার্ন
+
+    rect rgb(187, 222, 251)
+        Note over Response: রেসপন্স পোস্ট-প্রসেসিং
+        Response->>Response: HashidsEncode ID এনকোডিং
+        Response->>Response: AES সংবেদনশীল ফিল্ড এনক্রিপশন
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

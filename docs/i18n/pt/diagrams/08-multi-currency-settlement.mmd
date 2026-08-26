@@ -1,0 +1,28 @@
+flowchart TD
+    A["preços por moeda<br/>SKU precificado por currency_code<br/>(USD/EUR/GBP/CNY…)"] --> B["carrinho/pedido<br/>pedido trava a moeda de cobrança"]
+    B --> C["serviço de câmbio erik_exchange_rates<br/>manutenção manual / coleta automática exchangerate-api<br/>vigência effective_at versionada"]
+
+    C --> D["iniciar pagamento<br/>Stripe / PayPal / Klarna / Adyen<br/>débito na moeda original de cobrança"]
+    D --> E["callback de pagamento Webhook<br/>payment_intent.succeeded<br/>verificação de assinatura Gateway::verifyWebhook"]
+
+    E --> F["atualizar pagamento/pedido<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["liquidação da plataforma PlatformSettlements<br/>total do pedido total_amount<br/>comissão da plataforma platform_fee<br/>taxa do gateway payment_gateway_fee<br/>currency_code = moeda do pedido"]
+
+    G --> H1["liquidação do vendedor MerchantSettlements<br/>valor do pedido → taxa → valor liquidado<br/>0 a liquidar / 1 liquidado"]
+    G --> H2["liquidação de fornecedores SupplierSettlements<br/>pagamento devido ao fornecedor"]
+    G --> H3["liquidação de distribuição AffiliatePayouts<br/>comissão + saque"]
+    G --> H4["receita da plataforma<br/>comissão da plataforma + taxa de pagamento"]
+
+    H1 --> I["rastreamento de ganhos/perdas cambiais CurrencyExchangeGainsLosses<br/>valor/moeda recebidos ↔ valor/moeda liquidados<br/>câmbio no pagamento vs câmbio na liquidação<br/>positivo = ganho cambial / negativo = perda cambial"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["liquidação concluída settled_at<br/>conciliação/baixa · rastreabilidade de auditoria"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

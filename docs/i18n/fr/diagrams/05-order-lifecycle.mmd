@@ -1,0 +1,56 @@
+stateDiagram-v2
+    [*] --> Panier: Ajouter un article
+
+    Panier --> En attente de paiement: Soumettre la commande<br>POST /api/orders
+    Panier --> [*]: Vider / expiré
+
+    En attente de paiement --> Annulée: Non payée à temps<br>Annulation auto après 30 min
+    En attente de paiement --> Annulée: Annulée par l'utilisateur
+    En attente de paiement --> Paiement en cours: Initier le paiement<br>POST /api/payment/create
+
+    Paiement en cours --> En attente de paiement: Échec du paiement
+    Paiement en cours --> Payée: Paiement réussi<br>Confirmé par Webhook
+
+    Payée --> En attente de validation: Validation des risques<br>Score du moteur de règles
+    Payée --> Préparation en cours: Validation approuvée
+
+    En attente de validation --> Préparation en cours: Validation approuvée
+    En attente de validation --> Annulée: Validation refusée → remboursement
+
+    Préparation en cours --> Expédiée: Sortie d'entrepôt<br>Génération du n° de suivi
+
+    Expédiée --> En transit: Enlèvement par le transporteur
+    Expédiée --> Expédiée: Mise à jour du suivi
+
+    En transit --> Contrôle douanier: Arrivée au pays de destination
+    Contrôle douanier --> En transit: Passé après contrôle
+    Contrôle douanier --> Retenue en douane: Anomalie au contrôle
+    Retenue en douane --> En transit: Docs complémentaires acceptés
+
+    En transit --> Signée (livrée): Signé par le client
+    En transit --> Échec de livraison: Adresse / contact en échec
+
+    Échec de livraison --> En transit: Nouvelle livraison
+    Échec de livraison --> Renvoyée: Retour à l'expéditeur
+
+    Signée (livrée) --> Terminée: Confirmation auto<br>7 jours sans réclamation
+
+    Signée (livrée) --> Remboursement en cours: Demander un retour/remboursement
+    Remboursement en cours --> Retour en attente: Accepté par le vendeur
+
+    Retour en attente --> Retour en cours: Retour expédié par le client
+    Retour en cours --> Renvoyée: Réceptionné en entrepôt
+    Renvoyée --> Remboursement en cours: CQ validé
+    Renvoyée --> Signée (livrée): CQ refusé → renvoyé au client
+
+    Remboursement en cours --> Remboursée: Remboursement effectué<br>Retour au moyen de paiement
+
+    Terminée --> [*]
+    Annulée --> [*]
+    Remboursée --> [*]
+
+    note right of En attente de paiement: Stock réservé 30 min
+    note right of Paiement en cours: Stripe/PayPal/Klarna/Adyen
+    note right of Payée: Déduction de stock définitive
+    note right of En transit: Mises à jour poussées par Webhook
+    note right of Signée (livrée): Confirmation auto de réception sous 7 jours

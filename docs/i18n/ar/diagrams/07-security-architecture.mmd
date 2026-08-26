@@ -1,0 +1,109 @@
+graph TB
+    subgraph Request["نقطة الدخول"]
+        REQ["HTTP Request"]
+    end
+
+    subgraph L1["الطبقة الأولى: حد الشبكة"]
+        direction TB
+        NG["Nginx وكيل عكسي<br/>· إنهاء SSL/TLS<br/>· حد حجم جسم الطلب<br/>· رفض الاتصال المباشر بـ IP عارٍ"]
+        CORS_W["القائمة البيضاء CORS<br/>· Access-Control-Allow-Origin<br/>· حد origin قابل للتكوين"]
+    end
+
+    subgraph L2["الطبقة الثانية: كشف هجمات WAF<br/>(SecurityMiddleware)"]
+        direction TB
+        CT{"التحقق من<br/>Content-Type"}
+        BS{"Body Size<br/>≤ 10MB"}
+        XSS{"كشف XSS<br/>13 تعبيرًا"}
+        SQLI{"كشف SQLi<br/>13 تعبيرًا"}
+        CRLF{"حقن CRLF<br/>فحص الترويسات"}
+        PATH_T{"عبور المسار<br/>ترميز/null byte"}
+        XXE{"حقن كيان XXE<br/>ENTITY/DOCTYPE"}
+        SSRF{"تزوير SSRF<br/>كشف IP الشبكة الداخلية"}
+        FILE_CHK{"رفع الملفات<br/>قائمة سوداء/امتدادات مزدوجة"}
+        METHOD{"طرق HTTP<br/>تحقق القائمة البيضاء"}
+        HOST{"ترويسة Host<br/>التحقق"}
+
+        CT -->|غير سليم| E403["403"]
+        CT -->|نجاح| BS
+        BS -->|تجاوز| E413["413"]
+        BS -->|نجاح| XSS
+        XSS -->|إصابة| E40001["40001"]
+        XSS -->|نجاح| SQLI
+        SQLI -->|إصابة| E40002["40002"]
+        SQLI -->|نجاح| CRLF
+        CRLF -->|إصابة| E40003["40003"]
+        CRLF -->|نجاح| PATH_T
+        PATH_T -->|إصابة| E40004["40004"]
+        PATH_T -->|نجاح| XXE
+        XXE -->|إصابة| E40010["40010"]
+        XXE -->|نجاح| SSRF
+        SSRF -->|إصابة| E40011["40011"]
+        SSRF -->|نجاح| FILE_CHK
+        FILE_CHK -->|إصابة| E40009["40009"]
+        FILE_CHK -->|نجاح| METHOD
+        METHOD -->|غير سليم| E40012["40012"]
+        METHOD -->|نجاح| HOST
+    end
+
+    subgraph L3["الطبقة الثالثة: التحكم في الحركة"]
+        direction TB
+        BRUTE["حماية القوة الغاشمة<br/>عدّاد Redis<br/>API: 10 مرات/60 ثانية<br/>Admin: 5 مرات/300 ثانية"]
+        RATE["تحديد المعدل بدلو الرموز<br/>Redis ZSET نافذة منزلقة<br/>6 نقاط نهاية بقواعد مستقلة"]
+        BRUTE --> RATE
+    end
+
+    subgraph L4["الطبقة الرابعة: مصادقة الهوية"]
+        direction TB
+        POSTER["PosterVerify التحقق البشري<br/>· منزلق · لغز · نقر<br/>· يُفعّل عند التسجيل/الطلب/الدفع"]
+        JWT_AUTH["مصادقة JWT<br/>· توقيع HS256<br/>· فحص الانتهاء<br/>· تحديث الرمزين<br/>· حقن request→userId"]
+        POSTER --> JWT_AUTH
+    end
+
+    subgraph L5["الطبقة الخامسة: أمان البيانات"]
+        direction TB
+        HASHIDS["إخفاء معرفات Hashids<br/>· الطلب: hashid→snowflake<br/>· الاستجابة: snowflake→hashid<br/>· منع تعداد المعرّفات"]
+        AES_ENC["تشفير AES-256-CBC<br/>· طبقة النقل: حقول POST الحساسة<br/>· طبقة الاستجابة: ترويسة X-Encrypted<br/>· قاعدة البيانات: trait Encryptable<br/>email/mobile/name/tax_id"]
+        SENS_MASK["إخفاء البيانات الحساسة<br/>· ترشيح السجلات password/token/secret<br/>· إخفاء استجابات الأخطاء<br/>· عدم كشف المعلومات الداخلية"]
+    end
+
+    subgraph L6["الطبقة السادسة: أمان الاستجابة"]
+        direction TB
+        SEC_HEADERS["ترويسات HTTP الأمنية<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· إخفاء Server<br/>· Cache-Control"]
+    end
+
+    subgraph Audit["التدقيق والتتبع"]
+        direction LR
+        PLATFORM["تتبع المنصات<br/>ترويسة X-Platform<br/>تحديد 8 منصات<br/>تسجيل في 6 جداول"]
+        OP_LOG["سجلات العمليات<br/>erik_operation_logs<br/>platform · user_id<br/>action · ip · ua"]
+    end
+
+    REQ --> NG
+    NG --> CORS_W
+    CORS_W --> L2
+    HOST --> BRUTE
+    RATE --> POSTER
+
+    L5 --> L6
+    L6 --> RESP(["استجابة أمنية"])
+
+    PLATFORM -.-> OP_LOG
+    L2 -.-> PLATFORM
+    L4 -.-> PLATFORM
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+    style Audit fill:#f5f5f5
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E40009 fill:#ff5252,color:#fff
+    style E40010 fill:#ff5252,color:#fff
+    style E40011 fill:#ff5252,color:#fff
+    style E40012 fill:#ff5252,color:#fff

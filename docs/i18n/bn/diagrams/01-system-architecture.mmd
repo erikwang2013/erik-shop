@@ -1,0 +1,63 @@
+graph TB
+    subgraph Clients["ক্লায়েন্ট স্তর Client Layer"]
+        direction LR
+        FL["Flutter App<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>Riverpod + GoRouter + Dio"]
+        HM["HarmonyOS App<br/>ArkTS + ArkUI<br/>API 12+"]
+        WB["Web Admin<br/>LayUI + ECharts<br/>অ্যাডমিন প্যানেল"]
+    end
+
+    subgraph Gateway["গেটওয়ে স্তর Gateway"]
+        NG["Nginx :80 / :443<br/>api.erik.xyz → Service<br/>admin.erik.xyz → Admin<br/>স্ট্যাটিক রিসোর্স + SSL টার্মিনেশন"]
+    end
+
+    subgraph Apps["অ্যাপ্লিকেশন স্তর Application"]
+        subgraph Service["Service API (webman) :8787"]
+            direction TB
+            MW["গ্লোবাল মিডলওয়্যার 10টি<br/>Cors → Security → RateLimit<br/>→ Platform → GeoIp → Locale<br/>→ HashidsDecode → VersionRoute<br/>→ HashidsEncode → Encryption"]
+            RT["রাউট মিডলওয়্যার 2টি<br/>PosterVerify · JwtAuth"]
+            CTRL["39টি কন্ট্রোলার<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · Affiliate<br/>B2b · Cms · Faq · FlashSale<br/>GroupBuy · GiftCard · Review<br/>Search · SocialAuth · Settings"]
+            MDL["111টি মডেল Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable এনক্রিপশন<br/>+ Searchable ES সিঙ্ক<br/>+ SoftDelete সফট ডিলিট<br/>45টি টেবিলে সফট ডিলিট"]
+        end
+        subgraph Admin["Admin (webman-admin) :8788"]
+            direction TB
+            AMW["মিডলওয়্যার 5টি<br/>Security → Platform<br/>→ HashidsDecode<br/>→ AccessControl RBAC<br/>→ HashidsEncode"]
+            ACTRL["82টি কন্ট্রোলার<br/>পণ্য · অর্ডার · ব্যবহারকারী · মার্কেটিং<br/>লজিস্টিক্স · সাপ্লাই চেইন · রিস্ক<br/>CMS · কাস্টমার সার্ভিস · সিস্টেম"]
+            AMDL["76টি মডেল"]
+        end
+    end
+
+    subgraph Data["ডেটা স্তর Data"]
+        direction LR
+        MySQL[("MySQL 8.0 :3306<br/>117টি টেবিল · erik_ প্রিফিক্স<br/>Snowflake bigint PK<br/>রিড-রাইট সেপারেশন 2টি রিড রেপ্লিকা")]
+        Redis[("Redis 7 :6379<br/>রেট লিমিট টোকেন বাকেট<br/>Session · Poster ভেরিফিকেশন")]
+        ES[("Elasticsearch 8 :9200<br/>মাল্টি-ল্যাঙ্গুয়েজ টোকেনাইজেশন সার্চ<br/>পণ্য · ক্যাটাগরি · CMS")]
+    end
+
+    subgraph External["বাহ্যিক পরিষেবা External"]
+        direction LR
+        Pay["পেমেন্ট গেটওয়ে<br/>Stripe · PayPal<br/>Klarna · Adyen<br/>Webhook অ্যাসিনক্রোনাস নোটিফিকেশন"]
+        Geo["GeoIP<br/>MaxMind GeoIP2<br/>অঞ্চল · মুদ্রা সনাক্তকরণ"]
+        Email["ইমেইল সার্ভিস<br/>মাল্টি-ল্যাঙ্গুয়েজ টেমপ্লেট<br/>（email_templates টেবিল）"]
+    end
+
+    FL --> NG
+    HM --> NG
+    WB --> NG
+    NG --> Service
+    NG --> Admin
+    Service --> MySQL
+    Service --> Redis
+    Service --> ES
+    Service --> Pay
+    Service --> Geo
+    Service --> Email
+    Admin --> MySQL
+    Admin --> Redis
+
+    style Clients fill:#e1f5fe
+    style Gateway fill:#fff3e0
+    style Apps fill:#f3e5f5
+    style Service fill:#e8f5e9
+    style Admin fill:#fff9c4
+    style Data fill:#fce4ec
+    style External fill:#e0f2f1

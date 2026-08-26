@@ -1,0 +1,56 @@
+stateDiagram-v2
+    [*] --> Carrinho: adicionar produto
+
+    Carrinho --> AguardandoPagamento: enviar pedido<br/>POST /api/orders
+    Carrinho --> [*]: esvaziar/expirado
+
+    AguardandoPagamento --> Cancelado: não pago no prazo<br/>cancelamento automático 30min
+    AguardandoPagamento --> Cancelado: usuário cancela
+    AguardandoPagamento --> ProcessandoPagamento: iniciar pagamento<br/>POST /api/payment/create
+
+    ProcessandoPagamento --> AguardandoPagamento: falha no pagamento
+    ProcessandoPagamento --> Pago: pagamento concluído<br/>confirmação via Webhook
+
+    Pago --> EmRevisao: revisão de risco<br/>pontuação do motor de regras
+    Pago --> Separacao: revisão aprovada
+
+    EmRevisao --> Separacao: revisão aprovada
+    EmRevisao --> Cancelado: revisão rejeitada → reembolso
+
+    Separacao --> Enviado: saída do armazém concluída<br/>geração do código de rastreio
+
+    Enviado --> EmTransporte: coleta logística
+    Enviado --> Enviado: atualizar rastreamento
+
+    EmTransporte --> InspecaoAduaneira: chegada ao país de destino
+    InspecaoAduaneira --> EmTransporte: liberação alfandegária
+    InspecaoAduaneira --> RetencaoAduaneira: anomalia na inspeção
+    RetencaoAduaneira --> EmTransporte: documentos complementares aprovados
+
+    EmTransporte --> Recebido: assinatura do cliente
+    EmTransporte --> FalhaEntrega: endereço/contato inválidos
+
+    FalhaEntrega --> EmTransporte: reentrega
+    FalhaEntrega --> Devolvido: devolução ao remetente
+
+    Recebido --> Concluido: confirmação automática<br/>7 dias sem pós-venda
+
+    Recebido --> EmReembolso: solicitar devolução e reembolso
+    EmReembolso --> AguardandoDevolucao: vendedor concorda
+
+    AguardandoDevolucao --> EmDevolucao: cliente envia
+    EmDevolucao --> Devolvido: recebimento no armazém
+    Devolvido --> EmReembolso: inspeção aprovada
+    Devolvido --> Recebido: inspeção reprovada → devolução ao cliente
+
+    EmReembolso --> Reembolsado: reembolso concluído<br/>retorno pela via original
+
+    Concluido --> [*]
+    Cancelado --> [*]
+    Reembolsado --> [*]
+
+    note right of AguardandoPagamento: reserva de estoque 30min
+    note right of ProcessandoPagamento: Stripe/PayPal/Klarna/Adyen
+    note right of Pago: baixa de estoque permanente
+    note right of EmTransporte: atualização por push via Webhook
+    note right of Recebido: confirmação automática de recebimento em 7 dias

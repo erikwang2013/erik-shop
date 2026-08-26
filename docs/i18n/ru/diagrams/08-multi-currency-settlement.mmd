@@ -1,0 +1,28 @@
+flowchart TD
+    A["Ценообразование товара по валютам<br/>SKU оценивается по currency_code<br/>(USD/EUR/GBP/CNY…)"] --> B["Корзина/оформление заказа<br/>заказ фиксирует валюту оплаты"]
+    B --> C["Сервис курсов erik_exchange_rates<br/>manual ручное ведение / exchangerate-api автозагрузка<br/>версионирование по времени действия effective_at"]
+
+    C --> D["Инициация оплаты<br/>Stripe / PayPal / Klarna / Adyen<br/>списание в исходной валюте оплаты"]
+    D --> E["Платёжный Webhook<br/>payment_intent.succeeded<br/>проверка подписи Gateway::verifyWebhook"]
+
+    E --> F["Обновление платежа/заказа<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["Расчёт платформы PlatformSettlements<br/>сумма заказа total_amount<br/>комиссия платформы platform_fee<br/>комиссия шлюза payment_gateway_fee<br/>currency_code = валюта заказа"]
+
+    G --> H1["Расчёт продавца MerchantSettlements<br/>сумма заказа → ставка комиссии → сумма расчёта<br/>0 ожидает расчёта / 1 рассчитано"]
+    G --> H2["Расчёт поставщика SupplierSettlements<br/>задолженность поставщику за товар"]
+    G --> H3["Расчёт партнёрских комиссий AffiliatePayouts<br/>комиссия + вывод"]
+    G --> H4["Доход платформы<br/>комиссия платформы + комиссия за оплату"]
+
+    H1 --> I["Отслеживание курсовых разниц CurrencyExchangeGainsLosses<br/>сумма/валюта получения ↔ сумма/валюта расчёта<br/>курс при оплате vs курс при расчёте<br/>положительное = курсовой доход / отрицательное = курсовой убыток"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["Расчёт завершён settled_at<br/>сверка и списание / аудиторская трассировка"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

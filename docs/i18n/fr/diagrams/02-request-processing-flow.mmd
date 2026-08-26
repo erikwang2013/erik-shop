@@ -1,0 +1,68 @@
+graph TB
+    START(["Requête HTTP reçue"]) --> CORS["① Cors<br>En-têtes Access-Control-*<br>Pré-vol OPTIONS → 200"]
+
+    CORS --> SEC["② Security — détection d'attaques<br>━━━━━━━━━━━━━━━"]
+    SEC --> SEC1{"Content-Type<br>Valide ?"}
+    SEC1 -->|Non| E403["403 Forbidden"]
+    SEC1 -->|Oui| SEC2{"Body Size<br>≤ 10MB?"}
+    SEC2 -->|Non| E413["413 Too Large"]
+    SEC2 -->|Oui| SEC3{"Détection XSS<br>13 règles"}
+    SEC3 -->|Détecté| E40001["40001 XSS bloqué"]
+    SEC3 -->|OK| SEC4{"Détection SQLi<br>13 règles"}
+    SEC4 -->|Détecté| E40002["40002 SQLi bloqué"]
+    SEC4 -->|OK| SEC5{"Détection CRLF<br>Injection d'en-tête"}
+    SEC5 -->|Détecté| E40003["40003 CRLF bloqué"]
+    SEC5 -->|OK| SEC6{"Traversée de chemin<br>Détection"}
+    SEC6 -->|Détecté| E40004["40004 Path bloqué"]
+    SEC6 -->|OK| SEC_PASS["Contrôles de sécurité OK"]
+
+    SEC_PASS --> PLAT["③ Platform<br>En-tête X-Platform<br>+ détection UA de repli<br>8 plateformes"]
+
+    PLAT --> GEO["④ GeoIp<br>MaxMind GeoIP2<br>Utilisateurs non connectés<br>Région / devise / langue"]
+
+    GEO --> LOCALE["⑤ Locale<br>Analyse Accept-Language<br>5 langues : correspondance → repli → défaut"]
+
+    LOCALE --> HDEC["⑥ HashidsDecode<br>Champs *_id de la requête<br>hashid → ID snowflake"]
+
+    HDEC --> VER["⑦ VersionRoute<br>En-tête API-Version<br>→ routage espaces de noms v1/v2"]
+
+    VER --> RATE["⑧ RateLimit<br>Fenêtre glissante Redis ZSET<br>Limitation à jetons"]
+
+    RATE -->|Dépassement| E429["429 Too Many Requests<br>En-tête Retry-After"]
+    RATE -->|OK| ROUTE_CHECK{"Route trouvée ?"}
+
+    ROUTE_CHECK -->|Opérations sensibles<br>Inscription/Commande/Paiement| POSTER["⑨ PosterVerify<br>Jeton vérifié via Redis<br>Curseur / puzzle / clic"]
+    ROUTE_CHECK -->|Authentification requise| JWT_START["⑩ JwtAuth"]
+    ROUTE_CHECK -->|API publique| HENC
+
+    POSTER --> JWT_START
+
+    JWT_START --> JWT_CHECK{"Bearer Token<br>Vérif. signature HS256"}
+    JWT_CHECK -->|Invalide/Expiré| E401["401 Unauthorized"]
+    JWT_CHECK -->|Valide| JWT_INJECT["Injection de request→userId"]
+
+    JWT_INJECT --> HENC["⑪ HashidsEncode<br>Parcourt récursif du JSON<br>ID snowflake → hashid"]
+
+    HENC --> CTRL["Controller<br>Traitement métier<br>Requêtes Model · validation · calcul"]
+
+    CTRL --> ENC_RESP{"Réponse chiffrée ?"}
+
+    ENC_RESP -->|Oui| ENC["⑫ Encryption<br>Chiffrement AES-256-CBC<br>En-tête X-Encrypted: 1"]
+    ENC_RESP -->|Non| RESP
+    ENC --> RESP(["JSON Response<br>{code, msg, data}<br>+ CORS Headers<br>+ X-Platform Header"])
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style POSTER fill:#ffe0b2
+    style JWT_START fill:#c8e6c9
+    style CTRL fill:#bbdefb
+    style START fill:#e8eaf6
+    style RESP fill:#e8eaf6
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style E401 fill:#ff5252,color:#fff

@@ -1,0 +1,28 @@
+flowchart TD
+    A["Penetapan harga produk per mata uang<br/>SKU harga berdasarkan currency_code<br/>(USD/EUR/GBP/CNY…)"] --> B["Keranjang/pesan<br/>Pesanan mengunci mata uang pembayaran"]
+    B --> C["Layanan kurs erik_exchange_rates<br/>manual pemeliharaan manual / exchangerate-api tarik otomatis<br/>Waktu berlaku effective_at berversi"]
+
+    C --> D["Mulai pembayaran<br/>Stripe / PayPal / Klarna / Adyen<br/>Debit mata uang asli sesuai mata uang pembayaran"]
+    D --> E["Callback pembayaran Webhook<br/>payment_intent.succeeded<br/>Verifikasi tanda tangan Gateway::verifyWebhook"]
+
+    E --> F["Perbarui pembayaran/pesanan<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["Pembagian dana platform PlatformSettlements<br/>Total pesanan total_amount<br/>Komisi platform platform_fee<br/>Biaya gateway pembayaran payment_gateway_fee<br/>currency_code = mata uang pesanan"]
+
+    G --> H1["Penyelesaian penjual MerchantSettlements<br/>Jumlah pesanan → tingkat komisi → jumlah penyelesaian<br/>0 belum diselesaikan / 1 selesai"]
+    G --> H2["Penyelesaian pemasok SupplierSettlements<br/>Hutang pembayaran pemasok"]
+    G --> H3["Penyelesaian afiliasi AffiliatePayouts<br/>Komisi + penarikan"]
+    G --> H4["Pendapatan platform<br/>Komisi platform + biaya pemrosesan pembayaran"]
+
+    H1 --> I["Pelacakan laba/rugi kurs CurrencyExchangeGainsLosses<br/>Jumlah/mata uang diterima ↔ jumlah/mata uang penyelesaian<br/>Kurs saat bayar vs kurs saat penyelesaian<br/>Positif=laba kurs / negatif=rugi kurs"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["Penyelesaian selesai settled_at<br/>Rekonsiliasi penghapusan / audit penelusuran"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

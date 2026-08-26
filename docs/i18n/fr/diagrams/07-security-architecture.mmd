@@ -1,0 +1,109 @@
+graph TB
+    subgraph Request["Entrée"]
+        REQ["HTTP Request"]
+    end
+
+    subgraph L1["Couche 1 : périmètre réseau"]
+        direction TB
+        NG["Nginx reverse proxy<br>· Terminaison SSL/TLS<br>· Limite de taille du corps<br>· Refuse l'accès direct par IP brute"]
+        CORS_W["Liste blanche CORS<br>· Access-Control-Allow-Origin<br>· Restriction d'origin configurable"]
+    end
+
+    subgraph L2["Couche 2 : détection WAF des attaques<br>(SecurityMiddleware)"]
+        direction TB
+        CT{"Content-Type<br>Contrôle"}
+        BS{"Body Size<br>≤ 10MB"}
+        XSS{"Détection XSS — 13 regex"}
+        SQLI{"Détection SQLi — 13 regex"}
+        CRLF{"Injection CRLF<br>Détection dans les en-têtes"}
+        PATH_T{"Traversée de chemin<br>Encodé / null byte"}
+        XXE{"Injection d'entités XXE<br>ENTITY/DOCTYPE"}
+        SSRF{"Falsification SSRF<br>Détection IP internes"}
+        FILE_CHK{"Upload de fichiers<br>Liste noire / double extension"}
+        METHOD{"Méthode HTTP<br>Contrôle de liste blanche"}
+        HOST{"En-tête Host<br>Contrôle"}
+
+        CT -->|Invalide| E403["403"]
+        CT -->|OK| BS
+        BS -->|Dépassement| E413["413"]
+        BS -->|OK| XSS
+        XSS -->|Détecté| E40001["40001"]
+        XSS -->|OK| SQLI
+        SQLI -->|Détecté| E40002["40002"]
+        SQLI -->|OK| CRLF
+        CRLF -->|Détecté| E40003["40003"]
+        CRLF -->|OK| PATH_T
+        PATH_T -->|Détecté| E40004["40004"]
+        PATH_T -->|OK| XXE
+        XXE -->|Détecté| E40010["40010"]
+        XXE -->|OK| SSRF
+        SSRF -->|Détecté| E40011["40011"]
+        SSRF -->|OK| FILE_CHK
+        FILE_CHK -->|Détecté| E40009["40009"]
+        FILE_CHK -->|OK| METHOD
+        METHOD -->|Invalide| E40012["40012"]
+        METHOD -->|OK| HOST
+    end
+
+    subgraph L3["Couche 3 : contrôle du trafic"]
+        direction TB
+        BRUTE["Protection force brute<br>Compteur Redis<br>API : 10 / 60 s<br>Admin : 5 / 300 s"]
+        RATE["Limitation à jetons<br>Fenêtre glissante Redis ZSET<br>6 règles par endpoint"]
+        BRUTE --> RATE
+    end
+
+    subgraph L4["Couche 4 : authentification"]
+        direction TB
+        POSTER["Vérification humaine PosterVerify<br>· Curseur · puzzle · clic<br>· Déclenchée sur inscription/commande/paiement"]
+        JWT_AUTH["Authentification JWT<br>· Signature HS256<br>· Vérification de l'expiration<br>· Double jeton avec rafraîchissement<br>· Injection de request→userId"]
+        POSTER --> JWT_AUTH
+    end
+
+    subgraph L5["Couche 5 : sécurité des données"]
+        direction TB
+        HASHIDS["Obfuscation d'ID Hashids<br>· Requête : hashid→snowflake<br>· Réponse : snowflake→hashid<br>· Empêche l'énumération d'ID"]
+        AES_ENC["Chiffrement AES-256-CBC<br>· Transport : champs sensibles du body POST<br>· Réponse : en-tête X-Encrypted<br>· Base de données : trait Encryptable<br>email/mobile/name/tax_id"]
+        SENS_MASK["Masquage des données sensibles<br>· Filtre password/token/secret dans les journaux<br>· Masquage dans les réponses d'erreur<br>· Pas de fuite d'informations internes"]
+    end
+
+    subgraph L6["Couche 6 : sécurité de la réponse"]
+        direction TB
+        SEC_HEADERS["En-têtes de sécurité HTTP<br>· X-Content-Type-Options: nosniff<br>· X-Frame-Options: DENY<br>· X-XSS-Protection<br>· Referrer-Policy<br>· Permissions-Policy<br>· Server masqué<br>· Cache-Control"]
+    end
+
+    subgraph Audit["Audit et traçabilité"]
+        direction LR
+        PLATFORM["Suivi des plateformes<br>En-tête X-Platform<br>8 plateformes identifiées<br>Enregistrement dans 6 tables"]
+        OP_LOG["Journal d'opérations<br>erik_operation_logs<br>platform · user_id<br>action · ip · ua"]
+    end
+
+    REQ --> NG
+    NG --> CORS_W
+    CORS_W --> L2
+    HOST --> BRUTE
+    RATE --> POSTER
+
+    L5 --> L6
+    L6 --> RESP(["Réponse sécurisée"])
+
+    PLATFORM -.-> OP_LOG
+    L2 -.-> PLATFORM
+    L4 -.-> PLATFORM
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+    style Audit fill:#f5f5f5
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E40009 fill:#ff5252,color:#fff
+    style E40010 fill:#ff5252,color:#fff
+    style E40011 fill:#ff5252,color:#fff
+    style E40012 fill:#ff5252,color:#fff

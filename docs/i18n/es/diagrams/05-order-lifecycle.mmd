@@ -1,0 +1,56 @@
+stateDiagram-v2
+    [*] --> Carrito: Añadir producto
+
+    Carrito --> Pendiente de pago: Enviar pedido<br/>POST /api/orders
+    Carrito --> [*]: Vaciar/caducar
+
+    Pendiente de pago --> Cancelado: Impago por timeout<br/>Cancelación automática 30min
+    Pendiente de pago --> Cancelado: Cancelado por el usuario
+    Pendiente de pago --> Pagando: Iniciar pago<br/>POST /api/payment/create
+
+    Pagando --> Pendiente de pago: Pago fallido
+    Pagando --> Pagado: Pago correcto<br/>Confirmación Webhook
+
+    Pagado --> Pendiente de revisión: Revisión de riesgo<br/>Puntuación del motor de reglas
+    Pagado --> Preparando pedido: Revisión aprobada
+
+    Pendiente de revisión --> Preparando pedido: Revisión aprobada
+    Pendiente de revisión --> Cancelado: Revisión rechazada → reembolso
+
+    Preparando pedido --> Enviado: Salida de almacén completada<br/>Generación de nº de guía
+
+    Enviado --> En tránsito: Recogida logística
+    Enviado --> Enviado: Actualizar trayectoria logística
+
+    En tránsito --> Inspección aduanera: Llegada al país de destino
+    Inspección aduanera --> En tránsito: Liberada tras inspección
+    Inspección aduanera --> Retenido en aduana: Anomalía en la inspección
+    Retenido en aduana --> En tránsito: Documentación adicional aprobada
+
+    En tránsito --> Firmado: Firma del cliente
+    En tránsito --> Incidencia de entrega: Dirección/contacto fallidos
+
+    Incidencia de entrega --> En tránsito: Reintento de entrega
+    Incidencia de entrega --> Devuelto: Devuelto al remitente
+
+    Firmado --> Completado: Confirmación automática<br/>7 días sin postventa
+
+    Firmado --> Reembolsando: Solicitar devolución y reembolso
+    Reembolsando --> Pendiente de devolución: Aceptado por el vendedor
+
+    Pendiente de devolución --> Devolviendo: Envío del cliente
+    Devolviendo --> Devuelto: Recepción en almacén
+    Devuelto --> Reembolsando: Control de calidad aprobado
+    Devuelto --> Firmado: Control de calidad no aprobado → devuelto al cliente
+
+    Reembolsando --> Reembolsado: Reembolso completado<br/>Reembolso por la vía original
+
+    Completado --> [*]
+    Cancelado --> [*]
+    Reembolsado --> [*]
+
+    note right of Pendiente de pago: Stock reservado 30min
+    note right of Pagando: Stripe/PayPal/Klarna/Adyen
+    note right of Pagado: Descuento de stock permanente
+    note right of En tránsito: Actualización por push Webhook
+    note right of Firmado: Confirmación automática de recepción en 7 días

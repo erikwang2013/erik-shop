@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br>Plateforme e-commerce transfrontière — Full"]
+
+    CENTER --> B2C["B2C — Vente au détail"]
+    CENTER --> B2B["B2B — Gros"]
+    CENTER --> MART["Multi-vendeurs"]
+    CENTER --> CROSS["Conformité transfrontière"]
+    CENTER --> LOGISTICS["Logistique internationale"]
+    CENTER --> PAY["Système de paiement"]
+    CENTER --> MKT["Centre marketing"]
+    CENTER --> MULTI["Gestion multi-plateformes"]
+    CENTER --> SUPPLY["Chaîne d'approvisionnement"]
+    CENTER --> RISK["Risque et conformité"]
+    CENTER --> SECURITY["Protection sécurité"]
+    CENTER --> PERF["Haute concurrence"]
+    CENTER --> GROWTH["Fidélisation"]
+    CENTER --> CMS["Gestion de contenu"]
+    CENTER --> CS["Service client"]
+    CENTER --> INFRA["Infrastructure"]
+    CENTER --> CLIENTS["Multi-plateformes clientes"]
+
+    B2C --> B2C_DETAIL["Produits multilingues · prix par devise<br>Stock SKU · Panier<br>Commandes · Remboursements · Retours"]
+
+    B2B --> B2B_DETAIL["Prix dégressifs MOQ<br>Certification entreprise (n° fiscal / licence)<br>Demande de devis"]
+
+    MART --> MART_DETAIL["Validation des vendeurs<br>Validation et mise en ligne des produits<br>Commissions et règlements"]
+
+    CROSS --> CROSS_DETAIL["Base HS Code<br>Règles douanières : pays + HS → taux<br>TVA/IOSS UE<br>Étiquettes de conformité FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["Frais de livraison par zone, paliers de poids<br>DHL/UPS/FedEx/EMS<br>Entrepôts à l'étranger (expédition + retours)<br>Facture commerciale / liste de colisage PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br>PayPal REST API<br>Klarna BNPL — payer plus tard<br>Adyen — paiement mondial<br>Vérif. 3DS · Règlement via Webhook"]
+
+    MKT --> MKT_DETAIL["Coupons (par zone, nouveaux/anciens clients)<br>Bannières visibles par région<br>Ventes flash (temps et quantité limités)<br>Achats groupés (nb de participants + validité)<br>Affiliation : liens + commissions + retraits"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br>Shopee · Lazada · Temu<br>Publication produits · agrégation des commandes<br>Gestion multi-boutiques"]
+
+    SUPPLY --> SUPPLY_DETAIL["Fiches fournisseurs + notation<br>Bons de commande : validation → réception → contrôle qualité<br>Journal de stock — registre immuable<br>Gestion des transferts"]
+
+    RISK --> RISK_DETAIL["Moteur de règles — scoring en parallèle<br>KYC — vérification d'identité<br>Demandes de données GDPR/CCPA<br>Gestion des versions du consentement cookies"]
+
+    SECURITY --> SECURITY_DETAIL["31 types de détection d'attaques<br>XSS · injection SQL · CRLF<br>Traversée de chemin · XXE · SSRF<br>Upload de fichiers · force brute<br>Host · CORS · masquage des données"]
+
+    PERF --> PERF_DETAIL["Limitation à jetons, fenêtre glissante<br>6 règles de limitation<br>Séparation lecture/écriture DB — 2 réplicas + sticky<br>Pools : DB 50/10 · Redis 30/5<br>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["Niveaux de membre + avantages<br>Règles de points + historique<br>Cartes cadeaux (solde + échange)<br>Alertes de baisse de prix / arrivée<br>Tests AB : répartition du trafic + confiance"]
+
+    CMS --> CMS_DETAIL["Pages CMS multilingues<br>FAQ · Base de connaissances<br>Guides des tailles (vêtements/chaussures)<br>Modèles d'e-mails multilingues<br>Flux produits Google/Meta"]
+
+    CS --> CS_DETAIL["Messagerie instantanée WebSocket<br>chat_sessions<br>chat_messages<br>Base de connaissances multilingue"]
+
+    INFRA --> INFRA_DETAIL["IDs distribués Snowflake<br>Obfuscation d'API Hashids<br>JWT HS256 — double jeton avec rafraîchissement<br>Chiffrement AES-256-CBC<br>Chiffrement base de données Encryptable<br>Vérification humaine Poster<br>Détection de région GeoIP"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter — 5 plateformes<br>iOS · Android · macOS<br>Windows · Linux · iPadOS<br>HarmonyOS ArkTS<br>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

@@ -1,0 +1,28 @@
+flowchart TD
+    A["Precios por moneda de productos<br/>SKU con precio según currency_code<br/>(USD/EUR/GBP/CNY…)"] --> B["Carrito/pedido<br/>El pedido fija la moneda de cobro"]
+    B --> C["Servicio de tipos de cambio erik_exchange_rates<br/>mantenimiento manual / obtención automática por exchangerate-api<br/>Fecha de entrada en vigor effective_at versionada"]
+
+    C --> D["Iniciar pago<br/>Stripe / PayPal / Klarna / Adyen<br/>Cobro en moneda original según moneda de cobro"]
+    D --> E["Callback de pago Webhook<br/>payment_intent.succeeded<br/>Verificación de firma Gateway::verifyWebhook"]
+
+    E --> F["Actualizar pago/pedido<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["Reparto de plataforma PlatformSettlements<br/>Total del pedido total_amount<br/>Comisión de plataforma platform_fee<br/>Comisión de pasarela de pago payment_gateway_fee<br/>currency_code = moneda del pedido"]
+
+    G --> H1["Liquidación de vendedor MerchantSettlements<br/>Importe del pedido → tasa de comisión → importe liquidado<br/>0 pendiente de liquidar / 1 liquidado"]
+    G --> H2["Liquidación de proveedor SupplierSettlements<br/>Importe a pagar al proveedor"]
+    G --> H3["Liquidación de distribución AffiliatePayouts<br/>Comisión + retiro"]
+    G --> H4["Ingresos de plataforma<br/>Comisión de plataforma + comisión de pago"]
+
+    H1 --> I["Seguimiento de pérdidas y ganancias cambiarias CurrencyExchangeGainsLosses<br/>Importe/moneda cobrados ↔ Importe/moneda liquidados<br/>Tipo de cambio al pagar vs tipo de cambio al liquidar<br/>Positivo=ganancia cambiaria / Negativo=pérdida cambiaria"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["Liquidación completada settled_at<br/>Conciliación y verificación / auditoría y trazabilidad"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

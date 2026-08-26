@@ -1,0 +1,109 @@
+graph TB
+    subgraph Request["진입점"]
+        REQ["HTTP Request"]
+    end
+
+    subgraph L1["1층: 네트워크 경계"]
+        direction TB
+        NG["Nginx 리버스 프록시<br/>· SSL/TLS 종단<br/>· 요청 본문 크기 제한<br/>· IP 직접 접속 차단"]
+        CORS_W["CORS 화이트리스트<br/>· Access-Control-Allow-Origin<br/>· 설정 가능한 origin 제한"]
+    end
+
+    subgraph L2["2층: WAF 공격 탐지<br/>(SecurityMiddleware)"]
+        direction TB
+        CT{"Content-Type<br/>검증"}
+        BS{"Body Size<br/>≤ 10MB"}
+        XSS{"XSS 탐지<br/>13개 정규식"}
+        SQLI{"SQLi 탐지<br/>13개 정규식"}
+        CRLF{"CRLF 주입<br/>Header 탐지"}
+        PATH_T{"경로 탐색<br/>인코딩/null byte"}
+        XXE{"XXE 엔티티 주입<br/>ENTITY/DOCTYPE"}
+        SSRF{"SSRF 위조<br/>내부망 IP 탐지"}
+        FILE_CHK{"파일 업로드<br/>블랙리스트/이중 확장자"}
+        METHOD{"HTTP 메서드<br/>화이트리스트 검증"}
+        HOST{"Host 헤더<br/>검증"}
+
+        CT -->|위법| E403["403"]
+        CT -->|통과| BS
+        BS -->|초과| E413["413"]
+        BS -->|통과| XSS
+        XSS -->|탐지됨| E40001["40001"]
+        XSS -->|통과| SQLI
+        SQLI -->|탐지됨| E40002["40002"]
+        SQLI -->|통과| CRLF
+        CRLF -->|탐지됨| E40003["40003"]
+        CRLF -->|통과| PATH_T
+        PATH_T -->|탐지됨| E40004["40004"]
+        PATH_T -->|통과| XXE
+        XXE -->|탐지됨| E40010["40010"]
+        XXE -->|통과| SSRF
+        SSRF -->|탐지됨| E40011["40011"]
+        SSRF -->|통과| FILE_CHK
+        FILE_CHK -->|탐지됨| E40009["40009"]
+        FILE_CHK -->|통과| METHOD
+        METHOD -->|위법| E40012["40012"]
+        METHOD -->|통과| HOST
+    end
+
+    subgraph L3["3층: 트래픽 제어"]
+        direction TB
+        BRUTE["무차별 대입 방어<br/>Redis 카운터<br/>API: 10회/60s<br/>Admin: 5회/300s"]
+        RATE["토큰 버킷 속도 제한<br/>Redis ZSET 슬라이딩 윈도우<br/>6개 엔드포인트 독립 규칙"]
+        BRUTE --> RATE
+    end
+
+    subgraph L4["4층: 신원 인증"]
+        direction TB
+        POSTER["PosterVerify 휴먼 인증<br/>· 슬라이더 · 퍼즐 · 클릭<br/>· 가입/주문/결제 시 트리거"]
+        JWT_AUTH["JWT 인증<br/>· HS256 서명<br/>· 만료 검사<br/>· 이중 token 갱신<br/>· request→userId 주입"]
+        POSTER --> JWT_AUTH
+    end
+
+    subgraph L5["5층: 데이터 보안"]
+        direction TB
+        HASHIDS["Hashids ID 난독화<br/>· 요청: hashid→snowflake<br/>· 응답: snowflake→hashid<br/>· ID 열거 방지"]
+        AES_ENC["AES-256-CBC 암호화<br/>· 전송 계층: POST body 민감 필드<br/>· 응답 계층: X-Encrypted header<br/>· 데이터베이스: Encryptable trait<br/>email/mobile/name/tax_id"]
+        SENS_MASK["민감 데이터 마스킹<br/>· 로그 필터링 password/token/secret<br/>· 오류 응답 마스킹<br/>· 내부 정보 비노출"]
+    end
+
+    subgraph L6["6층: 응답 보안"]
+        direction TB
+        SEC_HEADERS["HTTP 보안 응답 헤더<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· Server 숨김<br/>· Cache-Control"]
+    end
+
+    subgraph Audit["감사 추적"]
+        direction LR
+        PLATFORM["플랫폼 추적<br/>X-Platform header<br/>8개 플랫폼 인식<br/>6개 테이블 기록"]
+        OP_LOG["작업 로그<br/>erik_operation_logs<br/>platform · user_id<br/>action · ip · ua"]
+    end
+
+    REQ --> NG
+    NG --> CORS_W
+    CORS_W --> L2
+    HOST --> BRUTE
+    RATE --> POSTER
+
+    L5 --> L6
+    L6 --> RESP(["보안 응답"])
+
+    PLATFORM -.-> OP_LOG
+    L2 -.-> PLATFORM
+    L4 -.-> PLATFORM
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+    style Audit fill:#f5f5f5
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E40009 fill:#ff5252,color:#fff
+    style E40010 fill:#ff5252,color:#fff
+    style E40011 fill:#ff5252,color:#fff
+    style E40012 fill:#ff5252,color:#fff

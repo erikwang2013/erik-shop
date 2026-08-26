@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br/>Cross-Border-E-Commerce-Plattform Full"]
+
+    CENTER --> B2C["B2C Einzelhandel"]
+    CENTER --> B2B["B2B Großhandel"]
+    CENTER --> MART["Multi-Vendor-Onboarding"]
+    CENTER --> CROSS["Cross-Border-Compliance"]
+    CENTER --> LOGISTICS["Internationale Logistik"]
+    CENTER --> PAY["Zahlungssystem"]
+    CENTER --> MKT["Marketing-Zentrale"]
+    CENTER --> MULTI["Multi-Plattform-Verwaltung"]
+    CENTER --> SUPPLY["Lieferkette"]
+    CENTER --> RISK["Risikomanagement & Compliance"]
+    CENTER --> SECURITY["Sicherheitsschutz"]
+    CENTER --> PERF["Hohe Nebenläufigkeit"]
+    CENTER --> GROWTH["Mitgliederwachstum"]
+    CENTER --> CMS["Content-Management"]
+    CENTER --> CS["Kundenservice"]
+    CENTER --> INFRA["Infrastruktur"]
+    CENTER --> CLIENTS["Multi-Client-Abdeckung"]
+
+    B2C --> B2C_DETAIL["mehrsprachige Produkte · Preise pro Währung<br/>SKU-Bestand · Warenkorb<br/>Bestellungen · Rückerstattungen · Retouren"]
+
+    B2B --> B2B_DETAIL["Staffelpreise MOQ<br/>Unternehmensverifizierung (Steuernr./Gewerbeschein)<br/>Preisanfragen & Angebote"]
+
+    MART --> MART_DETAIL["Verkäufer-Prüfung & Onboarding<br/>Produktprüfung & Veröffentlichung<br/>Revenue-Sharing & Settlement"]
+
+    CROSS --> CROSS_DETAIL["HS-Code-Bibliothek<br/>Zollregeln: Zielland+HS → Zollsatz<br/>VAT/IOSS EU<br/>Compliance-Kennzeichen FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["Versand nach Zonen & Gewichtsstufen<br/>DHL/UPS/FedEx/EMS<br/>Auslandslager: Versand+Retoure<br/>Handelsrechnung/Packliste PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL „Jetzt kaufen, später zahlen“<br/>Adyen Global Payments<br/>3DS-Validierung · Webhook-Settlement"]
+
+    MKT --> MKT_DETAIL["Gutscheine: nach Region & Kundenstatus<br/>Karussells: regionssichtbar<br/>Flash-Sales: zeitlich & mengenbegrenzt<br/>Gruppenkauf: Mindestteilnehmer+Frist<br/>Affiliate: Links+Provision+Auszahlung"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br/>Shopee · Lazada · Temu<br/>Listing & Auftragsaggregation<br/>Multi-Shop-Verwaltung"]
+
+    SUPPLY --> SUPPLY_DETAIL["Lieferantenprofile + Bewertung<br/>Bestellungen: Prüfung→Wareneingang→Qualitätskontrolle<br/>Inventarjournal: unveränderliches Ledger<br/>Umlagerungsverwaltung"]
+
+    RISK --> RISK_DETAIL["Regel-Engine (Side-Channel-Scoring)<br/>KYC-Identitätsprüfung<br/>GDPR/CCPA-Datenanfragen<br/>Cookie-Consent-Versionsverwaltung"]
+
+    SECURITY --> SECURITY_DETAIL["31 Angriffserkennungen<br/>XSS · SQL-Injection · CRLF<br/>Pfad-Traversal · XXE · SSRF<br/>Datei-Upload · Brute-Force<br/>Host · CORS · Maskierung"]
+
+    PERF --> PERF_DETAIL["Token-Bucket-Limiting, Sliding Window<br/>6 Endpunkt-Limitregeln<br/>DB Read/Write-Splitting, 2 Lesereplikate + sticky<br/>Connection-Pool DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["Mitgliedsstufen + Vorteile<br/>Punkteregeln + Journal<br/>Geschenkkarten: Guthaben+Einlösung<br/>Preis-/Bestandserinnerungen<br/>A/B-Tests: Traffic-Verteilung+Konfidenz"]
+
+    CMS --> CMS_DETAIL["CMS, mehrsprachige Seiten<br/>FAQ · Wissensdatenbank<br/>Größentabellen: Bekleidung/Schuhe<br/>E-Mail-Vorlagen mehrsprachig<br/>Produkt-Feeds Google/Meta"]
+
+    CS --> CS_DETAIL["WebSocket-Echtzeit-IM<br/>chat_sessions<br/>chat_messages<br/>Wissensdatenbank mehrsprachig"]
+
+    INFRA --> INFRA_DETAIL["Snowflake, verteilte IDs<br/>Hashids-Schnittstellenverschleierung<br/>JWT HS256, Dual-Token-Refresh<br/>AES-256-CBC-Verschlüsselung<br/>Encryptable DB-Verschlüsselung<br/>Poster-CAPTCHA<br/>GeoIP-Erkennung"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter, 5 Plattformen<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

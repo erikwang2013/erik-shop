@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as العميل<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as خط أنابيب الوسائط<br/>10 وسائط عامة
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as توزيع التوجيه
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: إعادة توجيه الطلب
+
+    rect rgb(255, 205, 210)
+        Note over Security: مرحلة فحص الأمان
+        Security->>Security: ① التحقق من Content-Type
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ كشف XSS 13 قاعدة
+        Security->>Security: ④ كشف SQLi 13 قاعدة
+        Security->>Security: ⑤ حقن CRLF Header
+        Security->>Security: ⑥ عبور المسار Path Traversal
+    end
+
+    alt إصابة الهجوم
+        Security-->>Client: استجابة خطأ 4xxxx
+    end
+
+    Security->>Pipeline: اجتياز الأمان
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: مرحلة المعالجة الأولية للطلب
+        Pipeline->>Pipeline: ⑦ إعداد ترويسات Cors
+        Pipeline->>Pipeline: ⑧ تحديد مصدر Platform
+        Pipeline->>Pipeline: ⑨ GeoIp المنطقة/العملة
+        Pipeline->>Pipeline: ⑩ إعداد اللغة Locale
+        Pipeline->>Pipeline: ⑪ فك المعرفات HashidsDecode
+        Pipeline->>Pipeline: ⑫ إصدار API VersionRoute
+    end
+
+    Pipeline->>RateLimit: فحص تحديد المعدل
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: تحديد المعدل بدلو الرموز
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>عدّاد النافذة المنزلقة
+        Redis-->>RateLimit: عدد طلبات النافذة الحالية
+    end
+
+    alt تجاوز الحد
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: اجتياز
+
+    Route->>Route: API-Version → فضاء الأسماء<br/>مطابقة Controller
+
+    alt عملية حساسة تسجيل/طلب/دفع
+        Route->>Poster: التحقق البشري
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt فشل التحقق
+            Poster-->>Client: 40007 فشل التحقق
+        end
+    end
+
+    alt واجهة تتطلب مصادقة
+        Route->>JWT: Bearer Token
+        JWT->>JWT: التحقق من توقيع HS256 + فحص الانتهاء
+        alt Token غير صالح
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: معالجة الأعمال
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: معالجة منطق الأعمال
+        Controller->>Model: استدعاء Model
+        Model->>Model: توليد معرف Snowflake
+        Model->>Model: تشفير/فك تشفير Encryptable
+        Model->>MySQL: عمليات قراءة/كتابة
+        MySQL-->>Model: النتائج
+        Model->>ES: بحث/فهرسة
+        ES-->>Model: نتائج البحث
+        Model-->>Controller: بيانات الأعمال
+    end
+
+    Controller->>Response: إرجاع البيانات
+
+    rect rgb(187, 222, 251)
+        Note over Response: معالجة ما بعد الاستجابة
+        Response->>Response: ترميز المعرفات HashidsEncode
+        Response->>Response: تشفير الحقول الحساسة AES
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

@@ -1,0 +1,71 @@
+graph TB
+    subgraph Internet["인터넷"]
+        User["사용자 전 세계 접속"]
+    end
+
+    subgraph VPS["클라우드 서버 / VPS"]
+        subgraph Docker["Docker Compose"]
+            direction TB
+
+            subgraph Net["erik-net Bridge Network"]
+                direction TB
+
+                NGX["Nginx :80 :443<br/>alpine<br/>리버스 프록시 + SSL 종단<br/>정적 리소스 캐시"]
+
+                subgraph PHP_Service["Service Container"]
+                    SVC["PHP 8.3 + webman 2.1<br/>:8787 내부 포트<br/>32 Worker (CPU×4)<br/>OPCache 128MB<br/>Snowflake Worker ID=1"]
+                end
+
+                subgraph PHP_Admin["Admin Container"]
+                    ADM["PHP 8.3 + webman-admin<br/>:8788 내부 포트<br/>LayUI + ECharts<br/>내장 RBAC<br/>Snowflake Worker ID=2"]
+                end
+
+                subgraph DB["데이터베이스 컨테이너"]
+                    MYSQL[("MySQL 8.0 :3306<br/>117 테이블 (110 erik_ + 7 wa_)<br/>erik_data 데이터 볼륨<br/>character-set utf8mb4")]
+                    REDIS[("Redis 7 :6379<br/>erik_redis 데이터 볼륨<br/>appendonly AOF 영속화<br/>requirepass 비밀번호")]
+                    ES[("Elasticsearch 8.11 :9200<br/>erik_es 데이터 볼륨<br/>공식 이미지 다국어 검색")]
+                end
+            end
+        end
+
+        subgraph Volumes["영속화 데이터 볼륨"]
+            V1["erik_data MySQL 데이터"]
+            V2["erik_redis Redis 데이터"]
+            V3["erik_es ES 인덱스"]
+            V4["erik_logs 애플리케이션 로그"]
+        end
+    end
+
+    subgraph External["외부 서비스"]
+        Stripe["Stripe API<br/>PaymentIntent + 3DS"]
+        PayPal["PayPal REST<br/>Orders API v2"]
+        Klarna["Klarna API<br/>BNPL 선구매 후결제"]
+        SMTP["메일 서비스<br/>다국어 템플릿<br/>(email_templates 테이블)"]
+    end
+
+    User --> NGX
+    NGX -->|api.erik.xyz| SVC
+    NGX -->|admin.erik.xyz| ADM
+    SVC --> MYSQL
+    SVC --> REDIS
+    SVC --> ES
+    SVC --> Stripe
+    SVC --> PayPal
+    SVC --> Klarna
+    SVC --> SMTP
+    ADM --> MYSQL
+    ADM --> REDIS
+    MYSQL -.-> V1
+    REDIS -.-> V2
+    ES -.-> V3
+    SVC -.-> V4
+
+    style Internet fill:#e8eaf6
+    style VPS fill:#e8f5e9
+    style Docker fill:#f3e5f5
+    style Net fill:#e1f5fe
+    style PHP_Service fill:#c8e6c9
+    style PHP_Admin fill:#fff9c4
+    style DB fill:#fce4ec
+    style Volumes fill:#efebe9
+    style External fill:#e0f2f1

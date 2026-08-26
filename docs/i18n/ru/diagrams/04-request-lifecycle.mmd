@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as Клиент<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as Конвейер MW<br/>10 глобальных MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as Распределение маршрутов
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: Передача запроса
+
+    rect rgb(255, 205, 210)
+        Note over Security: Этап обнаружения атак
+        Security->>Security: ① Проверка Content-Type
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ XSS-проверка, 13 правил
+        Security->>Security: ④ SQLi-проверка, 13 правил
+        Security->>Security: ⑤ CRLF-инъекция в Header
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt Атака сработала
+        Security-->>Client: Ошибочный ответ 4xxxx
+    end
+
+    Security->>Pipeline: Проверка безопасности пройдена
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: Этап предобработки запроса
+        Pipeline->>Pipeline: ⑦ Установка заголовков Cors
+        Pipeline->>Pipeline: ⑧ Platform, определение источника
+        Pipeline->>Pipeline: ⑨ GeoIp, регион/валюта
+        Pipeline->>Pipeline: ⑩ Locale, установка языка
+        Pipeline->>Pipeline: ⑪ HashidsDecode, декодирование ID
+        Pipeline->>Pipeline: ⑫ VersionRoute, версия API
+    end
+
+    Pipeline->>RateLimit: Проверка лимита
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: Лимитирование токен-бакетом
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>Подсчёт в скользящем окне
+        Redis-->>RateLimit: Количество запросов в текущем окне
+    end
+
+    alt Превышение
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: Пройдено
+
+    Route->>Route: API-Version → пространство имён<br/>Сопоставление Controller
+
+    alt Чувствительные операции: регистрация/заказ/оплата
+        Route->>Poster: Человеко-машинная проверка
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt Проверка не пройдена
+            Poster-->>Client: 40007 проверка не пройдена
+        end
+    end
+
+    alt Интерфейсы, требующие аутентификации
+        Route->>JWT: Bearer Token
+        JWT->>JWT: Проверка HS256 + срока действия
+        alt Token недействителен
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: Обработка бизнес-логики
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: Обработка бизнес-логики
+        Controller->>Model: Вызов Model
+        Model->>Model: Генерация Snowflake ID
+        Model->>Model: Encryptable шифрование/дешифрование
+        Model->>MySQL: Операции чтения/записи
+        MySQL-->>Model: Результат
+        Model->>ES: Поиск/индексация
+        ES-->>Model: Результаты поиска
+        Model-->>Controller: Бизнес-данные
+    end
+
+    Controller->>Response: Возврат данных
+
+    rect rgb(187, 222, 251)
+        Note over Response: Постобработка ответа
+        Response->>Response: HashidsEncode, кодирование ID
+        Response->>Response: AES-шифрование чувствительных полей
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

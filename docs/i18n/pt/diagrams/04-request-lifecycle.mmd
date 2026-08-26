@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as Cliente<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as pipeline de middlewares<br/>10 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as distribuição de rotas
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: encaminha a requisição
+
+    rect rgb(255, 205, 210)
+        Note over Security: fase de detecção de segurança
+        Security->>Security: ① validação de Content-Type
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ detecção XSS 13 regras
+        Security->>Security: ④ detecção SQLi 13 regras
+        Security->>Security: ⑤ injeção de header CRLF
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt ataque detectado
+        Security-->>Client: resposta de erro 4xxxx
+    end
+
+    Security->>Pipeline: segurança aprovada
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: fase de pré-processamento da requisição
+        Pipeline->>Pipeline: ⑦ configuração de cabeçalhos de resposta Cors
+        Pipeline->>Pipeline: ⑧ reconhecimento de origem Platform
+        Pipeline->>Pipeline: ⑨ região/moeda GeoIp
+        Pipeline->>Pipeline: ⑩ configuração de idioma Locale
+        Pipeline->>Pipeline: ⑪ decodificação de ID HashidsDecode
+        Pipeline->>Pipeline: ⑫ versão de API VersionRoute
+    end
+
+    Pipeline->>RateLimit: verificação de limite de taxa
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: limitação por token bucket
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>contagem de janela deslizante
+        Redis-->>RateLimit: número de requisições na janela atual
+    end
+
+    alt excedido
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: aprovado
+
+    Route->>Route: API-Version → namespace<br/>correspondência do Controller
+
+    alt operação sensível: registro/pedido/pagamento
+        Route->>Poster: verificação humano
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt falha na verificação
+            Poster-->>Client: 40007 falha na verificação
+        end
+    end
+
+    alt endpoint autenticado
+        Route->>JWT: Bearer Token
+        JWT->>JWT: verificação de assinatura HS256 + checagem de expiração
+        alt Token inválido
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: processamento de negócio
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: processamento da lógica de negócio
+        Controller->>Model: chama Model
+        Model->>Model: geração de ID Snowflake
+        Model->>Model: criptografia/descriptografia Encryptable
+        Model->>MySQL: operações de leitura/escrita
+        MySQL-->>Model: resultado
+        Model->>ES: busca/índice
+        ES-->>Model: resultados de busca
+        Model-->>Controller: dados de negócio
+    end
+
+    Controller->>Response: retorna dados
+
+    rect rgb(187, 222, 251)
+        Note over Response: pós-processamento da resposta
+        Response->>Response: codificação de ID HashidsEncode
+        Response->>Response: criptografia AES de campos sensíveis
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

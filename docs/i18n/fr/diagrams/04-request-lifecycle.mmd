@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as Client<br>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br>Middleware
+    participant Pipeline as Pipeline de middlewares<br>10 MW globaux
+    participant RateLimit as RateLimit<br>Middleware
+    participant Route as Distribution des routes
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br>api.erik.xyz/api/v1/...
+    Nginx->>Security: Transmission de la requête
+
+    rect rgb(255, 205, 210)
+        Note over Security: Phase de détection de sécurité
+        Security->>Security: ① Vérification Content-Type
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ Détection XSS — 13 règles
+        Security->>Security: ④ Détection SQLi — 13 règles
+        Security->>Security: ⑤ Injection CRLF dans l'en-tête
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt Attaque détectée
+        Security-->>Client: Réponse d'erreur 4xxxx
+    end
+
+    Security->>Pipeline: Sécurité OK
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: Phase de prétraitement
+        Pipeline->>Pipeline: ⑦ Configuration des en-têtes Cors
+        Pipeline->>Pipeline: ⑧ Identification de la plateforme
+        Pipeline->>Pipeline: ⑨ GeoIp région/devise
+        Pipeline->>Pipeline: ⑩ Locale — langue
+        Pipeline->>Pipeline: ⑪ HashidsDecode — décodage d'ID
+        Pipeline->>Pipeline: ⑫ VersionRoute — version d'API
+    end
+
+    Pipeline->>RateLimit: Contrôle de limitation
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: Limitation à jetons
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br>Comptage fenêtre glissante
+        Redis-->>RateLimit: Requêtes de la fenêtre courante
+    end
+
+    alt Dépassement
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: OK
+
+    Route->>Route: API-Version → espace de noms<br>Correspondance Controller
+
+    alt Opérations sensibles : inscription / commande / paiement
+        Route->>Poster: Vérification humaine
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt Échec de vérification
+            Poster-->>Client: 40007 Échec de vérification
+        end
+    end
+
+    alt Interface nécessitant une authentification
+        Route->>JWT: Bearer Token
+        JWT->>JWT: Vérif. signature HS256 + expiration
+        alt Jeton invalide
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: Traitement métier
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: Traitement métier
+        Controller->>Model: Appel du Model
+        Model->>Model: Génération d'ID Snowflake
+        Model->>Model: Chiffrement/déchiffrement Encryptable
+        Model->>MySQL: Opérations de lecture/écriture
+        MySQL-->>Model: Résultats
+        Model->>ES: Recherche/indexation
+        ES-->>Model: Résultats de recherche
+        Model-->>Controller: Données métier
+    end
+
+    Controller->>Response: Données renvoyées
+
+    rect rgb(187, 222, 251)
+        Note over Response: Post-traitement de la réponse
+        Response->>Response: HashidsEncode — encodage d'ID
+        Response->>Response: Chiffrement AES des champs sensibles
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

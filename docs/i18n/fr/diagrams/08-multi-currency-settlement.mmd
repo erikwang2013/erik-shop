@@ -1,0 +1,28 @@
+flowchart TD
+    A["Prix des produits par devise<br>SKU tarifés selon currency_code<br>(USD/EUR/GBP/CNY…)"] --> B["Panier / commande<br>La commande fige la devise de paiement"]
+    B --> C["Service de taux erik_exchange_rates<br>Maintenance manuelle / récupération auto exchangerate-api<br>Versionné par date d'effet effective_at"]
+
+    C --> D["Initier le paiement<br>Stripe / PayPal / Klarna / Adyen<br>Débit dans la devise d'origine de la commande"]
+    D --> E["Webhook de paiement<br>payment_intent.succeeded<br>Vérification Gateway::verifyWebhook"]
+
+    E --> F["Mise à jour paiement/commande<br>Payments.status=1<br>Orders.status=1"]
+
+    F --> G["Règlement plateforme PlatformSettlements<br>Montant total total_amount<br>Commission plateforme platform_fee<br>Frais de passerelle payment_gateway_fee<br>currency_code = devise de la commande"]
+
+    G --> H1["Règlement vendeur MerchantSettlements<br>Montant de commande → taux de commission → montant réglé<br>0 à régler / 1 réglé"]
+    G --> H2["Règlement fournisseur SupplierSettlements<br>Montant dû au fournisseur"]
+    G --> H3["Règlement d'affiliation AffiliatePayouts<br>Commissions + retraits"]
+    G --> H4["Revenus plateforme<br>Commission plateforme + frais de paiement"]
+
+    H1 --> I["Suivi des gains/pertes de change CurrencyExchangeGainsLosses<br>Montant/devise encaissés ↔ montant/devise réglés<br>Taux au paiement vs taux au règlement<br>Positif = gain de change / Négatif = perte de change"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["Règlement terminé settled_at<br>Rapprochement / audit"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

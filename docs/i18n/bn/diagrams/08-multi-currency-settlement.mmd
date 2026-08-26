@@ -1,0 +1,28 @@
+flowchart TD
+    A["পণ্যের কারেন্সি-ভিত্তিক প্রাইসিং<br/>SKU currency_code অনুযায়ী প্রাইসিং<br/>(USD/EUR/GBP/CNY…)"] --> B["কার্ট/অর্ডার<br/>অর্ডার রিসিভিং কারেন্সি লক"]
+    B --> C["এক্সচেঞ্জ রেট সার্ভিস erik_exchange_rates<br/>manual ম্যানুয়াল মেইনটেনেন্স / exchangerate-api অটো ফেচ<br/>ইফেক্টিভ টাইম effective_at ভার্সনিং"]
+
+    C --> D["পেমেন্ট শুরু<br/>Stripe / PayPal / Klarna / Adyen<br/>রিসিভিং কারেন্সিতে চার্জ"]
+    D --> E["পেমেন্ট কলব্যাক Webhook<br/>payment_intent.succeeded<br/>সিগনেচার ভেরিফিকেশন Gateway::verifyWebhook"]
+
+    E --> F["পেমেন্ট/অর্ডার আপডেট<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["প্ল্যাটফর্ম সেটেলমেন্ট PlatformSettlements<br/>অর্ডার টোটাল total_amount<br/>প্ল্যাটফর্ম কমিশন platform_fee<br/>পেমেন্ট গেটওয়ে ফি payment_gateway_fee<br/>currency_code = অর্ডার কারেন্সি"]
+
+    G --> H1["মার্চেন্ট সেটেলমেন্ট MerchantSettlements<br/>অর্ডার অ্যামাউন্ট → কমিশন রেট → সেটেলমেন্ট অ্যামাউন্ট<br/>0 মুলতুবি / 1 সেটেল্ড"]
+    G --> H2["সাপ্লায়ার সেটেলমেন্ট SupplierSettlements<br/>সাপ্লায়ার পে-এবল"]
+    G --> H3["অ্যাফিলিয়েট পেআউট AffiliatePayouts<br/>কমিশন + উইথড্রয়াল"]
+    G --> H4["প্ল্যাটফর্ম রেভিনিউ<br/>প্ল্যাটফর্ম কমিশন + পেমেন্ট ফি"]
+
+    H1 --> I["ফরেক্স গেইন/লস ট্র্যাকিং CurrencyExchangeGainsLosses<br/>রিসিভ অ্যামাউন্ট/কারেন্সি ↔ সেটেলমেন্ট অ্যামাউন্ট/কারেন্সি<br/>পেমেন্ট রেট vs সেটেলমেন্ট রেট<br/>পজিটিভ=গেইন / নেগেটিভ=লস"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["সেটেলমেন্ট সম্পন্ন settled_at<br/>রিকনসিলিয়েশন / অডিট ট্রেসেবিলিটি"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

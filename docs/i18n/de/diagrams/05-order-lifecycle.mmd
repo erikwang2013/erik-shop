@@ -1,0 +1,56 @@
+stateDiagram-v2
+    [*] --> Warenkorb: Produkt hinzufügen
+
+    Warenkorb --> Ausstehende Zahlung: Bestellung aufgeben<br/>POST /api/orders
+    Warenkorb --> [*]: Leeren/abgelaufen
+
+    Ausstehende Zahlung --> Storniert: Zahlungsfrist abgelaufen<br/>Auto-Storno nach 30 Min.
+    Ausstehende Zahlung --> Storniert: Vom Benutzer storniert
+    Ausstehende Zahlung --> Zahlung läuft: Zahlung starten<br/>POST /api/payment/create
+
+    Zahlung läuft --> Ausstehende Zahlung: Zahlung fehlgeschlagen
+    Zahlung läuft --> Bezahlt: Zahlung erfolgreich<br/>Webhook bestätigt
+
+    Bezahlt --> Prüfung ausstehend: Risikoprüfung<br/>Regel-Engine-Scoring
+    Bezahlt --> Kommissionierung: Prüfung bestanden
+
+    Prüfung ausstehend --> Kommissionierung: Prüfung bestanden
+    Prüfung ausstehend --> Storniert: Prüfung abgelehnt → Rückerstattung
+
+    Kommissionierung --> Versendet: Versand abgeschlossen<br/>Sendungsnummer erstellt
+
+    Versendet --> In Transit: Abholung durch Spediteur
+    Versendet --> Versendet: Tracking-Update
+
+    In Transit --> Zollkontrolle: Im Zielland angekommen
+    Zollkontrolle --> In Transit: Zollfreigabe
+    Zollkontrolle --> Vom Zoll einbehalten: Zollprüfung auffällig
+    Vom Zoll einbehalten --> In Transit: Nachgereichte Unterlagen akzeptiert
+
+    In Transit --> Zugestellt: Kunde hat zugestellt erhalten
+    In Transit --> Zustellproblem: Adresse/Kontakt fehlgeschlagen
+
+    Zustellproblem --> In Transit: Erneute Zustellung
+    Zustellproblem --> Zurückgesandt: Rückgabe an Absender
+
+    Zugestellt --> Abgeschlossen: Auto-Bestätigung<br/>7 Tage ohne Nachbearbeitung
+
+    Zugestellt --> Rückerstattung läuft: Retoure/Rückerstattung beantragen
+    Rückerstattung läuft --> Retoure ausstehend: Verkäufer stimmt zu
+
+    Retoure ausstehend --> Retoure läuft: Kunde sendet zurück
+    Retoure läuft --> Zurückgesandt: Wareneingang im Lager
+    Zurückgesandt --> Rückerstattung läuft: Qualitätskontrolle bestanden
+    Zurückgesandt --> Zugestellt: Qualitätskontrolle nicht bestanden → an Kunden zurück
+
+    Rückerstattung läuft --> Rückerstattet: Rückerstattung abgeschlossen<br/>Rückzahlung auf Originalweg
+
+    Abgeschlossen --> [*]
+    Storniert --> [*]
+    Rückerstattet --> [*]
+
+    note right of Ausstehende Zahlung: Bestandsreservierung 30 Min.
+    note right of Zahlung läuft: Stripe/PayPal/Klarna/Adyen
+    note right of Bezahlt: Bestandsabbuchung dauerhaft
+    note right of In Transit: Webhook-Push-Update
+    note right of Zugestellt: Auto-Bestätigung nach 7 Tagen

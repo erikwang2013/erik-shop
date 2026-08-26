@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as क्लाइंट<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as मिडलवेयर पाइपलाइन<br/>10 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as रूट डिस्पैच
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: अनुरोध फ़ॉरवर्ड
+
+    rect rgb(255, 205, 210)
+        Note over Security: सुरक्षा जाँच चरण
+        Security->>Security: ① Content-Type सत्यापित
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ XSS जाँच 13नियम
+        Security->>Security: ④ SQLi जाँच 13नियम
+        Security->>Security: ⑤ CRLF हेडर इंजेक्शन
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt हमला हिट
+        Security-->>Client: 4xxxx त्रुटि रिस्पॉन्स
+    end
+
+    Security->>Pipeline: सुरक्षा पास
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: अनुरोध प्रीप्रोसेसिंग चरण
+        Pipeline->>Pipeline: ⑦ Cors रिस्पॉन्स हेडर सेटिंग
+        Pipeline->>Pipeline: ⑧ Platform स्रोत पहचान
+        Pipeline->>Pipeline: ⑨ GeoIp क्षेत्र/मुद्रा
+        Pipeline->>Pipeline: ⑩ Locale भाषा सेटिंग
+        Pipeline->>Pipeline: ⑪ HashidsDecode ID डिकोडिंग
+        Pipeline->>Pipeline: ⑫ VersionRoute API संस्करण
+    end
+
+    Pipeline->>RateLimit: रेट लिमिट जाँच
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: टोकन बकेट रेट लिमिट
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>स्लाइडिंग विंडो गणना
+        Redis-->>RateLimit: वर्तमान विंडो अनुरोध संख्या
+    end
+
+    alt सीमा से अधिक
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: पास
+
+    Route->>Route: API-Version → नेमस्पेस<br/>Controller मिलान
+
+    alt संवेदनशील ऑपरेशन पंजीकरण/ऑर्डर/भुगतान
+        Route->>Poster: मानव-सत्यापन
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt सत्यापन विफल
+            Poster-->>Client: 40007 सत्यापन विफल
+        end
+    end
+
+    alt प्रमाणीकरण-आवश्यक API
+        Route->>JWT: Bearer टोकन
+        JWT->>JWT: HS256 हस्ताक्षर सत्यापन + समाप्ति जाँच
+        alt अमान्य टोकन
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: व्यावसायिक प्रसंस्करण
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: व्यावसायिक लॉजिक प्रसंस्करण
+        Controller->>Model: Model कॉल
+        Model->>Model: Snowflake ID उत्पादन
+        Model->>Model: Encryptable एन्क्रिप्शन/डिक्रिप्शन
+        Model->>MySQL: रीड/राइट ऑपरेशन
+        MySQL-->>Model: परिणाम
+        Model->>ES: खोज/इंडेक्स
+        ES-->>Model: खोज परिणाम
+        Model-->>Controller: व्यावसायिक डेटा
+    end
+
+    Controller->>Response: डेटा लौटाना
+
+    rect rgb(187, 222, 251)
+        Note over Response: रिस्पॉन्स पोस्ट-प्रोसेसिंग
+        Response->>Response: HashidsEncode ID एन्कोडिंग
+        Response->>Response: AES संवेदनशील फ़ील्ड एन्क्रिप्शन
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

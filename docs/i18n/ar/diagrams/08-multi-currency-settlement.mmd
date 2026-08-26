@@ -1,0 +1,28 @@
+flowchart TD
+    A["تسعير المنتجات لكل عملة<br/>SKU مسعّر حسب currency_code<br/>(USD/EUR/GBP/CNY…)"] --> B["سلة التسوق/الطلب<br/>الطلب يثبّت عملة التحصيل"]
+    B --> C["خدمة أسعار الصرف erik_exchange_rates<br/>manual صيانة يدوية / exchangerate-api سحب تلقائي<br/>وقت السريان effective_at بنسخ موقّتة"]
+
+    C --> D["بدء الدفع<br/>Stripe / PayPal / Klarna / Adyen<br/>خصم بالعملة الأصلية حسب عملة التحصيل"]
+    D --> E["استدعاء الدفع Webhook<br/>payment_intent.succeeded<br/>التحقق من التوقيع Gateway::verifyWebhook"]
+
+    E --> F["تحديث الدفع/الطلب<br/>Payments.status=1<br/>Orders.status=1"]
+
+    F --> G["تسوية المنصة PlatformSettlements<br/>إجمالي الطلب total_amount<br/>عمولة المنصة platform_fee<br/>رسوم بوابة الدفع payment_gateway_fee<br/>currency_code = عملة الطلب"]
+
+    G --> H1["تسوية البائع MerchantSettlements<br/>مبلغ الطلب → نسبة الخصم → مبلغ التسوية<br/>0 قيد التسوية / 1 تم التسوية"]
+    G --> H2["تسوية المورد SupplierSettlements<br/>مستحقات المورد عن البضاعة"]
+    G --> H3["تسوية التوزيع AffiliatePayouts<br/>العمولة + السحب"]
+    G --> H4["أرباح المنصة<br/>عمولة المنصة + رسوم الدفع"]
+
+    H1 --> I["تتبع أرباح/خسائر الصرف CurrencyExchangeGainsLosses<br/>مبلغ/عملة التحصيل ↔ مبلغ/عملة التسوية<br/>سعر الصرف وقت الدفع مقابل سعر الصرف وقت التسوية<br/>موجب = ربح صرف / سالب = خسارة صرف"]
+    H2 --> I
+    H3 --> I
+
+    I --> J["اكتمال التسوية settled_at<br/>مطابقة الحسابات وإلغاء التنشيط / التدقيق والتتبع"]
+
+    classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
+    classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
+    classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
+    class A,B,C,D,E,F pay;
+    class G,H1,H2,H3,H4 settle;
+    class I,J fx;

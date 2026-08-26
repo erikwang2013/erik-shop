@@ -1,0 +1,104 @@
+sequenceDiagram
+    participant Client as 클라이언트<br/>Flutter/HarmonyOS/Web
+    participant Nginx as Nginx :80/:443
+    participant Security as Security<br/>Middleware
+    participant Pipeline as 미들웨어 파이프라인<br/>10 Global MW
+    participant RateLimit as RateLimit<br/>Middleware
+    participant Route as 라우팅 디스패치
+    participant Poster as PosterVerify
+    participant JWT as JwtAuth
+    participant Controller as Controller
+    participant Model as Model<br/>BaseModel
+    participant MySQL as MySQL 8.0
+    participant Redis as Redis 7
+    participant ES as ES 8
+    participant Response as Response<br/>HashidsEncode
+
+    Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
+    Nginx->>Security: 요청 전달
+
+    rect rgb(255, 205, 210)
+        Note over Security: 보안 탐지 단계
+        Security->>Security: ① Content-Type 검증
+        Security->>Security: ② Body Size ≤ 10MB
+        Security->>Security: ③ XSS 탐지 13규칙
+        Security->>Security: ④ SQLi 탐지 13규칙
+        Security->>Security: ⑤ CRLF Header 주입
+        Security->>Security: ⑥ Path Traversal
+    end
+
+    alt 공격 탐지됨
+        Security-->>Client: 4xxxx 오류 응답
+    end
+
+    Security->>Pipeline: 보안 통과
+
+    rect rgb(227, 242, 253)
+        Note over Pipeline: 요청 전처리 단계
+        Pipeline->>Pipeline: ⑦ Cors 응답 헤더 설정
+        Pipeline->>Pipeline: ⑧ Platform 출처 인식
+        Pipeline->>Pipeline: ⑨ GeoIp 지역/통화
+        Pipeline->>Pipeline: ⑩ Locale 언어 설정
+        Pipeline->>Pipeline: ⑪ HashidsDecode ID 디코딩
+        Pipeline->>Pipeline: ⑫ VersionRoute API 버전
+    end
+
+    Pipeline->>RateLimit: 속도 제한 검사
+
+    rect rgb(255, 249, 196)
+        Note over RateLimit: 토큰 버킷 속도 제한
+        RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>슬라이딩 윈도우 카운트
+        Redis-->>RateLimit: 현재 윈도우 요청 수
+    end
+
+    alt 초과
+        RateLimit-->>Client: 429 Retry-After
+    end
+
+    RateLimit->>Route: 통과
+
+    Route->>Route: API-Version → 네임스페이스<br/>Controller 매칭
+
+    alt 민감 작업 가입/주문/결제
+        Route->>Poster: 휴먼 인증
+        Poster->>Redis: GET poster_token:{key}
+        Redis-->>Poster: token
+        alt 검증 실패
+            Poster-->>Client: 40007 검증 실패
+        end
+    end
+
+    alt 인증 필요 인터페이스
+        Route->>JWT: Bearer Token
+        JWT->>JWT: HS256 서명 검증 + 만료 검사
+        alt Token 무효
+            JWT-->>Client: 401 Unauthorized
+        end
+        JWT->>Controller: request→userId
+    end
+
+    Route->>Controller: 비즈니스 처리
+
+    rect rgb(200, 230, 201)
+        Note over Controller,ES: 비즈니스 로직 처리
+        Controller->>Model: Model 호출
+        Model->>Model: Snowflake ID 생성
+        Model->>Model: Encryptable 암호화/복호화
+        Model->>MySQL: 읽기/쓰기 작업
+        MySQL-->>Model: 결과
+        Model->>ES: 검색/인덱싱
+        ES-->>Model: 검색 결과
+        Model-->>Controller: 비즈니스 데이터
+    end
+
+    Controller->>Response: 데이터 반환
+
+    rect rgb(187, 222, 251)
+        Note over Response: 응답 후처리
+        Response->>Response: HashidsEncode ID 인코딩
+        Response->>Response: AES 민감 필드 암호화
+        Response->>Response: JSON {code, msg, data}
+    end
+
+    Response->>Nginx: HTTP Response
+    Nginx->>Client: JSON + CORS Headers

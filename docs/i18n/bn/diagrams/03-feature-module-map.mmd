@@ -1,0 +1,73 @@
+graph TB
+    CENTER["Erik Shop<br/>ক্রস-বর্ডার ই-কমার্স প্ল্যাটফর্ম Full"]
+
+    CENTER --> B2C["B2C রিটেইল"]
+    CENTER --> B2B["B2B হোলসেল"]
+    CENTER --> MART["মাল্টি-ভেন্ডর অনবোর্ডিং"]
+    CENTER --> CROSS["ক্রস-বর্ডার কমপ্লায়েন্স"]
+    CENTER --> LOGISTICS["আন্তর্জাতিক লজিস্টিক্স"]
+    CENTER --> PAY["পেমেন্ট সিস্টেম"]
+    CENTER --> MKT["মার্কেটিং সেন্টার"]
+    CENTER --> MULTI["মাল্টি-প্ল্যাটফর্ম ম্যানেজমেন্ট"]
+    CENTER --> SUPPLY["সাপ্লাই চেইন"]
+    CENTER --> RISK["রিস্ক কন্ট্রোল কমপ্লায়েন্স"]
+    CENTER --> SECURITY["সিকিউরিটি প্রোটেকশন"]
+    CENTER --> PERF["হাই কনকারেন্সি"]
+    CENTER --> GROWTH["মেম্বারশিপ গ্রোথ"]
+    CENTER --> CMS["কনটেন্ট ম্যানেজমেন্ট"]
+    CENTER --> CS["কাস্টমার সার্ভিস সিস্টেম"]
+    CENTER --> INFRA["ইনফ্রাস্ট্রাকচার"]
+    CENTER --> CLIENTS["মাল্টি-এন্ড কভারেজ"]
+
+    B2C --> B2C_DETAIL["মাল্টি-ল্যাঙ্গুয়েজ পণ্য · কারেন্সি-ভিত্তিক প্রাইসিং<br/>SKU স্টক · কার্ট<br/>অর্ডার · রিফান্ড · রিটার্ন"]
+
+    B2B --> B2B_DETAIL["টায়ার্ড প্রাইসিং MOQ<br/>এন্টারপ্রাইজ ভেরিফিকেশন ট্যাক্স আইডি/বিজনেস লাইসেন্স<br/>ইনকোয়ারি কোটেশন"]
+
+    MART --> MART_DETAIL["ভেন্ডর রিভিউ অনবোর্ডিং<br/>পণ্য রিভিউ লিস্টিং<br/>কমিশন সেটেলমেন্ট"]
+
+    CROSS --> CROSS_DETAIL["HS Code লাইব্রেরি<br/>কাস্টমস রুল গন্তব্য+HS→শুল্ক হার<br/>VAT/IOSS ইইউ<br/>কমপ্লায়েন্স লেবেল FDA/CE/RoHS"]
+
+    LOGISTICS --> LOGISTICS_DETAIL["লজিস্টিক জোন শিপিং ওজন টায়ার<br/>DHL/UPS/FedEx/EMS<br/>ওভারসিজ ওয়ারহাউস ডেলিভারি+রিটার্ন<br/>কমার্শিয়াল ইনভয়েস/প্যাকিং লিস্ট PDF"]
+
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL এখন কিনুন পরে পরিশোধ<br/>Adyen গ্লোবাল পেমেন্ট<br/>3DS ভেরিফিকেশন · Webhook সেটেলমেন্ট"]
+
+    MKT --> MKT_DETAIL["কুপন জোন+নতুন/পুরাতন কাস্টমার<br/>ক্যারোসেল আঞ্চলিক ভিজিবিলিটি<br/>ফ্ল্যাশ সেল সময়সীমিত+পরিমাণসীমিত<br/>গ্রুপ বাই গ্রুপ সাইজ+ভ্যালিডিটি<br/>অ্যাফিলিয়েট লিংক+কমিশন+উইথড্রয়াল"]
+
+    MULTI --> MULTI_DETAIL["Amazon · eBay<br/>Shopee · Lazada · Temu<br/>পণ্য লিস্টিং · অর্ডার অ্যাগ্রিগেশন<br/>মাল্টি-স্টোর ম্যানেজমেন্ট"]
+
+    SUPPLY --> SUPPLY_DETAIL["সাপ্লায়ার প্রোফাইল+রেটিং<br/>পারচেজ অর্ডার রিভিউ→রিসিভ→কোয়ালিটি চেক<br/>ইনভেন্টরি লেজার অপরিবর্তনীয়<br/>ট্রান্সফার ম্যানেজমেন্ট"]
+
+    RISK --> RISK_DETAIL["রুল ইঞ্জিন বাইপাস স্কোরিং<br/>KYC রিয়েল-নেম ভেরিফিকেশন<br/>GDPR/CCPA ডেটা রিকোয়েস্ট<br/>Cookie Consent ভার্সন ম্যানেজমেন্ট"]
+
+    SECURITY --> SECURITY_DETAIL["31 ধরণের অ্যাটাক ডিটেকশন<br/>XSS · SQL ইনজেকশন · CRLF<br/>পাথ ট্রাভার্সাল · XXE · SSRF<br/>ফাইল আপলোড · ব্রুট ফোর্স<br/>Host · CORS · ডেসেনসিটাইজেশন"]
+
+    PERF --> PERF_DETAIL["টোকেন বাকেট স্লাইডিং উইন্ডো<br/>6টি এন্ডপয়েন্ট রেট লিমিট রুল<br/>DB রিড-রাইট সেপারেশন 2 রিড রেপ্লিকা+sticky<br/>কানেকশন পুল DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+
+    GROWTH --> GROWTH_DETAIL["মেম্বারশিপ লেভেল+বেনিফিট<br/>পয়েন্ট রুল+লেজার<br/>গিফট কার্ড ব্যালেন্স+রিডেম্পশন<br/>প্রাইস ড্রপ/স্টক অ্যালার্ট<br/>AB টেস্ট ট্রাফিক অ্যালোকেশন+কনফিডেন্স"]
+
+    CMS --> CMS_DETAIL["CMS মাল্টি-ল্যাঙ্গুয়েজ পেজ<br/>FAQ · নলেজ বেস<br/>সাইজ চার্ট কাপড়/জুতা<br/>ইমেইল টেমপ্লেট মাল্টি-ল্যাঙ্গুয়েজ<br/>পণ্য Feed Google/Meta"]
+
+    CS --> CS_DETAIL["WebSocket রিয়েল-টাইম IM<br/>chat_sessions<br/>chat_messages<br/>নলেজ বেস মাল্টি-ল্যাঙ্গুয়েজ"]
+
+    INFRA --> INFRA_DETAIL["Snowflake ডিস্ট্রিবিউটেড ID<br/>Hashids API অবফাসকেশন<br/>JWT HS256 ডুয়াল-টোকেন রিফ্রেশ<br/>AES-256-CBC এনক্রিপশন<br/>Encryptable ডেটাবেস এনক্রিপশন<br/>Poster হিউম্যান ভেরিফিকেশন<br/>GeoIP অঞ্চল সনাক্তকরণ"]
+
+    CLIENTS --> CLIENTS_DETAIL["Flutter 5 প্ল্যাটফর্ম<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
+
+    style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
+    style B2C fill:#e3f2fd
+    style B2B fill:#e8f5e9
+    style MART fill:#fff3e0
+    style CROSS fill:#fce4ec
+    style LOGISTICS fill:#f3e5f5
+    style PAY fill:#e0f2f1
+    style MKT fill:#fff9c4
+    style MULTI fill:#ede7f6
+    style SUPPLY fill:#efebe9
+    style RISK fill:#ffebee
+    style SECURITY fill:#ffcdd2
+    style PERF fill:#b3e5fc
+    style GROWTH fill:#c8e6c9
+    style CMS fill:#ffe0b2
+    style CS fill:#d1c4e9
+    style INFRA fill:#b2dfdb
+    style CLIENTS fill:#bbdefb

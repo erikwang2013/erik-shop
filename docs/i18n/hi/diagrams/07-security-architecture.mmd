@@ -1,0 +1,109 @@
+graph TB
+    subgraph Request["प्रवेश"]
+        REQ["HTTP Request"]
+    end
+
+    subgraph L1["परत 1: नेटवर्क सीमा"]
+        direction TB
+        NG["Nginx रिवर्स प्रॉक्सी<br/>· SSL/TLS टर्मिनेशन<br/>· बॉडी आकार सीमा<br/>· बेयर IP प्रत्यक्ष कनेक्शन अस्वीकार"]
+        CORS_W["CORS व्हाइटलिस्ट<br/>· Access-Control-Allow-Origin<br/>· कॉन्फ़िगर करने योग्य origin सीमा"]
+    end
+
+    subgraph L2["परत 2: WAF हमले की पहचान<br/>(SecurityMiddleware)"]
+        direction TB
+        CT{"Content-Type<br/>सत्यापित"}
+        BS{"Body Size<br/>≤ 10MB"}
+        XSS{"XSS जाँच<br/>13  नियम (रेगेक्स)"}
+        SQLI{"SQLi जाँच<br/>13  नियम (रेगेक्स)"}
+        CRLF{"CRLF इंजेक्शन<br/>Header जाँच"}
+        PATH_T{"पाथ ट्रैवर्सल<br/>एन्कोड/null byte"}
+        XXE{"XXE एंटिटी इंजेक्शन<br/>ENTITY/DOCTYPE"}
+        SSRF{"SSRF फ़ोर्जिंग<br/>आंतरिक नेटवर्क IP पहचान"}
+        FILE_CHK{"फ़ाइलअपलोड<br/>ब्लैकलिस्ट/डबल एक्सटेंशन"}
+        METHOD{"HTTP विधि<br/>व्हाइटलिस्ट सत्यापन"}
+        HOST{"Host हेडर<br/>सत्यापित"}
+
+        CT -->|अवैध| E403["403"]
+        CT -->|पास| BS
+        BS -->|सीमा से अधिक| E413["413"]
+        BS -->|पास| XSS
+        XSS -->|हिट| E40001["40001"]
+        XSS -->|पास| SQLI
+        SQLI -->|हिट| E40002["40002"]
+        SQLI -->|पास| CRLF
+        CRLF -->|हिट| E40003["40003"]
+        CRLF -->|पास| PATH_T
+        PATH_T -->|हिट| E40004["40004"]
+        PATH_T -->|पास| XXE
+        XXE -->|हिट| E40010["40010"]
+        XXE -->|पास| SSRF
+        SSRF -->|हिट| E40011["40011"]
+        SSRF -->|पास| FILE_CHK
+        FILE_CHK -->|हिट| E40009["40009"]
+        FILE_CHK -->|पास| METHOD
+        METHOD -->|अवैध| E40012["40012"]
+        METHOD -->|पास| HOST
+    end
+
+    subgraph L3["परत 3: ट्रैफ़िक नियंत्रण"]
+        direction TB
+        BRUTE["ब्रूट फ़ोर्स सुरक्षा<br/>Redis काउंटर<br/>API: 10 बार/60s<br/>Admin: 5 बार/300s"]
+        RATE["टोकन बकेट रेट लिमिट<br/>Redis ZSET स्लाइडिंग विंडो<br/>6 एंडपॉइंट स्वतंत्र नियम"]
+        BRUTE --> RATE
+    end
+
+    subgraph L4["परत 4: प्रमाणीकरण"]
+        direction TB
+        POSTER["PosterVerify मानव-सत्यापन<br/>· स्लाइडर · पहेली · क्लिक<br/>· पंजीकरण/ऑर्डर/भुगतान पर ट्रिगर"]
+        JWT_AUTH["JWT प्रमाणीकरण<br/>· HS256 हस्ताक्षर<br/>· समाप्ति जाँच<br/>· डबल-टोकन रिफ़्रेश<br/>· request→userId इंजेक्शन"]
+        POSTER --> JWT_AUTH
+    end
+
+    subgraph L5["परत 5: डेटा सुरक्षा"]
+        direction TB
+        HASHIDS["Hashids ID अस्पष्टीकरण<br/>· अनुरोध: hashid→snowflake<br/>· रिस्पॉन्स: snowflake→hashid<br/>· ID एन्यूमरेशन रोकता है"]
+        AES_ENC["AES-256-CBC एन्क्रिप्शन<br/>· ट्रांसमिशन परत: POST body संवेदनशील फ़ील्ड<br/>· रिस्पॉन्स परत: X-Encrypted हेडर<br/>· डेटाबेस: Encryptable trait<br/>email/mobile/name/tax_id"]
+        SENS_MASK["संवेदनशील डेटा मास्किंग<br/>· लॉग फ़िल्टर password/token/secret<br/>· त्रुटि रिस्पॉन्स मास्किंग<br/>· आंतरिक जानकारी लीक नहीं"]
+    end
+
+    subgraph L6["परत 6: रिस्पॉन्स सुरक्षा"]
+        direction TB
+        SEC_HEADERS["HTTP सुरक्षा रिस्पॉन्स हेडर<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· Server छिपा हुआ<br/>· Cache-Control"]
+    end
+
+    subgraph Audit["लेखा-परीक्षा ट्रेसबिलिटी"]
+        direction LR
+        PLATFORM["प्लेटफ़ॉर्म ट्रैकिंग<br/>X-Platform हेडर<br/>8 प्लेटफ़ॉर्म पहचान<br/>6 तालिका रिकॉर्ड"]
+        OP_LOG["ऑपरेशन लॉग<br/>erik_operation_logs<br/>platform · user_id<br/>action · ip · ua"]
+    end
+
+    REQ --> NG
+    NG --> CORS_W
+    CORS_W --> L2
+    HOST --> BRUTE
+    RATE --> POSTER
+
+    L5 --> L6
+    L6 --> RESP(["सुरक्षित रिस्पॉन्स"])
+
+    PLATFORM -.-> OP_LOG
+    L2 -.-> PLATFORM
+    L4 -.-> PLATFORM
+
+    style L1 fill:#e3f2fd
+    style L2 fill:#ffcdd2
+    style L3 fill:#fff9c4
+    style L4 fill:#c8e6c9
+    style L5 fill:#e1bee7
+    style L6 fill:#b2dfdb
+    style Audit fill:#f5f5f5
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E40009 fill:#ff5252,color:#fff
+    style E40010 fill:#ff5252,color:#fff
+    style E40011 fill:#ff5252,color:#fff
+    style E40012 fill:#ff5252,color:#fff

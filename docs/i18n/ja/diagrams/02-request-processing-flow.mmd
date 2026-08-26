@@ -1,0 +1,68 @@
+graph TB
+    START(["HTTP リクエスト到達"]) --> CORS["① Cors<br/>Access-Control-* レスポンスヘッダー<br/>OPTIONS プリフライトで 200 を返す"]
+
+    CORS --> SEC["② Security 攻撃検出<br/>━━━━━━━━━━━━━━━"]
+    SEC --> SEC1{"Content-Type<br/>合法?"}
+    SEC1 -->|否| E403["403 Forbidden"]
+    SEC1 -->|是| SEC2{"Body Size<br/>≤ 10MB?"}
+    SEC2 -->|否| E413["413 Too Large"]
+    SEC2 -->|是| SEC3{"XSS 検出<br/>13条のルール"}
+    SEC3 -->|命中| E40001["40001 XSS ブロック"]
+    SEC3 -->|通過| SEC4{"SQLi 検出<br/>13条のルール"}
+    SEC4 -->|命中| E40002["40002 SQLi ブロック"]
+    SEC4 -->|通過| SEC5{"CRLF 検出<br/>Header 注入"}
+    SEC5 -->|命中| E40003["40003 CRLF ブロック"]
+    SEC5 -->|通過| SEC6{"パストラバーサル<br/>検出"}
+    SEC6 -->|命中| E40004["40004 Path ブロック"]
+    SEC6 -->|通過| SEC_PASS["安全検出を通過"]
+
+    SEC_PASS --> PLAT["③ Platform<br/>X-Platform Header<br/>+ UA 降格識別<br/>8 プラットフォーム出所"]
+
+    PLAT --> GEO["④ GeoIp<br/>MaxMind GeoIP2<br/>未ログインユーザー<br/>地域/通貨/言語識別"]
+
+    GEO --> LOCALE["⑤ Locale<br/>Accept-Language 解析<br/>5 言語の完全一致 → 降格 → デフォルト"]
+
+    LOCALE --> HDEC["⑥ HashidsDecode<br/>リクエスト中の *_id フィールド<br/>hashid → snowflake ID"]
+
+    HDEC --> VER["⑦ VersionRoute<br/>API-Version Header<br/>→ v1/v2 名前空間ルーティング"]
+
+    VER --> RATE["⑧ RateLimit<br/>Redis ZSET スライディングウィンドウ<br/>トークンバケット限流"]
+
+    RATE -->|超限| E429["429 Too Many Requests<br/>Retry-After レスポンスヘッダー"]
+    RATE -->|通過| ROUTE_CHECK{"ルートマッチ?"}
+
+    ROUTE_CHECK -->|敏感操作<br/>登録/注文/決済| POSTER["⑨ PosterVerify<br/>Redis で token を検証<br/>スライダー/パズル/クリック"]
+    ROUTE_CHECK -->|認証が必要| JWT_START["⑩ JwtAuth"]
+    ROUTE_CHECK -->|公開インターフェース| HENC
+
+    POSTER --> JWT_START
+
+    JWT_START --> JWT_CHECK{"Bearer Token<br/>HS256 署名検証"}
+    JWT_CHECK -->|無効/期限切れ| E401["401 Unauthorized"]
+    JWT_CHECK -->|有効| JWT_INJECT["request→userId を注入"]
+
+    JWT_INJECT --> HENC["⑪ HashidsEncode<br/>レスポンス JSON を再帰的に走査<br/>snowflake ID → hashid"]
+
+    HENC --> CTRL["Controller<br/>業務ロジック処理<br/>Model クエリ · 検証 · 計算"]
+
+    CTRL --> ENC_RESP{"暗号化レスポンスが必要?"}
+
+    ENC_RESP -->|是| ENC["⑫ Encryption<br/>AES-256-CBC 暗号化<br/>X-Encrypted: 1 Header"]
+    ENC_RESP -->|否| RESP
+    ENC --> RESP(["JSON Response<br/>{code, msg, data}<br/>+ CORS Headers<br/>+ X-Platform Header"])
+
+    style SEC fill:#ffcdd2
+    style RATE fill:#fff9c4
+    style POSTER fill:#ffe0b2
+    style JWT_START fill:#c8e6c9
+    style CTRL fill:#bbdefb
+    style START fill:#e8eaf6
+    style RESP fill:#e8eaf6
+    style E403 fill:#ff5252,color:#fff
+    style E413 fill:#ff5252,color:#fff
+    style E40001 fill:#ff5252,color:#fff
+    style E40002 fill:#ff5252,color:#fff
+    style E40003 fill:#ff5252,color:#fff
+    style E40004 fill:#ff5252,color:#fff
+    style E429 fill:#ff9800,color:#fff
+    style E401 fill:#ff5252,color:#fff

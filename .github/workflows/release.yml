@@ -1,0 +1,60 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest version
+        id: latest
+        run: |
+          git fetch --tags origin
+          LATEST=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          echo "latest=$LATEST" >> "$GITHUB_OUTPUT"
+
+      - name: Bump patch version
+        id: version
+        run: |
+          BASE=${LATEST#v}
+          MAJOR=${BASE%%.*}
+          REST=${BASE#*.}
+          MINOR=${REST%%.*}
+          PATCH=${REST#*.}
+          TAG="v${MAJOR}.${MINOR}.$((PATCH + 1))"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Check tag not already created
+        id: check
+        run: |
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Changelog since last tag
+        id: changelog
+        if: steps.check.outputs.skip != 'true'
+        run: |
+          git log --oneline --no-merges "$LATEST"..HEAD | head -50 > /tmp/changelog.txt
+          if [ ! -s /tmp/changelog.txt ]; then echo "No new commits since $LATEST, skipping release" > /tmp/changelog.txt; fi
+
+      - name: Create tag and release
+        if: steps.check.outputs.skip != 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version.outputs.tag }}
+          name: ${{ steps.version.outputs.tag }}
+          body_path: /tmp/changelog.txt
+          fail_on_unmatched_files: false

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class ExchangeRates extends Base
 {
-    protected $table = "erik_exchange_rates";
+    protected $table = "shop_exchange_rates";
 }

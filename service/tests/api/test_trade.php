@@ -19,7 +19,7 @@ function addCart(array $h, $skuId, int $qty): void
     }
 }
 
-/** 创建订单（间隔≥3.5s 以避开 10s/3 限流） */
+/** 创建订单（间隔≥3.5s 以避开 10s/3 限流；429 自愈与 check() 一致） */
 function createOrder(array $h, string $addressId, array $extra = []): array
 {
     static $last = 0;
@@ -30,6 +30,10 @@ function createOrder(array $h, string $addressId, array $extra = []): array
     $last = microtime(true);
     $body = array_merge(['address_id' => $addressId, 'currency_code' => 'USD'], $extra);
     $r = http('POST', '/api/orders', $body, array_merge($h, ['X-Poster-Token: ' . posterToken()]));
+    if (($r[1]['code'] ?? -1) === 429) {
+        clearRateLimits();
+        $r = http('POST', '/api/orders', $body, array_merge($h, ['X-Poster-Token: ' . posterToken()]));
+    }
     if (($r[1]['code'] ?? -1) !== 0) {
         throw new RuntimeException('下单失败: ' . json_encode($r[1]));
     }
@@ -95,10 +99,10 @@ check('订单-空购物车-无验证码40001', 'POST', '/api/orders', [
 ]);
 
 // ===== 支付A（预置待支付记录 → 幂等复用，不调用真实网关） =====
-dbInsert('erik_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
-    [db()->query("SELECT id FROM erik_orders WHERE order_no='{$orderA['order_no']}'")->fetchColumn(), $u['id'], 'stripe', 'card', 'pi_test_ok_001', 82.98, 'USD', 0],
+dbInsert('shop_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
+    [db()->query("SELECT id FROM shop_orders WHERE order_no='{$orderA['order_no']}'")->fetchColumn(), $u['id'], 'stripe', 'card', 'pi_test_ok_001', 82.98, 'USD', 0],
 ]);
-$payAId = db()->query("SELECT id FROM erik_payments WHERE transaction_no='pi_test_ok_001'")->fetchColumn();
+$payAId = db()->query("SELECT id FROM shop_payments WHERE transaction_no='pi_test_ok_001'")->fetchColumn();
 check('支付-幂等复用待支付记录', 'POST', '/api/payment/create', [
     'headers' => array_merge($h, ['X-Poster-Token: ' . posterToken()]),
     'body' => ['order_id' => $orderA['order_id'], 'gateway' => 'stripe', 'method' => 'card'],
@@ -148,27 +152,27 @@ if ($refundId) {
 // ===== 订单B：支付成功 → 退款Webhook =====
 addCart($h, 2001, 1);
 $orderB = createOrder($h, $addressId);
-$orderBId = db()->query("SELECT id FROM erik_orders WHERE order_no='{$orderB['order_no']}'")->fetchColumn();
-dbInsert('erik_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
+$orderBId = db()->query("SELECT id FROM shop_orders WHERE order_no='{$orderB['order_no']}'")->fetchColumn();
+dbInsert('shop_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
     [$orderBId, $u['id'], 'stripe', 'card', 'pi_test_refund_001', 54.99, 'USD', 0],
 ]);
 $sucBPayload = json_encode(['id' => 'evt_ok_b_001', 'type' => 'payment_intent.succeeded', 'data' => ['object' => ['id' => 'pi_test_refund_001']]]);
 check('Webhook-B成功', 'POST', '/webhook/payment/stripe', ['body' => $sucBPayload, 'headers' => ['Stripe-Signature: ' . webhookSign($sucBPayload)], 'expect' => 200]);
 check('Webhook-B退款事件', 'POST', '/webhook/payment/stripe', ['body' => $refPayload, 'headers' => ['Stripe-Signature: ' . webhookSign($refPayload)], 'expect' => 200]);
-$payBId = db()->query("SELECT id FROM erik_payments WHERE transaction_no='pi_test_refund_001'")->fetchColumn();
+$payBId = db()->query("SELECT id FROM shop_payments WHERE transaction_no='pi_test_refund_001'")->fetchColumn();
 check('支付B-已退款状态2', 'GET', '/api/payment/status/' . enc($payBId), ['headers' => $h, 'expect' => 200, 'expect_contains' => '"status":2']);
 check('订单B-已退款7', 'GET', '/api/orders/' . $orderB['order_id'], ['headers' => $h, 'expect' => 200, 'expect_contains' => '已退款']);
 
 // ===== 订单C：支付失败事件 =====
 addCart($h, 2003, 1);
 $orderC = createOrder($h, $addressId);
-$orderCId = db()->query("SELECT id FROM erik_orders WHERE order_no='{$orderC['order_no']}'")->fetchColumn();
-dbInsert('erik_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
+$orderCId = db()->query("SELECT id FROM shop_orders WHERE order_no='{$orderC['order_no']}'")->fetchColumn();
+dbInsert('shop_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
     [$orderCId, $u['id'], 'stripe', 'card', 'pi_test_fail_001', 84.99, 'USD', 0],
 ]);
 $failPayload = json_encode(['id' => 'evt_fail_1', 'type' => 'payment_intent.payment_failed', 'data' => ['object' => ['id' => 'pi_test_fail_001']]]);
 check('Webhook-C失败事件', 'POST', '/webhook/payment/stripe', ['body' => $failPayload, 'headers' => ['Stripe-Signature: ' . webhookSign($failPayload)], 'expect' => 200]);
-$payCId = db()->query("SELECT id FROM erik_payments WHERE transaction_no='pi_test_fail_001'")->fetchColumn();
+$payCId = db()->query("SELECT id FROM shop_payments WHERE transaction_no='pi_test_fail_001'")->fetchColumn();
 check('支付C-失败状态3', 'GET', '/api/payment/status/' . enc($payCId), ['headers' => $h, 'expect' => 200, 'expect_contains' => '"status":3']);
 
 // ===== 订单D：取消订单 =====
@@ -206,8 +210,8 @@ check('支付-不支持的网关422', 'POST', '/api/payment/create', [
 // ===== 订单F：退货（PDO 置已发货） =====
 addCart($h, 2001, 1);
 $orderF = createOrder($h, $addressId);
-$orderFId = db()->query("SELECT id FROM erik_orders WHERE order_no='{$orderF['order_no']}'")->fetchColumn();
-db()->exec("UPDATE erik_orders SET status = 2, shipping_at = NOW() WHERE id = {$orderFId}");
+$orderFId = db()->query("SELECT id FROM shop_orders WHERE order_no='{$orderF['order_no']}'")->fetchColumn();
+db()->exec("UPDATE shop_orders SET status = 2, shipping_at = NOW() WHERE id = {$orderFId}");
 check('退货-申请', 'POST', '/api/returns', ['headers' => $h, 'body' => ['order_id' => $orderF['order_id'], 'reason_id' => 1], 'expect' => 200]);
 check('退货-未发货订单422', 'POST', '/api/returns', ['headers' => $h, 'body' => ['order_id' => $orderG['order_id'], 'reason_id' => 1], 'expect' => 422]);
 $returns = http('GET', '/api/returns', null, $h);
@@ -215,8 +219,8 @@ check('退货-列表', 'GET', '/api/returns', ['headers' => $h, 'expect' => 200,
 $returnId = $returns[1]['data']['list'][0]['id'] ?? null;
 if ($returnId) {
     check('退货-面单未生成404', 'GET', '/api/returns/' . $returnId . '/label', ['headers' => $h, 'expect' => 404]);
-    $retId = db()->query("SELECT id FROM erik_return_orders LIMIT 1")->fetchColumn();
-    dbInsert('erik_return_labels', ['return_id', 'logistics_id', 'tracking_no', 'label_url'], [
+    $retId = db()->query("SELECT id FROM shop_return_orders LIMIT 1")->fetchColumn();
+    dbInsert('shop_return_labels', ['return_id', 'logistics_id', 'tracking_no', 'label_url'], [
         [$retId, 1, 'DHL-TRACK-001', 'https://img.example.com/label.pdf'],
     ]);
     check('退货-面单生成后返回', 'GET', '/api/returns/' . $returnId . '/label', ['headers' => $h, 'expect' => 200, 'expect_contains' => 'label.pdf']);
@@ -239,13 +243,13 @@ check('导出-日期过滤', 'GET', '/api/export/orders?format=csv&date_from=' .
 $orderHId = null;
 addCart($h, 2001, 1);
 $reviewOrder = createOrder($h, $addressId);
-$orderHId = db()->query("SELECT id FROM erik_orders WHERE order_no='{$reviewOrder['order_no']}'")->fetchColumn();
-db()->exec("UPDATE erik_orders SET status = 8 WHERE id = {$orderHId}");
+$orderHId = db()->query("SELECT id FROM shop_orders WHERE order_no='{$reviewOrder['order_no']}'")->fetchColumn();
+db()->exec("UPDATE shop_orders SET status = 8 WHERE id = {$orderHId}");
 check('Admin-风控审核通过', 'POST', '/api/admin/orders/' . enc($orderHId) . '/review', ['headers' => ['X-Admin-Key: ' . $adminKey], 'body' => ['action' => 'approve'], 'expect' => 200]);
 addCart($h, 2001, 1);
 $orderI = createOrder($h, $addressId);
-$orderIId = db()->query("SELECT id FROM erik_orders WHERE order_no='{$orderI['order_no']}'")->fetchColumn();
-db()->exec("UPDATE erik_orders SET status = 8 WHERE id = {$orderIId}");
+$orderIId = db()->query("SELECT id FROM shop_orders WHERE order_no='{$orderI['order_no']}'")->fetchColumn();
+db()->exec("UPDATE shop_orders SET status = 8 WHERE id = {$orderIId}");
 check('Admin-风控审核驳回', 'POST', '/api/admin/orders/' . enc($orderIId) . '/review', ['headers' => ['X-Admin-Key: ' . $adminKey], 'body' => ['action' => 'reject'], 'expect' => 200]);
 check('Admin-风控审核非法action422', 'POST', '/api/admin/orders/' . enc($orderIId) . '/review', ['headers' => ['X-Admin-Key: ' . $adminKey], 'body' => ['action' => 'hack'], 'expect' => 422]);
 check('Admin-商品刊登', 'POST', '/api/admin/platform/listings', ['headers' => ['X-Admin-Key: ' . $adminKey], 'body' => ['product_id' => 1001, 'platform_account_id' => 1, 'platform_product_id' => 'PLAT-001'], 'expect' => 200, 'expect_key' => 'listing_id']);
@@ -254,14 +258,14 @@ check('Admin-刊登缺参422', 'POST', '/api/admin/platform/listings', ['headers
 // 网关退款（alipay 不受支持 → 422，无外部调用）
 addCart($h, 2001, 1);
 $orderJ = createOrder($h, $addressId);
-$orderJId = db()->query("SELECT id FROM erik_orders WHERE order_no='{$orderJ['order_no']}'")->fetchColumn();
-dbInsert('erik_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
+$orderJId = db()->query("SELECT id FROM shop_orders WHERE order_no='{$orderJ['order_no']}'")->fetchColumn();
+dbInsert('shop_payments', ['order_id', 'user_id', 'gateway', 'method', 'transaction_no', 'amount', 'currency_code', 'status'], [
     [$orderJId, $u['id'], 'alipay', 'alipay', 'alipay_txn_001', 54.99, 'USD', 1],
 ]);
-dbInsert('erik_refunds', ['order_id', 'user_id', 'refund_no', 'type', 'amount', 'reason', 'status'], [
+dbInsert('shop_refunds', ['order_id', 'user_id', 'refund_no', 'type', 'amount', 'reason', 'status'], [
     [$orderJId, $u['id'], 'RF-TEST-001', 1, 10.00, 'admin执行', 0],
 ]);
-$adminRefundId = db()->query("SELECT id FROM erik_refunds WHERE refund_no='RF-TEST-001'")->fetchColumn();
+$adminRefundId = db()->query("SELECT id FROM shop_refunds WHERE refund_no='RF-TEST-001'")->fetchColumn();
 check('Admin-执行退款(不支持的网关)422', 'POST', '/api/admin/refunds/' . enc($adminRefundId) . '/execute', ['headers' => ['X-Admin-Key: ' . $adminKey], 'expect' => 422]);
 
 // ===== 订阅（周期购，自动创建首期订单） =====

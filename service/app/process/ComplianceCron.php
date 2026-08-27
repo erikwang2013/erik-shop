@@ -12,7 +12,7 @@ use Workerman\Worker;
 
 /**
  * 合规规则更新 — 每日检查外部合规规则源（可配置 URL）
- * 配置 cron.compliance_source_url 后拉取 JSON 规则同步到 erik_country_compliance_rules；
+ * 配置 cron.compliance_source_url 后拉取 JSON 规则同步到 shop_country_compliance_rules；
  * 未配置时由管理后台人工维护，跳过拉取
  */
 class ComplianceCron

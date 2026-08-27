@@ -9,5 +9,5 @@ use plugin\admin\app\model\Base;
 
 class Users extends Base
 {
-    protected $table = "erik_users";
+    protected $table = "shop_users";
 }

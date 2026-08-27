@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlatformOrders extends BaseModel
 {    use Encryptable;
-    protected $table = "erik_platform_orders";
+    protected $table = "shop_platform_orders";
     // 仅买家 PII 加密；platform_account_id 为 BIGINT 外键（加密后写入 INT 列报 1366，且 where 查询依赖明文匹配）
     protected $encryptable = ["buyer_name", "buyer_email"];
     protected $casts = [

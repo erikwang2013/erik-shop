@@ -13,7 +13,7 @@ use Workerman\Worker;
 
 /**
  * 物流轨迹拉取 — 每30分钟查询运输中包裹的轨迹
- * 物流商在 erik_logistics_companies.api_key 配置了密钥时真实调用；
+ * 物流商在 shop_logistics_companies.api_key 配置了密钥时真实调用；
  * 轨迹 API 模板用 cron.tracking_api_url 配置（{tracking_no} 占位符），未配置则跳过
  */
 class ShipmentTrackingCron

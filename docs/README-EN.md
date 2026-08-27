@@ -172,18 +172,22 @@ shop-php/
 ## Running Tests
 
 ```bash
-cd service && php vendor/bin/phpunit tests/
-# 22 tests, 45 assertions — ALL PASS
-# SecurityTest(12): XSS + SQL injection + XXE + SSRF + path traversal + data leak
-# JwtTest(4): encode/decode validation
-# ApiResponseTest(3): success/fail/paginate format
-# RedisFacadeTest(3): facade ping/set-get/helper
+cd service && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # unit/integration (211 tests / 1000 assertions)
+cd admin  && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # admin (2 tests / 7 assertions)
+cd service/tests/api && php run_all.php                      # API automation (4 suites, 213 assertions)
+cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js  # UI E2E (admin + service pages)
 
 # Dependency security audit (1 known low-severity CVE: CVE-2025-45769
 # firebase/php-jwt <7.0.0, constrained by jwt-webman ^6.0; HS256
 # symmetric-signature usage is not on the affected path)
 composer audit
 ```
+
+Latest full QA report: [test-reports/QA-REPORT-2026-08-27.md](test-reports/QA-REPORT-2026-08-27.md)
+(screenshots in `test-reports/screenshots/`, E2E detail in `scripts/e2e/results.json`).
+
+**Known gaps fixed (2026-08-28)**: 19 admin page views + ShopExport export page implemented;
+E2E rerun 47 PASS / 0 FAIL / 1 WARN (100%). See report §8.
 
 ## License
 

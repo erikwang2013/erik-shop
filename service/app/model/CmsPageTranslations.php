@@ -6,5 +6,5 @@
 namespace app\model;
 
 class CmsPageTranslations extends BaseModel
-{    protected $table = "erik_cms_page_translations";
+{    protected $table = "shop_cms_page_translations";
 }

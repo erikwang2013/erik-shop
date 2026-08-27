@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RiskLogs extends BaseModel
-{    protected $table = "erik_risk_logs";
+{    protected $table = "shop_risk_logs";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
     public function user(): BelongsTo
     {

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class PurchaseOrders extends Base
 {
-    protected $table = "erik_purchase_orders";
+    protected $table = "shop_purchase_orders";
 }

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Subscriptions extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_subscriptions";
+    protected $table = "shop_subscriptions";
     public function user(): BelongsTo
     {
         return $this->belongsTo(Users::class, "user_id");

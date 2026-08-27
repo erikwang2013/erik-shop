@@ -13,8 +13,8 @@ use support\Log;
 use Workerman\Worker;
 
 /**
- * 商品Feed同步 — 每6小时按 erik_product_feeds 配置生成 Google/Meta TSV Feed
- * 文件输出到 public/feeds/ 目录，同步结果写入 erik_product_feed_logs
+ * 商品Feed同步 — 每6小时按 shop_product_feeds 配置生成 Google/Meta TSV Feed
+ * 文件输出到 public/feeds/ 目录，同步结果写入 shop_product_feed_logs
  */
 class ProductFeedCron
 {

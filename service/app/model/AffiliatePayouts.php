@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AffiliatePayouts extends BaseModel
 {    use Encryptable;
-    protected $table = "erik_affiliate_payouts";
+    protected $table = "shop_affiliate_payouts";
     protected $encryptable = ["account"];
 
     public function user(): BelongsTo

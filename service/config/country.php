@@ -40,6 +40,6 @@ return [
         'CN' => 'zh_CN', 'HK' => 'zh_HK', 'TW' => 'zh_HK',
     ],
 
-    // 价格展示规则（由erik_countries表的price_display_mode覆盖）
+    // 价格展示规则（由shop_countries表的price_display_mode覆盖）
     // 'tax_inclusive': 含税价（欧盟），'tax_exclusive': 不含税（美国），'both': 并列（日本）
 ];

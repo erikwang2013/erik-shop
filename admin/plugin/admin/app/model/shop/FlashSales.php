@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class FlashSales extends Base
 {
-    protected $table = "erik_flash_sales";
+    protected $table = "shop_flash_sales";
 }

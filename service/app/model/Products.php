@@ -15,7 +15,7 @@ class Products extends BaseModel
     use SoftDeletes;
     use Searchable;
 
-    protected $table = "erik_products";
+    protected $table = "shop_products";
 
     // ES搜索字段
     protected $searchable = [
@@ -68,7 +68,7 @@ class Products extends BaseModel
      */
     public function searchableAs(): string
     {
-        return 'erik_shop_products';
+        return 'shop_products';
     }
 
     /**

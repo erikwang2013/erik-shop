@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ProductAttrs extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_product_attrs";
+    protected $table = "shop_product_attrs";
     protected $encryptable = [];
 
 }

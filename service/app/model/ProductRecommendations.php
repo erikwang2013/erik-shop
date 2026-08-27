@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductRecommendations extends BaseModel
-{    protected $table = "erik_product_recommendations";
+{    protected $table = "shop_product_recommendations";
     public function product(): BelongsTo
     {
         return $this->belongsTo(Products::class, "product_id");

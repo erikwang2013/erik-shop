@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class Coupons extends Base
 {
-    protected $table = "erik_coupons";
+    protected $table = "shop_coupons";
 }

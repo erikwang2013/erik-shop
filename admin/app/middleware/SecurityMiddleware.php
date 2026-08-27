@@ -48,7 +48,7 @@ class SecurityMiddleware implements MiddlewareInterface
         $path = $request->path();
         if (str_contains($path, '/login') || str_contains($path, '/auth/login')) {
             try {
-                $key = 'erik_admin_brute:' . $request->getRealIp();
+                $key = 'shop_admin_brute:' . $request->getRealIp();
                 $count = (int) redis()->get($key);
                 if ($count >= 5) {
                     return \response('Too Many Attempts', 429);

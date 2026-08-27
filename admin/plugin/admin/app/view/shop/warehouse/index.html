@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <title>海外仓管理</title>
+        <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
+        <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
+    </head>
+    <body class="pear-container">
+
+        <!-- 顶部查询表单 -->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <form class="layui-form top-search-from">
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">仓库名称</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="name" value="" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-block">
+                            <select name="status">
+                                <option value="">全部</option>
+                                <option value="1">启用</option>
+                                <option value="0">停用</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label"></label>
+                        <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
+                            <i class="layui-icon layui-icon-search"></i>查询
+                        </button>
+                        <button type="reset" class="pear-btn pear-btn-md" lay-submit lay-filter="table-reset">
+                            <i class="layui-icon layui-icon-refresh"></i>重置
+                        </button>
+                    </div>
+                    <div class="toggle-btn">
+                        <a class="layui-hide">展开<i class="layui-icon layui-icon-down"></i></a>
+                        <a class="layui-hide">收起<i class="layui-icon layui-icon-up"></i></a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <table id="data-table" lay-filter="data-table"></table>
+            </div>
+        </div>
+
+        <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
+        <script src="/app/admin/component/pear/pear.js"></script>
+        <script src="/app/admin/admin/js/permission.js"></script>
+        <script src="/app/admin/admin/js/common.js"></script>
+        <script>
+
+            // 相关常量
+            const PRIMARY_KEY = "id";
+            const SELECT_API = "/app/admin/shop/ShopWarehouse/select";
+
+            // 表格渲染
+            layui.use(["table", "form", "common", "popup", "util"], function() {
+                let table = layui.table;
+                let form = layui.form;
+                let $ = layui.$;
+                let common = layui.common;
+                let util = layui.util;
+
+                // 表头参数
+                let cols = [
+                    {
+                        type: "checkbox"
+                    },{
+                        title: "ID",
+                        field: "id",
+                    },{
+                        title: "名称",
+                        field: "name",
+                    },{
+                        title: "地址",
+                        field: "address",
+                    },{
+                        title: "联系人",
+                        field: "contact",
+                    },{
+                        title: "状态",
+                        field: "status",
+                        templet: function (d) {
+                            let text = d["status"] == 1 ? "启用" : (d["status"] == 0 ? "停用" : "未知");
+                            return util.escape(text);
+                        }
+                    },{
+                        title: "创建时间",
+                        field: "created_at",
+                        sort: true,
+                    }
+                ];
+
+                // 渲染表格
+                function render()
+                {
+                    table.render({
+                        elem: "#data-table",
+                        url: SELECT_API,
+                        page: true,
+                        escape: true,
+                        cols: [cols],
+                        skin: "line",
+                        size: "lg",
+                        autoSort: false,
+                        defaultToolbar: [{
+                            title: "刷新",
+                            layEvent: "refresh",
+                            icon: "layui-icon-refresh",
+                        }, "filter", "print", "exports"],
+                    });
+                }
+
+                render();
+
+                // 查询
+                form.on("submit(table-query)", function (data) {
+                    let where = {};
+                    let field = data.field;
+                    if (field.name) {
+                        where["name"] = {like: field.name};
+                    }
+                    if (field.status !== "") {
+                        where["status"] = field.status;
+                    }
+                    table.reload("data-table", {
+                        where: where,
+                        page: {curr: 1}
+                    });
+                    return false;
+                });
+
+                // 重置
+                form.on("submit(table-reset)", function () {
+                    $("form.top-search-from")[0].reset();
+                    form.render();
+                    table.reload("data-table", {
+                        where: {},
+                        page: {curr: 1}
+                    });
+                    return false;
+                });
+
+                // 刷新按钮
+                table.on("toolbar(data-table)", function (obj) {
+                    if (obj.event === "refresh") {
+                        common.refresh();
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -6,5 +6,5 @@
 namespace app\model;
 
 class InventoryTransfers extends BaseModel
-{    protected $table = "erik_inventory_transfers";
+{    protected $table = "shop_inventory_transfers";
 }

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserKyc extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_user_kyc";
+    protected $table = "shop_user_kyc";
     protected $encryptable = ["real_name", "id_number"];
 
     public function user(): BelongsTo

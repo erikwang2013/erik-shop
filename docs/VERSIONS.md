@@ -17,6 +17,26 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 全量测试轮次（5 人测试团队）
+
+- 结果：service 单元/集成 211 tests / 1000 assertions ✅、admin 2/7 ✅、API 自动化 4 套件 213 项断言 ✅、UI E2E 26 PASS / 21 FAIL / 1 WARN ⚠️（Go/Rust 无代码库 N/A）
+- 完整报告：[docs/test-reports/QA-REPORT-2026-08-27.md](test-reports/QA-REPORT-2026-08-27.md)（截图 `docs/test-reports/screenshots/`、E2E 明细 `scripts/e2e/results.json`）
+- 本轮测试发现并修复的产品缺陷：
+  | # | 问题 | 修复 |
+  |---|------|------|
+  | 1 | 购物车软删后重加购撞 `uk_user_sku` 唯一键（1062）→ 429 | `CartController::store()` 改用 withTrashed + restore + 本次数量 |
+  | 2 | 优惠券过期仍可领取（claim 缺窗口校验） | 对齐 applyCoupon 校验，过期视为不存在 → 404 |
+  | 3 | 订单详情缺 `status_text`（与列表不一致） | `OrderController::show()` 补齐状态文本映射 |
+- 已知缺口：19 个 admin 页面视图缺失（控制器已就绪，`view/shop/*/index.html` 未实现 → 500）、ShopExport 数据导出 404（控制器/路由缺失），见报告 §4.2
+
+## 2026-08-28 缺口实现（20 页）
+
+- 补齐全部 19 个 admin 页面视图（SKU/评价/退货/HS Code/关税/VAT/物流商/分区/费率/海外仓/发货/轮播/秒杀/拼团/分销/供应商/采购单/质检/库存流水）：按标准 CRUD 模板实现 `view/shop/{控制器小写}/index.html`，字段严格对照 install.sql 表结构
+- 修复 ShopExport 404：补 `index()` 方法 + 导出表单视图（日期/状态筛选 → Excel 导出）
+- E2E 重跑验证：**47 PASS / 0 FAIL / 1 WARN（100%）**，报告见 §8
+
+---
+
 ## 2026-08-27 熔断与降级
 
 - 新增 Redis 熔断器 `CircuitBreaker`（`service/app/common/CircuitBreaker.php`）: 支付网关(Stripe/PayPal/Klarna/Adyen)与社交登录外部调用统一熔断 — 连续5次失败→熔断30s, TTL过期半开探测自动恢复

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class TariffRules extends Base
 {
-    protected $table = "erik_tariff_rules";
+    protected $table = "shop_tariff_rules";
 }

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class EmailTemplates extends Base
 {
-    protected $table = "erik_email_templates";
+    protected $table = "shop_email_templates";
 }

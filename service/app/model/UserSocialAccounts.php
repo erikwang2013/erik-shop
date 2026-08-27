@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UserSocialAccounts extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_user_social_accounts";
+    protected $table = "shop_user_social_accounts";
     protected $encryptable = ["access_token", "refresh_token"];
 
     public function user(): BelongsTo

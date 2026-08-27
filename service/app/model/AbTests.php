@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AbTests extends BaseModel
 {    use Encryptable;
-    protected $table = "erik_ab_tests";
+    protected $table = "shop_ab_tests";
     protected $encryptable = [];
 
     public function abTestVariants(): HasMany

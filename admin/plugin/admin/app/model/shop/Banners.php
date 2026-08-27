@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class Banners extends Base
 {
-    protected $table = "erik_banners";
+    protected $table = "shop_banners";
 }

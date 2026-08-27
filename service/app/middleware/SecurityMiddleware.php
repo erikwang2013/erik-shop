@@ -71,7 +71,7 @@ class SecurityMiddleware implements MiddlewareInterface
 
         try {
             $ip = $request->getRealIp();
-            $key = 'erik_brute:' . $ip . ':' . (str_contains($path, 'login') ? 'login' : 'register');
+            $key = 'shop_brute:' . $ip . ':' . (str_contains($path, 'login') ? 'login' : 'register');
             $redis = redis();
             $count = (int) $redis->get($key);
             if ($count >= self::BRUTE_LIMIT) {

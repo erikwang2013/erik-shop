@@ -20,7 +20,7 @@ return [
     'password' => getenv('ES_PASS') ?: null,
 
     // 索引前缀（所有索引统一前缀，方便管理）
-    'prefix' => 'erik_shop_',
+    'prefix' => 'shop_',
 
     // 搜索设置
     'search' => [

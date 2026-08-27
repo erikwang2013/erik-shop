@@ -73,7 +73,7 @@ check('降价提醒-列表', 'GET', '/api/price-alerts', ['headers' => $h, 'expe
 check('KYC-提交', 'POST', '/api/kyc', ['headers' => $h, 'body' => ['real_name' => 'ZhangSan', 'id_number' => '110101199003071234', 'id_type' => 'id_card'], 'expect' => 200]);
 check('KYC-缺参422', 'POST', '/api/kyc', ['headers' => $h, 'body' => ['real_name' => ''], 'expect' => 422]);
 check('KYC-状态', 'GET', '/api/kyc/status', ['headers' => $h, 'expect' => 200, 'expect_contains' => 'submitted']);
-db()->exec("UPDATE erik_user_kyc SET status = 1, verified_at = NOW() WHERE user_id = {$user['id']}");
+db()->exec("UPDATE shop_user_kyc SET status = 1, verified_at = NOW() WHERE user_id = {$user['id']}");
 check('KYC-通过后状态1', 'GET', '/api/kyc/status', ['headers' => $h, 'expect' => 200, 'expect_contains' => '"status":1']);
 check('KYC-重复提交422', 'POST', '/api/kyc', ['headers' => $h, 'body' => ['real_name' => 'ZhangSan', 'id_number' => '110101199003071234'], 'expect' => 422]);
 

@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PriceAlerts extends BaseModel
 {
-    protected $table = "erik_price_alerts";
+    protected $table = "shop_price_alerts";
 
     public function user(): BelongsTo
     {

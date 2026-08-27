@@ -9,7 +9,7 @@ use plugin\admin\app\model\Base;
 
 class Orders extends Base
 {
-    protected $table = "erik_orders";
+    protected $table = "shop_orders";
 
     public function user()
     {

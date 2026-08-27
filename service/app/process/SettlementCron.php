@@ -20,7 +20,7 @@ use support\Log;
 use Workerman\Worker;
 
 /**
- * 分账结算 — 每日为已付款订单生成平台结算单（erik_platform_settlements）
+ * 分账结算 — 每日为已付款订单生成平台结算单（shop_platform_settlements）
  * 平台佣金率/支付手续费率用 cron.platform_fee_rate / cron.payment_gateway_fee_rate 配置
  */
 class SettlementCron
@@ -93,8 +93,8 @@ class SettlementCron
     }
 
     /**
-     * 卖家分账（erik_merchant_settlements）
-     * 数据链：order_items.product_id → erik_merchant_products(approved) → erik_merchants.commission_rate
+     * 卖家分账（shop_merchant_settlements）
+     * 数据链：order_items.product_id → shop_merchant_products(approved) → shop_merchants.commission_rate
      */
     private static function createMerchantSettlements(Orders $order): void
     {
@@ -142,8 +142,8 @@ class SettlementCron
     }
 
     /**
-     * 供应商周期结算（erik_supplier_settlements，按月汇总）
-     * 数据链：order_items.product_id → erik_products.supplier_id → 当月周期行（upsert）
+     * 供应商周期结算（shop_supplier_settlements，按月汇总）
+     * 数据链：order_items.product_id → shop_products.supplier_id → 当月周期行（upsert）
      */
     private static function createSupplierSettlements(Orders $order): void
     {
@@ -195,8 +195,8 @@ class SettlementCron
     }
 
     /**
-     * 分销佣金（erik_affiliate_commissions）
-     * 数据链：erik_orders.affiliate_link_id → erik_affiliate_links.commission_rate
+     * 分销佣金（shop_affiliate_commissions）
+     * 数据链：shop_orders.affiliate_link_id → shop_affiliate_links.commission_rate
      */
     private static function createAffiliateCommission(Orders $order): void
     {

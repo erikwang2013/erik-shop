@@ -55,7 +55,7 @@ class EsFallbackIntegrationTest extends IntegrationTestCase
     private function seedProduct(string $title, int $status, int $categoryId = 0): int
     {
         $p = Products::create(['title' => $title, 'status' => $status, 'category_id' => $categoryId]);
-        $this->track('erik_products', (int) $p->id);
+        $this->track('shop_products', (int) $p->id);
         return (int) $p->id;
     }
 
@@ -99,7 +99,7 @@ class EsFallbackIntegrationTest extends IntegrationTestCase
 
         $log = SearchLogs::where('keyword', $kw)->first();
         $this->assertNotNull($log, '应记录搜索日志');
-        $this->track('erik_search_logs', (int) $log->id);
+        $this->track('shop_search_logs', (int) $log->id);
         $this->assertSame((int) $data['data']['total'], (int) $log->result_count);
         $this->assertSame('en', $log->locale);
     }

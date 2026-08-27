@@ -49,7 +49,7 @@ class SubscriptionCronIntegrationTest extends IntegrationTestCase
             'invite_code' => 'T' . substr(md5(uniqid()), 0, 8),   // uk_invite_code 唯一
             'email' => 'qa_sub_' . uniqid() . '@example.com', 'nickname' => 'QA Sub', 'status' => 1,
         ]);
-        $this->track('erik_users', (int) $user->id);
+        $this->track('shop_users', (int) $user->id);
         return (int) $user->id;
     }
 
@@ -57,13 +57,13 @@ class SubscriptionCronIntegrationTest extends IntegrationTestCase
     private function seedSku(float $price, int $stock, int $status = 1): int
     {
         $product = Products::create(['title' => 'QA Sub Product', 'status' => 1]);
-        $this->track('erik_products', (int) $product->id);
+        $this->track('shop_products', (int) $product->id);
         $sku = ProductSkus::create([
             'product_id' => $product->id, 'sku_code' => 'SKUSUB' . uniqid(),
             'default_price' => $price, 'stock' => $stock, 'status' => $status,
         ]);
-        $this->track('erik_product_skus', (int) $sku->id);
-        $this->track('erik_product_sku_prices', (int) ProductSkuPrices::create([
+        $this->track('shop_product_skus', (int) $sku->id);
+        $this->track('shop_product_sku_prices', (int) ProductSkuPrices::create([
             'sku_id' => $sku->id, 'currency_code' => 'USD', 'price' => $price,
         ])->id);
         return (int) $sku->id;
@@ -77,7 +77,7 @@ class SubscriptionCronIntegrationTest extends IntegrationTestCase
             'interval_days' => $intervalDays, 'quantity' => $quantity,
             'next_billing_at' => date('Y-m-d', strtotime('-1 day')), 'status' => 'active',
         ]);
-        $this->track('erik_subscriptions', (int) $sub->id);
+        $this->track('shop_subscriptions', (int) $sub->id);
         return $sub;
     }
 
@@ -94,12 +94,12 @@ class SubscriptionCronIntegrationTest extends IntegrationTestCase
             'order_no' => 'SUB' . date('Ymd') . uniqid(),
             'user_id' => $userId, 'status' => 0, 'currency_code' => 'USD',
         ]);
-        $this->track('erik_orders', (int) $first->id);
+        $this->track('shop_orders', (int) $first->id);
         $prior = SubscriptionOrders::create([
             'subscription_id' => $sub->id, 'order_id' => $first->id,
             'billing_cycle' => 1, 'status' => 'success',
         ]);
-        $this->track('erik_subscription_orders', (int) $prior->id);
+        $this->track('shop_subscription_orders', (int) $prior->id);
 
         SubscriptionCron::run();
 

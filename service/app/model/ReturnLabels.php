@@ -6,6 +6,6 @@
 namespace app\model;
 
 class ReturnLabels extends BaseModel
-{    protected $table = "erik_return_labels";
+{    protected $table = "shop_return_labels";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
 }

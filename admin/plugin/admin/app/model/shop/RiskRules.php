@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class RiskRules extends Base
 {
-    protected $table = "erik_risk_rules";
+    protected $table = "shop_risk_rules";
 }

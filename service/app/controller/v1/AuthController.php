@@ -67,7 +67,7 @@ class AuthController extends \app\controller\BaseApiController
                 // 生成邮箱验证 token（Redis 24h 过期，邮件占位发送）
                 try {
                     $verifyToken = bin2hex(random_bytes(16));
-                    Redis::setex("erik:email_verify:{$verifyToken}", 86400, (string)$user->id);
+                    Redis::setex("shop:email_verify:{$verifyToken}", 86400, (string)$user->id);
                     self::logMail($email, '验证您的邮箱', "验证链接: /api/email/verify token={$verifyToken}");
                 } catch (\Throwable $e) {
                     // Redis 不可用时降级：注册成功但暂不发验证邮件（与限流中间件 fail-open 策略一致）
@@ -254,7 +254,7 @@ class AuthController extends \app\controller\BaseApiController
         if ($user) {
             try {
                 $code = (string)random_int(100000, 999999);
-                Redis::setex("erik:password_reset:{$user->email_hash}", 1800, $code);
+                Redis::setex("shop:password_reset:{$user->email_hash}", 1800, $code);
                 self::logMail($email, '重置您的密码', "验证码: {$code}（30分钟内有效，一次性使用）");
             } catch (\Throwable $e) {
                 \support\Log::warning('密码重置验证码生成失败: ' . $e->getMessage());
@@ -291,7 +291,7 @@ class AuthController extends \app\controller\BaseApiController
         }
 
         $user = Users::where('email_hash', Users::emailHash($email))->first();
-        $key = "erik:password_reset:" . ($user->email_hash ?? '');
+        $key = "shop:password_reset:" . ($user->email_hash ?? '');
         try {
             $stored = $user ? Redis::get($key) : null;
             if ($stored && hash_equals($stored, $code)) {
@@ -327,7 +327,7 @@ class AuthController extends \app\controller\BaseApiController
             return ApiResponse::fail('token格式不正确', 422);
         }
 
-        $key = "erik:email_verify:{$token}";
+        $key = "shop:email_verify:{$token}";
         try {
             $userId = Redis::get($key);
             if ($userId) {
@@ -349,7 +349,7 @@ class AuthController extends \app\controller\BaseApiController
 
     /**
      * 邮件发送占位：项目暂无 SMTP 邮件设施（config/ 无 mail.php），先落日志。
-     * 接入邮件服务后，将本方法替换为真实发送（可复用 erik_email_logs 表留痕）。
+     * 接入邮件服务后，将本方法替换为真实发送（可复用 shop_email_logs 表留痕）。
      */
     private static function logMail(string $to, string $subject, string $body): void
     {

@@ -8,7 +8,7 @@ namespace app\model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PaymentGatewayMethods extends BaseModel
-{    protected $table = "erik_payment_gateway_methods";
+{    protected $table = "shop_payment_gateway_methods";
 
     public function gateway(): BelongsTo
     {

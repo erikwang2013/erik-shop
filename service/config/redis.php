@@ -14,7 +14,7 @@ return [
         'port'     => getenv('REDIS_PORT') ?: '6379',        // 端口
         'password' => getenv('REDIS_PASS') ?: null,          // 密码
         'database' => 0,          // 默认db: 缓存
-        'prefix'   => 'erik:',    // key前缀
+        'prefix'   => 'shop:',    // key前缀
     ],
 
     // Session专用（可与default共用或分离）
@@ -23,7 +23,7 @@ return [
         'port'     => getenv('REDIS_PORT') ?: '6379',
         'password' => getenv('REDIS_PASS') ?: null,
         'database' => 1,          // db1: Session
-        'prefix'   => 'erik_session:',
+        'prefix'   => 'shop_session:',
     ],
 
     // 队列专用
@@ -32,7 +32,7 @@ return [
         'port'     => getenv('REDIS_PORT') ?: '6379',
         'password' => getenv('REDIS_PASS') ?: null,
         'database' => 2,          // db2: 队列
-        'prefix'   => 'erik_queue:',
+        'prefix'   => 'shop_queue:',
     ],
 
     // 限流计数器
@@ -41,6 +41,6 @@ return [
         'port'     => getenv('REDIS_PORT') ?: '6379',
         'password' => getenv('REDIS_PASS') ?: null,
         'database' => 3,          // db3: 限流
-        'prefix'   => 'erik_ratelimit:',
+        'prefix'   => 'shop_ratelimit:',
     ],
 ];

@@ -64,20 +64,20 @@ class StripeWebhookIntegrationTest extends IntegrationTestCase
             'invite_code' => 'T' . substr(md5(uniqid()), 0, 8),   // uk_invite_code 唯一
             'email' => 'qa_' . uniqid() . '@example.com', 'nickname' => 'QA Webhook', 'status' => 1,
         ]);
-        $this->track('erik_users', (int) $user->id);
+        $this->track('shop_users', (int) $user->id);
         $order = Orders::create([
             'order_no' => 'ORD' . date('Ymd') . uniqid(),
             'user_id' => $user->id, 'status' => 0,
             'pay_amount' => 100.00, 'currency_code' => 'USD',
         ]);
-        $this->track('erik_orders', (int) $order->id);
+        $this->track('shop_orders', (int) $order->id);
         $payment = Payments::create([
             'order_id' => $order->id, 'user_id' => $user->id,
             'gateway' => 'stripe', 'method' => 'card',
             'amount' => 100.00, 'currency_code' => 'USD',
             'status' => 0, 'transaction_no' => 'pi_qa_' . uniqid(),
         ]);
-        $this->track('erik_payments', (int) $payment->id);
+        $this->track('shop_payments', (int) $payment->id);
         return [(int) $order->id, (int) $payment->id];
     }
 

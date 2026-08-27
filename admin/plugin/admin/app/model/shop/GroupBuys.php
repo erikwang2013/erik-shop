@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class GroupBuys extends Base
 {
-    protected $table = "erik_group_buys";
+    protected $table = "shop_group_buys";
 }

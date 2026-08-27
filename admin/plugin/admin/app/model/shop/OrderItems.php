@@ -9,5 +9,5 @@ use plugin\admin\app\model\Base;
 
 class OrderItems extends Base
 {
-    protected $table = "erik_order_items";
+    protected $table = "shop_order_items";
 }

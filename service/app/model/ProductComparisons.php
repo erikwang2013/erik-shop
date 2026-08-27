@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductComparisons extends BaseModel
-{    protected $table = "erik_product_comparisons";
+{    protected $table = "shop_product_comparisons";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
     public function user(): BelongsTo
     {

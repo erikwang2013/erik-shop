@@ -42,11 +42,11 @@ class ChatWsIntegrationTest extends IntegrationTestCase
     protected function tearDown(): void
     {
         if (self::$dbAvailable) {
-            Db::table('erik_chat_messages')->where('session_id', $this->sessionId)->delete();
+            Db::table('shop_chat_messages')->where('session_id', $this->sessionId)->delete();
             if ($this->sessionId) {
-                Db::table('erik_chat_sessions')->where('id', $this->sessionId)->delete();
+                Db::table('shop_chat_sessions')->where('id', $this->sessionId)->delete();
             }
-            Db::table('erik_users')->where('id', $this->userId)->delete();
+            Db::table('shop_users')->where('id', $this->userId)->delete();
         }
         parent::tearDown();
     }
@@ -143,6 +143,6 @@ class ChatWsIntegrationTest extends IntegrationTestCase
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $this->assertSame('closed', ChatSessions::find($otherSessionId)->status);
 
-        Db::table('erik_users')->where('id', $otherUser)->delete();
+        Db::table('shop_users')->where('id', $otherUser)->delete();
     }
 }

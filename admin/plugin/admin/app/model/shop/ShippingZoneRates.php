@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class ShippingZoneRates extends Base
 {
-    protected $table = "erik_shipping_zone_rates";
+    protected $table = "shop_shipping_zone_rates";
 }

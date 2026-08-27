@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class AffiliateLinks extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_affiliate_links";
+    protected $table = "shop_affiliate_links";
     public function user(): BelongsTo
     {
         return $this->belongsTo(Users::class, "user_id");

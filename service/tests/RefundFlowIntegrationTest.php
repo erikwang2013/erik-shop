@@ -47,20 +47,20 @@ class RefundFlowIntegrationTest extends IntegrationTestCase
             'invite_code' => 'T' . substr(md5(uniqid()), 0, 8),   // uk_invite_code 唯一
             'email' => 'qa_' . uniqid() . '@example.com', 'nickname' => 'QA Refund', 'status' => 1,
         ]);
-        $this->track('erik_users', (int) $user->id);
+        $this->track('shop_users', (int) $user->id);
         $order = Orders::create([
             'order_no' => 'ORD' . date('Ymd') . uniqid(),
             'user_id' => $user->id, 'status' => 1,
             'pay_amount' => 100.00, 'currency_code' => 'USD', 'pay_at' => date('Y-m-d H:i:s'),
         ]);
-        $this->track('erik_orders', (int) $order->id);
+        $this->track('shop_orders', (int) $order->id);
         $payment = Payments::create([
             'order_id' => $order->id, 'user_id' => $user->id,
             'gateway' => 'stripe', 'method' => 'card',
             'amount' => 100.00, 'currency_code' => 'USD',
             'status' => 1, 'transaction_no' => 'pi_qa_' . uniqid(),
         ]);
-        $this->track('erik_payments', (int) $payment->id);
+        $this->track('shop_payments', (int) $payment->id);
         return [(int) $user->id, (int) $order->id, (int) $payment->id];
     }
 
@@ -114,7 +114,7 @@ class RefundFlowIntegrationTest extends IntegrationTestCase
         [$data] = $this->applyRefund($userId, $orderId, 30.00);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $refundId = (int) $data['data']['refund_id'];
-        $this->track('erik_refunds', $refundId);
+        $this->track('shop_refunds', $refundId);
         $refundNo = $data['data']['refund_no'];
         $this->assertStringStartsWith('R', $refundNo);
         $this->assertSame(0, (int) Refunds::find($refundId)->status);   // 待审
@@ -141,7 +141,7 @@ class RefundFlowIntegrationTest extends IntegrationTestCase
         [$data] = $this->applyRefund($userId, $orderId, 70.00);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $refundId2 = (int) $data['data']['refund_id'];
-        $this->track('erik_refunds', $refundId2);
+        $this->track('shop_refunds', $refundId2);
         [$data] = $this->adminApprove($refundId2);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $this->assertEqualsWithDelta(100.00, (float) Payments::find($paymentId)->refunded_amount, 0.001);
@@ -157,7 +157,7 @@ class RefundFlowIntegrationTest extends IntegrationTestCase
 
         [$data] = $this->applyRefund($userId, $orderId, 60.00);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
-        $this->track('erik_refunds', (int) $data['data']['refund_id']);
+        $this->track('shop_refunds', (int) $data['data']['refund_id']);
 
         // 在审 60 占额度，再申请 60 超可退余额 40 → 拒绝
         [$data] = $this->applyRefund($userId, $orderId, 60.00);
@@ -170,7 +170,7 @@ class RefundFlowIntegrationTest extends IntegrationTestCase
         $this->assertSame(422, $data['code']);
         [$data] = $this->applyRefund($userId, $orderId, 40.00);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
-        $this->track('erik_refunds', (int) $data['data']['refund_id']);
+        $this->track('shop_refunds', (int) $data['data']['refund_id']);
     }
 
     #[\PHPUnit\Framework\Attributes\Test]
@@ -182,7 +182,7 @@ class RefundFlowIntegrationTest extends IntegrationTestCase
         [$data] = $this->applyRefund($userId, $orderId, 30.00);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $refundId = (int) $data['data']['refund_id'];
-        $this->track('erik_refunds', $refundId);
+        $this->track('shop_refunds', $refundId);
 
         [$data] = $this->adminReject($refundId, '凭证不足');
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
@@ -197,7 +197,7 @@ class RefundFlowIntegrationTest extends IntegrationTestCase
         // 驳回不占额度，可重新申请
         [$data] = $this->applyRefund($userId, $orderId, 40.00);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
-        $this->track('erik_refunds', (int) $data['data']['refund_id']);
+        $this->track('shop_refunds', (int) $data['data']['refund_id']);
 
         // 已驳回的退款单不可再 approve
         [$data] = $this->adminApprove($refundId);

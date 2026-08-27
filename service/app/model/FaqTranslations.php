@@ -6,5 +6,5 @@
 namespace app\model;
 
 class FaqTranslations extends BaseModel
-{    protected $table = "erik_faq_translations";
+{    protected $table = "shop_faq_translations";
 }

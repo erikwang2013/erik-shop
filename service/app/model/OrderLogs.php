@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderLogs extends BaseModel
-{    protected $table = "erik_order_logs";
+{    protected $table = "shop_order_logs";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认 CURRENT_TIMESTAMP），无 updated_at
     public function order(): BelongsTo
     {

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class SizeCharts extends Base
 {
-    protected $table = "erik_size_charts";
+    protected $table = "shop_size_charts";
 }

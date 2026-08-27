@@ -6,5 +6,5 @@
 namespace app\model;
 
 class KnowledgeBase extends BaseModel
-{    protected $table = "erik_knowledge_base";
+{    protected $table = "shop_knowledge_base";
 }

@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlatformOrderItems extends BaseModel
-{    protected $table = "erik_platform_order_items";
+{    protected $table = "shop_platform_order_items";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
     public function platformOrder(): BelongsTo
     {

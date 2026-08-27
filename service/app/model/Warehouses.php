@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Warehouses extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_warehouses";
+    protected $table = "shop_warehouses";
     protected $encryptable = [];
 
     public function shipments(): HasMany

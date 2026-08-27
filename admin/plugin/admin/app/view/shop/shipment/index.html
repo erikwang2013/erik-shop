@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <title>发货管理</title>
+        <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
+        <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
+    </head>
+    <body class="pear-container">
+
+        <!-- 顶部查询表单 -->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <form class="layui-form top-search-from">
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">订单号</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="order_id" value="" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">物流单号</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="tracking_no" value="" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">状态</label>
+                        <div class="layui-input-block">
+                            <select name="status">
+                                <option value="">全部</option>
+                                <option value="0">待发货</option>
+                                <option value="1">已发货</option>
+                                <option value="2">运输中</option>
+                                <option value="3">已签收</option>
+                                <option value="4">异常</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label"></label>
+                        <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="table-query">
+                            <i class="layui-icon layui-icon-search"></i>查询
+                        </button>
+                        <button type="reset" class="pear-btn pear-btn-md" lay-submit lay-filter="table-reset">
+                            <i class="layui-icon layui-icon-refresh"></i>重置
+                        </button>
+                    </div>
+                    <div class="toggle-btn">
+                        <a class="layui-hide">展开<i class="layui-icon layui-icon-down"></i></a>
+                        <a class="layui-hide">收起<i class="layui-icon layui-icon-up"></i></a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 数据表格 -->
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <table id="data-table" lay-filter="data-table"></table>
+            </div>
+        </div>
+
+        <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
+        <script src="/app/admin/component/pear/pear.js"></script>
+        <script src="/app/admin/admin/js/permission.js"></script>
+        <script src="/app/admin/admin/js/common.js"></script>
+        <script>
+
+            // 相关常量
+            const PRIMARY_KEY = "id";
+            const SELECT_API = "/app/admin/shop/ShopShipment/select";
+
+            // 表格渲染
+            layui.use(["table", "form", "common", "popup", "util"], function() {
+                let table = layui.table;
+                let form = layui.form;
+                let $ = layui.$;
+                let common = layui.common;
+                let util = layui.util;
+
+                // 表头参数
+                let cols = [
+                    {
+                        type: "checkbox"
+                    },{
+                        title: "ID",
+                        field: "id",
+                    },{
+                        title: "订单号",
+                        field: "order_id",
+                    },{
+                        title: "物流商ID",
+                        field: "logistics_id",
+                    },{
+                        title: "物流单号",
+                        field: "tracking_no",
+                    },{
+                        title: "状态",
+                        field: "status",
+                        templet: function (d) {
+                            let text = ["待发货", "已发货", "运输中", "已签收", "异常"][d["status"]] ?? "未知";
+                            return util.escape(text);
+                        }
+                    },{
+                        title: "发货时间",
+                        field: "shipped_at",
+                    },{
+                        title: "创建时间",
+                        field: "created_at",
+                        sort: true,
+                    }
+                ];
+
+                // 渲染表格
+                function render()
+                {
+                    table.render({
+                        elem: "#data-table",
+                        url: SELECT_API,
+                        page: true,
+                        escape: true,
+                        cols: [cols],
+                        skin: "line",
+                        size: "lg",
+                        autoSort: false,
+                        defaultToolbar: [{
+                            title: "刷新",
+                            layEvent: "refresh",
+                            icon: "layui-icon-refresh",
+                        }, "filter", "print", "exports"],
+                    });
+                }
+
+                render();
+
+                // 查询
+                form.on("submit(table-query)", function (data) {
+                    let where = {};
+                    let field = data.field;
+                    if (field.order_id !== "") {
+                        where["order_id"] = field.order_id;
+                    }
+                    if (field.tracking_no) {
+                        where["tracking_no"] = {like: field.tracking_no};
+                    }
+                    if (field.status !== "") {
+                        where["status"] = field.status;
+                    }
+                    table.reload("data-table", {
+                        where: where,
+                        page: {curr: 1}
+                    });
+                    return false;
+                });
+
+                // 重置
+                form.on("submit(table-reset)", function () {
+                    $("form.top-search-from")[0].reset();
+                    form.render();
+                    table.reload("data-table", {
+                        where: {},
+                        page: {curr: 1}
+                    });
+                    return false;
+                });
+
+                // 刷新按钮
+                table.on("toolbar(data-table)", function (obj) {
+                    if (obj.event === "refresh") {
+                        common.refresh();
+                    }
+                });
+            });
+        </script>
+    </body>
+</html>

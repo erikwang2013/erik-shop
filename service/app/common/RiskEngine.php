@@ -69,7 +69,7 @@ class RiskEngine
             if ($checks['velocity_check'] ?? true) {
                 $vel = $cfg['velocity'] ?? [];
                 if ($event === 'order_create' && $userId > 0) {
-                    $key = "erik:risk:orders:{$userId}:h:" . date('YmdH');
+                    $key = "shop:risk:orders:{$userId}:h:" . date('YmdH');
                     $cnt = (int) Redis::incr($key);
                     Redis::expire($key, 3600);
                     if ($cnt > (int) ($vel['order_per_hour'] ?? 10)) {
@@ -78,7 +78,7 @@ class RiskEngine
                     }
                 }
                 if ($event === 'user_register' && $ip !== '') {
-                    $key = "erik:risk:reg:{$ip}:h:" . date('YmdH');
+                    $key = "shop:risk:reg:{$ip}:h:" . date('YmdH');
                     $cnt = (int) Redis::incr($key);
                     Redis::expire($key, 3600);
                     if ($cnt > (int) ($vel['register_per_ip_hour'] ?? 3)) {
@@ -111,7 +111,7 @@ class RiskEngine
 
             // 5. IP 信誉：曾触发登录暴力破解防护
             if (!empty($ip) && ($checks['ip_reputation'] ?? true)) {
-                if (Redis::exists("erik:brute:{$ip}:login")) {
+                if (Redis::exists("shop:brute:{$ip}:login")) {
                     $score += 20;
                     $details['ip_reputation'] = "IP 曾触发登录风控";
                 }

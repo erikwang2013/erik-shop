@@ -32,7 +32,7 @@ shop-php/
     .env.example    # 环境变量模板，Web安装向导自动生成 .env
     .env            # 实际环境变量（首次安装自动生成，含 JWT_SECRET + JWT_SECRET_KEY + Hashids + AES 密钥）
     config/
-    database.php      # MySQL 连接，表前缀 erik_
+    database.php      # MySQL 连接，表前缀 shop_
     redis.php         # Redis 缓存/session
     jwt.php           # JWT 密钥和有效期
     snowflake.php     # Snowflake worker_id/datacenter_id
@@ -119,8 +119,8 @@ LocaleMiddleware:
 
 ### 多语言商品模式
 ```
-erik_products (id, category_id, brand, status, ...)  ← 公共字段
-erik_product_translations (product_id, locale, title, description)  ← 按语言分离
+shop_products (id, category_id, brand, status, ...)  ← 公共字段
+shop_product_translations (product_id, locale, title, description)  ← 按语言分离
 ```
 - 查询时通过 Eloquent `whereHas` 关联 `product_translations` 按当前 locale 过滤
 - Product 模型定义 `translation()` hasOne 关系，自动 eager load
@@ -128,8 +128,8 @@ erik_product_translations (product_id, locale, title, description)  ← 按语�
 
 ### 多币种定价模式
 ```
-erik_product_skus (id, product_id, attrs, stock, ...)           ← 基础SKU
-erik_product_sku_prices (sku_id, currency_code, price, origin_price) ← 分币种价格
+shop_product_skus (id, product_id, attrs, stock, ...)           ← 基础SKU
+shop_product_sku_prices (sku_id, currency_code, price, origin_price) ← 分币种价格
 ```
 - 每个 SKU 按币种存独立价格（非汇率换算），支持区域差异化定价
 - 默认币种（CNY/USD）作为基准，其他币种可选独立定价或汇率换算
@@ -137,11 +137,11 @@ erik_product_sku_prices (sku_id, currency_code, price, origin_price) ← 分币�
 
 ### HS Code + 关税模式
 ```
-erik_hs_codes (id, code, description)                           ← HS编码库
-erik_product_hs_codes (product_id, hs_code_id, is_primary)      ← 商品关联
-erik_tariff_rules (dest_country_id, hs_code_id, duty_rate, vat_rate) ← 关税规则
+shop_hs_codes (id, code, description)                           ← HS编码库
+shop_product_hs_codes (product_id, hs_code_id, is_primary)      ← 商品关联
+shop_tariff_rules (dest_country_id, hs_code_id, duty_rate, vat_rate) ← 关税规则
 ```
-- 下单时 `TariffController` 根据目的国+商品HS Code查 `erik_tariff_rules` 计算预估关税和增值税
+- 下单时 `TariffController` 根据目的国+商品HS Code查 `shop_tariff_rules` 计算预估关税和增值税
 - 预估结果在结算页展示，实际以海关核定为准
 
 ### 社交登录模式
@@ -150,7 +150,7 @@ erik_tariff_rules (dest_country_id, hs_code_id, duty_rate, vat_rate) ← 关税�
   → SDK 返回 id_token
   → POST /api/auth/social {provider, id_token, email, name}
   → SocialAuth.php 验证 id_token
-  → 查找 erik_user_social_accounts 表
+  → 查找 shop_user_social_accounts 表
   → 已有绑定：直接登录，返回 JWT
   → 未绑定：自动创建用户 + 绑定，返回 JWT
 ```
@@ -166,7 +166,7 @@ ApiResponse::paginate($items, $total, $page, $perPage);
 ### 国际化 (i18n)
 - 翻译文件位于 `resource/translations/`，支持 `zh_CN`（默认）、`zh_HK`、`en`、`ja`、`ko`
 - API 消息通过 `trans()` 翻译，界面文本通过此机制
-- 商品等内容数据通过 `erik_product_translations` 多语言表存储
+- 商品等内容数据通过 `shop_product_translations` 多语言表存储
 
 ## 技术栈
 

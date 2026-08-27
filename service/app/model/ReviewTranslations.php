@@ -6,6 +6,6 @@
 namespace app\model;
 
 class ReviewTranslations extends BaseModel
-{    protected $table = "erik_review_translations";
+{    protected $table = "shop_review_translations";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
 }

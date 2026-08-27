@@ -10,5 +10,5 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class VatSettings extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_vat_settings";
+    protected $table = "shop_vat_settings";
 }

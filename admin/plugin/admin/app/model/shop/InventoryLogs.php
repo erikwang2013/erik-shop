@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class InventoryLogs extends Base
 {
-    protected $table = "erik_inventory_logs";
+    protected $table = "shop_inventory_logs";
 }

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class ReturnOrders extends Base
 {
-    protected $table = "erik_return_orders";
+    protected $table = "shop_return_orders";
 }

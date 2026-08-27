@@ -1,12 +1,7 @@
-# Erik Shop — 跨境电商平台 完整版(Full)
+# Erik Shop — 跨境电商平台
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
-## 版本
-
-> 简化版 (MIT开源): `lite` | 标准版 (商业): `standard` | 完整版 (商业): `full`
->
-> 商业授权联系: **erik@erik.xyz** | 版本对比: [docs/VERSIONS.md]
 
 ## 语言 / Languages
 
@@ -235,13 +230,19 @@ shop-php/
 
 ```bash
 make test             # 推荐方式
-cd service && php vendor/bin/phpunit tests/   # 原生命令
-# 22 tests, 45 assertions — ALL PASS
+cd service && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # service 单元/集成（211 tests / 1000 assertions）
+cd admin  && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # admin（2 tests / 7 assertions）
+cd service/tests/api && php run_all.php                      # API 自动化（4 套件 213 项断言）
+cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js  # UI E2E（admin + service 页面）
 
 # 依赖安全审计（已知 1 个低危 CVE：CVE-2025-45769 firebase/php-jwt <7.0.0，
 # 受 jwt-webman ^6.0 约束无法升级，HS256 对称签名用法不受影响）
 composer audit
 ```
+
+最新全量测试结果见 [docs/test-reports/QA-REPORT-2026-08-27.md](docs/test-reports/QA-REPORT-2026-08-27.md)（截图在 `docs/test-reports/screenshots/`，E2E 明细在 `scripts/e2e/results.json`）。
+
+**已知缺口已全部修复（2026-08-28）**：19 个 admin 页面视图 + ShopExport 数据导出页已实现，E2E 重跑 47 PASS / 0 FAIL / 1 WARN（100%），详见测试报告 §8。
 
 ## 开发工具
 

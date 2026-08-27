@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Payments extends BaseModel
-{    protected $table = "erik_payments";
+{    protected $table = "shop_payments";
     public function order(): BelongsTo
     {
         return $this->belongsTo(Orders::class, "order_id");

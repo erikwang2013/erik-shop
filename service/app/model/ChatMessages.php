@@ -7,7 +7,7 @@ namespace app\model;
 
 class ChatMessages extends BaseModel
 {
-    protected $table = 'erik_chat_messages';
+    protected $table = 'shop_chat_messages';
 
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
 }

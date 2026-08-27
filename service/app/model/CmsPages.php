@@ -10,5 +10,5 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class CmsPages extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_cms_pages";
+    protected $table = "shop_cms_pages";
 }

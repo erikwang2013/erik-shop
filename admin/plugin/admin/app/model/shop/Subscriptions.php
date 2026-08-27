@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class Subscriptions extends Base
 {
-    protected $table = "erik_subscriptions";
+    protected $table = "shop_subscriptions";
 }

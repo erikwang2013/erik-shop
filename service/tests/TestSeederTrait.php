@@ -57,7 +57,7 @@ trait TestSeederTrait
             'nickname' => 'QA Tester',
             'status' => 1,
         ]);
-        $this->trackCreated('erik_users', (int) $user->id);
+        $this->trackCreated('shop_users', (int) $user->id);
         return (int) $user->id;
     }
 
@@ -72,7 +72,7 @@ trait TestSeederTrait
             'iso_code_3' => 'USA',
             'currency_code' => $currency, 'status' => 1, 'kyc_required' => 0,
         ]);
-        $this->trackCreated('erik_countries', (int) $country->id);
+        $this->trackCreated('shop_countries', (int) $country->id);
         return (int) $country->id;
     }
 
@@ -82,13 +82,13 @@ trait TestSeederTrait
     protected function seedSku(float $price = 10.0, int $stock = 10, int $status = 1): int
     {
         $product = Products::create(['title' => 'QA Product', 'status' => 2]);
-        $this->trackCreated('erik_products', (int) $product->id);
+        $this->trackCreated('shop_products', (int) $product->id);
         $sku = ProductSkus::create([
             'product_id' => $product->id, 'sku_code' => 'SKU' . uniqid(),
             'default_price' => $price, 'stock' => $stock, 'status' => $status,
         ]);
-        $this->trackCreated('erik_product_skus', (int) $sku->id);
-        $this->trackCreated('erik_product_sku_prices', (int) ProductSkuPrices::create([
+        $this->trackCreated('shop_product_skus', (int) $sku->id);
+        $this->trackCreated('shop_product_sku_prices', (int) ProductSkuPrices::create([
             'sku_id' => $sku->id, 'currency_code' => 'USD', 'price' => $price,
         ])->id);
         return (int) $sku->id;

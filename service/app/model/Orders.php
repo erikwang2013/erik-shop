@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Orders extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_orders";
+    protected $table = "shop_orders";
     protected $casts = [
         'address_snapshot' => 'array',   // JSON 列：数组自动序列化/反序列化
     ];

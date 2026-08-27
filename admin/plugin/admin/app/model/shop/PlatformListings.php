@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class PlatformListings extends Base
 {
-    protected $table = "erik_platform_listings";
+    protected $table = "shop_platform_listings";
 }

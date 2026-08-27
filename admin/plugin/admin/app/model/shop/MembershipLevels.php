@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class MembershipLevels extends Base
 {
-    protected $table = "erik_membership_levels";
+    protected $table = "shop_membership_levels";
 }

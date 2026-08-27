@@ -165,6 +165,13 @@ function registerUser(string $email, string $password = 'Passw0rd123'): array
     [$s, $json] = http('POST', '/api/auth/register', [
         'email' => $email, 'password' => $password, 'nickname' => 'Tester',
     ], ['X-Poster-Token: ' . posterToken()]);
+    // 429 自愈：限流窗口未清时仅清限流计数并重试一次（与 check() 一致）
+    if ($s === 429) {
+        clearRateLimits();
+        [$s, $json] = http('POST', '/api/auth/register', [
+            'email' => $email, 'password' => $password, 'nickname' => 'Tester',
+        ], ['X-Poster-Token: ' . posterToken()]);
+    }
     if ($s !== 200 || ($json['code'] ?? -1) !== 0) {
         throw new RuntimeException('注册失败: ' . json_encode($json));
     }
@@ -215,27 +222,27 @@ function resetDb(): void
     echo 'DB 已清空: ' . count($tables) . " 张表\n";
 }
 
-/** 清空本服务 Redis 命名空间（erik 前缀全部键） */
+/** 清空本服务 Redis 命名空间（shop 前缀全部键：shop:*、shop_session:*、shop_queue:*、shop_ratelimit:* 等） */
 function resetRedis(): void
 {
     $r = redisClient();
-    $keys = $r->keys('erik*');
+    $keys = $r->keys('shop*');
     if ($keys) {
         foreach (array_chunk($keys, 500) as $chunk) {
             $r->del($chunk);
         }
     }
-    echo 'Redis erik* 键已清空: ' . count($keys) . "\n";
+    echo 'Redis shop* 键已清空: ' . count($keys) . "\n";
 }
 
 /**
- * 仅清限流/暴力破解计数键（erik_ratelimit:*、erik_brute:*）。
+ * 仅清限流/暴力破解计数键（shop_ratelimit:*、shop_brute:*）。
  * 429 自愈时使用：全量 resetRedis 会连带清掉 poster/邮箱验证/密码重置 token，破坏测试流程状态。
  */
 function clearRateLimits(): void
 {
     $r = redisClient();
-    $keys = array_merge($r->keys('erik:erik_ratelimit:*'), $r->keys('erik:erik_brute:*'));
+    $keys = array_merge($r->keys('shop:shop_ratelimit:*'), $r->keys('shop:shop_brute:*'));
     if ($keys) {
         foreach (array_chunk($keys, 500) as $chunk) {
             $r->del($chunk);

@@ -5,7 +5,7 @@
 
 /**
  * redis-queue 队列连接配置
- * 对齐 config/redis.php 的 queue 连接：db2 队列专用，prefix erik_queue:
+ * 对齐 config/redis.php 的 queue 连接：db2 队列专用，prefix shop_queue:
  */
 
 return [
@@ -14,7 +14,7 @@ return [
         'options' => [
             'auth' => getenv('REDIS_PASS') ?: null,
             'db' => 2,                   // db2: 队列（与 config/redis.php queue 一致）
-            'prefix' => 'erik_queue:',   // 队列 key 前缀
+            'prefix' => 'shop_queue:',   // 队列 key 前缀
             'max_attempts'  => 5,        // 消费失败最大重试次数
             'retry_seconds' => 5,        // 重试间隔秒数
         ],

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Merchants extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_merchants";
+    protected $table = "shop_merchants";
     protected $encryptable = ["email", "phone"];
 
     public function shop(): BelongsTo

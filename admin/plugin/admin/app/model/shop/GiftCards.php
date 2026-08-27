@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class GiftCards extends Base
 {
-    protected $table = "erik_gift_cards";
+    protected $table = "shop_gift_cards";
 }

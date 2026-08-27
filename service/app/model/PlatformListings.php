@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PlatformListings extends BaseModel
 {    use Encryptable;
-    protected $table = "erik_platform_listings";
+    protected $table = "shop_platform_listings";
     protected $encryptable = [];
 
     public function product(): BelongsTo

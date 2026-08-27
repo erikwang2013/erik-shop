@@ -6,5 +6,5 @@
 namespace app\model;
 
 class ApiDocs extends BaseModel
-{    protected $table = "erik_api_docs";
+{    protected $table = "shop_api_docs";
 }

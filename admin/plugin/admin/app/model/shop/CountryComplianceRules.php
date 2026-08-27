@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class CountryComplianceRules extends Base
 {
-    protected $table = "erik_country_compliance_rules";
+    protected $table = "shop_country_compliance_rules";
 }

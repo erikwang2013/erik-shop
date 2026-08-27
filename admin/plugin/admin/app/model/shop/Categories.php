@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class Categories extends Base
 {
-    protected $table = "erik_categories";
+    protected $table = "shop_categories";
 }

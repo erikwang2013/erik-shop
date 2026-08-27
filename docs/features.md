@@ -55,7 +55,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **基础设施** | Snowflake分布式ID(bigint非自增)、Hashids接口ID混淆、JWT认证(HS256+access/refresh双token刷新)、AES加解密(接口+数据库三层加密)、GeoIP区域识别(MaxMind)、Poster人机验证(滑块/拼图/点击) | 完整 |
 | **多端覆盖** | Flutter 5平台(iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS(ArkTS 9页面) + Web Admin(LayUI+ECharts) + API | Flutter 25文件,HarmonyOS 14文件,Admin 239文件 |
 | **平台追踪** | 8平台识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+X-Platform header+6表记录(orders/payments/operation_logs/users/search_logs/chat_messages) | 完整 |
-| **测试** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | 单元测试完整,集成测试待补 |
+| **测试** | service 211 tests / 1000 assertions + admin 2/7 + API 4 套件 213 项断言全绿（2026-08-27 全量轮次，详见 [QA-REPORT](test-reports/QA-REPORT-2026-08-27.md)） | 单元/集成/API 完整；UI E2E 47 PASS / 0 FAIL（2026-08-28 全部缺口已实现） |
 
 ### 1.1 模块矩阵
 
@@ -365,9 +365,18 @@ erik_countries ──┬── vat_settings, tariff_rules(dest_country_id)
 
 ## 8. 测试验证
 
+最新全量测试结果（2026-08-27，5 人测试团队）见 [docs/test-reports/QA-REPORT-2026-08-27.md](test-reports/QA-REPORT-2026-08-27.md)：
+service 单元/集成 **211 tests / 1000 assertions** ✅、admin 2/7 ✅、API 自动化 **4 套件 213 项断言** ✅、UI E2E **26 PASS / 21 FAIL / 1 WARN** ⚠️。
+
+已知缺口已于 2026-08-28 全部实现：19 个 admin 页面视图 + ShopExport 导出页，E2E 重跑 47 PASS / 0 FAIL / 1 WARN（100%），详见报告 §8。
+
 ```bash
-cd service && php vendor/bin/phpunit tests/
+cd service && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit
+cd service/tests/api && php run_all.php
+cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js
 ```
+
+### 8.1 核心测试套件（历史基线）
 
 | 测试类 | Tests | 覆盖 |
 |--------|-------|------|
@@ -375,4 +384,3 @@ cd service && php vendor/bin/phpunit tests/
 | JwtTest | 4 | encode三段式JWT + decode往返 + 无效token→null + 空token→null |
 | ApiResponseTest | 3 | success(code=0) + fail(error code) + paginate(list+meta分页) |
 | RedisFacadeTest | 3 | ping + set/get往返 + redis() 辅助函数（Redis 不可用时 skip） |
-| **Total** | **22** | **45 assertions — ALL PASS** |

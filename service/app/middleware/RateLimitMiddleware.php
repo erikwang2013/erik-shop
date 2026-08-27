@@ -39,7 +39,7 @@ class RateLimitMiddleware implements MiddlewareInterface
         // 构建Redis key
         $userId = $request->userId ?? '0';
         $ip = $request->getRealIp();
-        $key = "erik_ratelimit:{$userId}:{$ip}:" . md5($path);
+        $key = "shop_ratelimit:{$userId}:{$ip}:" . md5($path);
 
         try {
             $redis = Redis::connection();

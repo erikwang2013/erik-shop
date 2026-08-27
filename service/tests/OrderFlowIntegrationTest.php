@@ -56,21 +56,21 @@ class OrderFlowIntegrationTest extends IntegrationTestCase
         if (!self::$dbAvailable) {
             return;
         }
-        $orders = $this->created['erik_orders'] ?? [];
+        $orders = $this->created['shop_orders'] ?? [];
         foreach ([
-            'erik_order_items' => ['order_id', $orders],
-            'erik_order_logs' => ['order_id', $orders],
-            'erik_payments' => ['order_id', $orders],
-            'erik_platform_settlements' => ['order_id', $orders],
+            'shop_order_items' => ['order_id', $orders],
+            'shop_order_logs' => ['order_id', $orders],
+            'shop_payments' => ['order_id', $orders],
+            'shop_platform_settlements' => ['order_id', $orders],
         ] as $table => [$col, $ids]) {
             if ($ids) {
                 Db::table($table)->whereIn($col, $ids)->delete();
             }
         }
         if ($this->userId !== null) {
-            Db::table('erik_inventory_logs')->where('operator_id', $this->userId)->delete();
-            Db::table('erik_risk_logs')->where('user_id', $this->userId)->delete();
-            \support\Redis::del('erik:risk:orders:' . $this->userId . ':h:' . date('YmdH'));
+            Db::table('shop_inventory_logs')->where('operator_id', $this->userId)->delete();
+            Db::table('shop_risk_logs')->where('user_id', $this->userId)->delete();
+            \support\Redis::del('shop:risk:orders:' . $this->userId . ':h:' . date('YmdH'));
         }
         foreach ($this->created as $table => $ids) {
             if ($ids) {
@@ -88,7 +88,7 @@ class OrderFlowIntegrationTest extends IntegrationTestCase
             'status' => 1,
         ]);
         $this->userId = (int) $user->id;
-        $this->track('erik_users', $this->userId);
+        $this->track('shop_users', $this->userId);
 
         $country = Countries::create([
             'name_en' => 'Test Country', 'name_cn' => '测试国家',
@@ -96,26 +96,26 @@ class OrderFlowIntegrationTest extends IntegrationTestCase
             'iso_code_3' => 'USA',
             'currency_code' => 'USD', 'status' => 1, 'kyc_required' => 0,
         ]);
-        $this->track('erik_countries', (int) $country->id);
+        $this->track('shop_countries', (int) $country->id);
 
         $address = UserAddresses::create([
             'user_id' => $this->userId, 'name' => 'QA', 'phone' => '1234567890',
             'country_id' => $country->id, 'detail' => '1 Test St', 'is_default' => 1,
         ]);
         $this->addressId = (int) $address->id;
-        $this->track('erik_user_addresses', $this->addressId);
+        $this->track('shop_user_addresses', $this->addressId);
     }
 
     private function seedSku(float $price, int $stock): int
     {
         $product = Products::create(['title' => 'QA Product', 'status' => 1]);
-        $this->track('erik_products', (int) $product->id);
+        $this->track('shop_products', (int) $product->id);
         $sku = ProductSkus::create([
             'product_id' => $product->id, 'sku_code' => 'SKU' . uniqid(),
             'default_price' => $price, 'stock' => $stock, 'status' => 1,
         ]);
-        $this->track('erik_product_skus', (int) $sku->id);
-        $this->track('erik_product_sku_prices', (int) ProductSkuPrices::create([
+        $this->track('shop_product_skus', (int) $sku->id);
+        $this->track('shop_product_sku_prices', (int) ProductSkuPrices::create([
             'sku_id' => $sku->id, 'currency_code' => 'USD', 'price' => $price,
         ])->id);
         return (int) $sku->id;
@@ -123,7 +123,7 @@ class OrderFlowIntegrationTest extends IntegrationTestCase
 
     private function addCart(int $skuId, int $qty): void
     {
-        $this->track('erik_carts', (int) Carts::create([
+        $this->track('shop_carts', (int) Carts::create([
             'user_id' => $this->userId, 'sku_id' => $skuId,
             'product_id' => (int) ProductSkus::find($skuId)->product_id,
             'quantity' => $qty, 'selected' => 1,
@@ -150,7 +150,7 @@ class OrderFlowIntegrationTest extends IntegrationTestCase
         [, $data] = $this->storeOrder();
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $orderId = (int) $data['data']['order_id'];
-        $this->track('erik_orders', $orderId);
+        $this->track('shop_orders', $orderId);
 
         $order = Orders::find($orderId);
         $this->assertSame(0, (int) $order->status);                              // 待付款（风控 pass）
@@ -199,15 +199,15 @@ class OrderFlowIntegrationTest extends IntegrationTestCase
             'title' => 'QA满减', 'type' => 1, 'value' => 5.00, 'min_amount' => 0,
             'status' => 1, 'total_qty' => 10, 'per_user_limit' => 1,
         ]);
-        $this->track('erik_coupons', (int) $coupon->id);
-        $this->track('erik_user_coupons', (int) UserCoupons::create([
+        $this->track('shop_coupons', (int) $coupon->id);
+        $this->track('shop_user_coupons', (int) UserCoupons::create([
             'user_id' => $this->userId, 'coupon_id' => $coupon->id, 'status' => 0,
         ])->id);
 
         [, $data] = $this->storeOrder(['coupon_id' => (string) $coupon->id]);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $orderId = (int) $data['data']['order_id'];
-        $this->track('erik_orders', $orderId);
+        $this->track('shop_orders', $orderId);
 
         $order = Orders::find($orderId);
         $this->assertEquals(60.00, (float) $order->total_amount);
@@ -227,7 +227,7 @@ class OrderFlowIntegrationTest extends IntegrationTestCase
         $this->addCart($skuId, 3);
         [, $data] = $this->storeOrder();
         $orderId = (int) $data['data']['order_id'];
-        $this->track('erik_orders', $orderId);
+        $this->track('shop_orders', $orderId);
         $this->assertSame(1, (int) ProductSkus::find($skuId)->stock);   // 4-3
 
         $hash = HashidsHelper::encode($orderId);

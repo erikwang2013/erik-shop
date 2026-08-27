@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class Currencies extends Base
 {
-    protected $table = "erik_currencies";
+    protected $table = "shop_currencies";
 }

@@ -6,6 +6,6 @@
 namespace app\model;
 
 class ProductFeedLogs extends BaseModel
-{    protected $table = "erik_product_feed_logs";
+{    protected $table = "shop_product_feed_logs";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
 }

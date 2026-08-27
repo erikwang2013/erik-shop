@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class PriceAlerts extends Base
 {
-    protected $table = "erik_price_alerts";
+    protected $table = "shop_price_alerts";
 }

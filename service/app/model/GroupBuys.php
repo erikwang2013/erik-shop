@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class GroupBuys extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_group_buys";
+    protected $table = "shop_group_buys";
 
     public function sku(): BelongsTo
     {

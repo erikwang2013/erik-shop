@@ -19,8 +19,8 @@ class CircuitBreakerOpenException extends \RuntimeException
  * 轻量 Redis 熔断器（保护外部 API 调用：支付网关 / 社交登录）
  *
  * 状态键：
- *   erik_cb_state:{name}  存在即熔断中（TTL = open_seconds）
- *   erik_cb_fail:{name}   连续失败计数（TTL = open_seconds，滑动窗口）
+ *   shop_cb_state:{name}  存在即熔断中（TTL = open_seconds）
+ *   shop_cb_fail:{name}   连续失败计数（TTL = open_seconds，滑动窗口）
  *
  * 半开探测为简化版：无独立状态机，熔断 TTL 过期后下一个请求自然放行即为探测，
  * 成功 → recordSuccess 复位（DEL 两个 key），失败 → 计数重新累积
@@ -125,12 +125,12 @@ final class CircuitBreaker
 
     private static function stateKey(string $name): string
     {
-        return "erik_cb_state:{$name}";
+        return "shop_cb_state:{$name}";
     }
 
     private static function failKey(string $name): string
     {
-        return "erik_cb_fail:{$name}";
+        return "shop_cb_fail:{$name}";
     }
 
     private static function failThreshold(): int

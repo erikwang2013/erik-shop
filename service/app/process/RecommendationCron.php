@@ -12,7 +12,7 @@ use Workerman\Worker;
 
 /**
  * 推荐计算 — 每日基于近90天订单商品共现计算 item-based 协同过滤推荐
- * 结果为每商品 Top 10 相似品，写入 erik_product_recommendations(type=collaborative)
+ * 结果为每商品 Top 10 相似品，写入 shop_product_recommendations(type=collaborative)
  */
 class RecommendationCron
 {

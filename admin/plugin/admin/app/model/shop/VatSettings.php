@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class VatSettings extends Base
 {
-    protected $table = "erik_vat_settings";
+    protected $table = "shop_vat_settings";
 }

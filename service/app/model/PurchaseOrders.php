@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class PurchaseOrders extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_purchase_orders";
+    protected $table = "shop_purchase_orders";
     public function supplier(): BelongsTo
     {
         return $this->belongsTo(Suppliers::class, "supplier_id");

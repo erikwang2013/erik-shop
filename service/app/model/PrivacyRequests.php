@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PrivacyRequests extends BaseModel
 {    use Encryptable;
-    protected $table = "erik_privacy_requests";
+    protected $table = "shop_privacy_requests";
     protected $encryptable = ["email"];
 
     public function user(): BelongsTo

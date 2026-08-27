@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmailLogs extends BaseModel
 {    use Encryptable;
-    protected $table = "erik_email_logs";
+    protected $table = "shop_email_logs";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
     protected $encryptable = ["to_email"];
 

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class ProductSkus extends Base
 {
-    protected $table = "erik_product_skus";
+    protected $table = "shop_product_skus";
 }

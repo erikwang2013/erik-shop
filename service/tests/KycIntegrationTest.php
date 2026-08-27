@@ -43,7 +43,7 @@ class KycIntegrationTest extends IntegrationTestCase
             'invite_code' => 'T' . substr(md5(uniqid()), 0, 8),   // uk_invite_code 唯一
             'email' => 'qa_kyc_' . uniqid() . '@example.com', 'nickname' => 'QA KYC', 'status' => 1,
         ]);
-        $this->track('erik_users', (int) $user->id);
+        $this->track('shop_users', (int) $user->id);
         return (int) $user->id;
     }
 
@@ -72,7 +72,7 @@ class KycIntegrationTest extends IntegrationTestCase
         $data = $this->submit($userId, ['real_name' => '张三', 'id_number' => '110101199001011234']);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $kycId = (int) UserKyc::where('user_id', $userId)->value('id');
-        $this->track('erik_user_kyc', $kycId);
+        $this->track('shop_user_kyc', $kycId);
 
         // 模型读取自动解密还原明文
         $kyc = UserKyc::find($kycId);
@@ -82,7 +82,7 @@ class KycIntegrationTest extends IntegrationTestCase
         $this->assertSame('id_card', $kyc->id_type);
 
         // 原始存储为密文（非明文）
-        $raw = Db::table('erik_user_kyc')->where('id', $kycId)->first();
+        $raw = Db::table('shop_user_kyc')->where('id', $kycId)->first();
         $this->assertNotSame('张三', (string) $raw->real_name);
         $this->assertNotSame('110101199001011234', (string) $raw->id_number);
 
@@ -126,7 +126,7 @@ class KycIntegrationTest extends IntegrationTestCase
 
         $this->submit($userId, ['real_name' => '张三', 'id_number' => '110101199001011234']);
         $kyc = UserKyc::where('user_id', $userId)->first();
-        $this->track('erik_user_kyc', (int) $kyc->id);
+        $this->track('shop_user_kyc', (int) $kyc->id);
         // 模拟 admin 驳回
         $kyc->status = 2;
         $kyc->reject_reason = '证件模糊';
@@ -153,7 +153,7 @@ class KycIntegrationTest extends IntegrationTestCase
 
         $this->submit($userId, ['real_name' => '张三', 'id_number' => '110101199001011234']);
         $kyc = UserKyc::where('user_id', $userId)->first();
-        $this->track('erik_user_kyc', (int) $kyc->id);
+        $this->track('shop_user_kyc', (int) $kyc->id);
         $kyc->status = 1;
         $kyc->verified_at = date('Y-m-d H:i:s');
         $kyc->save();
@@ -174,7 +174,7 @@ class KycIntegrationTest extends IntegrationTestCase
         $otherUserId = $this->seedUser();
 
         $this->submit($userId, ['real_name' => '张三', 'id_number' => '110101199001011234']);
-        $this->track('erik_user_kyc', (int) UserKyc::where('user_id', $userId)->value('id'));
+        $this->track('shop_user_kyc', (int) UserKyc::where('user_id', $userId)->value('id'));
 
         $s = $this->fetchStatus($otherUserId);
         $this->assertFalse($s['submitted']);                      // 他人 KYC 不可见

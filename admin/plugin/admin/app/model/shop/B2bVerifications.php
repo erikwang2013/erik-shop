@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class B2bVerifications extends Base
 {
-    protected $table = "erik_b2b_verifications";
+    protected $table = "shop_b2b_verifications";
 }

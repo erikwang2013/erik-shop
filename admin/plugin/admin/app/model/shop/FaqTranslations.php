@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class FaqTranslations extends Base
 {
-    protected $table = "erik_faq_translations";
+    protected $table = "shop_faq_translations";
 }

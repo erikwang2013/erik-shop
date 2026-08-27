@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Carts extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_carts";
+    protected $table = "shop_carts";
 
     public function user(): BelongsTo
     {

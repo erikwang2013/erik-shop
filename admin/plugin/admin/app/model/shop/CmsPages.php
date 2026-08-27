@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class CmsPages extends Base
 {
-    protected $table = "erik_cms_pages";
+    protected $table = "shop_cms_pages";
 }

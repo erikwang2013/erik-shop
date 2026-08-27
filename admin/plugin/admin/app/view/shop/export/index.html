@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <title>数据导出</title>
+        <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
+        <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
+    </head>
+    <body class="pear-container">
+
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <form class="layui-form">
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">开始日期</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="date_from" id="date_from" placeholder="yyyy-MM-dd" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">结束日期</label>
+                        <div class="layui-input-block">
+                            <input type="text" name="date_to" id="date_to" placeholder="yyyy-MM-dd" class="layui-input">
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item">
+                        <label class="layui-form-label">订单状态</label>
+                        <div class="layui-input-block">
+                            <select name="status">
+                                <option value="">全部</option>
+                                <option value="0">待付款</option>
+                                <option value="1">已付款</option>
+                                <option value="2">已发货</option>
+                                <option value="3">已收货</option>
+                                <option value="4">已完成</option>
+                                <option value="5">已取消</option>
+                                <option value="6">退款中</option>
+                                <option value="7">已退款</option>
+                                <option value="8">待审核</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label"></label>
+                        <button type="button" class="pear-btn pear-btn-md pear-btn-primary" id="export-btn">
+                            <i class="layui-icon layui-icon-export"></i>导出订单Excel
+                        </button>
+                    </div>
+
+                    <div class="layui-form-item layui-inline">
+                        <label class="layui-form-label"></label>
+                        <div class="layui-input-block" style="line-height: 32px; color: #999;">
+                            Excel 含订单号/日期/状态/币种/金额/优惠/运费/实付，上限 5000 条
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
+        <script src="/app/admin/component/pear/pear.js"></script>
+        <script src="/app/admin/admin/js/permission.js"></script>
+        <script src="/app/admin/admin/js/common.js"></script>
+        <script>
+            layui.use(["laydate", "form", "util"], function() {
+                let laydate = layui.laydate;
+                let $ = layui.$;
+
+                laydate.render({
+                    elem: "#date_from",
+                    format: "yyyy-MM-dd"
+                });
+                laydate.render({
+                    elem: "#date_to",
+                    format: "yyyy-MM-dd"
+                });
+
+                $("#export-btn").on("click", function () {
+                    let dateFrom = $("#date_from").val();
+                    let dateTo = $("#date_to").val();
+                    let status = $("select[name=status]").val();
+                    let url = "/app/admin/shop/ShopExport/orders?date_from=" + encodeURIComponent(dateFrom) + "&date_to=" + encodeURIComponent(dateTo) + "&status=" + encodeURIComponent(status);
+                    window.open(url);
+                });
+            });
+        </script>
+    </body>
+</html>

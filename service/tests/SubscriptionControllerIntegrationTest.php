@@ -49,7 +49,7 @@ class SubscriptionControllerIntegrationTest extends IntegrationTestCase
             'invite_code' => 'T' . substr(md5(uniqid()), 0, 8),   // uk_invite_code 唯一
             'email' => 'qa_subc_' . uniqid() . '@example.com', 'nickname' => 'QA Sub Ctrl', 'status' => 1,
         ]);
-        $this->track('erik_users', (int) $user->id);
+        $this->track('shop_users', (int) $user->id);
         return (int) $user->id;
     }
 
@@ -57,13 +57,13 @@ class SubscriptionControllerIntegrationTest extends IntegrationTestCase
     private function seedSku(float $price): int
     {
         $product = Products::create(['title' => 'QA Sub Product', 'status' => 1]);
-        $this->track('erik_products', (int) $product->id);
+        $this->track('shop_products', (int) $product->id);
         $sku = ProductSkus::create([
             'product_id' => $product->id, 'sku_code' => 'SKUSUBC' . uniqid(),
             'default_price' => $price, 'stock' => 10, 'status' => 1,
         ]);
-        $this->track('erik_product_skus', (int) $sku->id);
-        $this->track('erik_product_sku_prices', (int) ProductSkuPrices::create([
+        $this->track('shop_product_skus', (int) $sku->id);
+        $this->track('shop_product_sku_prices', (int) ProductSkuPrices::create([
             'sku_id' => $sku->id, 'currency_code' => 'USD', 'price' => $price,
         ])->id);
         return (int) $sku->id;
@@ -104,11 +104,11 @@ class SubscriptionControllerIntegrationTest extends IntegrationTestCase
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $subId = (int) $data['data']['subscription_id'];
         $orderId = (int) $data['data']['order_id'];
-        $this->track('erik_subscriptions', $subId);
-        $this->track('erik_orders', $orderId);
-        $this->track('erik_subscription_orders', (int) SubscriptionOrders::where('subscription_id', $subId)->value('id'));
-        $this->track('erik_subscription_logs', (int) SubscriptionLogs::where('subscription_id', $subId)->value('id'));
-        $this->track('erik_order_items', (int) OrderItems::where('order_id', $orderId)->value('id'));
+        $this->track('shop_subscriptions', $subId);
+        $this->track('shop_orders', $orderId);
+        $this->track('shop_subscription_orders', (int) SubscriptionOrders::where('subscription_id', $subId)->value('id'));
+        $this->track('shop_subscription_logs', (int) SubscriptionLogs::where('subscription_id', $subId)->value('id'));
+        $this->track('shop_order_items', (int) OrderItems::where('order_id', $orderId)->value('id'));
         $this->assertEqualsWithDelta(199.00, (float) $data['data']['first_amount'], 0.001);
         $this->assertSame(date('Y-m-d', strtotime('+30 days')), $data['data']['next_billing_at']);
 
@@ -188,7 +188,7 @@ class SubscriptionControllerIntegrationTest extends IntegrationTestCase
         $data = $this->store($userId, ['sku_id' => (string) $skuId, 'interval_days' => 30]);
         $this->assertSame(0, $data['code'], $data['msg'] ?? '');
         $subId = (int) $data['data']['subscription_id'];
-        $this->track('erik_subscriptions', $subId);
+        $this->track('shop_subscriptions', $subId);
 
         // 非本人取消 → 404
         $data = $this->cancel($otherUserId, $subId);

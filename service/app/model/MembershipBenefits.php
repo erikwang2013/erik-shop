@@ -10,5 +10,5 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class MembershipBenefits extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_membership_benefits";
+    protected $table = "shop_membership_benefits";
 }

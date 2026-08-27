@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class B2bQuotes extends BaseModel
-{    protected $table = "erik_b2b_quotes";
+{    protected $table = "shop_b2b_quotes";
     public function user(): BelongsTo
     {
         return $this->belongsTo(Users::class, "user_id");

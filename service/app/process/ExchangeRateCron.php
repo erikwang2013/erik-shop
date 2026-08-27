@@ -12,7 +12,7 @@ use support\Log;
 use Workerman\Worker;
 
 /**
- * 汇率定时更新 — 每小时从汇率源拉取并写入 erik_exchange_rates
+ * 汇率定时更新 — 每小时从汇率源拉取并写入 shop_exchange_rates
  * 默认使用 open.er-api.com 免费源（无需密钥），可用 cron.exchange_rate_source 覆盖
  */
 class ExchangeRateCron

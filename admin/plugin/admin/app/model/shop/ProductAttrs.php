@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class ProductAttrs extends Base
 {
-    protected $table = "erik_product_attrs";
+    protected $table = "shop_product_attrs";
 }

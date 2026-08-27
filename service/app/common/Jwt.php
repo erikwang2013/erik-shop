@@ -83,6 +83,6 @@ class Jwt
 
     private static function blacklistKey(string $jti): string
     {
-        return 'erik:jwt_blacklist:' . $jti;
+        return 'shop:jwt_blacklist:' . $jti;
     }
 }

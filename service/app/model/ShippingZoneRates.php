@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ShippingZoneRates extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_shipping_zone_rates";
+    protected $table = "shop_shipping_zone_rates";
 
     public function logistics(): BelongsTo
     {

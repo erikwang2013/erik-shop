@@ -10,5 +10,5 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ProductSkuPrices extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_product_sku_prices";
+    protected $table = "shop_product_sku_prices";
 }

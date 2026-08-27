@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PlatformAccounts extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_platform_accounts";
+    protected $table = "shop_platform_accounts";
     protected $encryptable = ["account_name", "api_key", "api_secret"];
 
     public function shop(): BelongsTo

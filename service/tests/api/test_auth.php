@@ -112,7 +112,7 @@ check('重置-申请', 'POST', '/api/auth/password/reset', ['body' => ['email' =
 check('重置-申请不存在邮箱也200', 'POST', '/api/auth/password/reset', ['body' => ['email' => 'nobody@test.local'], 'expect' => 200]);
 check('重置-非法邮箱', 'POST', '/api/auth/password/reset', ['body' => ['email' => 'bad'], 'expect' => 422]);
 $hash = hash_hmac('sha256', 'carol@test.local', envFromFile('JWT_SECRET'));
-$code = redisClient()->get("erik:erik:password_reset:{$hash}");
+$code = redisClient()->get("shop:shop:password_reset:{$hash}");
 check('重置-验证码已生成', 'POST', '/api/auth/password/reset/confirm', [
     'body' => ['email' => 'carol@test.local', 'code' => '000000', 'new_password' => 'ResetPass123'],
     'expect' => 401,
@@ -140,9 +140,9 @@ if ($code) {
 // ===== 邮箱验证（24h 一次性 token，Redis 枚举） =====
 $u4 = registerUser('dave@test.local');
 $verifyToken = null;
-foreach (redisClient()->keys('erik:erik:email_verify:*') as $k) {
+foreach (redisClient()->keys('shop:shop:email_verify:*') as $k) {
     if (redisClient()->get($k) === (string) $u4['id']) {
-        $verifyToken = substr($k, strlen('erik:erik:email_verify:'));
+        $verifyToken = substr($k, strlen('shop:shop:email_verify:'));
     }
 }
 check('邮箱验证-成功', 'POST', '/api/auth/email/verify', [

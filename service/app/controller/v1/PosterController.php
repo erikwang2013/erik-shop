@@ -13,13 +13,13 @@ use app\common\ApiResponse;
 /**
  * 人机验证（Poster）签发控制器
  *
- * 背景：PosterVerify 中间件校验 Redis 键 erik:poster:{token} == '1'（一次性消费），
+ * 背景：PosterVerify 中间件校验 Redis 键 shop:poster:{token} == '1'（一次性消费），
  * 但此前全项目无任何签发端，客户端无法获取 X-Poster-Token。
  * 本控制器提供最小可用的文本算术题验证码：
  *   GET  /api/poster/challenge  → 生成题目，返回 token + question，答案存 Redis
- *   POST /api/poster/verify     → 提交答案，正确则写入 erik:poster:{token}='1'
+ *   POST /api/poster/verify     → 提交答案，正确则写入 shop:poster:{token}='1'
  *
- * 与 PosterVerify 中间件完全兼容（中间件只查 erik:poster:{token}）。
+ * 与 PosterVerify 中间件完全兼容（中间件只查 shop:poster:{token}）。
  * 前端可在注册/下单/支付前先完成验证，携带 X-Poster-Token 调用受保护接口。
  */
 class PosterController
@@ -43,7 +43,7 @@ class PosterController
         $expire = (int) config('poster.expire', 300);
 
         try {
-            Redis::setex("erik:poster:ans:{$token}", $expire, (string) $answer);
+            Redis::setex("shop:poster:ans:{$token}", $expire, (string) $answer);
         } catch (\Throwable $e) {
             return ApiResponse::fail('验证服务暂不可用', 500);
         }
@@ -68,7 +68,7 @@ class PosterController
             return ApiResponse::fail('参数不完整', 422);
         }
 
-        $ansKey = "erik:poster:ans:{$token}";
+        $ansKey = "shop:poster:ans:{$token}";
 
         try {
             $expected = Redis::get($ansKey);
@@ -83,7 +83,7 @@ class PosterController
             }
 
             $expire = (int) config('poster.expire', 300);
-            Redis::setex("erik:poster:{$token}", $expire, '1');
+            Redis::setex("shop:poster:{$token}", $expire, '1');
         } catch (\Throwable $e) {
             return ApiResponse::fail('验证服务暂不可用', 500);
         }

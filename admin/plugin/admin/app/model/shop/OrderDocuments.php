@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class OrderDocuments extends Base
 {
-    protected $table = "erik_order_documents";
+    protected $table = "shop_order_documents";
 }

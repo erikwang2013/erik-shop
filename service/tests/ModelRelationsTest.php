@@ -48,11 +48,11 @@ class ModelRelationsTest extends IntegrationTestCase
             'product_id' => $product->id, 'locale' => 'en', 'title' => 'Rel EN', 'description' => 'desc',
         ]);
         ProductImages::create(['product_id' => $product->id, 'url' => 'rel-1.jpg', 'sort' => 1]);
-        $this->trackCreated('erik_products', $this->productId);
-        $this->trackCreated('erik_product_skus', $this->skuId);
-        $this->trackCreated('erik_product_sku_prices', (int) ProductSkuPrices::where('sku_id', $sku->id)->value('id'));
-        $this->trackCreated('erik_product_translations', (int) ProductTranslations::where('product_id', $product->id)->value('id'));
-        $this->trackCreated('erik_product_images', (int) ProductImages::where('product_id', $product->id)->value('id'));
+        $this->trackCreated('shop_products', $this->productId);
+        $this->trackCreated('shop_product_skus', $this->skuId);
+        $this->trackCreated('shop_product_sku_prices', (int) ProductSkuPrices::where('sku_id', $sku->id)->value('id'));
+        $this->trackCreated('shop_product_translations', (int) ProductTranslations::where('product_id', $product->id)->value('id'));
+        $this->trackCreated('shop_product_images', (int) ProductImages::where('product_id', $product->id)->value('id'));
     }
 
     public function test_product_relations_resolve(): void
@@ -103,7 +103,7 @@ class ModelRelationsTest extends IntegrationTestCase
             'order_no' => 'ORD' . date('Ymd') . uniqid(),
             'user_id' => 1, 'status' => 0, 'currency_code' => 'USD',
         ]);
-        $this->trackCreated('erik_orders', (int) $order->id);
+        $this->trackCreated('shop_orders', (int) $order->id);
         OrderItems::create([
             'order_id' => $order->id, 'product_id' => $this->productId, 'sku_id' => $this->skuId,
             'title' => 'Rel Product', 'price' => 9.9, 'quantity' => 1, 'subtotal' => 9.9,
@@ -124,8 +124,8 @@ class ModelRelationsTest extends IntegrationTestCase
     {
         $parent = Categories::create(['name' => 'Parent', 'slug' => 'p-' . uniqid(), 'parent_id' => 0, 'level' => 1, 'sort' => 1, 'status' => 1]);
         $child = Categories::create(['name' => 'Child', 'slug' => 'c-' . uniqid(), 'parent_id' => $parent->id, 'level' => 2, 'sort' => 1, 'status' => 1]);
-        $this->trackCreated('erik_categories', (int) $parent->id);
-        $this->trackCreated('erik_categories', (int) $child->id);
+        $this->trackCreated('shop_categories', (int) $parent->id);
+        $this->trackCreated('shop_categories', (int) $child->id);
 
         $tree = Categories::where('status', 1)->orderBy('sort')->get()->toArray();
         $this->assertCount(2, $tree);

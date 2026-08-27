@@ -20,7 +20,7 @@ use Webman\Http\Request;
 /**
  * 订阅周期购 API
  *
- * 背景：erik_subscriptions 等表已建但无任何控制器/路由（docs/PLAN-RESEARCH.md §1 差距）。
+ * 背景：shop_subscriptions 等表已建但无任何控制器/路由（docs/PLAN-RESEARCH.md §1 差距）。
  * 最小可用实现：创建订阅（立即生成首期订单待付款）、我的订阅列表、取消订阅。
  * 后续自动续费由 SubscriptionCron 处理（另行排期）。
  */

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class KnowledgeBase extends Base
 {
-    protected $table = "erik_knowledge_base";
+    protected $table = "shop_knowledge_base";
 }

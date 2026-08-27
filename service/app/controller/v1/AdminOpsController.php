@@ -256,7 +256,7 @@ class AdminOpsController extends \app\controller\BaseApiController
     /**
      * 商品刊登到平台（多平台刊登）
      * POST /api/admin/platform/listings  {product_id, platform_account_id, platform_product_id?}
-     * 写入 erik_platform_listings（draft/listed），供后续平台同步流程使用
+     * 写入 shop_platform_listings（draft/listed），供后续平台同步流程使用
      */
     public function createListing(Request $request): \support\Response
     {

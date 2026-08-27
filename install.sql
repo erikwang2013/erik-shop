@@ -5,7 +5,7 @@
 --
 -- 包含两部分:
 --   wa_* 前缀 — webman-admin 管理后台系统表 (7张)
---   erik_* 前缀 — 商城业务表 (63张, 14个模块)
+--   shop_* 前缀 — 商城业务表 (63张, 14个模块)
 --
 -- 主键: BIGINT (snowflake生成, 非自增)
 -- 引擎: InnoDB
@@ -171,14 +171,14 @@ CREATE TABLE IF NOT EXISTS `wa_users` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='用户表';
 
 -- =============================================================
--- 第二部分: 商城业务表 (erik_ 前缀)
+-- 第二部分: 商城业务表 (shop_ 前缀)
 -- =============================================================
 
 -- -------------------------------------------------------------
 -- 模块1: 用户与账户 (7张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_users` (
+CREATE TABLE `shop_users` (
     `id` BIGINT UNSIGNED NOT NULL COMMENT 'snowflake主键',
     `nickname` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '昵称',
     `avatar` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '头像URL',
@@ -209,7 +209,7 @@ CREATE TABLE `erik_users` (
     KEY `idx_email_hash` (`email_hash`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
 
-CREATE TABLE `erik_user_addresses` (
+CREATE TABLE `shop_user_addresses` (
     `id` BIGINT UNSIGNED NOT NULL COMMENT 'snowflake主键',
     `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
     `name` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '收件人(加密)',
@@ -230,7 +230,7 @@ CREATE TABLE `erik_user_addresses` (
     KEY `idx_country_id` (`country_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户地址表';
 
-CREATE TABLE `erik_user_social_accounts` (
+CREATE TABLE `shop_user_social_accounts` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
     `provider` VARCHAR(32) NOT NULL COMMENT '社交平台 google/apple/facebook',
@@ -245,7 +245,7 @@ CREATE TABLE `erik_user_social_accounts` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户社交账号绑定';
 
-CREATE TABLE `erik_user_kyc` (
+CREATE TABLE `shop_user_kyc` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL COMMENT '用户ID',
     `real_name` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '真实姓名(加密)',
@@ -264,7 +264,7 @@ CREATE TABLE `erik_user_kyc` (
     KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户实名认证';
 
-CREATE TABLE `erik_user_wishlists` (
+CREATE TABLE `shop_user_wishlists` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
@@ -276,7 +276,7 @@ CREATE TABLE `erik_user_wishlists` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户收藏夹';
 
-CREATE TABLE `erik_membership_levels` (
+CREATE TABLE `shop_membership_levels` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(64) NOT NULL COMMENT '等级名称',
     `level` TINYINT UNSIGNED NOT NULL COMMENT '等级序号',
@@ -291,7 +291,7 @@ CREATE TABLE `erik_membership_levels` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='会员等级定义';
 
-CREATE TABLE `erik_membership_benefits` (
+CREATE TABLE `shop_membership_benefits` (
     `id` BIGINT UNSIGNED NOT NULL,
     `level_id` BIGINT UNSIGNED NOT NULL COMMENT '等级ID',
     `benefit_type` VARCHAR(32) NOT NULL COMMENT '权益类型 discount/free_shipping/priority/birthday_gift',
@@ -307,7 +307,7 @@ CREATE TABLE `erik_membership_benefits` (
 -- 模块2: 商品与分类 (16张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_categories` (
+CREATE TABLE `shop_categories` (
     `id` BIGINT UNSIGNED NOT NULL,
     `parent_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '父分类ID',
     `name` VARCHAR(128) NOT NULL COMMENT '分类名称',
@@ -327,7 +327,7 @@ CREATE TABLE `erik_categories` (
     KEY `idx_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分类表';
 
-CREATE TABLE `erik_products` (
+CREATE TABLE `shop_products` (
     `id` BIGINT UNSIGNED NOT NULL,
     `category_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '分类ID',
     `title` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '商品标题(默认语言)',
@@ -359,7 +359,7 @@ CREATE TABLE `erik_products` (
     KEY `idx_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品主表';
 
-CREATE TABLE `erik_product_translations` (
+CREATE TABLE `shop_product_translations` (
     `id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
     `locale` VARCHAR(10) NOT NULL COMMENT '语言 zh_CN/zh_HK/en/ja/ko',
@@ -377,7 +377,7 @@ CREATE TABLE `erik_product_translations` (
     KEY `idx_locale` (`locale`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品多语言内容';
 
-CREATE TABLE `erik_product_skus` (
+CREATE TABLE `shop_product_skus` (
     `id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
     `sku_code` VARCHAR(64) NOT NULL COMMENT 'SKU编码',
@@ -398,7 +398,7 @@ CREATE TABLE `erik_product_skus` (
     KEY `idx_product_id` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SKU变体';
 
-CREATE TABLE `erik_product_sku_prices` (
+CREATE TABLE `shop_product_sku_prices` (
     `id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
     `currency_code` CHAR(3) NOT NULL COMMENT '币种 USD/EUR/GBP/JPY/KRW',
@@ -412,7 +412,7 @@ CREATE TABLE `erik_product_sku_prices` (
     KEY `idx_sku_id` (`sku_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='SKU分币种定价';
 
-CREATE TABLE `erik_product_images` (
+CREATE TABLE `shop_product_images` (
     `id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
     `url` VARCHAR(512) NOT NULL,
@@ -425,7 +425,7 @@ CREATE TABLE `erik_product_images` (
     KEY `idx_product_id` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品图片';
 
-CREATE TABLE `erik_product_attrs` (
+CREATE TABLE `shop_product_attrs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(64) NOT NULL COMMENT '属性名 颜色/尺寸/材质',
     `sort` INT UNSIGNED NOT NULL DEFAULT 0,
@@ -436,7 +436,7 @@ CREATE TABLE `erik_product_attrs` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品属性定义';
 
-CREATE TABLE `erik_product_attr_values` (
+CREATE TABLE `shop_product_attr_values` (
     `id` BIGINT UNSIGNED NOT NULL,
     `attr_id` BIGINT UNSIGNED NOT NULL,
     `value` VARCHAR(128) NOT NULL,
@@ -448,7 +448,7 @@ CREATE TABLE `erik_product_attr_values` (
     KEY `idx_attr_id` (`attr_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品属性值';
 
-CREATE TABLE `erik_product_reviews` (
+CREATE TABLE `shop_product_reviews` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
@@ -470,7 +470,7 @@ CREATE TABLE `erik_product_reviews` (
     KEY `idx_order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品评价';
 
-CREATE TABLE `erik_review_translations` (
+CREATE TABLE `shop_review_translations` (
     `id` BIGINT UNSIGNED NOT NULL,
     `review_id` BIGINT UNSIGNED NOT NULL,
     `locale` VARCHAR(10) NOT NULL,
@@ -480,7 +480,7 @@ CREATE TABLE `erik_review_translations` (
     UNIQUE KEY `uk_review_locale` (`review_id`, `locale`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='评价翻译缓存';
 
-CREATE TABLE `erik_product_compliance` (
+CREATE TABLE `shop_product_compliance` (
     `id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
     `compliance_category_id` BIGINT UNSIGNED NOT NULL COMMENT '合规分类ID',
@@ -495,7 +495,7 @@ CREATE TABLE `erik_product_compliance` (
     KEY `idx_product_id` (`product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品合规标签';
 
-CREATE TABLE `erik_compliance_categories` (
+CREATE TABLE `shop_compliance_categories` (
     `id` BIGINT UNSIGNED NOT NULL,
     `code` VARCHAR(32) NOT NULL COMMENT '代码 FDA/CE/RoHS/FCM/COSMETIC/TOY/ELECTRONIC/CHILDREN/TEXTILE/BATTERY',
     `name` VARCHAR(128) NOT NULL COMMENT '名称',
@@ -507,7 +507,7 @@ CREATE TABLE `erik_compliance_categories` (
     UNIQUE KEY `uk_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='合规分类';
 
-CREATE TABLE `erik_product_hs_codes` (
+CREATE TABLE `shop_product_hs_codes` (
     `id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
     `hs_code_id` BIGINT UNSIGNED NOT NULL COMMENT 'HS编码ID',
@@ -520,7 +520,7 @@ CREATE TABLE `erik_product_hs_codes` (
     KEY `idx_hs_code_id` (`hs_code_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品HS Code关联';
 
-CREATE TABLE `erik_banners` (
+CREATE TABLE `shop_banners` (
     `id` BIGINT UNSIGNED NOT NULL,
     `title` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '标题',
     `image` VARCHAR(512) NOT NULL COMMENT '图片URL',
@@ -538,7 +538,7 @@ CREATE TABLE `erik_banners` (
     KEY `idx_position_status` (`position`, `status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='轮播图表';
 
-CREATE TABLE `erik_product_comparisons` (
+CREATE TABLE `shop_product_comparisons` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
@@ -547,7 +547,7 @@ CREATE TABLE `erik_product_comparisons` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品对比记录';
 
-CREATE TABLE `erik_product_recommendations` (
+CREATE TABLE `shop_product_recommendations` (
     `id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL COMMENT '源商品',
     `recommended_product_id` BIGINT UNSIGNED NOT NULL COMMENT '推荐商品',
@@ -563,7 +563,7 @@ CREATE TABLE `erik_product_recommendations` (
 -- 模块3: 购物车与订单 (9张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_carts` (
+CREATE TABLE `shop_carts` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -577,7 +577,7 @@ CREATE TABLE `erik_carts` (
     UNIQUE KEY `uk_user_sku` (`user_id`, `sku_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='购物车';
 
-CREATE TABLE `erik_orders` (
+CREATE TABLE `shop_orders` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_no` VARCHAR(32) NOT NULL COMMENT '订单号',
     `user_id` BIGINT UNSIGNED NOT NULL,
@@ -612,7 +612,7 @@ CREATE TABLE `erik_orders` (
     KEY `idx_pay_at` (`pay_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单主表';
 
-CREATE TABLE `erik_order_items` (
+CREATE TABLE `shop_order_items` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
@@ -629,7 +629,7 @@ CREATE TABLE `erik_order_items` (
     KEY `idx_order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单明细';
 
-CREATE TABLE `erik_order_logs` (
+CREATE TABLE `shop_order_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `from_status` TINYINT NOT NULL DEFAULT -1,
@@ -641,7 +641,7 @@ CREATE TABLE `erik_order_logs` (
     KEY `idx_order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订单状态日志';
 
-CREATE TABLE `erik_payments` (
+CREATE TABLE `shop_payments` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
@@ -664,7 +664,7 @@ CREATE TABLE `erik_payments` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='支付记录';
 
-CREATE TABLE `erik_refunds` (
+CREATE TABLE `shop_refunds` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
@@ -685,7 +685,7 @@ CREATE TABLE `erik_refunds` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退款记录';
 
-CREATE TABLE `erik_return_orders` (
+CREATE TABLE `shop_return_orders` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
@@ -704,7 +704,7 @@ CREATE TABLE `erik_return_orders` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退货单';
 
-CREATE TABLE `erik_return_labels` (
+CREATE TABLE `shop_return_labels` (
     `id` BIGINT UNSIGNED NOT NULL,
     `return_id` BIGINT UNSIGNED NOT NULL,
     `logistics_id` BIGINT UNSIGNED NOT NULL COMMENT '物流商ID',
@@ -715,7 +715,7 @@ CREATE TABLE `erik_return_labels` (
     KEY `idx_return_id` (`return_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='退货面单';
 
-CREATE TABLE `erik_order_documents` (
+CREATE TABLE `shop_order_documents` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `type` VARCHAR(32) NOT NULL COMMENT 'invoice/packing_list/certificate_of_origin',
@@ -730,7 +730,7 @@ CREATE TABLE `erik_order_documents` (
 -- 模块4: 国家/货币/物流 (11张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_countries` (
+CREATE TABLE `shop_countries` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name_en` VARCHAR(128) NOT NULL COMMENT '英文名',
     `name_cn` VARCHAR(128) NOT NULL DEFAULT '' COMMENT '中文名',
@@ -752,7 +752,7 @@ CREATE TABLE `erik_countries` (
     KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='国家/地区';
 
-CREATE TABLE `erik_currencies` (
+CREATE TABLE `shop_currencies` (
     `id` BIGINT UNSIGNED NOT NULL,
     `code` CHAR(3) NOT NULL COMMENT '币种代码 USD/EUR/GBP/JPY/KRW/CNY',
     `name` VARCHAR(64) NOT NULL COMMENT '币种名称',
@@ -766,7 +766,7 @@ CREATE TABLE `erik_currencies` (
     UNIQUE KEY `uk_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='货币定义';
 
-CREATE TABLE `erik_exchange_rates` (
+CREATE TABLE `shop_exchange_rates` (
     `id` BIGINT UNSIGNED NOT NULL,
     `from_currency` CHAR(3) NOT NULL,
     `to_currency` CHAR(3) NOT NULL,
@@ -780,7 +780,7 @@ CREATE TABLE `erik_exchange_rates` (
     KEY `idx_effective_at` (`effective_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='汇率表';
 
-CREATE TABLE `erik_logistics_companies` (
+CREATE TABLE `shop_logistics_companies` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(128) NOT NULL COMMENT '物流商名称 DHL/UPS/FedEx/EMS',
     `code` VARCHAR(32) NOT NULL COMMENT '物流商代码',
@@ -795,7 +795,7 @@ CREATE TABLE `erik_logistics_companies` (
     UNIQUE KEY `uk_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='国际物流商';
 
-CREATE TABLE `erik_shipping_zones` (
+CREATE TABLE `shop_shipping_zones` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(128) NOT NULL COMMENT '分区名 北美区/西欧区/亚太区',
     `countries` JSON COMMENT '包含国家 ["US","CA","MX"]',
@@ -806,7 +806,7 @@ CREATE TABLE `erik_shipping_zones` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物流分区';
 
-CREATE TABLE `erik_shipping_zone_rates` (
+CREATE TABLE `shop_shipping_zone_rates` (
     `id` BIGINT UNSIGNED NOT NULL,
     `zone_id` BIGINT UNSIGNED NOT NULL,
     `logistics_id` BIGINT UNSIGNED NOT NULL,
@@ -821,7 +821,7 @@ CREATE TABLE `erik_shipping_zone_rates` (
     KEY `idx_zone_logistics` (`zone_id`, `logistics_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物流分区费率阶梯';
 
-CREATE TABLE `erik_warehouses` (
+CREATE TABLE `shop_warehouses` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(128) NOT NULL COMMENT '仓库名',
     `country_id` BIGINT UNSIGNED NOT NULL COMMENT '所在国家',
@@ -838,7 +838,7 @@ CREATE TABLE `erik_warehouses` (
     KEY `idx_country_id` (`country_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='仓库';
 
-CREATE TABLE `erik_shipments` (
+CREATE TABLE `shop_shipments` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `logistics_id` BIGINT UNSIGNED NOT NULL,
@@ -862,7 +862,7 @@ CREATE TABLE `erik_shipments` (
     KEY `idx_tracking_no` (`tracking_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='发货记录';
 
-CREATE TABLE `erik_shipping_insurances` (
+CREATE TABLE `shop_shipping_insurances` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `shipment_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -876,7 +876,7 @@ CREATE TABLE `erik_shipping_insurances` (
     KEY `idx_order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物流保险';
 
-CREATE TABLE `erik_inventory_logs` (
+CREATE TABLE `shop_inventory_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `warehouse_id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -894,7 +894,7 @@ CREATE TABLE `erik_inventory_logs` (
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='库存流水(不可变账本)';
 
-CREATE TABLE `erik_inventory_transfers` (
+CREATE TABLE `shop_inventory_transfers` (
     `id` BIGINT UNSIGNED NOT NULL,
     `from_warehouse_id` BIGINT UNSIGNED NOT NULL,
     `to_warehouse_id` BIGINT UNSIGNED NOT NULL,
@@ -913,7 +913,7 @@ CREATE TABLE `erik_inventory_transfers` (
 -- 模块5: 海关与税务 (5张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_hs_codes` (
+CREATE TABLE `shop_hs_codes` (
     `id` BIGINT UNSIGNED NOT NULL,
     `code` CHAR(6) NOT NULL COMMENT 'HS 6位基码',
     `description` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '描述',
@@ -926,7 +926,7 @@ CREATE TABLE `erik_hs_codes` (
     KEY `idx_parent_code` (`parent_code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='HS Code编码库';
 
-CREATE TABLE `erik_tariff_rules` (
+CREATE TABLE `shop_tariff_rules` (
     `id` BIGINT UNSIGNED NOT NULL,
     `dest_country_id` BIGINT UNSIGNED NOT NULL COMMENT '目的国',
     `hs_code_id` BIGINT UNSIGNED NOT NULL COMMENT 'HS编码',
@@ -942,7 +942,7 @@ CREATE TABLE `erik_tariff_rules` (
     KEY `idx_dest_country_id` (`dest_country_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='关税规则';
 
-CREATE TABLE `erik_vat_settings` (
+CREATE TABLE `shop_vat_settings` (
     `id` BIGINT UNSIGNED NOT NULL,
     `country_id` BIGINT UNSIGNED NOT NULL,
     `vat_rate` DECIMAL(5,2) NOT NULL DEFAULT 0.00 COMMENT '标准VAT税率',
@@ -958,7 +958,7 @@ CREATE TABLE `erik_vat_settings` (
     UNIQUE KEY `uk_country_id` (`country_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='各国VAT/IOSS设置';
 
-CREATE TABLE `erik_country_compliance_rules` (
+CREATE TABLE `shop_country_compliance_rules` (
     `id` BIGINT UNSIGNED NOT NULL,
     `country_id` BIGINT UNSIGNED NOT NULL,
     `compliance_category_id` BIGINT UNSIGNED NOT NULL,
@@ -975,7 +975,7 @@ CREATE TABLE `erik_country_compliance_rules` (
 -- 模块6: 支付与资金 (6张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_payment_gateways` (
+CREATE TABLE `shop_payment_gateways` (
     `id` BIGINT UNSIGNED NOT NULL,
     `code` VARCHAR(32) NOT NULL COMMENT 'stripe/paypal/klarna/adyen',
     `name` VARCHAR(64) NOT NULL,
@@ -991,7 +991,7 @@ CREATE TABLE `erik_payment_gateways` (
     UNIQUE KEY `uk_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='支付网关配置';
 
-CREATE TABLE `erik_payment_gateway_methods` (
+CREATE TABLE `shop_payment_gateway_methods` (
     `id` BIGINT UNSIGNED NOT NULL,
     `gateway_id` BIGINT UNSIGNED NOT NULL,
     `method_code` VARCHAR(32) NOT NULL COMMENT 'card/ideal/sofort/klarna_paylater/afterpay',
@@ -1006,7 +1006,7 @@ CREATE TABLE `erik_payment_gateway_methods` (
     KEY `idx_gateway_id` (`gateway_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='支付网关-支付方式映射';
 
-CREATE TABLE `erik_platform_settlements` (
+CREATE TABLE `shop_platform_settlements` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `payment_id` BIGINT UNSIGNED NOT NULL,
@@ -1026,7 +1026,7 @@ CREATE TABLE `erik_platform_settlements` (
     KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台分账记录';
 
-CREATE TABLE `erik_supplier_settlements` (
+CREATE TABLE `shop_supplier_settlements` (
     `id` BIGINT UNSIGNED NOT NULL,
     `supplier_id` BIGINT UNSIGNED NOT NULL,
     `period_start` DATE NOT NULL COMMENT '结算周期开始',
@@ -1045,7 +1045,7 @@ CREATE TABLE `erik_supplier_settlements` (
     KEY `idx_period` (`period_start`, `period_end`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='供应商结算';
 
-CREATE TABLE `erik_currency_exchange_gains_losses` (
+CREATE TABLE `shop_currency_exchange_gains_losses` (
     `id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
     `received_amount` DECIMAL(12,2) NOT NULL COMMENT '收款金额',
@@ -1065,7 +1065,7 @@ CREATE TABLE `erik_currency_exchange_gains_losses` (
 -- 模块7: 营销 (9张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_coupons` (
+CREATE TABLE `shop_coupons` (
     `id` BIGINT UNSIGNED NOT NULL,
     `title` VARCHAR(128) NOT NULL COMMENT '优惠券名称',
     `type` TINYINT UNSIGNED NOT NULL COMMENT '1满减/2折扣/3固定金额',
@@ -1089,7 +1089,7 @@ CREATE TABLE `erik_coupons` (
     KEY `idx_status_time` (`status`, `start_at`, `end_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='优惠券';
 
-CREATE TABLE `erik_user_coupons` (
+CREATE TABLE `shop_user_coupons` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `coupon_id` BIGINT UNSIGNED NOT NULL,
@@ -1102,7 +1102,7 @@ CREATE TABLE `erik_user_coupons` (
     KEY `idx_user_coupon` (`user_id`, `coupon_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户优惠券';
 
-CREATE TABLE `erik_flash_sales` (
+CREATE TABLE `shop_flash_sales` (
     `id` BIGINT UNSIGNED NOT NULL,
     `title` VARCHAR(128) NOT NULL COMMENT '秒杀名称',
     `start_at` DATETIME NOT NULL COMMENT '开始时间',
@@ -1115,7 +1115,7 @@ CREATE TABLE `erik_flash_sales` (
     KEY `idx_status_time` (`status`, `start_at`, `end_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秒杀活动';
 
-CREATE TABLE `erik_flash_sale_skus` (
+CREATE TABLE `shop_flash_sale_skus` (
     `id` BIGINT UNSIGNED NOT NULL,
     `flash_sale_id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -1127,7 +1127,7 @@ CREATE TABLE `erik_flash_sale_skus` (
     KEY `idx_flash_sale_id` (`flash_sale_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秒杀SKU';
 
-CREATE TABLE `erik_group_buys` (
+CREATE TABLE `shop_group_buys` (
     `id` BIGINT UNSIGNED NOT NULL,
     `title` VARCHAR(128) NOT NULL COMMENT '拼团名称',
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -1144,7 +1144,7 @@ CREATE TABLE `erik_group_buys` (
     KEY `idx_status_time` (`status`, `start_at`, `end_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='拼团活动';
 
-CREATE TABLE `erik_affiliate_links` (
+CREATE TABLE `shop_affiliate_links` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL COMMENT '推广用户',
     `code` VARCHAR(16) NOT NULL COMMENT '推广码',
@@ -1162,7 +1162,7 @@ CREATE TABLE `erik_affiliate_links` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分销链接';
 
-CREATE TABLE `erik_affiliate_commissions` (
+CREATE TABLE `shop_affiliate_commissions` (
     `id` BIGINT UNSIGNED NOT NULL,
     `affiliate_link_id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
@@ -1176,7 +1176,7 @@ CREATE TABLE `erik_affiliate_commissions` (
     KEY `idx_order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分销佣金';
 
-CREATE TABLE `erik_affiliate_payouts` (
+CREATE TABLE `shop_affiliate_payouts` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `amount` DECIMAL(12,2) NOT NULL COMMENT '提现金额',
@@ -1194,7 +1194,7 @@ CREATE TABLE `erik_affiliate_payouts` (
 -- 模块8: 供应链 (7张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_suppliers` (
+CREATE TABLE `shop_suppliers` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(128) NOT NULL COMMENT '供应商名称',
     `contact_person` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '联系人',
@@ -1213,7 +1213,7 @@ CREATE TABLE `erik_suppliers` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='供应商';
 
-CREATE TABLE `erik_purchase_orders` (
+CREATE TABLE `shop_purchase_orders` (
     `id` BIGINT UNSIGNED NOT NULL,
     `po_no` VARCHAR(32) NOT NULL COMMENT '采购单号',
     `supplier_id` BIGINT UNSIGNED NOT NULL,
@@ -1231,7 +1231,7 @@ CREATE TABLE `erik_purchase_orders` (
     KEY `idx_supplier_id` (`supplier_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购单';
 
-CREATE TABLE `erik_purchase_order_items` (
+CREATE TABLE `shop_purchase_order_items` (
     `id` BIGINT UNSIGNED NOT NULL,
     `po_id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -1246,7 +1246,7 @@ CREATE TABLE `erik_purchase_order_items` (
     KEY `idx_po_id` (`po_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='采购明细';
 
-CREATE TABLE `erik_quality_inspections` (
+CREATE TABLE `shop_quality_inspections` (
     `id` BIGINT UNSIGNED NOT NULL,
     `po_id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联订单(出库质检)',
@@ -1265,7 +1265,7 @@ CREATE TABLE `erik_quality_inspections` (
     KEY `idx_order_id` (`order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='质检记录';
 
-CREATE TABLE `erik_quality_inspection_items` (
+CREATE TABLE `shop_quality_inspection_items` (
     `id` BIGINT UNSIGNED NOT NULL,
     `inspection_id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -1282,7 +1282,7 @@ CREATE TABLE `erik_quality_inspection_items` (
 -- 模块9: 风控与合规 (6张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_risk_rules` (
+CREATE TABLE `shop_risk_rules` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(64) NOT NULL COMMENT '规则名称',
     `event` VARCHAR(32) NOT NULL COMMENT '触发事件 user_register/user_login/order_create/payment_create/refund_request',
@@ -1298,7 +1298,7 @@ CREATE TABLE `erik_risk_rules` (
     KEY `idx_event` (`event`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='风控规则';
 
-CREATE TABLE `erik_risk_logs` (
+CREATE TABLE `shop_risk_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `event_type` VARCHAR(32) NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -1315,7 +1315,7 @@ CREATE TABLE `erik_risk_logs` (
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='风控日志';
 
-CREATE TABLE `erik_privacy_requests` (
+CREATE TABLE `shop_privacy_requests` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `email` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '请求人邮箱',
@@ -1330,7 +1330,7 @@ CREATE TABLE `erik_privacy_requests` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='GDPR/CCPA数据请求';
 
-CREATE TABLE `erik_cookie_consents` (
+CREATE TABLE `shop_cookie_consents` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `session_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '匿名用户session',
@@ -1343,7 +1343,7 @@ CREATE TABLE `erik_cookie_consents` (
     KEY `idx_session_id` (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Cookie同意记录';
 
-CREATE TABLE `erik_privacy_policy_versions` (
+CREATE TABLE `shop_privacy_policy_versions` (
     `id` BIGINT UNSIGNED NOT NULL,
     `version` VARCHAR(8) NOT NULL COMMENT '版本号',
     `content` TEXT COMMENT '政策内容',
@@ -1358,7 +1358,7 @@ CREATE TABLE `erik_privacy_policy_versions` (
 -- 模块10: 多平台与渠道 (8张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_shops` (
+CREATE TABLE `shop_shops` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(128) NOT NULL COMMENT '店铺名称',
     `domain` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '域名',
@@ -1374,7 +1374,7 @@ CREATE TABLE `erik_shops` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='多店铺';
 
-CREATE TABLE `erik_platform_accounts` (
+CREATE TABLE `shop_platform_accounts` (
     `id` BIGINT UNSIGNED NOT NULL,
     `shop_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `platform` VARCHAR(32) NOT NULL COMMENT 'amazon/ebay/shopee/lazada/temu',
@@ -1389,7 +1389,7 @@ CREATE TABLE `erik_platform_accounts` (
     KEY `idx_shop_id` (`shop_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='第三方平台账号';
 
-CREATE TABLE `erik_platform_listings` (
+CREATE TABLE `shop_platform_listings` (
     `id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
     `platform_account_id` BIGINT UNSIGNED NOT NULL,
@@ -1404,7 +1404,7 @@ CREATE TABLE `erik_platform_listings` (
     KEY `idx_account_product` (`platform_account_id`, `product_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='平台刊登记录';
 
-CREATE TABLE `erik_platform_orders` (
+CREATE TABLE `shop_platform_orders` (
     `id` BIGINT UNSIGNED NOT NULL,
     `platform_account_id` BIGINT UNSIGNED NOT NULL,
     `shop_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -1427,7 +1427,7 @@ CREATE TABLE `erik_platform_orders` (
     KEY `idx_status` (`internal_status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='第三方平台订单';
 
-CREATE TABLE `erik_platform_order_items` (
+CREATE TABLE `shop_platform_order_items` (
     `id` BIGINT UNSIGNED NOT NULL,
     `platform_order_id` BIGINT UNSIGNED NOT NULL,
     `platform_item_id` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '平台明细ID',
@@ -1440,7 +1440,7 @@ CREATE TABLE `erik_platform_order_items` (
     KEY `idx_platform_order_id` (`platform_order_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='第三方平台订单明细';
 
-CREATE TABLE `erik_merchants` (
+CREATE TABLE `shop_merchants` (
     `id` BIGINT UNSIGNED NOT NULL,
     `shop_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联店铺',
     `user_id` BIGINT UNSIGNED NOT NULL COMMENT '卖家用户ID',
@@ -1459,7 +1459,7 @@ CREATE TABLE `erik_merchants` (
     KEY `idx_shop_id` (`shop_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='第三方卖家(多商家)';
 
-CREATE TABLE `erik_merchant_products` (
+CREATE TABLE `shop_merchant_products` (
     `id` BIGINT UNSIGNED NOT NULL,
     `merchant_id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
@@ -1471,7 +1471,7 @@ CREATE TABLE `erik_merchant_products` (
     KEY `idx_merchant_id` (`merchant_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卖家商品(需审核)';
 
-CREATE TABLE `erik_merchant_settlements` (
+CREATE TABLE `shop_merchant_settlements` (
     `id` BIGINT UNSIGNED NOT NULL,
     `merchant_id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL,
@@ -1492,7 +1492,7 @@ CREATE TABLE `erik_merchant_settlements` (
 -- 模块11: 内容与体验 (12张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_cms_pages` (
+CREATE TABLE `shop_cms_pages` (
     `id` BIGINT UNSIGNED NOT NULL,
     `slug` VARCHAR(128) NOT NULL COMMENT 'URL别名',
     `type` VARCHAR(32) NOT NULL DEFAULT 'page' COMMENT 'page/blog/landing',
@@ -1506,7 +1506,7 @@ CREATE TABLE `erik_cms_pages` (
     UNIQUE KEY `uk_slug` (`slug`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CMS页面';
 
-CREATE TABLE `erik_cms_page_translations` (
+CREATE TABLE `shop_cms_page_translations` (
     `id` BIGINT UNSIGNED NOT NULL,
     `page_id` BIGINT UNSIGNED NOT NULL,
     `locale` VARCHAR(10) NOT NULL,
@@ -1520,7 +1520,7 @@ CREATE TABLE `erik_cms_page_translations` (
     UNIQUE KEY `uk_page_locale` (`page_id`, `locale`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='CMS页面多语言';
 
-CREATE TABLE `erik_product_feeds` (
+CREATE TABLE `shop_product_feeds` (
     `id` BIGINT UNSIGNED NOT NULL,
     `type` VARCHAR(16) NOT NULL COMMENT 'google/meta',
     `name` VARCHAR(64) NOT NULL DEFAULT '' COMMENT 'Feed名称',
@@ -1532,7 +1532,7 @@ CREATE TABLE `erik_product_feeds` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商品Feed配置';
 
-CREATE TABLE `erik_product_feed_logs` (
+CREATE TABLE `shop_product_feed_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `feed_id` BIGINT UNSIGNED NOT NULL,
     `status` VARCHAR(16) NOT NULL DEFAULT 'success' COMMENT 'success/error',
@@ -1543,7 +1543,7 @@ CREATE TABLE `erik_product_feed_logs` (
     KEY `idx_feed_id` (`feed_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='Feed同步日志';
 
-CREATE TABLE `erik_size_charts` (
+CREATE TABLE `shop_size_charts` (
     `id` BIGINT UNSIGNED NOT NULL,
     `category_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '关联品类',
     `type` VARCHAR(32) NOT NULL COMMENT 'clothing/shoes/ring/belt',
@@ -1554,7 +1554,7 @@ CREATE TABLE `erik_size_charts` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='尺码对照表';
 
-CREATE TABLE `erik_size_chart_values` (
+CREATE TABLE `shop_size_chart_values` (
     `id` BIGINT UNSIGNED NOT NULL,
     `chart_id` BIGINT UNSIGNED NOT NULL,
     `region` VARCHAR(8) NOT NULL COMMENT '地区 US/UK/EU/JP/CN',
@@ -1566,7 +1566,7 @@ CREATE TABLE `erik_size_chart_values` (
     KEY `idx_region_size` (`region`, `size_label`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='尺码转换值';
 
-CREATE TABLE `erik_notifications` (
+CREATE TABLE `shop_notifications` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0=全部用户',
     `title` VARCHAR(256) NOT NULL COMMENT '通知标题',
@@ -1581,7 +1581,7 @@ CREATE TABLE `erik_notifications` (
     KEY `idx_user_read` (`user_id`, `is_read`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统通知';
 
-CREATE TABLE `erik_email_templates` (
+CREATE TABLE `shop_email_templates` (
     `id` BIGINT UNSIGNED NOT NULL,
     `code` VARCHAR(64) NOT NULL COMMENT '模板代码 order_confirmed/shipped/password_reset/welcome',
     `locale` VARCHAR(10) NOT NULL DEFAULT 'en' COMMENT '语言',
@@ -1593,7 +1593,7 @@ CREATE TABLE `erik_email_templates` (
     UNIQUE KEY `uk_code_locale` (`code`, `locale`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='邮件模板(多语言)';
 
-CREATE TABLE `erik_email_logs` (
+CREATE TABLE `shop_email_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `template_code` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '模板代码',
@@ -1607,7 +1607,7 @@ CREATE TABLE `erik_email_logs` (
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='邮件发送日志';
 
-CREATE TABLE `erik_price_alerts` (
+CREATE TABLE `shop_price_alerts` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -1621,7 +1621,7 @@ CREATE TABLE `erik_price_alerts` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='降价提醒';
 
-CREATE TABLE `erik_search_logs` (
+CREATE TABLE `shop_search_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
     `keyword` VARCHAR(256) NOT NULL COMMENT '搜索词',
@@ -1635,7 +1635,7 @@ CREATE TABLE `erik_search_logs` (
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='搜索日志';
 
-CREATE TABLE `erik_operation_logs` (
+CREATE TABLE `shop_operation_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `admin_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '操作人ID',
     `module` VARCHAR(32) NOT NULL COMMENT '操作模块 product/order/user',
@@ -1656,7 +1656,7 @@ CREATE TABLE `erik_operation_logs` (
 -- 模块12: 订阅/积分/礼品卡/B2B (7张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_subscriptions` (
+CREATE TABLE `shop_subscriptions` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
@@ -1676,7 +1676,7 @@ CREATE TABLE `erik_subscriptions` (
     KEY `idx_next_billing` (`next_billing_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订阅周期购';
 
-CREATE TABLE `erik_subscription_orders` (
+CREATE TABLE `shop_subscription_orders` (
     `id` BIGINT UNSIGNED NOT NULL,
     `subscription_id` BIGINT UNSIGNED NOT NULL,
     `order_id` BIGINT UNSIGNED NOT NULL COMMENT '生成的订单ID',
@@ -1687,7 +1687,7 @@ CREATE TABLE `erik_subscription_orders` (
     KEY `idx_subscription_id` (`subscription_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订阅生成的订单';
 
-CREATE TABLE `erik_subscription_logs` (
+CREATE TABLE `shop_subscription_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `subscription_id` BIGINT UNSIGNED NOT NULL,
     `action` VARCHAR(16) NOT NULL COMMENT 'activate/pause/resume/cancel/renew/fail',
@@ -1697,7 +1697,7 @@ CREATE TABLE `erik_subscription_logs` (
     KEY `idx_subscription_id` (`subscription_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订阅日志';
 
-CREATE TABLE `erik_point_rules` (
+CREATE TABLE `shop_point_rules` (
     `id` BIGINT UNSIGNED NOT NULL,
     `code` VARCHAR(32) NOT NULL COMMENT '规则代码 register/order/review/referral',
     `name` VARCHAR(64) NOT NULL COMMENT '规则名称',
@@ -1710,7 +1710,7 @@ CREATE TABLE `erik_point_rules` (
     UNIQUE KEY `uk_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='积分规则';
 
-CREATE TABLE `erik_point_logs` (
+CREATE TABLE `shop_point_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `rule_code` VARCHAR(32) NOT NULL COMMENT '规则代码',
@@ -1723,7 +1723,7 @@ CREATE TABLE `erik_point_logs` (
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='积分流水';
 
-CREATE TABLE `erik_gift_cards` (
+CREATE TABLE `shop_gift_cards` (
     `id` BIGINT UNSIGNED NOT NULL,
     `code` VARCHAR(32) NOT NULL COMMENT '礼品卡码',
     `denomination` DECIMAL(10,2) NOT NULL COMMENT '面额',
@@ -1740,7 +1740,7 @@ CREATE TABLE `erik_gift_cards` (
     UNIQUE KEY `uk_code` (`code`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='礼品卡';
 
-CREATE TABLE `erik_b2b_prices` (
+CREATE TABLE `shop_b2b_prices` (
     `id` BIGINT UNSIGNED NOT NULL,
     `sku_id` BIGINT UNSIGNED NOT NULL,
     `min_order_qty` INT UNSIGNED NOT NULL COMMENT 'MOQ起订量',
@@ -1751,7 +1751,7 @@ CREATE TABLE `erik_b2b_prices` (
     KEY `idx_sku_id` (`sku_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='B2B阶梯定价';
 
-CREATE TABLE `erik_b2b_verifications` (
+CREATE TABLE `shop_b2b_verifications` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `company_name` VARCHAR(256) NOT NULL COMMENT '公司名',
@@ -1764,7 +1764,7 @@ CREATE TABLE `erik_b2b_verifications` (
     UNIQUE KEY `uk_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='B2B企业认证';
 
-CREATE TABLE `erik_b2b_quotes` (
+CREATE TABLE `shop_b2b_quotes` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `product_id` BIGINT UNSIGNED NOT NULL,
@@ -1785,7 +1785,7 @@ CREATE TABLE `erik_b2b_quotes` (
 -- 模块13: 客服与FAQ (5张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_chat_sessions` (
+CREATE TABLE `shop_chat_sessions` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
     `agent_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '客服ID 0=未分配',
@@ -1799,7 +1799,7 @@ CREATE TABLE `erik_chat_sessions` (
     KEY `idx_agent_id` (`agent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客服会话';
 
-CREATE TABLE `erik_chat_messages` (
+CREATE TABLE `shop_chat_messages` (
     `id` BIGINT UNSIGNED NOT NULL,
     `session_id` BIGINT UNSIGNED NOT NULL,
     `sender_type` VARCHAR(8) NOT NULL COMMENT 'user/agent/bot',
@@ -1813,7 +1813,7 @@ CREATE TABLE `erik_chat_messages` (
     KEY `idx_session_id` (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息';
 
-CREATE TABLE `erik_knowledge_base` (
+CREATE TABLE `shop_knowledge_base` (
     `id` BIGINT UNSIGNED NOT NULL,
     `category` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '分类 shipping/return/payment/product',
     `status` TINYINT UNSIGNED NOT NULL DEFAULT 1,
@@ -1822,7 +1822,7 @@ CREATE TABLE `erik_knowledge_base` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客服知识库';
 
-CREATE TABLE `erik_knowledge_base_translations` (
+CREATE TABLE `shop_knowledge_base_translations` (
     `id` BIGINT UNSIGNED NOT NULL,
     `kb_id` BIGINT UNSIGNED NOT NULL,
     `locale` VARCHAR(10) NOT NULL,
@@ -1834,7 +1834,7 @@ CREATE TABLE `erik_knowledge_base_translations` (
     UNIQUE KEY `uk_kb_locale` (`kb_id`, `locale`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库多语言';
 
-CREATE TABLE `erik_faq_translations` (
+CREATE TABLE `shop_faq_translations` (
     `id` BIGINT UNSIGNED NOT NULL,
     `category` VARCHAR(64) NOT NULL COMMENT '分类',
     `locale` VARCHAR(10) NOT NULL,
@@ -1852,7 +1852,7 @@ CREATE TABLE `erik_faq_translations` (
 -- 模块14: AB测试/API治理/设置 (7张)
 -- -------------------------------------------------------------
 
-CREATE TABLE `erik_ab_tests` (
+CREATE TABLE `shop_ab_tests` (
     `id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(128) NOT NULL COMMENT '测试名称',
     `goal` VARCHAR(64) NOT NULL COMMENT '目标 conversion/revenue/click',
@@ -1866,7 +1866,7 @@ CREATE TABLE `erik_ab_tests` (
     PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AB测试';
 
-CREATE TABLE `erik_ab_test_variants` (
+CREATE TABLE `shop_ab_test_variants` (
     `id` BIGINT UNSIGNED NOT NULL,
     `ab_test_id` BIGINT UNSIGNED NOT NULL,
     `name` VARCHAR(64) NOT NULL COMMENT '变体名 control/experiment_a',
@@ -1877,7 +1877,7 @@ CREATE TABLE `erik_ab_test_variants` (
     KEY `idx_ab_test_id` (`ab_test_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AB测试变体';
 
-CREATE TABLE `erik_ab_test_results` (
+CREATE TABLE `shop_ab_test_results` (
     `id` BIGINT UNSIGNED NOT NULL,
     `ab_test_id` BIGINT UNSIGNED NOT NULL,
     `variant_id` BIGINT UNSIGNED NOT NULL,
@@ -1891,7 +1891,7 @@ CREATE TABLE `erik_ab_test_results` (
     KEY `idx_ab_test_variant_date` (`ab_test_id`, `variant_id`, `recorded_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AB测试结果';
 
-CREATE TABLE `erik_api_rate_limits` (
+CREATE TABLE `shop_api_rate_limits` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0=IP限流',
     `ip_address` VARCHAR(45) NOT NULL DEFAULT '',
@@ -1907,7 +1907,7 @@ CREATE TABLE `erik_api_rate_limits` (
     KEY `idx_ip_endpoint` (`ip_address`, `endpoint`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='API限流记录';
 
-CREATE TABLE `erik_api_docs` (
+CREATE TABLE `shop_api_docs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `route` VARCHAR(256) NOT NULL COMMENT '路由 /api/products',
     `method` VARCHAR(8) NOT NULL COMMENT 'GET/POST/PUT/DELETE',
@@ -1923,7 +1923,7 @@ CREATE TABLE `erik_api_docs` (
     UNIQUE KEY `uk_route_method` (`route`, `method`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='API文档配置';
 
-CREATE TABLE `erik_settings` (
+CREATE TABLE `shop_settings` (
     `id` BIGINT UNSIGNED NOT NULL,
     `key` VARCHAR(64) NOT NULL COMMENT '配置键',
     `value` TEXT COMMENT '配置值',

@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Users extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_users";
+    protected $table = "shop_users";
     protected $encryptable = ["email", "mobile"]; // password用bcrypt哈希，非加密
     protected $hidden = ["password", "salt", "deleted_at"];
 

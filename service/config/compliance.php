@@ -6,7 +6,7 @@
 /**
  * 商品合规配置
  * 按品类和目的国校验商品合规性
- * 配合 erik_compliance_categories + erik_country_compliance_rules 表使用
+ * 配合 shop_compliance_categories + shop_country_compliance_rules 表使用
  */
 
 return [

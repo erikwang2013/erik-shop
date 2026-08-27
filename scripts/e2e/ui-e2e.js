@@ -116,8 +116,9 @@ async function dashboardChecks(browser, context) {
   log('仪表盘-index/dashboard', dash.canvas > 0 && dash.text > 50 ? 'PASS' : 'FAIL',
     `canvas=${dash.canvas} 文本=${dash.text}B`, await shot(page, '05-dashboard-index.png'));
 
-  // 跨境数据面板（ShopDashboard，ECharts CDN + KPI 卡片）
-  await page.goto(ADMIN_BASE + '/app/admin/shop/ShopDashboard/index', { waitUntil: 'domcontentloaded' });
+  // 跨境数据面板（ShopDashboard，ECharts CDN + KPI 卡片）。
+  // head 内 jsdelivr 外链脚本会阻塞 domcontentloaded（实测 ~20s+，CDN 慢时更长），放宽超时
+  await page.goto(ADMIN_BASE + '/app/admin/shop/ShopDashboard/index', { waitUntil: 'domcontentloaded', timeout: 90000 });
   await page.waitForTimeout(4000);
   const sd = await page.evaluate(() => {
     const kpi = [...document.querySelectorAll('#kpi-row .value')].map(v => v.textContent.trim());
@@ -213,14 +214,28 @@ async function menuWalk(browser, context) {
       if (status === 'PASS') pass.p++; else { failed.push({ name, note: notes.join('；'), info }); pass.f++; }
       log(`页面-${name}`, status, notes.join('；') || `title=${info.title} 表格=${info.tables} 文本=${info.text}B`,
         await shot(page, shotName));
+      await closeTab(page);
     } catch (e) {
       failed.push({ name, note: String(e).slice(0, 140) });
       pass.f++;
       log(`页面-${name}`, 'FAIL', String(e).slice(0, 140), await shot(page, shotName));
+      await closeTab(page);
     }
   }
   await page.close();
   return { pass, failed };
+}
+
+async function closeTab(page) {
+  // pear-admin tab.max=30（config/get），标签页数到 30 后新 tab 被拒（弹 layer.msg 且不创建 iframe）。
+  // 每测完一页关闭当前 tab，避免触顶导致后续页面无法打开。
+  try {
+    const closer = page.locator('.layui-tab-title li.layui-this .layui-tab-close');
+    if (await closer.count()) {
+      await closer.click();
+      await page.waitForTimeout(300);
+    }
+  } catch (e) { /* 关闭失败不影响测试结论 */ }
 }
 
 async function logoutFlow(browser, context) {

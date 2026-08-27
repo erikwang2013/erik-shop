@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class UserKyc extends Base
 {
-    protected $table = "erik_user_kyc";
+    protected $table = "shop_user_kyc";
 }

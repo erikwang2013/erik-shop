@@ -13,7 +13,7 @@ use Workerman\Worker;
 
 /**
  * 多平台订单同步 — 每5分钟拉取外部平台（amazon/ebay/shopee等）订单
- * 需在 erik_platform_accounts 配置账号 API 密钥，且配置 cron.platform_sync_url（{account_id} 占位符）；
+ * 需在 shop_platform_accounts 配置账号 API 密钥，且配置 cron.platform_sync_url（{account_id} 占位符）；
  * 未配置时跳过
  */
 class PlatformOrderSyncCron

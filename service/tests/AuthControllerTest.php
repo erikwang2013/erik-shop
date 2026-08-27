@@ -37,7 +37,7 @@ class AuthControllerTest extends IntegrationTestCase
             'password' => password_hash($password . $salt, PASSWORD_BCRYPT),
             'salt' => $salt, 'invite_code' => 'AU' . substr(md5(uniqid()), 0, 6), 'status' => 1,
         ]);
-        $this->trackCreated('erik_users', (int) $user->id);
+        $this->trackCreated('shop_users', (int) $user->id);
         return (int) $user->id;
     }
 
@@ -136,7 +136,7 @@ class AuthControllerTest extends IntegrationTestCase
         $this->assertSame(200, $code);
 
         // 从 Redis 取验证码（测试环境直接读）
-        $code6 = Redis::get("erik:password_reset:{$user->email_hash}");
+        $code6 = Redis::get("shop:password_reset:{$user->email_hash}");
         $this->assertMatchesRegularExpression('/^\d{6}$/', (string) $code6);
 
         [$ok, $okJson] = $this->callController($this->auth(), 'passwordResetConfirm', $this->makeRequest('POST', '/x', [
@@ -161,7 +161,7 @@ class AuthControllerTest extends IntegrationTestCase
     {
         $userId = $this->makeUser();
         $token = bin2hex(random_bytes(16));
-        Redis::setex("erik:email_verify:{$token}", 600, (string) $userId);
+        Redis::setex("shop:email_verify:{$token}", 600, (string) $userId);
 
         [$code] = $this->callController($this->auth(), 'emailVerify', $this->makeRequest('POST', '/x', ['token' => $token]));
         $this->assertSame(200, $code);

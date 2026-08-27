@@ -6,5 +6,5 @@
 namespace app\model;
 
 class Settings extends BaseModel
-{    protected $table = "erik_settings";
+{    protected $table = "shop_settings";
 }

@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class ProductHsCodes extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_product_hs_codes";
+    protected $table = "shop_product_hs_codes";
     public function product(): BelongsTo
     {
         return $this->belongsTo(Products::class, "product_id");

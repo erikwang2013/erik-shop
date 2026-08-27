@@ -35,7 +35,7 @@ class PosterVerify implements MiddlewareInterface
         }
 
         // 验证token（Redis存储）
-        $redisKey = "erik:poster:{$posterToken}";
+        $redisKey = "shop:poster:{$posterToken}";
         $verified = false;
         try {
             $verified = Redis::get($redisKey) === '1';

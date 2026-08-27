@@ -9,7 +9,7 @@ use Erik\Encryptable\Encryptable;
 
 class GiftCards extends BaseModel
 {    use Encryptable;
-    protected $table = "erik_gift_cards";
+    protected $table = "shop_gift_cards";
     protected $encryptable = ["receiver_email"];
 
 }

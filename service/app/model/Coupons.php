@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Coupons extends BaseModel
 {
     use SoftDeletes;
-    protected $table = "erik_coupons";
+    protected $table = "shop_coupons";
     public function userCoupons(): HasMany
     {
         return $this->hasMany(UserCoupons::class, "coupon_id");

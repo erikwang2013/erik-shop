@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class MembershipLevels extends BaseModel
 {    use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_membership_levels";
+    protected $table = "shop_membership_levels";
     protected $encryptable = [];
 
 }

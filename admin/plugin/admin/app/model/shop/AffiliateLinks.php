@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class AffiliateLinks extends Base
 {
-    protected $table = "erik_affiliate_links";
+    protected $table = "shop_affiliate_links";
 }

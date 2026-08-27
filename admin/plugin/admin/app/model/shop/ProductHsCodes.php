@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class ProductHsCodes extends Base
 {
-    protected $table = "erik_product_hs_codes";
+    protected $table = "shop_product_hs_codes";
 }

@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class ProductReviews extends Base
 {
-    protected $table = "erik_product_reviews";
+    protected $table = "shop_product_reviews";
 }

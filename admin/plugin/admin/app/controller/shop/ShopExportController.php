@@ -20,6 +20,19 @@ use support\Request;
 class ShopExportController extends Base
 {
     /**
+ * @Apidoc\Title("数据导出")
+ * @Apidoc\Method("GET")
+ * @Apidoc\Url("/app/admin/shop/ShopExport/index")
+ * @Apidoc\Author("erik")
+ */
+    public function index(Request $request)
+    {
+        return view('shop/export/index', [
+            'title' => '数据导出',
+        ]);
+    }
+
+    /**
  * @Apidoc\Title("导出订单Excel")
  * @Apidoc\Method("GET")
  * @Apidoc\Url("/app/admin/shop/ShopExport/orders")

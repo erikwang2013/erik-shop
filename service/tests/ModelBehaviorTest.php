@@ -36,7 +36,7 @@ class ModelBehaviorTest extends IntegrationTestCase
             'invite_code' => 'SN' . substr(md5(uniqid()), 0, 6),
             'status' => 1,
         ]);
-        $this->trackCreated('erik_users', (int) $user->id);
+        $this->trackCreated('shop_users', (int) $user->id);
 
         $this->assertFalse((new Users())->getIncrementing(), 'BaseModel 应为非自增主键');
         $this->assertMatchesRegularExpression('/^\d{15,20}$/', (string) $user->id, 'Snowflake ID 应为纯数字串');
@@ -55,7 +55,7 @@ class ModelBehaviorTest extends IntegrationTestCase
             'status' => 1,
             'level' => 9,   // $guarded 列，批量赋值应被忽略
         ]);
-        $this->trackCreated('erik_users', (int) $user->id);
+        $this->trackCreated('shop_users', (int) $user->id);
 
         $this->assertNotSame(9, (int) $user->level, '$guarded 列不应被批量赋值写入');
         $this->assertNotSame(9, (int) Users::find($user->id)->level);
@@ -75,10 +75,10 @@ class ModelBehaviorTest extends IntegrationTestCase
             'invite_code' => 'EN' . substr(md5(uniqid()), 0, 6),
             'status' => 1,
         ]);
-        $this->trackCreated('erik_users', (int) $user->id);
+        $this->trackCreated('shop_users', (int) $user->id);
 
         // 密文落库：DB 原始值与明文不同
-        $raw = \support\Db::table('erik_users')->where('id', $user->id)->value('email');
+        $raw = \support\Db::table('shop_users')->where('id', $user->id)->value('email');
         $this->assertNotSame($plain, $raw, 'email 应以密文存储');
         $this->assertStringNotContainsString($plain, (string) $raw);
 
@@ -92,7 +92,7 @@ class ModelBehaviorTest extends IntegrationTestCase
     public function test_unique_constraints_enforced(): void
     {
         $this->requireDb();
-        // erik_users 唯一键为 uk_invite_code（email_hash 无索引，防重由注册锁保证）
+        // shop_users 唯一键为 uk_invite_code（email_hash 无索引，防重由注册锁保证）
         $inviteCode = 'UN' . substr(md5(uniqid()), 0, 6);
         Users::create([
             'nickname' => 'Unique A',
@@ -162,7 +162,7 @@ class ModelBehaviorTest extends IntegrationTestCase
             'invite_code' => 'TS' . substr(md5(uniqid()), 0, 6),
             'status' => 1,
         ]);
-        $this->trackCreated('erik_users', (int) $user->id);
+        $this->trackCreated('shop_users', (int) $user->id);
         $this->assertNotNull($user->created_at, 'timestamps=true 模型应自动写 created_at');
         $this->assertNotNull($user->updated_at, 'timestamps=true 模型应自动写 updated_at');
     }
@@ -177,7 +177,7 @@ class ModelBehaviorTest extends IntegrationTestCase
             'currency_code' => 'USD',
             'address_snapshot' => ['name' => 'QA', 'country_id' => 1],
         ]);
-        $this->trackCreated('erik_orders', (int) $order->id);
+        $this->trackCreated('shop_orders', (int) $order->id);
 
         $this->assertIsArray($order->address_snapshot, 'JSON 列应 cast 为数组');
         $this->assertSame('QA', $order->address_snapshot['name']);
@@ -213,7 +213,7 @@ class ModelBehaviorTest extends IntegrationTestCase
             'product_id' => 1, 'sku_code' => 'SKU' . uniqid(),
             'default_price' => 1.0, 'stock' => 7, 'status' => 1,
         ]);
-        $this->trackCreated('erik_product_skus', (int) $sku->id);
+        $this->trackCreated('shop_product_skus', (int) $sku->id);
         $this->assertSame(7, (int) ProductSkus::find($sku->id)->stock);
     }
 }

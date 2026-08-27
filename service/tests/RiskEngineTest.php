@@ -103,7 +103,7 @@ class RiskEngineTest extends TestCase
             $this->markTestSkipped('Redis 不可用');
         }
         $userId = random_int(1000000, 9999999);
-        $this->redisKeys[] = "erik:risk:orders:{$userId}:h:" . date('YmdH');
+        $this->redisKeys[] = "shop:risk:orders:{$userId}:h:" . date('YmdH');
         $r = [];
         for ($i = 1; $i <= 11; $i++) {
             $r = RiskEngine::score('order_create', ['user_id' => $userId]);
@@ -120,9 +120,9 @@ class RiskEngineTest extends TestCase
             $this->markTestSkipped('Redis 不可用');
         }
         $ip = '203.0.113.' . random_int(1, 250);
-        $this->redisKeys[] = "erik:brute:{$ip}:login";
-        $this->redisKeys[] = "erik:risk:reg:{$ip}:h:" . date('YmdH');
-        \support\Redis::set("erik:brute:{$ip}:login", 1);
+        $this->redisKeys[] = "shop:brute:{$ip}:login";
+        $this->redisKeys[] = "shop:risk:reg:{$ip}:h:" . date('YmdH');
+        \support\Redis::set("shop:brute:{$ip}:login", 1);
 
         $r = RiskEngine::score('user_register', ['user_id' => 0, 'ip' => $ip]);
         $this->assertSame(20, $r['score']);

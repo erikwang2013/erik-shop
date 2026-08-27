@@ -13,7 +13,7 @@ class SizeCharts extends BaseModel
 {
     use Encryptable;
     use SoftDeletes;
-    protected $table = "erik_size_charts";
+    protected $table = "shop_size_charts";
     protected $encryptable = [];
 
     public function values(): HasMany

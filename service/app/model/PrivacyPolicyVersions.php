@@ -6,6 +6,6 @@
 namespace app\model;
 
 class PrivacyPolicyVersions extends BaseModel
-{    protected $table = "erik_privacy_policy_versions";
+{    protected $table = "shop_privacy_policy_versions";
     public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
 }

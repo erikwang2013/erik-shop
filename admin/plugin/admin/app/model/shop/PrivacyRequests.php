@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class PrivacyRequests extends Base
 {
-    protected $table = "erik_privacy_requests";
+    protected $table = "shop_privacy_requests";
 }

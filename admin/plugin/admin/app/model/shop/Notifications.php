@@ -5,5 +5,5 @@ use plugin\admin\app\model\Base;
 
 class Notifications extends Base
 {
-    protected $table = "erik_notifications";
+    protected $table = "shop_notifications";
 }

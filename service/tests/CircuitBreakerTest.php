@@ -15,7 +15,7 @@ use support\Redis;
  *
  * 阈值/时长经 config('concurrency.circuit_breaker') 测试内临时调低并恢复；
  * 每次用唯一 name（'test:' . uniqid()），避免与其他测试/并行测试冲突；
- * tearDown 清理 erik_cb_* 残留 key，避免互相污染。
+ * tearDown 清理 shop_cb_* 残留 key，避免互相污染。
  */
 class CircuitBreakerTest extends TestCase
 {
@@ -44,10 +44,10 @@ class CircuitBreakerTest extends TestCase
         // 恢复原配置（原值可能为 null，即该键原本不存在）
         $this->setCbConfig($this->origCbConfig);
 
-        // 清理 erik_cb_* 熔断 key：keys() 返回带 redis 前缀的全 key，删除时需剥掉前缀
+        // 清理 shop_cb_* 熔断 key：keys() 返回带 redis 前缀的全 key，删除时需剥掉前缀
         try {
             $prefix = config('redis.default.prefix', '');
-            foreach (Redis::keys('erik_cb_*') ?: [] as $fullKey) {
+            foreach (Redis::keys('shop_cb_*') ?: [] as $fullKey) {
                 $raw = str_starts_with($fullKey, $prefix) ? substr($fullKey, strlen($prefix)) : $fullKey;
                 Redis::del($raw);
             }
@@ -165,7 +165,7 @@ class CircuitBreakerTest extends TestCase
         // 模拟 TTL 过期：手动删除该 name 的熔断 state key
         $prefix = config('redis.default.prefix', '');
         $deleted = 0;
-        foreach (Redis::keys('erik_cb_*') ?: [] as $fullKey) {
+        foreach (Redis::keys('shop_cb_*') ?: [] as $fullKey) {
             if (!str_contains($fullKey, $this->name)) {
                 continue;
             }
@@ -173,7 +173,7 @@ class CircuitBreakerTest extends TestCase
             Redis::del($raw);
             $deleted++;
         }
-        $this->assertGreaterThan(0, $deleted, '应能找到并删除熔断 state key（erik_cb_*）');
+        $this->assertGreaterThan(0, $deleted, '应能找到并删除熔断 state key（shop_cb_*）');
 
         // 半开探测：state 过期后允许请求通过
         $this->assertFalse(CircuitBreaker::isOpen($this->name), 'state key 删除后熔断器应转为关闭（半开探测）');

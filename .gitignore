@@ -69,3 +69,9 @@ apps/flutter//android/app/release
 apps/harmonyos/**/build
 apps/harmonyos/**/oh_modules
 **/.hvigor
+
+# E2E 测试产物（结果含截图 base64，不入库）
+scripts/e2e/results.json
+
+# 运行时生成的发票/装箱单 PDF
+service/public/documents/

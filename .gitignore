@@ -4,8 +4,8 @@
 /.vscode
 *.log
 .env
-plugin/admin/config/database.php
-plugin/admin/config/thinkorm.php
+**/plugin/admin/config/database.php
+**/plugin/admin/config/thinkorm.php
 /tests/tmp
 /tests/.phpunit.result.cache
 /.cursor

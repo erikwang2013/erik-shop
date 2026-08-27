@@ -86,6 +86,13 @@ class OrderController extends \app\controller\BaseApiController
             return ApiResponse::fail('订单不存在', 404);
         }
 
+        // 与列表一致：补状态文本（5.2 详情返回完整订单信息）
+        $order->status_text = [
+            0 => '待付款', 1 => '已付款', 2 => '已发货',
+            3 => '已收货', 4 => '已完成', 5 => '已取消',
+            6 => '退款中', 7 => '已退款', 8 => '待审核',
+        ][(int) $order->status] ?? '未知';
+
         return ApiResponse::success($order);
     }
 

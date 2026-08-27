@@ -12,7 +12,12 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PlatformOrders extends BaseModel
 {    use Encryptable;
     protected $table = "erik_platform_orders";
-    protected $encryptable = ["platform_account_id", "buyer_name", "buyer_email"];
+    // 仅买家 PII 加密；platform_account_id 为 BIGINT 外键（加密后写入 INT 列报 1366，且 where 查询依赖明文匹配）
+    protected $encryptable = ["buyer_name", "buyer_email"];
+    protected $casts = [
+        'raw_data' => 'array',          // 平台原始数据 JSON 列
+        'shipping_address' => 'array',  // 收货地址 JSON 列
+    ];
 
     public function platformAccount(): BelongsTo
     {

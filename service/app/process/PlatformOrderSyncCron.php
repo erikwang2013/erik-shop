@@ -71,6 +71,7 @@ class PlatformOrderSyncCron
                         ->first();
                     $data = [
                         'shop_id' => $account->shop_id,
+                        'platform_account_id' => $account->id,   // NOT NULL 外键，缺失则 INSERT 报 1364
                         'platform' => $account->platform,
                         'platform_order_id' => $platformOrderId,
                         'status' => (string) ($order['status'] ?? ''),

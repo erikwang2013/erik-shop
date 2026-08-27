@@ -147,7 +147,8 @@ return [
     // 客服实时 IM WebSocket（客户端以 ?token=JWT&session_id=xxx 连接）
     'chat_ws' => [
         'handler' => app\process\ChatWs::class,
-        'listen' => 'websocket://0.0.0.0:8788',
+        // 默认 8788；与 admin（8788）同机共存时设 CHAT_WS_PORT 错开
+        'listen' => 'websocket://0.0.0.0:' . (getenv('CHAT_WS_PORT') ?: '8788'),
         'count' => 1,
         'reloadable' => false,
     ],

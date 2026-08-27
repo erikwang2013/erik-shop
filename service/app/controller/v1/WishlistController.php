@@ -25,6 +25,9 @@ class WishlistController extends \app\controller\BaseApiController
     public function store(Request $request): \support\Response
     {
         $productId = $request->input('product_id');
+        if (empty($productId)) {
+            return ApiResponse::fail('缺少商品参数', 422);
+        }
         // 用户+商品粒度锁：并发收藏会绕过 exists 检查触发唯一键冲突
         try {
             return DistributedLock::run("lock:wishlist:{$request->userId}:{$productId}", function () use ($request, $productId) {

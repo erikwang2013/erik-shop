@@ -4,11 +4,14 @@
 /.vscode
 *.log
 .env
+plugin/admin/config/database.php
+plugin/admin/config/thinkorm.php
 /tests/tmp
 /tests/.phpunit.result.cache
 /.cursor
 /service/vendor
 /admin/vendor
+node_modules/
 .claude
 .claude-flow
 .swarm

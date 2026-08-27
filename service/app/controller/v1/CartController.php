@@ -55,7 +55,13 @@ class CartController extends \app\controller\BaseApiController
     {
         $userId = $request->userId;
         $skuId = $request->input('sku_id');
-        $quantity = max(1, (int) $request->input('quantity', 1));
+        $quantity = (int) $request->input('quantity', 1);
+        if (empty($skuId)) {
+            return ApiResponse::fail('缺少SKU参数', 422);
+        }
+        if ($quantity < 1) {
+            return ApiResponse::fail('数量必须大于0', 422);
+        }
 
         $sku = ProductSkus::find($skuId);
         if (!$sku || $sku->status !== 1) {
@@ -69,13 +75,19 @@ class CartController extends \app\controller\BaseApiController
         // 用户+SKU粒度锁：并发加购同 SKU 会丢失累加（读改写竞态）
         try {
             $result = DistributedLock::run("lock:cart:{$userId}:{$skuId}", function () use ($userId, $skuId, $quantity, $sku) {
-                $existing = Carts::where('user_id', $userId)->where('sku_id', $skuId)->first();
+                // withTrashed：软删后重新加购会撞 uk_user_sku 唯一键（1062），还原旧行并按本次数量重新开始
+                $existing = Carts::withTrashed()->where('user_id', $userId)->where('sku_id', $skuId)->first();
                 if ($existing) {
-                    $newQty = $existing->quantity + $quantity;
-                    if ($sku->stock < $newQty) {
-                        return ApiResponse::fail('库存不足', 422);
+                    if ($existing->trashed()) {
+                        $existing->restore();
+                        $existing->quantity = $quantity;
+                    } else {
+                        $newQty = $existing->quantity + $quantity;
+                        if ($sku->stock < $newQty) {
+                            return ApiResponse::fail('库存不足', 422);
+                        }
+                        $existing->quantity = $newQty;
                     }
-                    $existing->quantity = $newQty;
                     $existing->save();
                 } else {
                     Carts::create([
@@ -89,6 +101,7 @@ class CartController extends \app\controller\BaseApiController
                 return ApiResponse::success(null, '已添加到购物车');
             });
         } catch (\RuntimeException $e) {
+            \support\Log::error('cart store 异常: ' . $e->getMessage() . ' | ' . $e->getTraceAsString());
             return ApiResponse::fail('操作繁忙，请稍后重试', 429);
         }
         return $result;

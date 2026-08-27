@@ -6,12 +6,18 @@
 namespace app\model;
 
 use Erik\Encryptable\Encryptable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SizeCharts extends BaseModel
-{    use Encryptable;
+{
+    use Encryptable;
     use SoftDeletes;
     protected $table = "erik_size_charts";
     protected $encryptable = [];
 
+    public function values(): HasMany
+    {
+        return $this->hasMany(SizeChartValues::class, "chart_id");
+    }
 }

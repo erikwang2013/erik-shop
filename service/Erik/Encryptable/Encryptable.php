@@ -33,6 +33,21 @@ trait Encryptable
         return parent::setAttribute($key, $this->encryptAttributeValue($key, $value));
     }
 
+    /**
+     * toArray()/toJson() 读取原始属性，不走 getAttribute()，
+     * 这里统一在序列化前解密，否则 API 响应会泄漏密文。
+     */
+    public function attributesToArray()
+    {
+        $attributes = parent::attributesToArray();
+        foreach ($this->encryptable ?? [] as $key) {
+            if (array_key_exists($key, $attributes)) {
+                $attributes[$key] = $this->decryptAttributeValue($key, $attributes[$key]);
+            }
+        }
+        return $attributes;
+    }
+
     protected function isEncryptableField(string $key): bool
     {
         return isset($this->encryptable) && in_array($key, $this->encryptable, true);

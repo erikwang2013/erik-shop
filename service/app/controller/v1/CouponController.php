@@ -43,6 +43,11 @@ class CouponController extends \app\controller\BaseApiController
                 if (!$coupon || $coupon->status !== 1) {
                     throw new \RuntimeException('优惠券不存在');
                 }
+                // 有效期外不可领取（与 applyCoupon 窗口校验对齐）；过期视同不存在 → 404
+                $now = date('Y-m-d H:i:s');
+                if (($coupon->start_at && $now < $coupon->start_at) || ($coupon->end_at && $now > $coupon->end_at)) {
+                    throw new \RuntimeException('优惠券不存在');
+                }
 
                 $claimedCount = UserCoupons::where('user_id', $userId)->where('coupon_id', $id)->count();
                 if ($claimedCount >= $coupon->per_user_limit) {

@@ -10,6 +10,7 @@ use Erik\Encryptable\Encryptable;
 class PointRules extends BaseModel
 {    use Encryptable;
     protected $table = "erik_point_rules";
+    public $timestamps = false;   // 表仅 created_at 列（DB 默认），无 updated_at
     protected $encryptable = [];
 
 }

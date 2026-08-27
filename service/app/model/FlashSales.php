@@ -13,7 +13,7 @@ class FlashSales extends BaseModel
 {
     use SoftDeletes;
     protected $table = "erik_flash_sales";
-    public function flashSaleSkus(): HasMany
+    public function skus(): HasMany
     {
         return $this->hasMany(FlashSaleSkus::class, "flash_sale_id");
     }

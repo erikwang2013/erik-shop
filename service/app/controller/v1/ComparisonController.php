@@ -19,6 +19,9 @@ class ComparisonController extends \app\controller\BaseApiController
     public function store(Request $request): \support\Response
     {
         $productId = $request->input('product_id');
+        if (empty($productId)) {
+            return ApiResponse::fail('缺少商品参数', 422);
+        }
         $count = ProductComparisons::where('user_id', $request->userId)->count();
         if ($count >= 4) ProductComparisons::where('user_id', $request->userId)->oldest()->first()->delete();
 

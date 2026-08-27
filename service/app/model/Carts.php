@@ -5,7 +5,6 @@
 
 namespace app\model;
 
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -13,6 +12,7 @@ class Carts extends BaseModel
 {
     use SoftDeletes;
     protected $table = "erik_carts";
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(Users::class, "user_id");

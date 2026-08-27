@@ -43,6 +43,9 @@ class AuthController extends \app\controller\BaseApiController
         if (empty($email) || empty($password)) {
             return ApiResponse::fail('邮箱和密码不能为空', 422);
         }
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            return ApiResponse::fail('邮箱格式不正确', 422);
+        }
         // 邮箱粒度锁：email_hash 无唯一索引，并发注册同一邮箱会创建重复账号
         try {
             return DistributedLock::run("lock:register:" . Users::emailHash($email), function () use ($email, $password, $nickname, $request) {

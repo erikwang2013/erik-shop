@@ -15,6 +15,9 @@ class ComplianceController extends \app\controller\BaseApiController
     {
         $productId = $request->input('product_id');
         $destCountryId = $request->input('dest_country_id');
+        if (empty($productId) || empty($destCountryId)) {
+            return ApiResponse::fail('缺少商品或目的国参数', 422);
+        }
 
         $productCompliances = ProductCompliance::where('product_id', $productId)->pluck('compliance_category_id');
         if ($productCompliances->isEmpty()) {

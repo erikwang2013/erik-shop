@@ -20,6 +20,9 @@ class TariffController extends \app\controller\BaseApiController
     {
         $productId = $request->input('product_id');
         $destCountryId = $request->input('dest_country_id');
+        if (empty($productId) || empty($destCountryId)) {
+            return ApiResponse::fail('缺少商品或目的国参数', 422);
+        }
         $declaredValue = (float) $request->input('declared_value', 0);
 
         $hsCodeIds = ProductHsCodes::where('product_id', $productId)->pluck('hs_code_id');

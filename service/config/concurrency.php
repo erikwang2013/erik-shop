@@ -47,6 +47,12 @@ return [
         '/api/search' => [1 => 10],         // 搜索: 1秒10次
     ],
 
+    // 熔断器 (外部API调用)
+    'circuit_breaker' => [
+        'fail_threshold' => 5,   // 连续失败次数触发熔断
+        'open_seconds' => 30,    // 熔断持续时间（秒），到期后自动半开探测
+    ],
+
     // 异步队列 (慢操作)
     'queue' => [
         'email' => true,           // 邮件异步发送

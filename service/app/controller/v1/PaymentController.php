@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\CircuitBreakerOpenException;
 use app\common\DistributedLock;
 use app\common\PaymentGateway as Gateway;
 use app\common\RefundHelper;
@@ -122,6 +123,11 @@ class PaymentController extends \app\controller\BaseApiController
                     $payment->status = 3;
                     $payment->save();
                     return ApiResponse::fail('不支持的支付网关: ' . $gateway, 422);
+                } catch (CircuitBreakerOpenException $e) {
+                    // 熔断中：服务暂不可用（503），用户稍后可重试
+                    $payment->status = 3;
+                    $payment->save();
+                    return ApiResponse::fail('支付服务暂不可用，请稍后重试', 503);
                 } catch (\Throwable $e) {
                     $payment->status = 3;
                     $payment->save();

@@ -7,8 +7,18 @@ namespace app\common;
 
 use GuzzleHttp\Client as HttpClient;
 use Stripe\StripeClient;
+use Stripe\Exception\CardException;
+use Stripe\Exception\InvalidRequestException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Webhook;
+
+/**
+ * 网关业务拒绝（HTTP 成功但业务失败，如卡被拒/余额不足）：
+ * 不计入熔断失败计数，防止攻击者用无效请求打挂支付网关熔断器
+ */
+class GatewayBusinessException extends \RuntimeException
+{
+}
 
 class PaymentGateway
 {
@@ -37,6 +47,12 @@ class StripeGateway implements PaymentGatewayInterface
 
     public function createPayment(array $data): array
     {
+        // 卡被拒等业务拒绝不计数，防无效卡刷挂熔断器
+        return CircuitBreaker::call('stripe', fn() => $this->doCreatePayment($data), null, [CardException::class, InvalidRequestException::class]);
+    }
+
+    private function doCreatePayment(array $data): array
+    {
         $intent = $this->client->paymentIntents->create([
             'amount' => (int) round($data['amount'] * 100),
             'currency' => strtolower($data['currency']),
@@ -64,6 +80,11 @@ class StripeGateway implements PaymentGatewayInterface
 
     public function capturePayment(string $txnId): array
     {
+        return CircuitBreaker::call('stripe', fn() => $this->doCapturePayment($txnId), null, [CardException::class, InvalidRequestException::class]);
+    }
+
+    private function doCapturePayment(string $txnId): array
+    {
         $intent = $this->client->paymentIntents->capture($txnId);
 
         return [
@@ -74,6 +95,11 @@ class StripeGateway implements PaymentGatewayInterface
     }
 
     public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    {
+        return CircuitBreaker::call('stripe', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [CardException::class, InvalidRequestException::class]);
+    }
+
+    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
     {
         $refund = $this->client->refunds->create([
             'payment_intent' => $txnId,
@@ -138,6 +164,11 @@ class PayPalGateway implements PaymentGatewayInterface
 
     public function createPayment(array $data): array
     {
+        return CircuitBreaker::call('paypal', fn() => $this->doCreatePayment($data), null, [GatewayBusinessException::class]);
+    }
+
+    private function doCreatePayment(array $data): array
+    {
         $token = $this->getAccessToken();
         $amount = number_format($data['amount'], 2, '.', '');
 
@@ -157,8 +188,9 @@ class PayPalGateway implements PaymentGatewayInterface
 
         $result = json_decode($response->getBody(), true);
         if (empty($result['id'])) {
-            // 失败时抛异常而非伪造交易号，避免 webhook 永远匹配不上导致订单卡死
-            throw new \RuntimeException('PayPal 创建支付失败: ' . json_encode($result));
+            // 失败时抛异常而非伪造交易号，避免 webhook 永远匹配不上导致订单卡死；
+            // 业务拒绝不计数熔断（防攻击者用无效订单刷挂熔断器）
+            throw new GatewayBusinessException('PayPal 创建支付失败: ' . json_encode($result));
         }
 
         return [
@@ -172,6 +204,11 @@ class PayPalGateway implements PaymentGatewayInterface
     }
 
     public function capturePayment(string $txnId): array
+    {
+        return CircuitBreaker::call('paypal', fn() => $this->doCapturePayment($txnId), null, [GatewayBusinessException::class]);
+    }
+
+    private function doCapturePayment(string $txnId): array
     {
         $token = $this->getAccessToken();
         $response = $this->http->post("/v2/checkout/orders/{$txnId}/capture", [
@@ -188,6 +225,11 @@ class PayPalGateway implements PaymentGatewayInterface
 
     public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
     {
+        return CircuitBreaker::call('paypal', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [GatewayBusinessException::class]);
+    }
+
+    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    {
         $token = $this->getAccessToken();
         $response = $this->http->post("/v2/payments/captures/{$txnId}/refund", [
             'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
@@ -195,7 +237,7 @@ class PayPalGateway implements PaymentGatewayInterface
         ]);
         $result = json_decode($response->getBody(), true);
         if (empty($result['id'])) {
-            throw new \RuntimeException('PayPal 退款失败: ' . json_encode($result));
+            throw new GatewayBusinessException('PayPal 退款失败: ' . json_encode($result));
         }
 
         return [

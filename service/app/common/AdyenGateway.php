@@ -42,6 +42,11 @@ class AdyenGateway implements PaymentGatewayInterface
 
     public function createPayment(array $data): array
     {
+        return CircuitBreaker::call('adyen', fn() => $this->doCreatePayment($data), null, [GatewayBusinessException::class]);
+    }
+
+    private function doCreatePayment(array $data): array
+    {
         $response = $this->http->post('/v71/sessions', [
             'json' => [
                 'merchantAccount' => $this->merchantAccount,
@@ -57,7 +62,7 @@ class AdyenGateway implements PaymentGatewayInterface
         ]);
         $result = json_decode($response->getBody(), true);
         if (empty($result['id'])) {
-            throw new \RuntimeException('Adyen 创建支付会话失败: ' . json_encode($result));
+            throw new GatewayBusinessException('Adyen 创建支付会话失败: ' . json_encode($result));
         }
 
         return [
@@ -75,6 +80,11 @@ class AdyenGateway implements PaymentGatewayInterface
      */
     public function capturePayment(string $txnId): array
     {
+        return CircuitBreaker::call('adyen', fn() => $this->doCapturePayment($txnId), null, [GatewayBusinessException::class]);
+    }
+
+    private function doCapturePayment(string $txnId): array
+    {
         $response = $this->http->get("/v71/sessions/{$txnId}");
         $result = json_decode($response->getBody(), true);
 
@@ -89,6 +99,11 @@ class AdyenGateway implements PaymentGatewayInterface
      * 退款：txnId 传 Adyen 的 paymentPspReference
      */
     public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    {
+        return CircuitBreaker::call('adyen', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [GatewayBusinessException::class]);
+    }
+
+    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
     {
         $response = $this->http->post("/v71/payments/{$txnId}/refunds", [
             'json' => [

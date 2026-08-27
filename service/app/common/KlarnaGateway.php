@@ -44,6 +44,11 @@ class KlarnaGateway implements PaymentGatewayInterface
 
     public function createPayment(array $data): array
     {
+        return CircuitBreaker::call('klarna', fn() => $this->doCreatePayment($data), null, [GatewayBusinessException::class]);
+    }
+
+    private function doCreatePayment(array $data): array
+    {
         $response = $this->http->post('/payments/v1/sessions', [
             'json' => [
                 'purchase_country' => $data['country'] ?? 'US',
@@ -59,7 +64,7 @@ class KlarnaGateway implements PaymentGatewayInterface
         ]);
         $result = json_decode($response->getBody(), true);
         if (empty($result['session_id'])) {
-            throw new \RuntimeException('Klarna 创建支付会话失败: ' . json_encode($result));
+            throw new GatewayBusinessException('Klarna 创建支付会话失败: ' . json_encode($result));
         }
 
         return [
@@ -78,6 +83,11 @@ class KlarnaGateway implements PaymentGatewayInterface
      */
     public function capturePayment(string $txnId): array
     {
+        return CircuitBreaker::call('klarna', fn() => $this->doCapturePayment($txnId), null, [GatewayBusinessException::class]);
+    }
+
+    private function doCapturePayment(string $txnId): array
+    {
         $response = $this->http->get("/ordermanagement/v1/orders/{$txnId}");
         $result = json_decode($response->getBody(), true);
 
@@ -89,6 +99,11 @@ class KlarnaGateway implements PaymentGatewayInterface
     }
 
     public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    {
+        return CircuitBreaker::call('klarna', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [GatewayBusinessException::class]);
+    }
+
+    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
     {
         $response = $this->http->post("/ordermanagement/v1/orders/{$txnId}/refunds", [
             'json' => ['refunded_amount' => (int) round($amount * 100)],

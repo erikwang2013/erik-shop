@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\CircuitBreakerOpenException;
 use app\common\DistributedLock;
 use app\common\HashidsHelper;
 use app\common\Jwt;
@@ -33,6 +34,9 @@ class SocialAuthController extends \app\controller\BaseApiController
         // 验证 id_token（fail-closed），provider_user_id 取自验证结果而非客户端提交
         try {
             $verified = SocialAuth::verify($provider, $idToken, $email);
+        } catch (CircuitBreakerOpenException $e) {
+            // 社交平台熔断中：服务暂不可用（503），稍后可重试
+            return ApiResponse::fail('社交登录服务暂不可用，请稍后重试', 503);
         } catch (\Throwable $e) {
             return ApiResponse::fail('社交登录验证失败: ' . $e->getMessage(), 401);
         }

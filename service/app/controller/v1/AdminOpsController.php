@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\CircuitBreakerOpenException;
 use app\common\HashidsHelper;
 use app\common\PaymentGateway as Gateway;
 use app\common\RefundHelper;
@@ -69,6 +70,9 @@ class AdminOpsController extends \app\controller\BaseApiController
             $result = $gatewayObj->refundPayment($txnId, $amount, $payment->currency_code);
         } catch (\InvalidArgumentException $e) {
             return ApiResponse::fail('不支持的支付网关: ' . $payment->gateway, 422);
+        } catch (CircuitBreakerOpenException $e) {
+            // 熔断中：服务暂不可用（503），稍后可重试
+            return ApiResponse::fail('支付服务暂不可用，请稍后重试', 503);
         } catch (\Throwable $e) {
             \support\Log::error('退款执行失败 [refund=' . $refund->refund_no . ']: ' . $e->getMessage(), [
                 'refund_id' => $refund->id,

@@ -59,6 +59,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(integriertes R
 ## 5. Hohe Nebenläufigkeit
 
 - **Rate-Limiting**: Token-Bucket-Sliding-Window (Redis ZSET), 6 Endpunkt-Regeln
+- **Circuit Breaker/Degradation**: Redis-Circuit-Breaker — externe API-Aufrufe (Zahlungs-Gateways/Social-Login): 5 aufeinanderfolgende Fehler → 30s geöffnet, halboffener Test mit automatischer Wiederherstellung; Geschäftsfehler zählen nicht als Fehler; bei Redis-Ausfall automatische Degradation mit Durchlass (503)
 - **DB**: Read/Write-Splitting (2 Lesereplikate + sticky) + Verbindungspool (50/10)
 - **Langsame Operationen**: werden von separaten Cron-Prozessen verarbeitet (Feed-Synchronisierung/Empfehlungsberechnung/Zahlungsabgleich/Settlement-Berechnung usw.)
 

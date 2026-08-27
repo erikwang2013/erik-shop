@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 Circuit Breaker and Degradation
+
+- Added Redis circuit breaker `CircuitBreaker` (`service/app/common/CircuitBreaker.php`): payment gateways (Stripe/PayPal/Klarna/Adyen) and social login external calls uniformly guarded — 5 consecutive failures → 30s open, TTL expiry half-open probe auto-recovers
+- Business-rejection whitelist: invalid card/invalid token don't count toward breaker failures (prevents junk requests taking down dependencies)
+- Redis failure auto-degrades to pass-through; while open, APIs return 503 "Service Unavailable"
+- Config: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## 2026-08-07 Fix Log
 
 | # | Issue | Severity | Fix |

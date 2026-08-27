@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 Disyuntor y degradación
+
+- Nuevo disyuntor Redis `CircuitBreaker` (`service/app/common/CircuitBreaker.php`): llamadas externas de pasarelas de pago (Stripe/PayPal/Klarna/Adyen) e inicio de sesión social protegidas uniformemente — 5 fallos consecutivos → 30s abierto, al expirar el TTL sonda semiabierta con recuperación automática
+- Lista blanca de rechazos de negocio: tarjeta no válida/token no válido no cuentan como fallos del disyuntor (evita que peticiones basura tumben los servicios dependientes)
+- Fallo de Redis: degradación automática con pase directo; mientras está abierto, las APIs devuelven 503 «Servicio no disponible»
+- Parámetros: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## Registro de correcciones 2026-08-07
 
 | # | Problema | Gravedad | Corrección |

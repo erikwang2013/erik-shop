@@ -57,6 +57,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl (RBAC embutido
 ## 5. Alta concorrência
 
 - **Limitação de taxa**: token bucket com janela deslizante (Redis ZSET), regras para 6 endpoints
+- **Disjuntor/degradação**: disjuntor Redis — chamadas de API externas de gateways de pagamento/login social; 5 falhas consecutivas→disjuntor aberto por 30s, sondagem semiaberta com recuperação automática; exceções de negócio não contam como falhas; falha do Redis libera a passagem automaticamente (503)
 - **DB**: separação leitura/escrita (2 réplicas de leitura + sticky) + pool de conexões (50/10)
 - **Operações lentas**: tratadas por processos Cron independentes (sincronização de Feed/cálculo de recomendações/conciliação de pagamentos/liquidação de repartições etc.)
 

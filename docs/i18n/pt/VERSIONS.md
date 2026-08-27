@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 Disjuntor e degradação
+
+- Novo disjuntor Redis `CircuitBreaker` (`service/app/common/CircuitBreaker.php`): chamadas externas de gateways de pagamento (Stripe/PayPal/Klarna/Adyen) e login social passam a ser protegidas por disjuntor unificado — 5 falhas consecutivas→disjuntor aberto por 30s, sondagem semiaberta após o TTL com recuperação automática
+- Lista branca de exceções de negócio: cartão inválido/token inválido não contam como falha do disjuntor (evita que requisições maliciosas derrubem serviços dependentes)
+- Falha do Redis libera a passagem automaticamente (fail-open); durante o disjuntor a interface retorna 503 "Serviço temporariamente indisponível"
+- Parâmetros: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## Registro de correções 2026-08-07
 
 | # | Problema | Severidade | Correção |

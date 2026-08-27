@@ -39,7 +39,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // 40005 Body terlalu besar  40006 Kesalahan Content-Type  40008 Serangan brute-force
 // 40009 Pelanggaran upload file  40010 Injeksi XXE  40011 Serangan SSRF
 // 40012 Metode HTTP salah  40013 Kesalahan header Host
-// 401 Belum login  403 Akses ditolak  422 Validasi parameter gagal  429 Terlalu banyak permintaan
+// 401 Belum login  403 Akses ditolak  422 Validasi parameter gagal  429 Terlalu banyak permintaan  503 Layanan untuk sementara tidak tersedia (circuit breaker/degradasi)
 ```
 
 ### Keterangan ID

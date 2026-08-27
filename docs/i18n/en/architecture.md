@@ -57,6 +57,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl (built-in RBAC
 ## 5. High Concurrency
 
 - **Rate limiting**: token bucket sliding window (Redis ZSET), 6 endpoint rules
+- **Circuit breaker/degradation**: Redis circuit breaker — external API calls (payment gateways/social login), 5 consecutive failures → 30s open, half-open probe auto-recovers; business rejections don't count as failures; Redis failure auto-degrades to pass-through (503)
 - **DB**: read/write split (2 read replicas + sticky) + connection pool (50/10)
 - **Slow operations**: handled by dedicated Cron processes (Feed sync/recommendation calculation/payment reconciliation/settlement etc.)
 

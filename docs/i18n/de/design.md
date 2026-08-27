@@ -93,11 +93,15 @@ API-Versionskontrolle, Middleware-Pipeline, Endpunkt-Statistik und einheitliche 
 
 Token-Bucket-Sliding-Window (Redis ZSET, über die `support\Redis`-Fassade): standardmäßig 60s/100 Anfragen, Login 10/60s, Registrierung 5/300s, Social-Login 5/300s, Zahlung 5/60s, Bestellung 3/10s, Suche 10/1s
 
-### 4.2 Redis-Verwendung
+### 4.2 Circuit Breaker & Degradation
+
+Redis-Circuit-Breaker (`app\common\CircuitBreaker`): Externe API-Aufrufe wie Zahlungs-Gateways/Social-Login laufen einheitlich über `CircuitBreaker::call()` — 5 aufeinanderfolgende Fehler lösen eine 30s-Öffnung aus, nach Ablauf der TTL führt der nächste Request automatisch einen halboffenen Test durch, bei Erfolg wird zurückgesetzt. Eine Whitelist für Geschäftsfehler (ungültige Karte/ungültiges Token) zählt nicht als Fehler, um zu verhindern, dass Angreifer den abhängigen Dienst mit ungültigen Anfragen lahmlegen; bei Redis-Ausfall automatische Degradation mit Durchlass. Während der Öffnung gibt die Schnittstelle 503 „Dienst vorübergehend nicht verfügbar" zurück.
+
+### 4.3 Redis-Verwendung
 
 Redis wird für das Rate-Limiting-Token-Bucket (`support\Redis`-Fassade), Mensch-Maschine-Verifizierungscodes und Session-Speicherung verwendet; Geschäftsdaten werden nicht auf Anwendungsebene gecacht, sondern direkt aus MySQL gelesen (Read/Write-Splitting + Verbindungspool).
 
-### 4.3 Verbindungspool
+### 4.4 Verbindungspool
 
 MySQL: 50max/10min/2s-Timeout | Read/Write-Splitting: 30max/5min (2 Lesereplikate, sticky=true) | Redis: 30max/5min
 

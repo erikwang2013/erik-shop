@@ -91,11 +91,15 @@ Contrôle de version API, pipeline de middlewares, statistiques d'endpoints et s
 
 Seau à jetons à fenêtre glissante (ZSET Redis, via la facade support\Redis) : 100 requêtes/60s par défaut, connexion 10/60s, inscription 5/300s, connexion sociale 5/300s, paiement 5/60s, commande 3/10s, recherche 10/1s
 
-### 4.2 Utilisations de Redis
+### 4.2 Disjoncteur et dégradation
+
+Disjoncteur Redis (`app\common\CircuitBreaker`) : tous les appels d'API externes comme les passerelles de paiement/connexion sociale passent par `CircuitBreaker::call()` — 5 échecs consécutifs ouvrent le disjoncteur pendant 30s ; une fois le TTL expiré, la requête suivante effectue automatiquement une sonde semi-ouverte et se réinitialise en cas de succès. La liste blanche des rejets métier (carte invalide/jeton invalide) ne compte jamais comme échec, empêchant les attaquants de faire tomber les services dépendants avec des requêtes indésirables ; quand Redis est indisponible, il se dégrade automatiquement en passage direct. Tant que le disjoncteur est ouvert, les API renvoient 503 « Service indisponible ».
+
+### 4.3 Utilisations de Redis
 
 Redis est utilisé pour la limitation de débit par seau à jetons (facade `support\Redis`), les codes de vérification homme-machine et le stockage des sessions ; les données métier ne sont pas mises en cache au niveau application, elles sont lues directement depuis MySQL (séparation lecture/écriture + pools de connexions).
 
-### 4.3 Pools de connexions
+### 4.4 Pools de connexions
 
 MySQL : 50 max/10min/2s de délai | séparation lecture/écriture : 30 max/5min (2 réplicas de lecture, sticky=true) | Redis : 30 max/5min
 

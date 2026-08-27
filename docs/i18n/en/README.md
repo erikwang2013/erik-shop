@@ -74,6 +74,8 @@ A full-stack cross-border e-commerce platform built on the webman ecosystem, cov
 
 ![Security Architecture Diagram](./diagrams/07-security-architecture.svg)
 
+**Resilience (circuit breaker):** a Redis-backed CircuitBreaker guards all outbound payment (Stripe/PayPal/Klarna/Adyen) and social-login calls — 5 consecutive failures open the circuit for 30s, then half-open probing auto-recovers. Business rejections (declined card, invalid token) are whitelisted and never count, so junk requests cannot knock out dependencies. If Redis itself fails, the breaker degrades to pass-through; while open, APIs return 503.
+
 ### Multi-Currency Settlement Flow Diagram
 
 ![Multi-Currency Settlement Flow Diagram](./diagrams/08-multi-currency-settlement.svg)

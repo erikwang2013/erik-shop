@@ -74,6 +74,8 @@ Plateforme de commerce électronique transfrontalier full-stack basée sur l'éc
 
 ![Diagramme d'architecture de sécurité](diagrams/07-security-architecture.svg)
 
+**Résilience (disjoncteur) :** un CircuitBreaker adossé à Redis protège tous les appels sortants de paiement (Stripe/PayPal/Klarna/Adyen) et de connexion sociale — 5 échecs consécutifs ouvrent le disjoncteur pendant 30s, puis une sonde semi-ouverte le rétablit automatiquement. Les rejets métier (carte refusée, jeton invalide) sont en liste blanche et ne comptent jamais, si bien que les requêtes indésirables ne peuvent pas faire tomber les dépendances. Si Redis lui-même tombe en panne, le disjoncteur se dégrade en passage direct ; tant qu'il est ouvert, les API renvoient 503.
+
 ### Diagramme de flux de règlement multidevise
 
 ![Diagramme de flux de règlement multidevise](diagrams/08-multi-currency-settlement.svg)

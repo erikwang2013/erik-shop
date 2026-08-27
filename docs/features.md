@@ -48,7 +48,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **供应链** | 供应商档案+评级、采购单(审核→发货→收货→质检)、质检(入库+出库门禁/外观/功能/合规标签检查)、库存流水(不可变账本:入库/出库/调拨/盘点) | 完整 |
 | **风控合规** | 规则引擎(旁路打分:地址校验/邮编匹配/3DS/批量注册/货值异常)、KYC实名、GDPR/CCPA数据请求、Cookie Consent版本管理 | 完整 |
 | **安全防护** | SecurityMiddleware 封装 security-php 31个检测器: XSS(13条)/SQL注入(13条)/CRLF/路径遍历(编码+null byte)/Body大小/Content-Type/文件上传/HTTP安全头/暴力破解(Redis计数器)/XXE/SSRF/方法/Host/敏感脱敏/CORS | 完整 |
-| **高并发** | 令牌桶限流(滑动窗口+6端点规则)、DB读写分离(2读副本+sticky)、连接池(DB 50/10+Redis 30/5)、OPCache(128MB, Docker环境) | 完整 |
+| **高并发** | 令牌桶限流(滑动窗口+6端点规则)、熔断器(支付/社交登录,5次失败→30s熔断+半开恢复)、DB读写分离(2读副本+sticky)、连接池(DB 50/10+Redis 30/5)、OPCache(128MB, Docker环境) | 完整 |
 | **会员增长** | 会员等级+权益、积分规则+流水、礼品卡(余额+兑换)、降价/到货提醒、收藏夹、商品对比、浏览历史、订阅周期购、AB测试(流量分配+置信度) | 完整 |
 | **内容管理** | CMS多语言页面(Landing/Blog)、FAQ多语言、知识库多语言、尺码对照表(服装/鞋类+US/UK/EU/JP/CN转换)、邮件模板(多语言)、商品Feed(Google/Meta+定时同步) | 完整 |
 | **客服** | WebSocket实时IM(chat_sessions/chat_messages)、知识库多语言 | 表结构完整,WS待实现 |

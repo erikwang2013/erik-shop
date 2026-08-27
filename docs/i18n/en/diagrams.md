@@ -50,7 +50,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|---------|---------|
 | Layer 1 | Network boundary | Nginx SSL + reverse proxy + Host validation | Service + Admin |
 | Layer 2 | WAF attack detection | `erikwang2013/security-php` 31 detectors | XSS/SQLi/CRLF/path traversal/XXE/SSRF/file upload/method/Host/Content-Type/Body etc. |
-| Layer 3 | Traffic control | RateLimitMiddleware + brute force Redis counters | Token bucket rate limiting (6 endpoints) + login/register anti-brute-force |
+| Layer 3 | Traffic control + dependency resilience | RateLimitMiddleware + brute force Redis counters + CircuitBreaker | Token bucket rate limiting (6 endpoints) + login/register anti-brute-force + payment/social-login circuit breaker (5 failures→30s, half-open recovery) |
 | Layer 4 | Identity authentication | PosterVerify + JwtAuth HS256 | Human verification (slider/puzzle/click) + Bearer Token + dual-token refresh |
 | Layer 5 | Data security | Hashids + AES-256-CBC + Encryptable | Three-layer encryption: ID obfuscation/transport encryption/database field encryption |
 | Layer 6 | Response security | HTTP security headers + sensitive data masking | nosniff/DENY/XSS-Protection/Referrer-Policy/log masking |
@@ -86,5 +86,5 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 4 | Request Lifecycle Diagram | Lifecycle | Shows the complete sequence from request to response and interactions at each stage |
 | 5 | Order Lifecycle Diagram | Lifecycle | Shows all state transitions of an order from cart to completed/refunded |
 | 6 | Deployment Architecture Diagram | Architecture | Shows Docker Compose container orchestration, network, and data volumes |
-| 7 | Security Architecture Diagram | Architecture | Shows the 6-layer defense-in-depth system: boundary→WAF→traffic→auth→data→response |
+| 7 | Security Architecture Diagram | Architecture | Shows the 6-layer defense-in-depth system: boundary→WAF→traffic/resilience (rate limiting + circuit breaker)→auth→data→response |
 | 8 | Multi-Currency Settlement Flow Diagram | Flow | Shows the complete chain: per-currency pricing→payment→settlement→settlement allocation→FX gains/losses |

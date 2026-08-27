@@ -52,7 +52,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|---------|---------|
 | Ebene 1 | Netzwerk-Boundary | Nginx SSL + Reverse-Proxy + Host-Validierung | Service + Admin |
 | Ebene 2 | WAF-Angriffserkennung | 31 Erkennungsmodule von `erikwang2013/security-php` | XSS/SQLi/CRLF/Pfad-Traversal/XXE/SSRF/Datei-Upload/Methode/Host/Content-Type/Body usw. |
-| Ebene 3 | Traffic-Steuerung | RateLimitMiddleware + Brute-Force-Redis-Zähler | Token-Bucket-Limiting (6 Endpunkte) + Schutz für Login/Registrierung |
+| Ebene 3 | Traffic-Steuerung + Abhängigkeits-Resilienz | RateLimitMiddleware + Brute-Force-Redis-Zähler + CircuitBreaker | Token-Bucket-Limiting (6 Endpunkte) + Schutz für Login/Registrierung + Zahlungs-/Social-Login-Circuit-Breaker (5 Fehler → 30s, halboffene Erholung) |
 | Ebene 4 | Identitätsauthentifizierung | PosterVerify + JwtAuth HS256 | Mensch-Maschine-Verifizierung (Schieberegler/Puzzle/Klick) + Bearer Token + Dual-Token-Refresh |
 | Ebene 5 | Datensicherheit | Hashids + AES-256-CBC + Encryptable | Drei-Schichten-Verschlüsselung: ID-Verschleierung/Übertragungsverschlüsselung/Datenbank-Feldverschlüsselung |
 | Ebene 6 | Antwort-Sicherheit | HTTP-Sicherheitsheader + Maskierung sensibler Daten | nosniff/DENY/XSS-Protection/Referrer-Policy/Log-Maskierung |
@@ -88,5 +88,5 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 4 | Anfrage-Lebenszyklus | Lebenszyklus | Zeigt die vollständige Sequenz von der Anfrage bis zur Antwort und die Interaktionen der einzelnen Phasen |
 | 5 | Bestell-Lebenszyklus | Lebenszyklus | Zeigt alle Statusübergänge einer Bestellung vom Warenkorb bis zur Fertigstellung/Rückerstattung |
 | 6 | Bereitstellungsarchitektur | Architekturdiagramm | Zeigt die Docker-Compose-Container-Orchestrierung, das Netzwerk und die Datenvolumes |
-| 7 | Sicherheitsarchitektur | Architekturdiagramm | Zeigt das 6-stufige Defense-in-Depth-System: Boundary → WAF → Traffic → Auth → Daten → Antwort |
+| 7 | Sicherheitsarchitektur | Architekturdiagramm | Zeigt das 6-stufige Defense-in-Depth-System: Boundary → WAF → Traffic/Resilienz (Rate-Limiting + Circuit Breaker) → Auth → Daten → Antwort |
 | 8 | Mehrwährungs-Abwicklungsfluss | Flussdiagramm | Zeigt die vollständige Kette: währungsbezogene Preisgestaltung → Zahlung → Aufteilung → Abrechnung → Wechselkurs-Gewinne/-Verluste |

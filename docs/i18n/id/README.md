@@ -157,7 +157,7 @@ shop-php/
 | **Rantai pasok** | Rating pemasok, pembelian→inspeksi kualitas→penerimaan stok, riwayat stok (buku besar tidak dapat diubah), transfer |
 | **Manajemen risiko & kepatuhan** | Mesin aturan (penilaian side-channel), verifikasi identitas KYC, permintaan data GDPR/CCPA, Cookie Consent |
 | **Perlindungan keamanan** | Deteksi 31 jenis serangan (XSS/Injeksi SQL/XXE/SSRF/CRLF/path traversal/unggah file/brute force/metode HTTP/Host/CORS, dll.) |
-| **Konkurensi tinggi** | Rate limiting token bucket, pemisahan baca/tulis DB, optimasi kumpulan koneksi |
+| **Konkurensi tinggi** | Rate limiting token bucket, circuit breaker (pembayaran/login sosial), pemisahan baca/tulis DB, optimasi kumpulan koneksi |
 | **Pertumbuhan anggota** | Aturan poin, hak-hak level keanggotaan, kartu hadiah, pengingat penurunan harga, pembelian berlangganan, uji AB |
 | **Manajemen konten** | Halaman CMS multi-bahasa, FAQ, basis pengetahuan, tabel konversi ukuran, template email, sinkronisasi Feed produk |
 | **Layanan pelanggan** | IM real-time WebSocket, basis pengetahuan (struktur tabel sudah dibuat) |

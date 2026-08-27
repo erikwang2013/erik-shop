@@ -20,6 +20,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 Circuit Breaker & Degradation
+
+- Neuer Redis-Circuit-Breaker `CircuitBreaker` (`service/app/common/CircuitBreaker.php`): Zahlungs-Gateways (Stripe/PayPal/Klarna/Adyen) und Social-Login-Aufrufe einheitlich abgesichert — 5 aufeinanderfolgende Fehler → 30s geöffnet, nach TTL-Ablauf halboffener Test mit automatischer Wiederherstellung
+- Whitelist für Geschäftsfehler: ungültige Karte/ungültiges Token zählen nicht als Fehler (verhindert, dass Angreifer den abhängigen Dienst mit ungültigen Requests lahmlegen)
+- Bei Redis-Ausfall automatische Degradation mit Durchlass; während der Öffnung gibt die Schnittstelle 503 „Dienst vorübergehend nicht verfügbar" zurück
+- Parameter: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## Fehlerbehebungsprotokoll 2026-08-07
 
 | # | Problem | Schweregrad | Lösung |

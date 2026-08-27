@@ -74,6 +74,8 @@ Plataforma de comercio electrónico transfronterizo full-stack construida sobre 
 
 ![Diagrama de arquitectura de seguridad](diagrams/07-security-architecture.svg)
 
+**Resiliencia (disyuntor):** un CircuitBreaker respaldado por Redis protege todas las llamadas externas de pago (Stripe/PayPal/Klarna/Adyen) e inicio de sesión social — 5 fallos consecutivos abren el disyuntor durante 30s y, después, una sonda semiabierta lo recupera automáticamente. Los rechazos de negocio (tarjeta rechazada, token no válido) están en lista blanca y nunca cuentan, por lo que las peticiones basura no pueden tumbar las dependencias. Si Redis falla, el disyuntor degrada a pase directo; mientras está abierto, las APIs devuelven 503.
+
 ### Diagrama de flujo de liquidación multimoneda
 
 ![Diagrama de flujo de liquidación multimoneda](diagrams/08-multi-currency-settlement.svg)

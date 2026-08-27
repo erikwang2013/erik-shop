@@ -39,7 +39,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // 40005 Corps de requête trop volumineux  40006 Erreur Content-Type  40008 Attaque par force brute
 // 40009 Téléversement de fichier non conforme  40010 Injection XXE  40011 Attaque SSRF
 // 40012 Méthode HTTP invalide  40013 En-tête Host invalide
-// 401 Non authentifié  403 Accès interdit  422 Échec de validation des paramètres  429 Trop de requêtes
+// 401 Non authentifié  403 Accès interdit  422 Échec de validation des paramètres  429 Trop de requêtes  503 Service indisponible (disjoncteur/dégradation)
 ```
 
 ### Remarque sur les ID

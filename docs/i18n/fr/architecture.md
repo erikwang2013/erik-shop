@@ -57,6 +57,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(RBAC intégré
 ## 5. Haute concurrence
 
 - **Limitation de débit** : seau à jetons à fenêtre glissante (ZSET Redis), règles pour 6 endpoints
+- **Disjoncteur/dégradation** : disjoncteur Redis — appels d'API externes (passerelles de paiement/connexion sociale), 5 échecs consécutifs → ouvert 30s, sonde semi-ouverte avec rétablissement automatique ; les exceptions métier ne comptent pas comme échecs ; en cas de panne Redis, dégradation automatique en passage direct (503)
 - **DB** : séparation lecture/écriture (2 réplicas de lecture + sticky) + pools de connexions (50/10)
 - **Opérations lentes** : traitées par des processus Cron indépendants (synchronisation Feed/calcul de recommandations/rapprochement de paiements/règlement de répartition etc.)
 

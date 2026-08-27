@@ -91,11 +91,15 @@ API 版本控制、中间件管道、端点统计与统一响应规范，详见 
 
 令牌桶滑动窗口(Redis ZSET, 经 support\Redis 门面): 默认60s/100次, 登录10次/60s, 注册5次/300s, 社交登录5次/300s, 支付5次/60s, 下单3次/10s, 搜索10次/1s
 
-### 4.2 Redis 用途
+### 4.2 熔断与降级
 
-Redis 用于限流令牌桶（`support\Redis` 门面）、人机验证码与 Session 存储；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）。
+Redis 熔断器（`app\common\CircuitBreaker`）: 支付网关/社交登录等外部 API 调用统一走 `CircuitBreaker::call()` — 连续 5 次失败触发熔断 30s, TTL 过期后下一个请求自动半开探测, 成功即复位。业务异常白名单（无效卡/无效 token）不计入失败, 防止攻击者用无效请求打挂依赖服务; Redis 不可用时自动降级放行。熔断期间接口返回 503「服务暂不可用」。
 
-### 4.3 连接池
+### 4.3 Redis 用途
+
+Redis 用于限流令牌桶（`support\Redis` 门面）、熔断器计数、人机验证码与 Session 存储；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）。
+
+### 4.4 连接池
 
 MySQL: 50max/10min/2s超时 | 读写分离: 30max/5min (2读副本, sticky=true) | Redis: 30max/5min
 

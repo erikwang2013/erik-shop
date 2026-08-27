@@ -50,7 +50,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|---------|---------|
 | 제1계층 | 네트워크 경계 | Nginx SSL + 리버스 프록시 + Host 검증 | Service + Admin |
 | 제2계층 | WAF 공격 탐지 | `erikwang2013/security-php` 31개 탐지기 | XSS/SQLi/CRLF/경로 탐색/XXE/SSRF/파일 업로드/메서드/Host/Content-Type/Body 등 |
-| 제3계층 | 트래픽 제어 | RateLimitMiddleware + 무차별 대입 Redis 카운터 | 토큰 버킷 속도 제한(6엔드포인트) + 로그인/가입 폭주 방어 |
+| 제3계층 | 트래픽 제어 + 의존성 복원력 | RateLimitMiddleware + 무차별 대입 Redis 카운터 + CircuitBreaker | 토큰 버킷 속도 제한(6엔드포인트) + 로그인/가입 폭주 방어 + 결제/소셜 로그인 서킷 브레이커(5회 실패→30s, 반개 복구) |
 | 제4계층 | 신원 인증 | PosterVerify + JwtAuth HS256 | 휴먼 인증(슬라이더/퍼즐/클릭) + Bearer Token + 이중 token 갱신 |
 | 제5계층 | 데이터 보안 | Hashids + AES-256-CBC + Encryptable | 3계층 암호화: ID 난독화/전송 암호화/DB 필드 암호화 |
 | 제6계층 | 응답 보안 | HTTP 보안 헤더 + 민감 데이터 마스킹 | nosniff/DENY/XSS-Protection/Referrer-Policy/로그 마스킹 |
@@ -86,5 +86,5 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 4 | 요청 라이프사이클 다이어그램 | 라이프사이클 | 요청부터 응답까지의 전체 시퀀스와 단계별 상호작용 |
 | 5 | 주문 라이프사이클 다이어그램 | 라이프사이클 | 장바구니부터 완료/환불까지의 모든 상태 전이 |
 | 6 | 배포 아키텍처 다이어그램 | 아키텍처 도면 | Docker Compose 컨테이너 오케스트레이션, 네트워크, 데이터 볼륨 |
-| 7 | 보안 아키텍처 다이어그램 | 아키텍처 도면 | 6계층 심층 방어 체계: 경계→WAF→트래픽→인증→데이터→응답 |
+| 7 | 보안 아키텍처 다이어그램 | 아키텍처 도면 | 6계층 심층 방어 체계: 경계→WAF→트래픽/복원력(속도 제한+서킷 브레이커)→인증→데이터→응답 |
 | 8 | 다중 통화 정산 흐름도 | 흐름도 | 통화별 가격 책정→결제→분배→정산→환차손익 전체 체인 |

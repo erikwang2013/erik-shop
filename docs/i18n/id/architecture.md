@@ -57,6 +57,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(RBAC bawaan) �
 ## 5. Konkurensi Tinggi
 
 - **Rate limiting**: jendela geser token bucket (Redis ZSET), 6 aturan endpoint
+- **Circuit breaker/degradasi**: circuit breaker Redis — panggilan API eksternal gateway pembayaran/login sosial, 5 kegagalan beruntun→terbuka 30s, probe half-open pulih otomatis; pengecualian bisnis tidak dihitung sebagai kegagalan; saat Redis gagal otomatis degradasi mengizinkan (503)
 - **DB**: pemisahan baca/tulis (2 replika baca + sticky) + kumpulan koneksi (50/10)
 - **Operasi lambat**: ditangani oleh proses Cron independen (sinkronisasi Feed/perhitungan rekomendasi/rekonsiliasi pembayaran/settlement pembagian dana, dll.)
 

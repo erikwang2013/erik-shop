@@ -39,7 +39,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // 40005 Corpo da requisição grande demais  40006 Content-Type incorreto  40008 Força bruta
 // 40009 Upload de arquivo violado  40010 Injeção XXE  40011 Ataque SSRF
 // 40012 Método HTTP incorreto  40013 Header Host incorreto
-// 401 Não autenticado  403 Acesso proibido  422 Falha de validação de parâmetros  429 Requisições frequentes demais
+// 401 Não autenticado  403 Acesso proibido  422 Falha de validação de parâmetros  429 Requisições frequentes demais  503 Serviço temporariamente indisponível (disjuntor/degradação)
 ```
 
 ### Sobre IDs

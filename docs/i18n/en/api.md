@@ -39,7 +39,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // 40005 Request body too large  40006 Content-Type error  40008 Brute force
 // 40009 File upload violation  40010 XXE injection  40011 SSRF attack
 // 40012 HTTP method error  40013 Host header error
-// 401 Not logged in  403 Forbidden  422 Parameter validation failed  429 Too many requests
+// 401 Not logged in  403 Forbidden  422 Parameter validation failed  429 Too many requests  503 Service unavailable (circuit breaker/degradation)
 ```
 
 ### ID Explanation

@@ -154,6 +154,7 @@ graph TB
 | 6.模型层 | 111个Eloquent模型, BaseModel提供Snowflake ID主键, 45个模型按表启用SoftDelete |
 | 7.数据层 | MySQL(110表erik_前缀/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
 | 8.响应返回 | JSON统一格式 → HashidsEncode编码ID → Encryption加密(X-Encrypt-Response) → 返回客户端 |
+| 9.熔断与降级 | Redis 熔断器(CircuitBreaker): 支付网关/社交登录外部API, 连续5次失败→熔断30s, 半开探测恢复; 业务异常白名单; Redis故障降级放行(503) |
 
 ### 2.2 进程模型
 

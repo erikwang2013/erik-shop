@@ -41,7 +41,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // 40005 Anfrage-Body zu groß  40006 Content-Type-Fehler  40008 Brute-Force
 // 40009 Datei-Upload-Verstoß  40010 XXE-Injection  40011 SSRF-Angriff
 // 40012 HTTP-Methode ungültig  40013 Host-Header-Fehler
-// 401 Nicht angemeldet  403 Zugriff verweigert  422 Parameter-Validierung fehlgeschlagen  429 Zu viele Anfragen
+// 401 Nicht angemeldet  403 Zugriff verweigert  422 Parameter-Validierung fehlgeschlagen  429 Zu viele Anfragen  503 Dienst vorübergehend nicht verfügbar (Circuit Breaker/Degradation)
 ```
 
 ### ID-Erläuterung

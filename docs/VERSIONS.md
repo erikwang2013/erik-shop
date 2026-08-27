@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 熔断与降级
+
+- 新增 Redis 熔断器 `CircuitBreaker`（`service/app/common/CircuitBreaker.php`）: 支付网关(Stripe/PayPal/Klarna/Adyen)与社交登录外部调用统一熔断 — 连续5次失败→熔断30s, TTL过期半开探测自动恢复
+- 业务异常白名单: 无效卡/无效token不计入熔断失败（防恶意请求打挂依赖服务）
+- Redis 故障自动降级放行; 熔断期间接口返回 503「服务暂不可用」
+- 参数: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## 2026-08-07 修复记录
 
 | # | 问题 | 严重度 | 修复 |

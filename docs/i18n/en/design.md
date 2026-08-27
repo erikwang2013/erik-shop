@@ -91,11 +91,15 @@ API versioning, middleware pipeline, endpoint statistics, and unified response c
 
 Token bucket sliding window (Redis ZSET, via the `support\Redis` facade): default 60s/100 requests, login 10/60s, register 5/300s, social login 5/300s, payment 5/60s, order placement 3/10s, search 10/1s
 
-### 4.2 Redis Usage
+### 4.2 Circuit Breaker and Degradation
+
+Redis circuit breaker (`app\common\CircuitBreaker`): all external API calls such as payment gateways/social login go through `CircuitBreaker::call()` — 5 consecutive failures open the circuit for 30s; once the TTL expires, the next request automatically probes half-open and resets on success. A business-rejection whitelist (invalid card/invalid token) never counts toward failures, preventing attackers from taking down dependencies with junk requests; when Redis is unavailable it auto-degrades to pass-through. While the circuit is open, APIs return 503 "Service Unavailable".
+
+### 4.3 Redis Usage
 
 Redis is used for rate limiting token buckets (`support\Redis` facade), human verification codes, and Session storage; business data is not cached at the application layer, it reads MySQL directly (read/write split + connection pool).
 
-### 4.3 Connection Pools
+### 4.4 Connection Pools
 
 MySQL: 50max/10min/2s timeout | Read/write split: 30max/5min (2 read replicas, sticky=true) | Redis: 30max/5min
 

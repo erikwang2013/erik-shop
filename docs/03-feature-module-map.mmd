@@ -41,7 +41,7 @@ graph TB
 
     SECURITY --> SECURITY_DETAIL["31类攻击检测<br/>XSS · SQL注入 · CRLF<br/>路径遍历 · XXE · SSRF<br/>文件上传 · 暴力破解<br/>Host · CORS · 脱敏"]
 
-    PERF --> PERF_DETAIL["令牌桶限流 滑动窗口<br/>6端点限流规则<br/>DB读写分离 2读副本+sticky<br/>连接池 DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+    PERF --> PERF_DETAIL["令牌桶限流 滑动窗口<br/>6端点限流规则<br/>熔断器 支付/社交登录<br/>5次失败→熔断30s 半开恢复<br/>DB读写分离 2读副本+sticky<br/>连接池 DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
 
     GROWTH --> GROWTH_DETAIL["会员等级+权益<br/>积分规则+流水<br/>礼品卡 余额+兑换<br/>降价/到货提醒<br/>AB测试 流量分配+置信度"]
 

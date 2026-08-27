@@ -50,7 +50,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|---------|---------|
 | Lapisan pertama | Batas jaringan | Nginx SSL + reverse proxy + validasi Host | Service + Admin |
 | Lapisan kedua | Deteksi serangan WAF | `erikwang2013/security-php` 31 detektor | XSS/SQLi/CRLF/Path traversal/XXE/SSRF/Unggah file/Metode/Host/Content-Type/Body, dll. |
-| Lapisan ketiga | Kontrol lalu lintas | RateLimitMiddleware + penghitung Redis brute force | Rate limiting token bucket (6 endpoint) + anti-brute force login/registrasi |
+| Lapisan ketiga | Kontrol lalu lintas + ketahanan dependensi | RateLimitMiddleware + penghitung Redis brute force + CircuitBreaker | Rate limiting token bucket (6 endpoint) + anti-brute force login/registrasi + circuit breaker pembayaran/login sosial (5 kegagalan→30s, pemulihan half-open) |
 | Lapisan keempat | Autentikasi identitas | PosterVerify + JwtAuth HS256 | Verifikasi manusia (slider/teka-teki/klik) + Bearer Token + refresh token ganda |
 | Lapisan kelima | Keamanan data | Hashids + AES-256-CBC + Encryptable | Enkripsi tiga lapis: obfuscation ID/enkripsi transportasi/enkripsi field database |
 | Lapisan keenam | Keamanan respons | Header keamanan HTTP + penghilangan data sensitif | nosniff/DENY/XSS-Protection/Referrer-Policy/penghilangan log |
@@ -86,5 +86,5 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 4 | Diagram Siklus Hidup Permintaan | Siklus hidup | Menampilkan urutan waktu lengkap dari permintaan hingga respons serta interaksi setiap tahap |
 | 5 | Diagram Siklus Hidup Pesanan | Siklus hidup | Menampilkan semua alur status pesanan dari keranjang hingga selesai/refund |
 | 6 | Diagram Arsitektur Deployment | Diagram arsitektur | Menampilkan orkestrasi kontainer Docker Compose, jaringan, volume data |
-| 7 | Diagram Arsitektur Keamanan | Diagram arsitektur | Menampilkan sistem pertahanan berlapis 6 tingkat: batas→WAF→lalu lintas→autentikasi→data→respons |
+| 7 | Diagram Arsitektur Keamanan | Diagram arsitektur | Menampilkan sistem pertahanan berlapis 6 tingkat: batas→WAF→lalu lintas/ketahanan (rate limiting+circuit breaker)→autentikasi→data→respons |
 | 8 | Diagram Alir Settlement Multi-Mata Uang | Diagram alir | Menampilkan rantai lengkap penetapan harga per mata uang→pembayaran→pembagian dana→settlement→laba/rugi kurs |

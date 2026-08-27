@@ -57,6 +57,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(内置RBAC) �
 ## 5. 高并发
 
 - **限流**: 令牌桶滑动窗口(Redis ZSET), 6端点规则
+- **熔断/降级**: Redis 熔断器 — 支付网关/社交登录外部API调用, 连续5次失败→熔断30s, 半开探测自动恢复; 业务异常不计入失败; Redis故障自动降级放行(503)
 - **DB**: 读写分离(2读副本+sticky) + 连接池(50/10)
 - **慢操作**: 由独立 Cron 进程处理（Feed同步/推荐计算/支付对账/分账结算等）
 

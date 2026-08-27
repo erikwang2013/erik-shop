@@ -45,11 +45,13 @@ graph TB
         METHOD -->|通过| HOST
     end
 
-    subgraph L3["第三层：流量控制"]
+    subgraph L3["第三层：流量控制 + 依赖韧性"]
         direction TB
         BRUTE["暴力破解防护<br/>Redis 计数器<br/>API: 10次/60s<br/>Admin: 5次/300s"]
         RATE["令牌桶限流<br/>Redis ZSET 滑动窗口<br/>6 端点独立规则"]
+        CB["熔断器<br/>Redis 连续失败计数<br/>支付网关/社交登录<br/>5次失败 → 熔断 30s<br/>TTL 过期半开探测恢复<br/>Redis 故障降级放行"]
         BRUTE --> RATE
+        RATE --> CB
     end
 
     subgraph L4["第四层：身份认证"]
@@ -81,7 +83,8 @@ graph TB
     NG --> CORS_W
     CORS_W --> L2
     HOST --> BRUTE
-    RATE --> POSTER
+    CB -->|通过| POSTER
+    CB -->|熔断| E503["503 服务暂不可用<br/>请稍后重试"]
 
     L5 --> L6
     L6 --> RESP(["安全响应"])
@@ -93,6 +96,7 @@ graph TB
     style L1 fill:#e3f2fd
     style L2 fill:#ffcdd2
     style L3 fill:#fff9c4
+    style E503 fill:#ff7043,color:#fff
     style L4 fill:#c8e6c9
     style L5 fill:#e1bee7
     style L6 fill:#b2dfdb

@@ -45,9 +45,12 @@ graph TB
 
     HENC --> CTRL["Controller<br/>业务逻辑处理<br/>Model 查询 · 验证 · 计算"]
 
-    CTRL --> ENC_RESP{"需加密响应?"}
+    CTRL --> CB{"⑫ 熔断器<br/>外部API调用<br/>支付网关/社交登录<br/>连续5次失败→熔断30s<br/>Redis故障自动降级放行"}
 
-    ENC_RESP -->|是| ENC["⑫ Encryption<br/>AES-256-CBC 加密<br/>X-Encrypted: 1 Header"]
+    CB -->|熔断中| E503["503 服务暂不可用<br/>请稍后重试"]
+    CB -->|通过| ENC_RESP{"需加密响应?"}
+
+    ENC_RESP -->|是| ENC["⑬ Encryption<br/>AES-256-CBC 加密<br/>X-Encrypted: 1 Header"]
     ENC_RESP -->|否| RESP
     ENC --> RESP(["JSON Response<br/>{code, msg, data}<br/>+ CORS Headers<br/>+ X-Platform Header"])
 
@@ -56,6 +59,7 @@ graph TB
     style POSTER fill:#ffe0b2
     style JWT_START fill:#c8e6c9
     style CTRL fill:#bbdefb
+    style CB fill:#ffe0b2
     style START fill:#e8eaf6
     style RESP fill:#e8eaf6
     style E403 fill:#ff5252,color:#fff
@@ -65,4 +69,5 @@ graph TB
     style E40003 fill:#ff5252,color:#fff
     style E40004 fill:#ff5252,color:#fff
     style E429 fill:#ff9800,color:#fff
+    style E503 fill:#ff7043,color:#fff
     style E401 fill:#ff5252,color:#fff

@@ -226,3 +226,4 @@ php vendor/bin/phpunit      # 运行测试
 | PhpSpreadsheet XLSX 导出 | 完整 |
 | MaxMind GeoLite2 GeoIP | 完整 |
 | Item-based 协同过滤推荐 | 完整 |
+| 熔断/降级 (Redis CircuitBreaker) | 完整（支付/社交登录，5次失败→30s熔断+半开恢复） |

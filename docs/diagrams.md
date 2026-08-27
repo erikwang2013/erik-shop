@@ -50,7 +50,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|---------|---------|
 | 第一层 | 网络边界 | Nginx SSL + 反向代理 + Host校验 | Service + Admin |
 | 第二层 | WAF 攻击检测 | `erikwang2013/security-php` 31个检测器 | XSS/SQLi/CRLF/路径遍历/XXE/SSRF/文件上传/方法/Host/Content-Type/Body 等 |
-| 第三层 | 流量控制 | RateLimitMiddleware + 暴力破解 Redis 计数器 | 令牌桶限流(6端点) + 登录/注册防爆 |
+| 第三层 | 流量控制 + 依赖韧性 | RateLimitMiddleware + 暴力破解 Redis 计数器 + CircuitBreaker | 令牌桶限流(6端点) + 登录/注册防爆 + 支付/社交登录熔断(5次失败→30s, 半开恢复) |
 | 第四层 | 身份认证 | PosterVerify + JwtAuth HS256 | 人机验证(滑块/拼图/点击) + Bearer Token + 双token刷新 |
 | 第五层 | 数据安全 | Hashids + AES-256-CBC + Encryptable | 三层加密: ID混淆/传输加密/数据库字段加密 |
 | 第六层 | 响应安全 | HTTP 安全头 + 敏感脱敏 | nosniff/DENY/XSS-Protection/Referrer-Policy/日志脱敏 |
@@ -86,5 +86,5 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 四 | 请求生命周期图 | 生命周期 | 展示从请求到响应的完整时序和各阶段交互 |
 | 五 | 订单生命周期图 | 生命周期 | 展示订单从购物车到完成/退款的所有状态流转 |
 | 六 | 部署架构图 | 架构图 | 展示 Docker Compose 容器编排、网络、数据卷 |
-| 七 | 安全架构图 | 架构图 | 展示 6 层纵深防御体系：边界→WAF→流量→认证→数据→响应 |
+| 七 | 安全架构图 | 架构图 | 展示 6 层纵深防御体系：边界→WAF→流量/韧性(限流+熔断)→认证→数据→响应 |
 | 八 | 多币种结算流程图 | 流程图 | 展示分币种定价→支付→分账→结算→汇兑损益的完整链路 |

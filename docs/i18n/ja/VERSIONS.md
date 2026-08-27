@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 サーキットブレーカーと降級
+
+- Redis サーキットブレーカー `CircuitBreaker` を新設（`service/app/common/CircuitBreaker.php`）: 決済ゲートウェイ（Stripe/PayPal/Klarna/Adyen）とソーシャルログインの外部呼び出しを統一遮断 — 連続5回失敗→30s遮断、TTL期限切れでハーフオープンプローブによる自動復旧
+- 業務例外ホワイトリスト: 無効カード/無効トークンはサーキットブレーカーの失敗にカウントしない（悪意あるリクエストによる依存サービス停止を防止）
+- Redis 障害時は自動降級して通過; 遮断中はインターフェースが 503「サービス一時利用不可」を返す
+- パラメータ: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## 2026-08-07 修正記録
 
 | # | 問題 | 深刻度 | 修正 |

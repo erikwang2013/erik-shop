@@ -91,11 +91,15 @@ Controle de versão da API, pipeline de middlewares, estatísticas de endpoints 
 
 Token bucket com janela deslizante (Redis ZSET, via facade `support\Redis`): padrão 60s/100 vezes, login 10 vezes/60s, registro 5 vezes/300s, login social 5 vezes/300s, pagamento 5 vezes/60s, pedido 3 vezes/10s, busca 10 vezes/1s
 
-### 4.2 Usos do Redis
+### 4.2 Disjuntor e degradação
 
-O Redis é usado para token bucket de limitação de taxa (facade `support\Redis`), códigos de verificação humano e armazenamento de Session; os dados de negócio não têm cache em nível de aplicação, são lidos diretamente do MySQL (separação leitura/escrita + pool de conexões).
+Disjuntor Redis (`app\common\CircuitBreaker`): chamadas de API externas de gateways de pagamento/login social passam todas por `CircuitBreaker::call()` — 5 falhas consecutivas abrem o disjuntor por 30s; após a expiração do TTL, a próxima requisição faz automaticamente uma sondagem semiaberta e, em caso de sucesso, o disjuntor é redefinido. Exceções de negócio na lista branca (cartão inválido/token inválido) não contam como falhas, evitando que atacantes derrubem serviços dependentes com requisições inválidas; quando o Redis está indisponível, a passagem é liberada automaticamente (fail-open). Durante o disjuntor, a interface retorna 503 "Serviço temporariamente indisponível".
 
-### 4.3 Pool de conexões
+### 4.3 Usos do Redis
+
+O Redis é usado para token bucket de limitação de taxa (facade `support\Redis`), contagem do disjuntor, códigos de verificação humano e armazenamento de Session; os dados de negócio não têm cache em nível de aplicação, são lidos diretamente do MySQL (separação leitura/escrita + pool de conexões).
+
+### 4.4 Pool de conexões
 
 MySQL: 50max/10min/2s de timeout | Separação leitura/escrita: 30max/5min (2 réplicas de leitura, sticky=true) | Redis: 30max/5min
 

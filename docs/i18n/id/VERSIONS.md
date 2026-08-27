@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 Circuit Breaker dan Degradasi
+
+- Circuit breaker Redis baru `CircuitBreaker` (`service/app/common/CircuitBreaker.php`): panggilan eksternal gateway pembayaran (Stripe/PayPal/Klarna/Adyen) dan login sosial diputus seragam — 5 kegagalan beruntun→terbuka 30s, TTL habis probe half-open pulih otomatis
+- Daftar putih pengecualian bisnis: kartu/token tidak valid tidak dihitung sebagai kegagalan circuit breaker (mencegah permintaan jahat menjatuhkan layanan dependen)
+- Saat Redis gagal otomatis degradasi mengizinkan; selama sirkuit terbuka antarmuka mengembalikan 503「Layanan untuk sementara tidak tersedia」
+- Parameter: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## Catatan Perbaikan 2026-08-07
 
 | # | Masalah | Tingkat Keparahan | Perbaikan |

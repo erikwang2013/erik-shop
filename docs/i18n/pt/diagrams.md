@@ -50,7 +50,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|---------|---------|
 | Primeira camada | Perímetro de rede | Nginx SSL + proxy reverso + validação de Host | Service + Admin |
 | Segunda camada | Detecção de ataques WAF | 31 detectores do `erikwang2013/security-php` | XSS/SQLi/CRLF/Path Traversal/XXE/SSRF/upload de arquivos/métodos/Host/Content-Type/Body etc. |
-| Terceira camada | Controle de tráfego | RateLimitMiddleware + contador Redis de força bruta | Limitação por token bucket (6 endpoints) + proteção de login/registro |
+| Terceira camada | Controle de tráfego + resiliência de dependências | RateLimitMiddleware + contador Redis de força bruta + CircuitBreaker | Limitação por token bucket (6 endpoints) + proteção de login/registro + disjuntor de pagamento/login social (5 falhas→30s, recuperação semiaberta) |
 | Quarta camada | Autenticação de identidade | PosterVerify + JwtAuth HS256 | Verificação humano (slider/quebra-cabeça/clique) + Bearer Token + renovação de token duplo |
 | Quinta camada | Segurança de dados | Hashids + AES-256-CBC + Encryptable | Criptografia em três camadas: ofuscação de ID/criptografia de transporte/criptografia de campos do banco |
 | Sexta camada | Segurança de resposta | Cabeçalhos HTTP de segurança + mascaramento de dados sensíveis | nosniff/DENY/XSS-Protection/Referrer-Policy/mascaramento em logs |
@@ -86,5 +86,5 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 4 | Diagrama de ciclo de vida da requisição | Ciclo de vida | Mostra a sequência completa da requisição à resposta e as interações de cada etapa |
 | 5 | Diagrama de ciclo de vida do pedido | Ciclo de vida | Mostra todas as transições de estado do pedido, do carrinho à conclusão/reembolso |
 | 6 | Diagrama de arquitetura de implantação | Arquitetura | Mostra a orquestração de contêineres Docker Compose, rede e volumes de dados |
-| 7 | Diagrama de arquitetura de segurança | Arquitetura | Mostra o sistema de defesa em profundidade de 6 camadas: perímetro→WAF→tráfego→autenticação→dados→resposta |
+| 7 | Diagrama de arquitetura de segurança | Arquitetura | Mostra o sistema de defesa em profundidade de 6 camadas: perímetro→WAF→tráfego/resiliência (limitação de taxa + disjuntor)→autenticação→dados→resposta |
 | 8 | Diagrama de fluxo de liquidação multi-moeda | Fluxo | Mostra a cadeia completa de precificação por moeda→pagamento→repartição→liquidação→ganhos/perdas cambiais |

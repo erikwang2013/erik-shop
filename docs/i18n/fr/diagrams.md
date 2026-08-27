@@ -50,7 +50,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|---------|---------|
 | Première couche | Frontière réseau | Nginx SSL + reverse proxy + validation Host | Service + Admin |
 | Deuxième couche | Détection d'attaques WAF | 31 détecteurs `erikwang2013/security-php` | XSS/SQLi/CRLF/traversée de chemin/XXE/SSRF/téléversement de fichiers/méthodes/Host/Content-Type/Body etc. |
-| Troisième couche | Contrôle du trafic | RateLimitMiddleware + compteurs Redis anti-force brute | Limitation par seau à jetons (6 endpoints) + anti-explosion connexion/inscription |
+| Troisième couche | Contrôle du trafic + résilience des dépendances | RateLimitMiddleware + compteurs Redis anti-force brute + CircuitBreaker | Limitation par seau à jetons (6 endpoints) + anti-explosion connexion/inscription + disjoncteur paiements/connexion sociale (5 échecs→30s, rétablissement semi-ouvert) |
 | Quatrième couche | Authentification | PosterVerify + JwtAuth HS256 | Vérification homme-machine (curseur/puzzle/clic) + Bearer Token + double jeton avec rafraîchissement |
 | Cinquième couche | Sécurité des données | Hashids + AES-256-CBC + Encryptable | Chiffrement à trois couches : obscurcissement d'ID/chiffrement de transport/chiffrement des champs en base de données |
 | Sixième couche | Sécurité des réponses | En-têtes de sécurité HTTP + masquage des données sensibles | nosniff/DENY/XSS-Protection/Referrer-Policy/masquage des journaux |
@@ -86,5 +86,5 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | IV | Diagramme de cycle de vie des requêtes | Cycle de vie | Séquence complète de la requête à la réponse et les interactions de chaque phase |
 | V | Diagramme de cycle de vie des commandes | Cycle de vie | Toutes les transitions d'état des commandes, du panier à la réalisation/au remboursement |
 | VI | Diagramme d'architecture de déploiement | Diagramme d'architecture | Orchestration des conteneurs Docker Compose, réseau, volumes de données |
-| VII | Diagramme d'architecture de sécurité | Diagramme d'architecture | Système de défense en profondeur sur 6 couches : frontière → WAF → trafic → authentification → données → réponses |
+| VII | Diagramme d'architecture de sécurité | Diagramme d'architecture | Système de défense en profondeur sur 6 couches : frontière → WAF → trafic/résilience (limitation + disjoncteur) → authentification → données → réponses |
 | VIII | Diagramme de flux de règlement multidevise | Diagramme de flux | Chaîne complète : tarification par devise → paiement → répartition → règlement → gains et pertes de change |

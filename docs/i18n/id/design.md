@@ -91,11 +91,15 @@ Versioning API, pipa middleware, statistik endpoint, dan spesifikasi respons ser
 
 Jendela geser token bucket (Redis ZSET, melalui facade `support\Redis`): default 60s/100 kali, login 10 kali/60s, registrasi 5 kali/300s, login sosial 5 kali/300s, pembayaran 5 kali/60s, order 3 kali/10s, pencarian 10 kali/1s
 
-### 4.2 Penggunaan Redis
+### 4.2 Circuit Breaker dan Degradasi
+
+Circuit breaker Redis (`app\common\CircuitBreaker`): panggilan API eksternal seperti gateway pembayaran/login sosial semuanya melalui `CircuitBreaker::call()` — 5 kegagalan beruntun membuka sirkuit selama 30s, setelah TTL habis permintaan berikutnya otomatis melakukan probe half-open, berhasil maka langsung reset. Daftar putih pengecualian bisnis (kartu tidak valid/token tidak valid) tidak dihitung sebagai kegagalan, mencegah penyerang menjatuhkan layanan dependen dengan permintaan tidak valid; saat Redis tidak tersedia otomatis degradasi dan mengizinkan (fail-open). Selama sirkuit terbuka, antarmuka mengembalikan 503「Layanan untuk sementara tidak tersedia」.
+
+### 4.3 Penggunaan Redis
 
 Redis digunakan untuk rate limiting token bucket (facade `support\Redis`), kode verifikasi manusia, dan penyimpanan Session; data bisnis tidak melakukan cache lapisan aplikasi, langsung membaca MySQL (pemisahan baca/tulis + kumpulan koneksi).
 
-### 4.3 Kumpulan Koneksi
+### 4.4 Kumpulan Koneksi
 
 MySQL: 50max/10min/2s timeout | Pemisahan baca/tulis: 30max/5min (2 replika baca, sticky=true) | Redis: 30max/5min
 

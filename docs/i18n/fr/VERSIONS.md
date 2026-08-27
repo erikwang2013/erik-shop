@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 Disjoncteur et dégradation
+
+- Nouveau disjoncteur Redis `CircuitBreaker` (`service/app/common/CircuitBreaker.php`) : appels externes des passerelles de paiement (Stripe/PayPal/Klarna/Adyen) et de connexion sociale protégés uniformément — 5 échecs consécutifs → ouvert 30s, sonde semi-ouverte avec rétablissement automatique après expiration du TTL
+- Liste blanche des rejets métier : carte invalide/jeton invalide ne comptent pas comme échecs du disjoncteur (empêche les requêtes indésirables de faire tomber les services dépendants)
+- Panne Redis : dégradation automatique en passage direct ; tant qu'il est ouvert, les API renvoient 503 « Service indisponible »
+- Paramètres : `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## Journal des corrections 2026-08-07
 
 | # | Problème | Sévérité | Correction |

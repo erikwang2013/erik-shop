@@ -157,7 +157,7 @@ shop-php/
 | **Cadeia de suprimentos** | Avaliação de fornecedores, compra→inspeção de qualidade→entrada em estoque, registro de inventário (livro-razão imutável), transferência |
 | **Gestão de risco e conformidade** | Motor de regras (pontuação paralela), KYC, solicitações de dados GDPR/CCPA, consentimento de cookies |
 | **Proteção de segurança** | Detecção de 31 tipos de ataques (XSS/Injeção SQL/XXE/SSRF/CRLF/Path Traversal/upload de arquivos/força bruta/métodos HTTP/Host/CORS etc.) |
-| **Alta concorrência** | Rate limiting com token bucket, separação leitura/escrita do DB, otimização de pool de conexões |
+| **Alta concorrência** | Rate limiting com token bucket, disjuntor (pagamento/login social, 5 falhas→disjuntor de 30s + recuperação semiaberta), separação leitura/escrita do DB, otimização de pool de conexões |
 | **Crescimento de membros** | Regras de pontos, benefícios por nível de membro, cartões-presente, alerta de queda de preço, compra por assinatura, testes AB |
 | **Gestão de conteúdo** | Páginas CMS multi-idioma, FAQ, base de conhecimento, tabela de tamanhos, modelos de e-mail, sincronização de feeds de produtos |
 | **Atendimento ao cliente** | IM em tempo real via WebSocket, base de conhecimento (estrutura de tabelas criada) |

@@ -17,6 +17,15 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-27 서킷 브레이커와 디그레이션
+
+- Redis 서킷 브레이커 `CircuitBreaker` 신규(`service/app/common/CircuitBreaker.php`): 결제 게이트웨이(Stripe/PayPal/Klarna/Adyen)와 소셜 로그인 외부 호출 통합 차단 — 5회 연속 실패→30초 차단, TTL 만료 후 반개(半開) 탐지로 자동 복구
+- 비즈니스 예외 화이트리스트: 유효하지 않은 카드/유효하지 않은 토큰은 차단 실패로 집계하지 않음(악성 요청으로 의존 서비스 마비 방지)
+- Redis 장애 시 자동 통과(fail-open); 차단 중 인터페이스는 503「서비스를 일시적으로 사용할 수 없음」반환
+- 파라미터: `config/concurrency.php` → `circuit_breaker` (fail_threshold=5, open_seconds=30)
+
+---
+
 ## 2026-08-07 수정 기록
 
 | # | 문제 | 심각도 | 수정 |

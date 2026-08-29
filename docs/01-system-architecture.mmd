@@ -7,6 +7,7 @@ graph TB
     end
 
     subgraph Gateway["接入层 Gateway"]
+        CDN["CDN 边缘层<br/>https://{CDN_DOMAIN}{path}<br/>Origin-Pull 回源 Nginx<br/>静态资源缓存 expires 7d"]
         NG["Nginx :80 / :443<br/>api.erik.xyz → Service<br/>admin.erik.xyz → Admin<br/>静态资源 + SSL 终端"]
     end
 
@@ -40,9 +41,10 @@ graph TB
         Email["邮件服务<br/>多语言模板<br/>（email_templates 表）"]
     end
 
-    FL --> NG
-    HM --> NG
-    WB --> NG
+    FL --> CDN
+    HM --> CDN
+    WB --> CDN
+    CDN --> NG
     NG --> Service
     NG --> Admin
     Service --> MySQL

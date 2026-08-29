@@ -56,6 +56,8 @@ docker compose logs -f admin
 - [ ] 数据库已导入根目录 `install.sql`（117 张表，Web 安装向导自动导入）
 - [ ] ES索引已创建: `php start.php scout:import "app\model\Products"`
 - [ ] MySQL/Redis/ES 数据卷已配置备份
+- [ ] CDN 已配置（可选）: CDN 域名 CNAME 回源 admin 域名 + `.env` 中 `CDN_ENABLED=true`/`CDN_DOMAIN` + 管理端「系统→CDN管理」填写提供商凭据并通过连通性测试
+- [ ] 上传目录已持久化（`admin_uploads`:/app/plugin/admin/public/upload、`service_public`:/app/public/documents）
 
 ## 2. 手动部署
 
@@ -93,6 +95,8 @@ php start.php start -d
 # 见 docker/nginx/conf.d/shop.conf
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+# /app/admin/upload/ → expires 7d; Cache-Control public, max-age=604800, immutable
+# CDN 域名 CNAME 回源到 admin 域名（Origin-Pull 回源，静态资源由 CDN 边缘缓存分发）
 ```
 
 ## 3. 数据库初始化
@@ -128,6 +132,26 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Stripe密钥 |
 | STRIPE_WEBHOOK_SECRET | - | Stripe Webhook验签 |
+
+### CDN 环境变量（可选，共 13 个）
+
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| CDN_ENABLED | false | CDN 全局开关（管理端 DB 配置可覆盖，经共享 Redis 传播到 service） |
+| CDN_DEFAULT_PROVIDER | cloudflare | 默认提供商: cloudflare / cloudfront / aliyun / tencent |
+| CDN_DOMAIN | - | CDN 域名（如 cdn.erik.xyz，CNAME 回源 admin 域名） |
+| CF_API_TOKEN | - | Cloudflare API Token |
+| CF_ZONE_ID | - | Cloudflare Zone ID |
+| AWS_ACCESS_KEY_ID | - | AWS 访问密钥 ID（CloudFront） |
+| AWS_SECRET_ACCESS_KEY | - | AWS 访问密钥 Secret |
+| AWS_REGION | - | AWS 区域（如 us-east-1） |
+| CLOUDFRONT_DISTRIBUTION_ID | - | CloudFront 分发 ID |
+| ALIYUN_ACCESS_KEY_ID | - | 阿里云 AccessKey ID |
+| ALIYUN_ACCESS_KEY_SECRET | - | 阿里云 AccessKey Secret |
+| TENCENT_SECRET_ID | - | 腾讯云 SecretId |
+| TENCENT_SECRET_KEY | - | 腾讯云 SecretKey |
+
+> 提供商凭据亦可直接在管理端「CDN 管理」页配置（config JSON 经 encryptable 整体加密入库，DB 配置优先于 .env）。
 
 ## 5. 运维命令
 

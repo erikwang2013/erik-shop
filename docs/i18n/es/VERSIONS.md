@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 Soporte CDN
+
+- **Modelo origin-pull**: las subidas permanecen en el disco local del origin de admin; la base de datos solo guarda rutas relativas (migración cero); en los límites de salida `Cdn::url()` reescribe a `https://{CDN_DOMAIN}{ruta}`; el dominio CDN apunta por CNAME de vuelta al dominio de admin
+- **Abstracción unificada de proveedores**: `CdnProviderInterface` (purge / purgeByTag / preload), implementada para Cloudflare, AWS CloudFront, Aliyun y Tencent Cloud (Fastly/Akamai reservados); matriz de capacidades: purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- **Configuración en el panel de administración**: página de gestión CDN (3 pestañas: Configuración/Invalidación/Registros) — interruptores de activación por proveedor, credenciales (JSON de configuración cifrado en reposo), prueba de conectividad, invalidación/preload manuales, registros de invalidación (tablas `wa_cdn_providers` / `wa_cdn_purge_logs`); la configuración de BD sobrescribe .env; el interruptor global se propaga al servicio vía Redis compartido (prefijo `shop:`, TTL 60s)
+- **Invalidación automática (fail-open)**: el CRUD de productos y banners dispara la invalidación automáticamente; un fallo de CDN nunca bloquea el CRUD de admin
+- **Caché de borde**: nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable`; los directorios de subida persisten mediante volúmenes Docker (`admin_uploads:/app/plugin/admin/public/upload`, `service_public:/app/public/documents`)
+- **Configuración**: `config/cdn.php` (admin + service) + 13 variables de entorno `CDN_*` (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / credenciales por proveedor)
+
+---
+
 ## Registro de correcciones 2026-08-07
 
 | # | Problema | Gravedad | Corrección |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Limitación con token bucket | — | — | ✅ |
 | Separación lectura/escritura de BD | — | — | ✅ |
 | Tareas programadas Cron (11) | — | — | ✅ |
+| Caché de borde CDN (origin-pull) | ✅ | ✅ | ✅ |
 
 ### Contenido y crecimiento
 

@@ -37,6 +37,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 CDN 支持
+
+- **Origin-Pull 回源模型**：上传文件仍保存在 admin 源站本地磁盘，数据库只存相对路径（零迁移）；仅在输出边界通过 `Cdn::url()` 重写为 `https://{CDN_DOMAIN}{path}`；CDN 域名 CNAME 回源到 admin 域名
+- **统一 Provider 抽象**：`CdnProviderInterface`（purge / purgeByTag / preload），已实现 Cloudflare、AWS CloudFront、阿里云、腾讯云 4 家（Fastly/Akamai 预留）；能力矩阵：purge 4/4、preload 2/4（阿里云/腾讯云）、purgeByTag 1/4（Cloudflare）
+- **管理端可配置**：CDN 管理页（Layui 3-tab：配置/刷新/日志）— 提供商启用开关、凭据（config JSON 经 encryptable 整体加密入库）、连通性测试、手动刷新/预热、刷新日志（`wa_cdn_providers` / `wa_cdn_purge_logs` 表）；DB 配置覆盖 .env；全局开关经共享 Redis（prefix `shop:`，60s TTL）传播到 service
+- **自动刷新（fail-open）**：商品与轮播图 CRUD 自动触发 purge；CDN 故障绝不阻断管理 CRUD（`Log::error` + purge log 记录）
+- **边缘缓存**：nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable`；上传目录改为持久化 docker volume（`admin_uploads`:/app/plugin/admin/public/upload、`service_public`:/app/public/documents）
+- **配置**：`config/cdn.php`（admin + service 各一份）+ .env 13 个 `CDN_*` 变量（CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / 各厂商凭据）
+
+---
+
 ## 2026-08-27 熔断与降级
 
 - 新增 Redis 熔断器 `CircuitBreaker`（`service/app/common/CircuitBreaker.php`）: 支付网关(Stripe/PayPal/Klarna/Adyen)与社交登录外部调用统一熔断 — 连续5次失败→熔断30s, TTL过期半开探测自动恢复
@@ -195,6 +206,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | DB连接池 | ✅ | ✅ | ✅ |
 | 令牌桶限流 | — | — | ✅ |
 | DB读写分离 | — | — | ✅ |
+| CDN 内容分发 (Cloudflare/CloudFront/阿里云/腾讯云) | — | — | ✅ |
 | Cron 定时任务 (11个) | — | — | ✅ |
 
 ### 内容与增长

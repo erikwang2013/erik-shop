@@ -85,6 +85,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 3 | Mapa geral de módulos funcionais | Funcional | Mostra os 17 grandes módulos funcionais e seus subpontos |
 | 4 | Diagrama de ciclo de vida da requisição | Ciclo de vida | Mostra a sequência completa da requisição à resposta e as interações de cada etapa |
 | 5 | Diagrama de ciclo de vida do pedido | Ciclo de vida | Mostra todas as transições de estado do pedido, do carrinho à conclusão/reembolso |
-| 6 | Diagrama de arquitetura de implantação | Arquitetura | Mostra a orquestração de contêineres Docker Compose, rede e volumes de dados |
+| 6 | Diagrama de arquitetura de implantação | Arquitetura | Mostra a orquestração de contêineres Docker Compose, rede, camada de borda CDN (origin-pull) e volumes de dados persistentes (admin_uploads/service_public) |
 | 7 | Diagrama de arquitetura de segurança | Arquitetura | Mostra o sistema de defesa em profundidade de 6 camadas: perímetro→WAF→tráfego/resiliência (limitação de taxa + disjuntor)→autenticação→dados→resposta |
 | 8 | Diagrama de fluxo de liquidação multi-moeda | Fluxo | Mostra a cadeia completa de precificação por moeda→pagamento→repartição→liquidação→ganhos/perdas cambiais |

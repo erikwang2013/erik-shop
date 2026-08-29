@@ -19,7 +19,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/           API الأعمال (251 ملف PHP)
-    config/            35 إعدادًا (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36 إعدادًا (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39 متحكمًا (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111 نموذجًا (BaseModel + 110 نماذج أعمال)
     app/middleware/     14 وسيطة (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
@@ -82,5 +82,6 @@ cd admin && php start.php start -d
 - **تعدد اللغات (i18n)**: ملفات ترجمة لـ 5 لغات + LocaleMiddleware + Flutter AppLocalizations
 - **توثيق API**: مولّد تلقائيًا عبر hg/apidoc (6 مجموعات، مدفوع بتعليقات المتحكمين)
 - **تتبع المنصات**: ترويسة X-Platform لـ 8 منصات + تسجيل في قاعدة البيانات
+- **تسريع CDN**: نموذج سحب الأصل Origin-Pull — تبقى الرفوعات على قرص admin الأصلي وتُعاد كتابة عناوين الموارد عند الإخراج عبر `Cdn::url()` إلى `https://{CDN_DOMAIN}{path}`؛ 4 مزوّدين (Cloudflare/CloudFront/Aliyun/Tencent) مع تطهير تلقائي fail-open وتخزين مؤقت للحافة 7 أيام
 
 انظر: [وثيقة النشر](deployment.md) | [وثيقة البنية الكاملة](architecture-full.md) | [وثيقة تصميم الميزات](features.md)

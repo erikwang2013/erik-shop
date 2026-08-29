@@ -19,7 +19,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/            व्यावसायिक API (251 PHP फ़ाइलें)
-    config/            35 कॉन्फ़िग (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36 कॉन्फ़िग (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39 कंट्रोलर (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111 मॉडल (BaseModel + 110 व्यावसायिक मॉडल)
     app/middleware/     14 मिडलवेयर (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
@@ -82,5 +82,6 @@ cd admin && php start.php start -d
 - **बहुभाषी (i18n)**: 5 भाषा अनुवाद फ़ाइलें + LocaleMiddleware + Flutter AppLocalizations
 - **API दस्तावेज़**: hg/apidoc स्वचालित उत्पादन (6 समूह, कंट्रोलर एनोटेशन संचालित)
 - **प्लेटफ़ॉर्म ट्रैकिंग**: 8 प्लेटफ़ॉर्म X-Platform header + DB रिकॉर्ड
+- **CDN त्वरण**: ओरिजिन-पुल मॉडल — अपलोड admin ओरिजिन डिस्क पर रहते हैं और रिसोर्स URL आउटपुट पर `Cdn::url()` से `https://{CDN_DOMAIN}{path}` रीराइट होते हैं; 4 प्रोवाइडर (Cloudflare/CloudFront/Aliyun/Tencent) fail-open ऑटो-पर्ज व 7 दिन की एज कैशिंग के साथ
 
 विवरण के लिए देखें: [तैनाती दस्तावेज़](deployment.md) | [पूर्ण आर्किटेक्चर दस्तावेज़](architecture-full.md) | [कार्यक्षमता डिज़ाइन दस्तावेज़](features.md)

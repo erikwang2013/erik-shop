@@ -99,7 +99,7 @@ Redis-Circuit-Breaker (`app\common\CircuitBreaker`): Externe API-Aufrufe wie Zah
 
 ### 4.3 Redis-Verwendung
 
-Redis wird für das Rate-Limiting-Token-Bucket (`support\Redis`-Fassade), Mensch-Maschine-Verifizierungscodes und Session-Speicherung verwendet; Geschäftsdaten werden nicht auf Anwendungsebene gecacht, sondern direkt aus MySQL gelesen (Read/Write-Splitting + Verbindungspool).
+Redis wird für das Rate-Limiting-Token-Bucket (`support\Redis`-Fassade), Mensch-Maschine-Verifizierungscodes und Session-Speicherung verwendet; Geschäftsdaten werden nicht auf Anwendungsebene gecacht, sondern direkt aus MySQL gelesen (Read/Write-Splitting + Verbindungspool). Statische Ressourcen (Bilder/Dokumente) werden über das CDN-Edge-Caching ausgeliefert (Origin-Pull, 7 Tage immutable, Auto-Invalidierung via `Cdn::purge` bei CRUD, fail-open).
 
 ### 4.4 Verbindungspool
 

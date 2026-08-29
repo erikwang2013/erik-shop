@@ -46,6 +46,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 所有接口中的ID字段均为hashids编码字符串（如 `Ab3xK9pq`），由中间件自动编码/解码。前端无需手动处理。
 
+### 资源URL（CDN）
+
+商品图片、SKU 图、评价图、轮播图与 PDF 文档等资源 URL 在接口输出时经 `Cdn::url()` 重写：开启 CDN（`CDN_ENABLED=true` 且配置 `CDN_DOMAIN`）后统一输出为 `https://{CDN_DOMAIN}{相对路径}`（如 `https://cdn.erik.xyz/app/admin/upload/p1.jpg`）；未开启时返回 admin 源站相对/绝对路径。资源为 Origin-Pull 回源，CDN 域名 CNAME 回源到 admin 域名，前端无需区分两种形态。
+
 ---
 
 ## 1. 认证接口

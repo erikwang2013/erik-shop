@@ -52,7 +52,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **Crescimento de membros** | Níveis de membro + benefícios, regras de pontos + extrato, cartões-presente (saldo + resgate), alerta de queda de preço/chegada, favoritos, comparação de produtos, histórico de navegação, compra por assinatura, testes AB (distribuição de tráfego + nível de confiança) | Completa |
 | **Gestão de conteúdo** | Páginas CMS multi-idioma (Landing/Blog), FAQ multi-idioma, base de conhecimento multi-idioma, tabela de tamanhos (vestuário/calçados + conversão US/UK/EU/JP/CN), modelos de e-mail (multi-idioma), Feed de produtos (Google/Meta + sincronização agendada) | Completa |
 | **Atendimento ao cliente** | IM em tempo real via WebSocket (chat_sessions/chat_messages), base de conhecimento multi-idioma | Estrutura de tabelas completa, WS pendente |
-| **Infraestrutura** | ID distribuído Snowflake (bigint não auto-incremento), ofuscação de ID na interface via Hashids, autenticação JWT (HS256 + renovação de token duplo access/refresh), criptografia/descriptografia AES (interface + banco, três camadas), identificação de região GeoIP (MaxMind), verificação humano Poster (slider/quebra-cabeça/clique) | Completa |
+| **Infraestrutura** | ID distribuído Snowflake (bigint não auto-incremento), ofuscação de ID na interface via Hashids, autenticação JWT (HS256 + renovação de token duplo access/refresh), criptografia/descriptografia AES (interface + banco, três camadas), identificação de região GeoIP (MaxMind), verificação humano Poster (slider/quebra-cabeça/clique), CDN origin-pull (Cloudflare/CloudFront/Aliyun/Tencent, `Cdn::url()`, depuração automática fail-open) | Completa |
 | **Cobertura multi-dispositivo** | Flutter 5 plataformas (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 páginas) + Web Admin (LayUI+ECharts) + API | Flutter 25 arquivos, HarmonyOS 14 arquivos, Admin 239 arquivos |
 | **Rastreamento de plataforma** | Identificação de 8 plataformas (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + header X-Platform + registro em 6 tabelas (orders/payments/operation_logs/users/search_logs/chat_messages) | Completa |
 | **Testes** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | Testes unitários completos, integração pendente |
@@ -74,7 +74,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Gestão de conteúdo | CMS/FAQ/base de conhecimento/modelos de e-mail/notificações/tabela de tamanhos | P2 | ✅ |
 | Ferramentas de crescimento | Atacado B2B/compra por assinatura/testes AB | P2-P3 | ✅ |
 | Atendimento ao cliente | IM em tempo real via WebSocket/base de conhecimento | P3 | ✅ |
-| Infraestrutura | Snowflake ID/JWT/Hashids/Encryption/Poster/versão de API/GeoIP | P0 | ✅ |
+| Infraestrutura | Snowflake ID/JWT/Hashids/Encryption/Poster/versão de API/GeoIP/CDN | P0 | ✅ |
 
 ---
 

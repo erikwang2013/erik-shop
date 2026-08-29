@@ -53,6 +53,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **Manajemen konten** | Halaman CMS multibahasa (Landing/Blog), FAQ multibahasa, basis pengetahuan multibahasa, tabel konversi ukuran (pakaian/sepatu + konversi US/UK/EU/JP/CN), template email (multibahasa), Feed produk (Google/Meta + sinkronisasi terjadwal) | Lengkap |
 | **Layanan pelanggan** | IM real-time WebSocket (chat_sessions/chat_messages), basis pengetahuan multibahasa | Struktur tabel lengkap, WS belum diimplementasikan |
 | **Infrastruktur** | ID terdistribusi Snowflake (bigint non-auto-increment), obfuscation ID antarmuka Hashids, autentikasi JWT (HS256 + refresh token ganda access/refresh), enkripsi/dekripsi AES (enkripsi tiga lapis antarmuka + database), identifikasi wilayah GeoIP (MaxMind), verifikasi manusia Poster (slider/teka-teki/klik) | Lengkap |
+| **Akselerasi CDN** | Model Origin-Pull (unggahan di disk origin admin, DB hanya menyimpan path relatif), `Cdn::url()` menulis ulang ke `https://{CDN_DOMAIN}{path}`, multi-provider (Cloudflare/CloudFront/Aliyun/Tencent), halaman manajemen CDN admin (Config/Purge/Logs), auto-purge fail-open, cache edge 7d immutable | Lengkap |
 | **Cakupan multi-klien** | Flutter 5 platform (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 halaman) + Web Admin (LayUI+ECharts) + API | Flutter 25 file, HarmonyOS 14 file, Admin 239 file |
 | **Pelacakan platform** | Pengenalan 8 platform (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + header X-Platform + pencatatan 6 tabel (orders/payments/operation_logs/users/search_logs/chat_messages) | Lengkap |
 | **Pengujian** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | Pengujian unit lengkap, pengujian integrasi menyusul |
@@ -75,6 +76,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Alat pertumbuhan | Grosir B2B/pembelian berlangganan/pengujian AB | P2-P3 | ✅ |
 | Layanan pelanggan | IM real-time WebSocket/basis pengetahuan | P3 | ✅ |
 | Infrastruktur | Snowflake ID/JWT/Hashids/Encryption/Poster/versi API/GeoIP | P0 | ✅ |
+| Akselerasi CDN | Abstraksi provider CDN/origin-pull/auto-purge/log purge | P1 | ✅ |
 
 ---
 

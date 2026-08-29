@@ -19,7 +19,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/           业务API (251 PHP文件)
-    config/            35配置 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36配置 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39控制器 (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111模型 (BaseModel + 110业务模型)
     app/middleware/     14中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
@@ -27,9 +27,9 @@ shop-php/
     database/          schema.sql (已被根目录 install.sql 替代) + seeders
     tests/              4测试类 (22 tests, 45 assertions)
   admin/             管理后台 (239 PHP文件)
-    plugin/admin/app/controller/shop/ 82控制器
-    plugin/admin/app/model/shop/      76模型
-    plugin/admin/app/view/shop/       ECharts仪表盘
+    plugin/admin/app/controller/shop/ 82控制器 (含 CdnProvider 控制器)
+    plugin/admin/app/model/shop/      76模型 (含 CdnProviders/CdnPurgeLogs)
+    plugin/admin/app/view/shop/       ECharts仪表盘 + CDN管理页(Layui 3-tab)
     app/middleware/    5中间件 (Security/Platform/HashidsDecode/HashidsEncode/StaticFile)
   apps/              客户端
     flutter/lib/      25 Dart (11页面 + 核心层 + 路由)
@@ -82,5 +82,6 @@ cd admin && php start.php start -d
 - **多语言 (i18n)**: 5语言翻译文件 + LocaleMiddleware + Flutter AppLocalizations
 - **API文档**: hg/apidoc自动生成 (6分组, 控制器注解驱动)
 - **平台追踪**: 8平台 X-Platform header + DB记录
+- **CDN (可选)**: Origin-Pull 回源 — 上传文件存 admin 本地磁盘, 输出边界 `Cdn::url()` 重写为 `https://{CDN_DOMAIN}{path}`; 4家提供商(Cloudflare/CloudFront/阿里云/腾讯云), 管理端配置+自动刷新, 详情见 [CDN 支持方案](PLAN-CDN.md)
 
 详见: [部署文档](deployment.md) | [完整架构文档](architecture-full.md) | [功能设计文档](features.md)

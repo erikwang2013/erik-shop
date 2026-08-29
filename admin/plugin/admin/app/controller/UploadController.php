@@ -2,6 +2,7 @@
 
 namespace plugin\admin\app\controller;
 
+use app\common\Cdn;
 use Exception;
 use Intervention\Image\ImageManagerStatic as Image;
 use plugin\admin\app\model\Upload;
@@ -120,7 +121,7 @@ class UploadController extends Crud
         $upload->category = $request->post('category');
         $upload->save();
         return $this->json(0, '上传成功', [
-            'url' => $data['url'],
+            'url' => Cdn::url($data['url']),
             'name' => $data['name'],
             'size' => $data['size'],
         ]);
@@ -149,7 +150,7 @@ class UploadController extends Crud
         }
         $data = $this->base($request, '/upload/files/' . date('Ymd'));
         return $this->json(0, '上传成功', [
-            'url' => $data['url'],
+            'url' => Cdn::url($data['url']),
             'name' => $data['name'],
             'size' => $data['size'],
         ]);
@@ -187,7 +188,7 @@ class UploadController extends Crud
             'code' => 0,
             'msg' => '上传成功',
             'data' => [
-                'url' => $data['url'],
+                'url' => Cdn::url($data['url']),
                 'name' => $data['name'],
                 'size' => $data['size'],
             ]
@@ -243,7 +244,7 @@ class UploadController extends Crud
                 'code' => 0,
                 'msg' => '上传成功',
                 'data' => [
-                    'url' => "/app/admin/$relative_path/$name.md.$ext"
+                    'url' => Cdn::url("/app/admin/$relative_path/$name.md.$ext")
                 ]
             ]);
         }
@@ -272,11 +273,13 @@ class UploadController extends Crud
         $file_list = array_filter($file_list, function ($item) {
             return !empty($item);
         });
+        $purge_urls = array_values(array_filter(array_column($files, 'url')));
         $result = parent::delete($request);
         if (($res = json_decode($result->rawBody())) && $res->code === 0) {
             foreach ($file_list as $file) {
                 @unlink($file);
             }
+            Cdn::purge($purge_urls); // fail-open：CDN 故障不影响删除
         }
         return $result;
     }

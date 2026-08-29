@@ -1,6 +1,10 @@
 graph TB
     subgraph Internet["인터넷"]
         User["사용자 전 세계 접속"]
+
+        subgraph CDN["CDN 에지 계층"]
+            CDN_EDGE["Cloudflare / CloudFront / Aliyun / Tencent<br/>Origin-Pull 모델 https://{CDN_DOMAIN}{path}<br/>정적 자산 7일 캐시 (immutable)"]
+        end
     end
 
     subgraph VPS["클라우드 서버 / VPS"]
@@ -33,6 +37,8 @@ graph TB
             V2["erik_redis Redis 데이터"]
             V3["erik_es ES 인덱스"]
             V4["erik_logs 애플리케이션 로그"]
+            V5["admin_uploads admin 업로드<br/>(/app/plugin/admin/public/upload)"]
+            V6["service_public 공개 문서<br/>(/app/public/documents)"]
         end
     end
 
@@ -43,7 +49,8 @@ graph TB
         SMTP["메일 서비스<br/>다국어 템플릿<br/>(email_templates 테이블)"]
     end
 
-    User --> NGX
+    User --> CDN_EDGE
+    CDN_EDGE --> NGX
     NGX -->|api.erik.xyz| SVC
     NGX -->|admin.erik.xyz| ADM
     SVC --> MYSQL
@@ -59,6 +66,8 @@ graph TB
     REDIS -.-> V2
     ES -.-> V3
     SVC -.-> V4
+    SVC -.-> V6
+    ADM -.-> V5
 
     style Internet fill:#e8eaf6
     style VPS fill:#e8f5e9

@@ -28,6 +28,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 CDN সমর্থন
+
+- **অরিজিন-পুল (Origin-Pull) মডেল**: আপলোড admin অরিজিন লোকাল ডিস্কে থাকে; DB শুধু রিলেটিভ পাথ সংরক্ষণ করে (শূন্য মাইগ্রেশন); আউটপুট বাউন্ডারিতে `Cdn::url()` লিংকটি `https://{CDN_DOMAIN}{path}` ফরম্যাটে রিরাইট করে; CDN ডোমেইন CNAME দিয়ে admin ডোমেইনে ফেরত যায়
+- **ইউনিফাইড প্রোভাইডার অ্যাবস্ট্রাকশন**: `CdnProviderInterface` (purge / purgeByTag / preload) Cloudflare, AWS CloudFront, Aliyun, Tencent-এ বাস্তবায়িত (Fastly/Akamai সংরক্ষিত); ক্যাপাবিলিটি ম্যাট্রিক্স: purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- **অ্যাডমিন প্যানেল কনফিগারেশন**: CDN ম্যানেজমেন্ট পেজ (৩টি ট্যাব: কনফিগ/পার্জ/লগ) — প্রোভাইডার এনেবল সুইচ, ক্রেডেনশিয়াল (কনফিগ JSON এনক্রিপ্টেড অ্যাট রেস্ট), কানেক্টিভিটি টেস্ট, ম্যানুয়াল পার্জ/প্রিলোড, পার্জ লগ (wa_cdn_providers / wa_cdn_purge_logs টেবিল); DB কনফিগ .env-কে ওভাররাইড করে; গ্লোবাল অন/অফ শেয়ার্ড Redis দিয়ে service-এ পৌঁছায় (prefix `shop:`, TTL 60s)
+- **অটো-পার্জ (fail-open)**: প্রোডাক্ট ও ব্যানার CRUD স্বয়ংক্রিয়ভাবে পার্জ ট্রিগার করে; CDN ব্যর্থতা কখনো অ্যাডমিন CRUD ব্লক করে না
+- **এজ ক্যাশিং**: nginx `location /app/admin/upload/` → `expires 7d; Cache-Control public, max-age=604800, immutable`; আপলোড ডিরেক্টরি docker ভলিউমে স্থায়ী থাকে (admin_uploads:/app/plugin/admin/public/upload ও service_public:/app/public/documents)
+- **কনফিগ**: `config/cdn.php` (admin + service) + ১৩টি `CDN_*` .env ভেরিয়েবল (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / প্রতি-প্রোভাইডার ক্রেডেনশিয়াল)
+
+---
+
 ## 2026-08-07 ফিক্স রেকর্ড
 
 | # | সমস্যা | সিভিয়ারিটি | ফিক্স |
@@ -178,6 +189,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | টোকেন বাকেট রেট লিমিট | — | — | ✅ |
 | DB রিড-রাইট সেপারেশন | — | — | ✅ |
 | Cron শিডিউলড টাস্ক (11টি) | — | — | ✅ |
+| CDN এজ ক্যাশিং | ✅ | ✅ | ✅ |
 
 ### কনটেন্ট ও গ্রোথ
 

@@ -21,6 +21,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Plateforme | En-tête `X-Platform: ios|ipados|macos|windows|linux|android|harmonyos|web` |
 | Content-Type | `application/json` (POST/PUT) |
 | Vérification homme-machine | En-tête `X-Poster-Token: <token>` (opérations sensibles) |
+| URL des ressources | CDN activé : images/documents émis via le domaine CDN (`https://{CDN_DOMAIN}{chemin}`, réécriture d'URL origin-pull via `Cdn::url()`) |
 
 ### Format des réponses
 

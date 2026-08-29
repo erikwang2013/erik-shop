@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 Suporte a CDN
+
+- Novo suporte a CDN nos dois projetos (service + admin), modelo de origem (origin-pull): os uploads continuam sendo salvos no disco local do admin (origem); o banco de dados guarda apenas caminhos relativos (migração zero); nas fronteiras de saída `Cdn::url()` reescreve para `https://{CDN_DOMAIN}{path}`; o domínio do CDN aponta por CNAME de volta para o domínio do admin
+- Abstração unificada de provedores `CdnProviderInterface` (purge / purgeByTag / preload) implementada para Cloudflare, AWS CloudFront, Aliyun e Tencent Cloud (Fastly/Akamai reservados); matriz de capacidades: purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- Configuração pelo painel admin: página de gerenciamento de CDN (3 abas: Configuração/Depuração/Logs) — chaves de ativação por provedor, credenciais (JSON de configuração criptografado em repouso), teste de conectividade, depuração/pré-aquecimento manuais, logs de depuração (tabelas `wa_cdn_providers` / `wa_cdn_purge_logs`); a configuração no banco de dados sobrepõe o `.env`; o liga/desliga global propaga para o service via Redis compartilhado (prefixo `shop:`, TTL 60s)
+- Depuração automática (fail-open): o CRUD de produtos e banners aciona a depuração automaticamente; falha do CDN nunca bloqueia o CRUD do admin
+- Cache de borda: nginx `location /app/admin/upload/` com `expires 7d; Cache-Control public, max-age=604800, immutable`; os diretórios de upload persistem via volumes docker (`admin_uploads:/app/plugin/admin/public/upload`, `service_public:/app/public/documents`)
+- Configuração: `config/cdn.php` (admin + service) + 13 variáveis de ambiente `CDN_*` (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / credenciais por provedor)
+
+---
+
 ## Registro de correções 2026-08-07
 
 | # | Problema | Severidade | Correção |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Limitação por token bucket | — | — | ✅ |
 | Separação leitura/escrita do DB | — | — | ✅ |
 | Tarefas agendadas Cron (11) | — | — | ✅ |
+| CDN (Cloudflare/CloudFront/Aliyun/Tencent, origin-pull) | — | — | ✅ |
 
 ### Conteúdo e crescimento
 

@@ -162,6 +162,7 @@ shop-php/
 | **सामग्री प्रबंधन** | CMS बहुभाषी पृष्ठ, FAQ, ज्ञानकोष, साइज़ चार्ट, ईमेल टेम्पलेट, उत्पाद Feed सिंक |
 | **ग्राहक सेवा** | WebSocket रीयल-टाइम IM, ज्ञानकोष (तालिका संरचना बनी हुई है) |
 | **बुनियादी ढाँचा** | Snowflake वितरित ID, Hashids इंटरफ़ेस अस्पष्टीकरण, JWT प्रमाणीकरण, AES एन्क्रिप्शन, GeoIP क्षेत्र पहचान |
+| **CDN त्वरण** | ओरिजिन-पुल मॉडल + `Cdn::url()` से `https://{CDN_DOMAIN}{path}` रीराइट, 4 प्रोवाइडर (Cloudflare/CloudFront/Aliyun/Tencent), fail-open ऑटो-पर्ज, 7 दिन की एज कैशिंग |
 | **बहु-प्लेटफ़ॉर्म कवरेज** | Flutter (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS) + Web Admin |
 | **प्लेटफ़ॉर्म ट्रैकिंग** | 8 प्लेटफ़ॉर्म स्रोत पहचान (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + DB रिकॉर्ड |
 | **परीक्षण** | 22 tests / 45 assertions — ALL PASS (Security+Jwt+ApiResponse+Redis) |
@@ -192,6 +193,7 @@ shop-php/
 | [API इंटरफ़ेस दस्तावेज़](api.md) | 71 API एंडपॉइंट (स्थैतिक दस्तावेज़) |
 | [hg/apidoc इंटरफ़ेस दस्तावेज़](http://localhost:8787/apidoc/) | hg/apidoc स्वचालित जनन (6 समूह: प्रमाणीकरण/उत्पाद/लेनदेन/लॉजिस्टिक्स सीमा शुल्क/उपयोगकर्ता मार्केटिंग/संचालन) |
 | [तैनाती दस्तावेज़](deployment.md) | Docker/मैनुअल तैनाती, पर्यावरण चर, संचालन कमांड |
+| [CDN योजना](PLAN-CDN.md) | CDN एकीकरण योजना: ओरिजिन-पुल मॉडल, यूनिफाइड CDN प्रोवाइडर इंटरफ़ेस, ऑटो-पर्ज, .env कॉन्फ़िग |
 
 ## ओपन-सोर्स आसान नहीं, समर्थन का स्वागत है
 
@@ -228,6 +230,16 @@ shop-php/
   - बैंक का नाम: THE BANK OF NEW YORK MELLON
   - SWIFT Code: IRVTUS3NXXX
   - बैंक का पता: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### क्रिप्टो दान (Crypto Donation)
+
+यदि यह प्रोजेक्ट आपके काम आए, तो दान करने के लिए QR कोड स्कैन करें, धन्यवाद!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

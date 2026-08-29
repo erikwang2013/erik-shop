@@ -42,8 +42,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    E1[CDN Edge<br/>Cloudflare / CloudFront / Aliyun / Tencent<br/>https://{CDN_DOMAIN}{path}]
     subgraph Gateway[एक्सेस परत]
-        N[Nginx :80/:443]
+        N[Nginx :80/:443<br/>location /app/admin/upload/<br/>expires 7d immutable]
     end
     subgraph Apps[एप्लिकेशन परत]
         S[Service API :8787<br/>39 Controllers 111 Models 14 MW]
@@ -54,9 +55,8 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F & H & W --> E1
+    E1 -->|CNAME| N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -75,8 +75,8 @@ graph TB
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
-    subgraph Gateway["2. एक्सेस परत Nginx :80"]
-        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
+    subgraph Gateway["2. एक्सेस परत Nginx :80 (CDN एज के पीछे)"]
+        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin<br/>एज: location /app/admin/upload/ expires 7d immutable]
     end
     subgraph Security["3. सुरक्षा परत SecurityMiddleware 6 चरण पहचान"]
         CT{Content-Type?} -->|Y| BS{Body Size?}
@@ -147,7 +147,7 @@ graph TB
 | परत | विवरण |
 |----|------|
 | 1. क्लाइंट परत | Flutter 5 प्लेटफ़ॉर्म + HarmonyOS + Web Admin, सभी HTTP/JSON से संवाद करते हैं |
-| 2. एक्सेस परत | Nginx डोमेन के अनुसार विभाजन: api→service, admin→admin |
+| 2. एक्सेस परत | CDN एज (Cloudflare/CloudFront/Aliyun/Tencent, CNAME admin डोमेन पर) के पीछे Nginx डोमेन के अनुसार विभाजन करता है: api→service, admin→admin; `/app/admin/upload/` 7 दिन immutable कैश होता है |
 | 3. सुरक्षा परत | SecurityMiddleware 31 प्रकार के हमले डिटेक्टर, हिट होने पर त्रुटि कोड/403 लौटाता है |
 | 4. मिडलवेयर पाइपलाइन | 10 ग्लोबल MW क्रमिक प्रसंस्करण + 2 रूट-स्तरीय MW (PosterVerify संवेदनशील ऑपरेशन, JwtAuth प्रमाणीकरण इंटरफ़ेस) |
 | 5. कंट्रोलर परत | 39 API कंट्रोलर कार्यक्षमता के अनुसार समूहित, सभी व्यावसायिक तर्क संसाधित करते हैं |
@@ -405,7 +405,7 @@ graph LR
 
 ### 7.2 Redis उपयोग
 
-Redis का उपयोग रेट लिमिट टोकन बकेट, मानव-सत्यापन कोड और Session स्टोरेज के लिए किया जाता है (मिडलवेयर परत); व्यावसायिक डेटा एप्लिकेशन-स्तरीय कैश नहीं किया जाता, सीधे MySQL से पढ़ा जाता है (रीड/राइट स्प्लिटिंग + कनेक्शन पूल)।
+Redis का उपयोग रेट लिमिट टोकन बकेट, मानव-सत्यापन कोड और Session स्टोरेज के लिए किया जाता है (मिडलवेयर परत); व्यावसायिक डेटा एप्लिकेशन-स्तरीय कैश नहीं किया जाता, सीधे MySQL से पढ़ा जाता है (रीड/राइट स्प्लिटिंग + कनेक्शन पूल)। हालाँकि स्टैटिक फ़ाइलें (प्रोडक्ट/बैनर चित्र) CDN एज पर कैश होती हैं (7 दिन immutable), और प्रोडक्ट या बैनर बदलने/हटाने पर कैश स्वतः purge होता है।
 
 ### 7.4 कनेक्शन पूल अनुकूलन
 
@@ -437,8 +437,9 @@ docker-compose.yml:
   service (php:8.3) :8787 internal, 32 workers
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
-नेटवर्क: erik-net bridge | डेटा वॉल्यूम स्थायित्व
-रूटिंग: api.erik.xyz→service | admin.erik.xyz→admin
+CDN एज: Cloudflare/CloudFront/Aliyun/Tencent (CNAME admin डोमेन पर) + nginx /app/admin/upload/ expires 7d immutable
+अपलोड वॉल्यूम: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
+नेटवर्क: erik-net bridge | डेटा वॉल्यूम स्थायित्व | रूटिंग: api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
 ---
@@ -490,7 +491,7 @@ cd service && php vendor/bin/phpunit tests/
 | मिडलवेयर | 14 |
 | टूल क्लास | 8 |
 | शेड्यूल्ड कार्य | 12 |
-| कॉन्फ़िग आइटम | 35+ |
+| कॉन्फ़िग आइटम | 36+ |
 | टेस्ट | 22 टेस्ट, 45 असर्शन |
 | Skills | 38 |
 | दस्तावेज़ | 9 |

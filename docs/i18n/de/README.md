@@ -158,6 +158,7 @@ shop-php/
 | **Risikomanagement & Compliance** | Regel-Engine (Bypass-Scoring), KYC-Verifizierung, GDPR/CCPA-Datenanfragen, Cookie-Consent |
 | **Sicherheitsschutz** | 31 Angriffserkennungstypen (XSS/SQL-Injection/XXE/SSRF/CRLF/Pfad-Traversal/Datei-Upload/Brute-Force/HTTP-Methode/Host/CORS usw.) |
 | **Hohe Nebenläufigkeit** | Token-Bucket-Rate-Limiting, DB-Read/Write-Splitting, Verbindungspool-Optimierung |
+| **CDN-Unterstützung** | Origin-Pull-Edge-Caching, einheitliche Provider-Abstraktion (Cloudflare/CloudFront/Aliyun/Tencent), Auto-Invalidierung (fail-open), CDN-Verwaltungsseite (Konfiguration/Invalidierung/Protokolle) |
 | **Mitgliederwachstum** | Punktregeln, Mitgliedsstufen-Berechtigungen, Geschenkkarten, Preisalarme, Abonnement-Kauf, AB-Tests |
 | **Content-Management** | Mehrsprachige CMS-Seiten, FAQ, Wissensdatenbank, Größentabellen, E-Mail-Vorlagen, Produkt-Feed-Synchronisierung |
 | **Kundenservice** | WebSocket-Echtzeit-IM, Wissensdatenbank (Tabellenstruktur vorhanden) |
@@ -191,7 +192,7 @@ shop-php/
 | [Architekturdokument](architecture.md) | Verzeichnisstruktur, Modell-Vererbungskette, Schlüsselpakete |
 | [API-Schnittstellendokument](api.md) | 71 API-Endpunkte (statisches Dokument) |
 | [hg/apidoc-Schnittstellendokumentation](http://localhost:8787/apidoc/) | Automatisch von hg/apidoc generiert (6 Gruppen: Authentifizierung/Produkte/Transaktionen/Logistik-Zoll/Benutzer-Marketing/Betrieb) |
-| [Bereitstellungsdokument](deployment.md) | Docker/manuelle Bereitstellung, Umgebungsvariablen, Betriebsbefehle |
+| [Bereitstellungsdokument](deployment.md) | Docker/manuelle Bereitstellung, Umgebungsvariablen (inkl. `CDN_*`), Betriebsbefehle |
 
 
 ## Open Source ist harte Arbeit — wir freuen uns über Unterstützung
@@ -229,6 +230,16 @@ shop-php/
   - Bankname: THE BANK OF NEW YORK MELLON
   - SWIFT Code: IRVTUS3NXXX
   - Bankadresse: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Krypto-Spenden (Crypto Donation)
+
+Wenn dieses Projekt Ihnen hilft, scannen Sie gerne den QR-Code, um zu spenden. Vielen Dank!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

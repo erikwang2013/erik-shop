@@ -52,7 +52,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **Membership Growth** | Membership levels + benefits, point rules + ledger, gift cards (balance + redemption), price drop/arrival alerts, wishlists, product comparison, browsing history, subscription orders, AB testing (traffic allocation + confidence) | Complete |
 | **Content Management** | CMS multilingual pages (Landing/Blog), multilingual FAQ, multilingual knowledge base, size charts (apparel/footwear + US/UK/EU/JP/CN conversion), email templates (multilingual), product feeds (Google/Meta + scheduled sync) | Complete |
 | **Customer Service** | WebSocket real-time IM (chat_sessions/chat_messages), multilingual knowledge base | Schema complete, WS pending |
-| **Infrastructure** | Snowflake distributed IDs (bigint non-auto-increment), Hashids API ID obfuscation, JWT auth (HS256 + access/refresh dual-token refresh), AES encryption (interface + database three-layer encryption), GeoIP region detection (MaxMind), Poster human verification (slider/puzzle/click) | Complete |
+| **Infrastructure** | Snowflake distributed IDs (bigint non-auto-increment), Hashids API ID obfuscation, JWT auth (HS256 + access/refresh dual-token refresh), AES encryption (interface + database three-layer encryption), GeoIP region detection (MaxMind), Poster human verification (slider/puzzle/click), CDN origin-pull (edge caching + auto-purge) | Complete |
 | **Multi-Platform Clients** | Flutter 5 platforms (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 pages) + Web Admin (LayUI+ECharts) + API | Flutter 25 files, HarmonyOS 14 files, Admin 239 files |
 | **Platform Tracking** | 8-platform identification (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + X-Platform header + recorded in 6 tables (orders/payments/operation_logs/users/search_logs/chat_messages) | Complete |
 | **Testing** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | Unit tests complete, integration tests pending |
@@ -74,7 +74,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Content Management | CMS/FAQ/Knowledge base/Email templates/Notifications/Size charts | P2 | ✅ |
 | Growth Tools | B2B wholesale/Subscription orders/AB testing | P2-P3 | ✅ |
 | Customer Service | WebSocket real-time IM/Knowledge base | P3 | ✅ |
-| Infrastructure | Snowflake ID/JWT/Hashids/Encryption/Poster/API versioning/GeoIP | P0 | ✅ |
+| Infrastructure | Snowflake ID/JWT/Hashids/Encryption/Poster/API versioning/GeoIP/CDN (edge cache + auto-purge) | P0 | ✅ |
 
 ---
 

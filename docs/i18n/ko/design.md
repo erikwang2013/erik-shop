@@ -99,6 +99,8 @@ Redis 서킷 브레이커(`app\common\CircuitBreaker`): 결제 게이트웨이/�
 
 Redis는 속도 제한 토큰 버킷(`support\Redis` 퍼사드), 서킷 브레이커 카운트, 휴먼 인증 코드와 Session 저장에 사용됩니다. 비즈니스 데이터는 애플리케이션 계층 캐시를 하지 않고 MySQL(읽기/쓰기 분리 + 커넥션 풀)을 직접 읽습니다.
 
+또한, admin의 CDN 전체 on/off 상태는 공유 Redis(prefix `shop:`, TTL 60s)를 통해 service로 전파됩니다.
+
 ### 4.4 커넥션 풀
 
 MySQL: 50max/10min/2s 타임아웃 | 읽기/쓰기 분리: 30max/5min (2개 읽기 복제본, sticky=true) | Redis: 30max/5min

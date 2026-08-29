@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    <head>
+        <meta charset="utf-8">
+        <title>CDN 管理</title>
+        <link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
+        <link rel="stylesheet" href="/app/admin/admin/css/reset.css" />
+    </head>
+    <body class="pear-container">
+
+        <div class="layui-card">
+            <div class="layui-card-body">
+                <div class="layui-tab layui-tab-brief">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this">全局设置</li>
+                        <li>提供商配置</li>
+                        <li>刷新 / 预热</li>
+                    </ul>
+                    <div class="layui-tab-content">
+
+                        <!-- 全局设置 -->
+                        <div class="layui-tab-item layui-show">
+                            <form class="layui-form" lay-filter="settings-form" style="max-width: 600px;">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">总开关</label>
+                                    <div class="layui-input-block">
+                                        <input type="checkbox" name="enabled" lay-skin="switch" lay-text="开启|关闭" id="cdn-enabled">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">CDN 域名</label>
+                                    <div class="layui-input-block">
+                                        <input type="text" name="domain" id="cdn-domain" placeholder="如 cdn.example.com（不含 https://）" class="layui-input">
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">默认提供商</label>
+                                    <div class="layui-input-block">
+                                        <select name="default" id="cdn-default">
+                                            <option value="cloudflare">Cloudflare</option>
+                                            <option value="cloudfront">AWS CloudFront</option>
+                                            <option value="aliyun">阿里云 CDN</option>
+                                            <option value="tencent">腾讯云 CDN</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="settings-save">保存</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- 提供商配置 -->
+                        <div class="layui-tab-item">
+                            <table id="provider-table" lay-filter="provider-table"></table>
+                        </div>
+
+                        <!-- 刷新 / 预热 + 日志 -->
+                        <div class="layui-tab-item">
+                            <form class="layui-form" lay-filter="flush-form" style="max-width: 600px;">
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">提供商</label>
+                                    <div class="layui-input-block">
+                                        <select name="code">
+                                            <option value="cloudflare">Cloudflare</option>
+                                            <option value="cloudfront">AWS CloudFront</option>
+                                            <option value="aliyun">阿里云 CDN</option>
+                                            <option value="tencent">腾讯云 CDN</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <label class="layui-form-label">URL 清单</label>
+                                    <div class="layui-input-block">
+                                        <textarea name="urls" placeholder="每行一个 URL 或相对路径（如 /app/admin/upload/img/xxx.jpg）" class="layui-textarea"></textarea>
+                                    </div>
+                                </div>
+                                <div class="layui-form-item">
+                                    <div class="layui-input-block">
+                                        <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="flush-purge">刷新</button>
+                                        <button class="pear-btn pear-btn-md" lay-submit lay-filter="flush-preload">预热</button>
+                                    </div>
+                                </div>
+                            </form>
+                            <table id="log-table" lay-filter="log-table" style="margin-top: 15px;"></table>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 提供商编辑弹窗 -->
+        <div id="provider-edit" style="display: none; padding: 20px;">
+            <form class="layui-form" lay-filter="provider-form">
+                <input type="hidden" name="code">
+                <input type="hidden" name="name">
+                <input type="hidden" name="weight" value="0">
+                <div class="layui-form-item">
+                    <label class="layui-form-label">启用</label>
+                    <div class="layui-input-block">
+                        <input type="checkbox" name="enabled" lay-skin="switch" lay-text="开启|关闭">
+                    </div>
+                </div>
+                <div class="layui-form-item layui-form-pane" id="provider-fields">
+                    <label class="layui-form-label" style="height:auto;">凭据字段</label>
+                    <div class="layui-input-block" id="provider-field-inputs"></div>
+                </div>
+                <div class="layui-form-item">
+                    <div class="layui-input-block">
+                        <button class="pear-btn pear-btn-md pear-btn-primary" lay-submit lay-filter="provider-save">保存</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
+        <script src="/app/admin/component/pear/pear.js"></script>
+        <script src="/app/admin/admin/js/permission.js"></script>
+        <script src="/app/admin/admin/js/common.js"></script>
+        <script>
+            layui.use(["table", "form", "layer", "common", "util"], function() {
+                let table = layui.table;
+                let form = layui.form;
+                let layer = layui.layer;
+                let common = layui.common;
+                let $ = layui.$;
+
+                const FIELD_NAMES = {
+                    cloudflare: ["api_token", "zone_id"],
+                    cloudfront: ["key_id", "secret_key", "distribution_id", "region"],
+                    aliyun: ["access_key_id", "access_key_secret"],
+                    tencent: ["secret_id", "secret_key"]
+                };
+
+                // ---------- 全局设置 ----------
+                function loadSettings() {
+                    common.ajax("/app/admin/shop/CdnProvider/settings", {}, function(res) {
+                        if (res.code === 0 && res.data) {
+                            $("#cdn-enabled").prop("checked", !!res.data.enabled);
+                            $("#cdn-domain").val(res.data.domain || "");
+                            $("#cdn-default").val(res.data.default || "cloudflare");
+                            form.render();
+                        }
+                    });
+                }
+                loadSettings();
+
+                form.on("submit(settings-save)", function(data) {
+                    common.ajax("/app/admin/shop/CdnProvider/settings", data.field, function(res) {
+                        if (res.code === 0) {
+                            layer.msg("保存成功");
+                            loadSettings();
+                        } else {
+                            layer.msg(res.msg, { icon: 2 });
+                        }
+                    });
+                    return false;
+                });
+
+                // ---------- 提供商列表 ----------
+                table.render({
+                    elem: "#provider-table",
+                    url: "/app/admin/shop/CdnProvider/select",
+                    cols: [[
+                        { field: "name", title: "名称", minWidth: 120 },
+                        { field: "code", title: "标识", width: 120 },
+                        { field: "enabled", title: "启用", width: 80, templet: function(d) { return d.enabled ? "是" : "否"; } },
+                        { field: "source", title: "配置来源", width: 100, templet: function(d) { return d.source === "db" ? "数据库" : "env"; } },
+                        { field: "fields", title: "凭据", minWidth: 200, templet: function(d) {
+                            return d.fields.map(function(f) { return f.key + ": " + (f.masked ? "******" : "(未设置)"); }).join("<br>");
+                        } },
+                        { title: "操作", width: 180, templet: function(d) {
+                            return '<button class="layui-btn layui-btn-sm" lay-event="edit">编辑</button>' +
+                                   '<button class="layui-btn layui-btn-sm layui-btn-normal" lay-event="test">测试</button>';
+                        } }
+                    ]],
+                    page: false,
+                    limits: [10, 20, 50]
+                });
+
+                table.on("tool(provider-table)", function(obj) {
+                    let d = obj.data;
+                    if (obj.event === "edit") {
+                        $("#provider-edit [name=code]").val(d.code);
+                        $("#provider-edit [name=name]").val(d.name);
+                        $("#provider-edit [name=enabled]").prop("checked", !!d.enabled);
+                        let html = "";
+                        d.fields.forEach(function(f) {
+                            html += '<div class="layui-form-item"><div class="layui-input-block">' +
+                                '<label style="margin-right:8px;">' + f.key + '</label>' +
+                                '<input type="text" name="' + f.key + '" placeholder="' +
+                                (f.masked ? "留空则不修改（当前已配置）" : "未配置，请输入") + '" class="layui-input" style="width:300px;display:inline-block;"></div></div>';
+                        });
+                        $("#provider-field-inputs").html(html);
+                        form.render();
+                        layer.open({ type: 1, title: "编辑 - " + d.name, area: ["520px"], content: $("#provider-edit") });
+                    } else if (obj.event === "test") {
+                        common.ajax("/app/admin/shop/CdnProvider/test", { code: d.code }, function(res) {
+                            layer.msg(res.code === 0 ? "连接正常" : res.msg, { icon: res.code === 0 ? 1 : 2 });
+                        });
+                    }
+                });
+
+                form.on("submit(provider-save)", function(data) {
+                    common.ajax("/app/admin/shop/CdnProvider/save", data.field, function(res) {
+                        if (res.code === 0) {
+                            layer.closeAll();
+                            layer.msg("保存成功");
+                            table.reload("provider-table");
+                        } else {
+                            layer.msg(res.msg, { icon: 2 });
+                        }
+                    });
+                    return false;
+                });
+
+                // ---------- 刷新 / 预热 ----------
+                function flushAction(event) {
+                    let type = event === "flush-purge" ? "purge" : "preload";
+                    let data = form.val("flush-form");
+                    if (!data.urls) { layer.msg("请填写 URL 清单", { icon: 2 }); return false; }
+                    common.ajax("/app/admin/shop/CdnProvider/" + type, data, function(res) {
+                        layer.msg(res.msg || (type === "purge" ? "刷新完成" : "预热完成"), { icon: res.code === 0 ? 1 : 2 });
+                        table.reload("log-table");
+                    });
+                    return false;
+                }
+                form.on("submit(flush-purge)", function() { return flushAction("flush-purge"); });
+                form.on("submit(flush-preload)", function() { return flushAction("flush-preload"); });
+
+                // ---------- 日志 ----------
+                table.render({
+                    elem: "#log-table",
+                    url: "/app/admin/shop/CdnProvider/log",
+                    cols: [[
+                        { field: "id", title: "ID", width: 90 },
+                        { field: "provider", title: "提供商", width: 110 },
+                        { field: "type", title: "类型", width: 110 },
+                        { field: "urls", title: "URL", minWidth: 220, templet: function(d) { return d.urls.join("<br>"); } },
+                        { field: "status", title: "结果", width: 70, templet: function(d) { return d.status ? "成功" : "失败"; } },
+                        { field: "message", title: "信息", minWidth: 160 },
+                        { field: "created_at", title: "时间", width: 170 }
+                    ]],
+                    page: true
+                });
+            });
+        </script>
+    </body>
+</html>

@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 CDN サポート
+
+- Origin-Pull モデル: アップロードは admin オリジンのローカルディスクに保存されたまま、DB には相対パスのみ保存（マイグレーション不要）; 出力時に `Cdn::url()` が `https://{CDN_DOMAIN}{path}` へ書き換え; CDN ドメインは admin ドメインへ CNAME で戻す
+- 統合プロバイダー抽象化: `CdnProviderInterface`（purge / purgeByTag / preload）を Cloudflare、AWS CloudFront、Aliyun、Tencent Cloud に実装（Fastly/Akamai は予約）; 能力マトリクス: purge 4/4、preload 2/4（Aliyun/Tencent）、purgeByTag 1/4（Cloudflare）
+- 管理パネル設定: CDN 管理ページ（3タブ: Config/Purge/Logs）— プロバイダー有効スイッチ、認証情報（設定 JSON は保存時に暗号化）、接続テスト、手動 purge/preload、パージログ（wa_cdn_providers / wa_cdn_purge_logs テーブル）; DB 設定が .env を上書き; 全体のオン/オフは共有 Redis（prefix shop:、TTL 60s）経由で service に伝播
+- 自動パージ（fail-open）: 商品 & バナーの CRUD が自動パージをトリガー; CDN 障害が admin の CRUD をブロックすることはない
+- エッジキャッシュ: nginx `location /app/admin/upload/` で `expires 7d; Cache-Control public, max-age=604800, immutable`; アップロードディレクトリは docker ボリュームで永続化（admin_uploads:/app/plugin/admin/public/upload、service_public:/app/public/documents）
+- 設定: `config/cdn.php`（admin + service）+ 13 個の `CDN_*` .env 変数（CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / プロバイダー別認証情報）
+
+---
+
 ## 2026-08-07 修正記録
 
 | # | 問題 | 深刻度 | 修正 |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | トークンバケット限流 | — | — | ✅ |
 | DB読み書き分離 | — | — | ✅ |
 | Cron 定時タスク (11個) | — | — | ✅ |
+| CDN マルチプロバイダー (Cloudflare/CloudFront/Aliyun/Tencent) | — | ✅ | ✅ |
 
 ### コンテンツと成長
 

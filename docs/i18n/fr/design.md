@@ -97,7 +97,7 @@ Disjoncteur Redis (`app\common\CircuitBreaker`) : tous les appels d'API externes
 
 ### 4.3 Utilisations de Redis
 
-Redis est utilisé pour la limitation de débit par seau à jetons (facade `support\Redis`), les codes de vérification homme-machine et le stockage des sessions ; les données métier ne sont pas mises en cache au niveau application, elles sont lues directement depuis MySQL (séparation lecture/écriture + pools de connexions).
+Redis est utilisé pour la limitation de débit par seau à jetons (facade `support\Redis`), les codes de vérification homme-machine et le stockage des sessions ; les données métier ne sont pas mises en cache au niveau application, elles sont lues directement depuis MySQL (séparation lecture/écriture + pools de connexions). Les ressources statiques (images/documents) sont servies via le cache périphérique CDN (origin-pull, 7 jours immutable, invalidation automatique via `Cdn::purge` lors du CRUD, fail-open).
 
 ### 4.4 Pools de connexions
 

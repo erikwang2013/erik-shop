@@ -46,6 +46,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 모든 인터페이스의 ID 필드는 hashids 인코딩 문자열입니다（예: `Ab3xK9pq`）, 미들웨어가 자동으로 인코딩/디코딩합니다. 프론트엔드에서 수동 처리할 필요가 없습니다.
 
+### 리소스 URL (CDN)
+
+이미지·파일 등 정적 리소스는 DB에 상대 경로만 저장되며, 출력 경계에서 `Cdn::url()`이 `https://{CDN_DOMAIN}{path}`로 재작성합니다(CDN 미설정 시 admin 오리진 URL을 그대로 반환). 클라이언트는 응답의 URL을 그대로 사용하면 됩니다(CDN 도메인은 admin 도메인으로 CNAME 해석되며 Origin-Pull로 오리진에서 가져옵니다).
+
 ---
 
 ## 1. 인증 인터페이스

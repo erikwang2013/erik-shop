@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 CDN 지원
+
+- **Origin-Pull 모델**: 업로드는 admin 오리진 로컬 디스크에 유지되고 DB에는 상대 경로만 저장(마이그레이션 제로); 출력 경계에서 `Cdn::url()`이 `https://{CDN_DOMAIN}{path}`로 재작성, CDN 도메인은 admin 도메인으로 CNAME 연결
+- **통합 프로바이더 추상화**: `CdnProviderInterface`(purge / purgeByTag / preload)를 Cloudflare·AWS CloudFront·Aliyun·Tencent가 구현(Fastly/Akamai 예약); 능력 매트릭스: purge 4/4, preload 2/4(Aliyun/Tencent), purgeByTag 1/4(Cloudflare)
+- **admin 패널 구성**: CDN 관리 페이지(Config/Purge/Logs 3개 탭) — 프로바이더 활성화 스위치, 자격 증명(설정 JSON은 저장 시 암호화), 연결 테스트, 수동 purge/preload, purge 로그(`wa_cdn_providers`/`wa_cdn_purge_logs` 테이블); DB 설정이 .env보다 우선, 전역 on/off는 공유 Redis(prefix `shop:`, TTL 60s)로 service에 전파
+- **자동 purge (fail-open)**: 상품·배너 CRUD 시 자동 purge 트리거, CDN 장애가 admin CRUD를 차단하지 않음
+- **엣지 캐싱**: nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable`; 업로드 디렉터리는 Docker 볼륨으로 영속화(admin_uploads:/app/plugin/admin/public/upload, service_public:/app/public/documents)
+- **설정**: `config/cdn.php`(admin+service) + CDN_* 관련 환경 변수 13개
+
+---
+
 ## 2026-08-07 수정 기록
 
 | # | 문제 | 심각도 | 수정 |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 토큰 버킷 속도 제한 | — | — | ✅ |
 | DB 읽기/쓰기 분리 | — | — | ✅ |
 | Cron 스케줄 작업 (11개) | — | — | ✅ |
+| CDN 멀티 프로바이더 (Cloudflare/CloudFront/Aliyun/Tencent) | — | ✅ | ✅ |
 
 ### 콘텐츠와 성장
 

@@ -56,6 +56,7 @@ docker compose logs -f admin
 - [ ] Импортирована БД из корневого `install.sql` (117 таблиц, автоматически импортирует Web-мастер установки)
 - [ ] Созданы индексы ES: `php start.php scout:import "app\model\Products"`
 - [ ] Настроено резервное копирование томов данных MySQL/Redis/ES
+- [ ] Настроен CDN (если используется): `CDN_DOMAIN` с CNAME на домен admin + учётные данные провайдера (Cloudflare/CloudFront/Aliyun/Tencent) в `config/cdn.php` / админ-панели; тома `admin_uploads` и `service_public` персистентны
 
 ## 2. Ручное развёртывание
 
@@ -93,6 +94,8 @@ php start.php start -d
 # См. docker/nginx/conf.d/shop.conf
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+# CDN origin-pull: граничный кэш загрузок (иммутабельный, 7 дней)
+# location /app/admin/upload/ { expires 7d; add_header Cache-Control "public, max-age=604800, immutable"; }
 ```
 
 ## 3. Инициализация базы данных
@@ -128,6 +131,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Ключ Stripe |
 | STRIPE_WEBHOOK_SECRET | - | Проверка подписи Stripe Webhook |
+| CDN_ENABLED | false | Глобальный вкл/выкл CDN (0/1) |
+| CDN_DEFAULT_PROVIDER | cloudflare | Провайдер по умолчанию (cloudflare/cloudfront/aliyun/tencent) |
+| CDN_DOMAIN | - | Домен CDN (напр. cdn.erik.xyz, CNAME на домен admin) |
+| CF_API_TOKEN | - | API-токен Cloudflare |
+| CF_ZONE_ID | - | Zone ID Cloudflare |
+| AWS_ACCESS_KEY_ID | - | Access Key ID AWS (CloudFront) |
+| AWS_SECRET_ACCESS_KEY | - | Secret Access Key AWS (CloudFront) |
+| AWS_REGION | us-east-1 | Регион AWS |
+| CLOUDFRONT_DISTRIBUTION_ID | - | Distribution ID CloudFront |
+| ALIYUN_ACCESS_KEY_ID | - | AccessKey ID Aliyun CDN |
+| ALIYUN_ACCESS_KEY_SECRET | - | AccessKey Secret Aliyun CDN |
+| TENCENT_SECRET_ID | - | SecretId Tencent Cloud CDN |
+| TENCENT_SECRET_KEY | - | SecretKey Tencent Cloud CDN |
 
 ## 5. Команды эксплуатации
 

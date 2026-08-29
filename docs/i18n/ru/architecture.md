@@ -19,7 +19,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/            Бизнес-API (251 PHP-файл)
-    config/            35 конфигураций (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36 конфигураций (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39 контроллеров (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111 моделей (BaseModel + 110 бизнес-моделей)
     app/middleware/     14 промежуточных ПО (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
@@ -82,5 +82,6 @@ cd admin && php start.php start -d
 - **Многоязычность (i18n)**: 5 файлов переводов + LocaleMiddleware + Flutter AppLocalizations
 - **API-документация**: автоматическая генерация hg/apidoc (6 групп, на основе аннотаций контроллеров)
 - **Трекинг платформ**: заголовок X-Platform для 8 платформ + запись в БД
+- **CDN (origin-pull)**: загрузки остаются на admin; URL переписываются через `Cdn::url()` в `https://{CDN_DOMAIN}{path}`; иммутабельный кэш 7 дней для `/app/admin/upload/` (nginx `expires 7d`); автоочистка (fail-open) при CRUD товаров/каруселей; провайдеры Cloudflare/CloudFront/Aliyun/Tencent
 
 Подробнее: [документация по развёртыванию](deployment.md) | [полный архитектурный документ](architecture-full.md) | [функциональный дизайн](features.md)

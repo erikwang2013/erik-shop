@@ -1,6 +1,10 @@
 graph TB
     subgraph Internet["インターネット"]
         User["ユーザー グローバルアクセス"]
+
+        subgraph CDN["CDN エッジ層"]
+            CDN_EDGE["Cloudflare / CloudFront / Aliyun / Tencent<br/>Origin-Pull モデル https://{CDN_DOMAIN}{path}<br/>静的アセット 7日間キャッシュ (immutable)"]
+        end
     end
 
     subgraph VPS["クラウドサーバー / VPS"]
@@ -33,6 +37,8 @@ graph TB
             V2["erik_redis Redis データ"]
             V3["erik_es ES インデックス"]
             V4["erik_logs アプリケーションログ"]
+            V5["admin_uploads admin アップロード<br/>(/app/plugin/admin/public/upload)"]
+            V6["service_public 公開ドキュメント<br/>(/app/public/documents)"]
         end
     end
 
@@ -43,7 +49,8 @@ graph TB
         SMTP["メールサービス<br/>多言語テンプレート<br/>(email_templates テーブル)"]
     end
 
-    User --> NGX
+    User --> CDN_EDGE
+    CDN_EDGE --> NGX
     NGX -->|api.erik.xyz| SVC
     NGX -->|admin.erik.xyz| ADM
     SVC --> MYSQL
@@ -59,6 +66,8 @@ graph TB
     REDIS -.-> V2
     ES -.-> V3
     SVC -.-> V4
+    SVC -.-> V6
+    ADM -.-> V5
 
     style Internet fill:#e8eaf6
     style VPS fill:#e8f5e9

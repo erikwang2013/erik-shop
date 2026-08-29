@@ -46,6 +46,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 Todos os campos de ID nas interfaces são strings codificadas em hashids (ex.: `Ab3xK9pq`), codificadas/decodificadas automaticamente pelo middleware. O frontend não precisa tratá-las manualmente.
 
+### URLs de recursos (CDN)
+
+Os URLs de recursos (imagens de produtos, banners, documentos) são armazenados no banco como caminhos relativos e, nas fronteiras de saída, reescritos por `Cdn::url()` para `https://{CDN_DOMAIN}{path}` quando o CDN está habilitado (`CDN_ENABLED=true`); desabilitado, retornam o caminho relativo original. O domínio do CDN aponta por CNAME de volta para o domínio do admin (modelo origin-pull) e os arquivos são servidos com cache imutável (7 dias) em `/app/admin/upload/`.
+
 ---
 
 ## 1. Interfaces de autenticação

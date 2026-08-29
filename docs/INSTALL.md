@@ -103,6 +103,8 @@ SNOWFLAKE_WORKER_ID=1
 SNOWFLAKE_DATACENTER_ID=1
 ```
 
+> **CDN 为可选配置**：默认 `CDN_ENABLED=false`，图片等资源直接从 admin 源站输出。开启 CDN 需在 `.env` 配置 `CDN_ENABLED=true`、`CDN_DEFAULT_PROVIDER`（cloudflare/cloudfront/aliyun/tencent）、`CDN_DOMAIN`（CNAME 回源 admin 域名）及对应厂商凭据，并确保管理端「CDN 管理」页连通性测试通过。未配置 CDN 不影响任何功能。
+
 ### 4. 配置 admin/
 
 ```bash

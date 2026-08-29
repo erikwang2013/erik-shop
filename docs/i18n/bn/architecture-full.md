@@ -44,8 +44,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    E1[CDN Edge<br/>Cloudflare / CloudFront / Aliyun / Tencent<br/>https://{CDN_DOMAIN}{path}]
     subgraph Gateway[অ্যাক্সেস স্তর]
-        N[Nginx :80/:443]
+        N[Nginx :80/:443<br/>location /app/admin/upload/<br/>expires 7d immutable]
     end
     subgraph Apps[অ্যাপ্লিকেশন স্তর]
         S[Service API :8787<br/>39 Controllers 111 Models 14 MW]
@@ -56,9 +57,8 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F & H & W --> E1
+    E1 -->|CNAME| N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -77,8 +77,8 @@ graph TB
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
-    subgraph Gateway["2. অ্যাক্সেস স্তর Nginx :80"]
-        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
+    subgraph Gateway["2. অ্যাক্সেস স্তর Nginx :80 (CDN এজ-এর পেছনে)"]
+        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin<br/>এজ: location /app/admin/upload/ expires 7d immutable]
     end
     subgraph Security["3. নিরাপত্তা স্তর SecurityMiddleware 6 ধরনের ডিটেকশন"]
         CT{Content-Type?} -->|Y| BS{Body Size?}
@@ -149,7 +149,7 @@ graph TB
 | স্তর | বিবরণ |
 |----|------|
 | 1. ক্লায়েন্ট স্তর | Flutter 5 প্ল্যাটফর্ম + HarmonyOS + Web Admin, সব HTTP/JSON দিয়ে যোগাযোগ করে |
-| 2. অ্যাক্সেস স্তর | Nginx ডোমেইন অনুযায়ী ডিভার্ট: api→service, admin→admin |
+| 2. অ্যাক্সেস স্তর | CDN এজ-এর (Cloudflare/CloudFront/Aliyun/Tencent, CNAME admin ডোমেইনে) পেছনে Nginx ডোমেইন অনুযায়ী ডিভার্ট করে: api→service, admin→admin; `/app/admin/upload/` ৭ দিন immutable ক্যাশ হয় |
 | 3. নিরাপত্তা স্তর | SecurityMiddleware 31 ধরনের অ্যাটাক ডিটেক্টর, হিট হলে এরর কোড/403 রিটার্ন |
 | 4. মিডলওয়্যার পাইপলাইন | 10 গ্লোবাল MW সিরিয়াল প্রসেসিং + 2 রাউট-লেভেল MW (PosterVerify সংবেদনশীল অপারেশন, JwtAuth অথেনটিকেশন ইন্টারফেস) |
 | 5. কন্ট্রোলার স্তর | 39 API কন্ট্রোলার ফিচার অনুযায়ী গ্রুপ করা, সব বিজনেস লজিক হ্যান্ডল করে |
@@ -407,7 +407,7 @@ graph LR
 
 ### 7.2 Redis-এর ব্যবহার
 
-Redis রেট লিমিট টোকেন বাকেট, হিউম্যান ভেরিফিকেশন কোড ও Session স্টোরেজে ব্যবহৃত হয় (মিডলওয়্যার স্তর); বিজনেস ডেটা অ্যাপ্লিকেশন-লেভেল ক্যাশ করা হয় না, সরাসরি MySQL থেকে পড়া হয় (রিড-রাইট সেপারেশন + কানেকশন পুল)।
+Redis রেট লিমিট টোকেন বাকেট, হিউম্যান ভেরিফিকেশন কোড ও Session স্টোরেজে ব্যবহৃত হয় (মিডলওয়্যার স্তর); বিজনেস ডেটা অ্যাপ্লিকেশন-লেভেল ক্যাশ করা হয় না, সরাসরি MySQL থেকে পড়া হয় (রিড-রাইট সেপারেশন + কানেকশন পুল)। তবে স্ট্যাটিক ফাইল (প্রোডাক্ট/ব্যানার ইমেজ) CDN এজে ক্যাশ হয় (৭ দিন immutable), এবং প্রোডাক্ট বা ব্যানার পরিবর্তন/মুছে দিলে ক্যাশ স্বয়ংক্রিয়ভাবে পার্জ হয়।
 
 ### 7.4 কানেকশন পুল অপটিমাইজেশন
 
@@ -439,8 +439,8 @@ docker-compose.yml:
   service (php:8.3) :8787 internal, 32 workers
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
-নেটওয়ার্ক: erik-net bridge | ডেটা ভলিউম পারসিস্টেন্স
-রাউটিং: api.erik.xyz→service | admin.erik.xyz→admin
+CDN এজ: Cloudflare/CloudFront/Aliyun/Tencent (CNAME admin ডোমেইনে) + nginx /app/admin/upload/ expires 7d immutable
+স্থায়ী ভলিউম: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents | নেটওয়ার্ক: erik-net bridge | রাউটিং: api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
 ---
@@ -492,7 +492,7 @@ cd service && php vendor/bin/phpunit tests/
 | মিডলওয়্যার | 14 |
 | টুল ক্লাস | 8 |
 | শিডিউলড টাস্ক | 12 |
-| কনফিগ আইটেম | 35+ |
+| কনফিগ আইটেম | 36+ |
 | টেস্ট | 22 tests, 45 assertions |
 | Skills | 38 |
 | ডকুমেন্ট | 9 |

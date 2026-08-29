@@ -56,6 +56,8 @@ docker compose logs -f admin
 - [ ] 루트 `install.sql` 임포트 완료 (117개 테이블, Web 설치 마법사가 자동 임포트)
 - [ ] ES 인덱스 생성: `php start.php scout:import "app\model\Products"`
 - [ ] MySQL/Redis/ES 데이터 볼륨 백업 설정
+- [ ] CDN 프로바이더 설정 완료 (admin 관리 페이지: Config 탭에서 프로바이더 활성화 + 자격 증명 입력 + 연결 테스트)
+- [ ] CDN 도메인 CNAME이 admin 도메인으로 해석되도록 설정 완료 (Origin-Pull, DB에는 상대 경로만 저장)
 
 ## 2. 수동 배포
 
@@ -93,6 +95,12 @@ php start.php start -d
 # docker/nginx/conf.d/shop.conf 참조
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+
+# 업로드 파일 엣지 캐시 (CDN Origin-Pull + nginx 최종 방어선)
+location /app/admin/upload/ {
+    expires 7d;
+    add_header Cache-Control "public, max-age=604800, immutable";
+}
 ```
 
 ## 3. 데이터베이스 초기화
@@ -128,6 +136,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Stripe 키 |
 | STRIPE_WEBHOOK_SECRET | - | Stripe Webhook 서명 검증 |
+| CDN_ENABLED | false | CDN 전체 on/off (admin 관리 페이지에서도 설정 가능, DB 설정이 .env보다 우선) |
+| CDN_DEFAULT_PROVIDER | cloudflare | 기본 프로바이더 (cloudflare/cloudfront/aliyun/tencent) |
+| CDN_DOMAIN | - | CDN 도메인 (`Cdn::url()`이 상대 경로를 `https://{CDN_DOMAIN}{path}`로 재작성) |
+| CF_API_TOKEN | - | Cloudflare API Token |
+| CF_ZONE_ID | - | Cloudflare Zone ID |
+| AWS_ACCESS_KEY_ID | - | AWS Access Key ID (CloudFront) |
+| AWS_SECRET_ACCESS_KEY | - | AWS Secret Access Key (CloudFront) |
+| CLOUDFRONT_DISTRIBUTION_ID | - | CloudFront 배포 ID |
+| AWS_REGION | us-east-1 | AWS 리전 |
+| ALIYUN_ACCESS_KEY_ID | - | Aliyun AccessKey ID |
+| ALIYUN_ACCESS_KEY_SECRET | - | Aliyun AccessKey Secret |
+| TENCENT_SECRET_ID | - | Tencent Cloud SecretId |
+| TENCENT_SECRET_KEY | - | Tencent Cloud SecretKey |
 
 ## 5. 운영 명령어
 

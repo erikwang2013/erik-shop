@@ -42,6 +42,7 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    C[CDN Edge<br/>Cloudflare/CloudFront/Aliyun/Tencent<br/>cache imutável 7d /app/admin/upload/]
     subgraph Gateway[Camada de acesso]
         N[Nginx :80/:443]
     end
@@ -54,9 +55,8 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F & H & W --> C
+    C --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -75,10 +75,11 @@ graph TB
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
-    subgraph Gateway["2. Camada de acesso Nginx :80"]
+    CEDGE[CDN Edge: Cloudflare/CloudFront/Aliyun/Tencent<br/>cache imutável de /app/admin/upload/<br/>URLs reescritas para o domínio do CDN]
+    subgraph Gateway["3. Camada de acesso Nginx :80"]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
     end
-    subgraph Security["3. Camada de segurança SecurityMiddleware 6 detecções"]
+    subgraph Security["4. Camada de segurança SecurityMiddleware 6 detecções"]
         CT{Content-Type?} -->|Y| BS{Body Size?}
         BS -->|Y| XS{XSS?}
         XS -->|pass| SQ{SQLi?}
@@ -86,7 +87,7 @@ graph TB
         CR -->|pass| PT{Path?}
         PT -->|pass| PASS[Pass]
     end
-    subgraph Pipeline["4. Pipeline de middlewares 10 globais+2 rota"]
+    subgraph Pipeline["5. Pipeline de middlewares 10 globais+2 rota"]
         CORS[Cors] --> SEC[Security WAF]
         SEC --> RATE[RateLimit token bucket]
         RATE --> PLAT[Platform]
@@ -99,29 +100,30 @@ graph TB
         JWT --> HENC[HashidsEncode]
         HENC --> ENC[Encryption criptografia de interface]
     end
-    subgraph Controllers["5. Controladores 39"]
+    subgraph Controllers["6. Controladores 39"]
         AUTH[Auth] & PROD[Product] & CART[Cart]
         ORD[Order] & PAY[Payment] & SHIP[Shipping]
         TARI[Tariff] & USER[User] & COUP[Coupon]
         RET[Return] & NOTI[Notify] & EXPORT[Export]
     end
-    subgraph Models["6. Camada de modelos 111 Models"]
+    subgraph Models["7. Camada de modelos 111 Models"]
         BM[BaseModel: chave primária Snowflake ID]
         REL[Relations: hasMany/belongsTo]
         SRCH[Searchable: sincronização ES tokenização multilíngue]
     end
-    subgraph Data["7. Camada de dados"]
+    subgraph Data["8. Camada de dados"]
         MySQL[(MySQL 8.0<br/>110 tables<br/>erik_ prefix)]
         Redis[(Redis 7<br/>cache/session<br/>limit/poster)]
         ES[(ES 8<br/>multilingual<br/>search)]
     end
-    subgraph Response["8. Resposta"]
+    subgraph Response["9. Resposta"]
         JSON[JSON: code msg data]
         OUTENC[HashidsEncode: codificação de ID]
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CEDGE
+    CEDGE --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,13 +149,14 @@ graph TB
 | Camada | Descrição |
 |----|------|
 | 1. Camada de cliente | Flutter 5 plataformas + HarmonyOS + Web Admin, todos comunicando via HTTP/JSON |
-| 2. Camada de acesso | Nginx roteia por domínio: api→service, admin→admin |
-| 3. Camada de segurança | SecurityMiddleware com 31 detectores de ataques, em caso de detecção retorna código de erro/403 |
-| 4. Pipeline de middlewares | 10 MW globais processados em série + 2 MW de rota (PosterVerify em operações sensíveis, JwtAuth em interfaces autenticadas) |
-| 5. Camada de controladores | 39 controladores de API agrupados por função, tratando toda a lógica de negócio |
-| 6. Camada de modelos | 111 modelos Eloquent, BaseModel fornece chave primária Snowflake ID, 45 modelos com SoftDelete habilitado por tabela |
-| 7. Camada de dados | MySQL (110 tabelas prefixo erik_/chave primária snowflake) + Redis (cache/Session/limite de taxa/Poster) + ES (busca multilíngue) |
-| 8. Resposta | Formato JSON unificado → HashidsEncode codifica IDs → Encryption criptografa (X-Encrypt-Response) → retorna ao cliente |
+| 2. Camada de borda CDN | Edge CDN (origin-pull, Cloudflare/CloudFront/Aliyun/Tencent): recursos estáticos `/app/admin/upload/` com cache imutável (7 dias); URLs reescritas por `Cdn::url()` para `https://{CDN_DOMAIN}{path}` |
+| 3. Camada de acesso | Nginx roteia por domínio: api→service, admin→admin |
+| 4. Camada de segurança | SecurityMiddleware com 31 detectores de ataques, em caso de detecção retorna código de erro/403 |
+| 5. Pipeline de middlewares | 10 MW globais processados em série + 2 MW de rota (PosterVerify em operações sensíveis, JwtAuth em interfaces autenticadas) |
+| 6. Camada de controladores | 39 controladores de API agrupados por função, tratando toda a lógica de negócio |
+| 7. Camada de modelos | 111 modelos Eloquent, BaseModel fornece chave primária Snowflake ID, 45 modelos com SoftDelete habilitado por tabela |
+| 8. Camada de dados | MySQL (110 tabelas prefixo erik_/chave primária snowflake) + Redis (cache/Session/limite de taxa/Poster) + ES (busca multilíngue) |
+| 9. Resposta | Formato JSON unificado → HashidsEncode codifica IDs → Encryption criptografa (X-Encrypt-Response) → retorna ao cliente |
 
 ### 2.2 Modelo de processos
 
@@ -405,7 +408,7 @@ graph LR
 
 ### 7.2 Usos do Redis
 
-O Redis é usado para token bucket de limitação de taxa, códigos de verificação humano e armazenamento de Session (camada de middleware); os dados de negócio não têm cache em nível de aplicação, são lidos diretamente do MySQL (separação leitura/escrita + pool de conexões).
+O Redis é usado para token bucket de limitação de taxa, códigos de verificação humano e armazenamento de Session (camada de middleware); os dados de negócio não têm cache em nível de aplicação, são lidos diretamente do MySQL (separação leitura/escrita + pool de conexões). Recursos estáticos (uploads) são servidos pelo edge CDN com cache imutável (nginx `/app/admin/upload/`, `expires 7d`); invalidação por purge automático no CRUD de produtos/banners, fail-open (expiração natural de 7 dias como reserva).
 
 ### 7.4 Otimização de pool de conexões
 
@@ -438,11 +441,10 @@ docker-compose.yml:
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 Rede: erik-net bridge | persistência em volumes de dados
-Rotas: api.erik.xyz→service | admin.erik.xyz→admin
+Rotas: api.erik.xyz→service | admin.erik.xyz→admin | CDN: edge origin-pull (Cloudflare/CloudFront/Aliyun/Tencent; nginx /app/admin/upload/ expires 7d + immutable; CNAME→admin) | Volumes: admin_uploads:/app/plugin/admin/public/upload, service_public:/app/public/documents
 ```
 
 ---
-
 
 ## 8. Internacionalização (i18n)
 
@@ -490,7 +492,7 @@ cd service && php vendor/bin/phpunit tests/
 | Middlewares | 14 |
 | Classes utilitárias | 8 |
 | Tarefas agendadas | 12 |
-| Itens de configuração | 35+ |
+| Itens de configuração | 36+ |
 | Testes | 22 tests, 45 assertions |
 | Skills | 38 |
 | Documentos | 9 |

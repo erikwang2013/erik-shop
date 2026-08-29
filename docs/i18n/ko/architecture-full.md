@@ -42,6 +42,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    subgraph Edge[CDN 에지 계층]
+        CDN[CDN Edge<br/>Cloudflare/CloudFront/Aliyun/Tencent<br/>업로드 캐시 7일 immutable]
+    end
     subgraph Gateway[게이트웨이 계층]
         N[Nginx :80/:443]
     end
@@ -54,9 +57,10 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F --> CDN
+    H --> CDN
+    W --> CDN
+    CDN --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -74,6 +78,9 @@ graph TB
         FL[Flutter: iOS Android macOS Win Linux]
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
+    end
+    subgraph CDNEdge["1.5 CDN 에지 계층"]
+        CDN2[CDN Edge: Origin-Pull 정적 리소스 캐시 7일 immutable]
     end
     subgraph Gateway["2. 게이트웨이 계층 Nginx :80"]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
@@ -121,7 +128,8 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CDN2
+    CDN2 --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,7 +155,7 @@ graph TB
 | 계층 | 설명 |
 |----|------|
 | 1.클라이언트 계층 | Flutter 5플랫폼 + HarmonyOS + Web Admin, 모두 HTTP/JSON 통신 |
-| 2.게이트웨이 계층 | Nginx가 도메인별 분기: api→service, admin→admin |
+| 2.게이트웨이 계층 | CDN 에지(origin-pull, 정적 리소스 캐시) → Nginx가 도메인별 분기: api→service, admin→admin |
 | 3.보안 계층 | SecurityMiddleware 31종 공격 탐지기, 탐지 시 오류 코드/403 반환 |
 | 4.미들웨어 파이프라인 | 10개 글로벌 MW 직렬 처리 + 2개 라우팅 레벨 MW(PosterVerify 민감 작업, JwtAuth 인증 인터페이스) |
 | 5.컨트롤러 계층 | 39개 API 컨트롤러가 기능별 그룹화, 전체 비즈니스 로직 처리 |
@@ -407,6 +415,8 @@ graph LR
 
 Redis는 속도 제한 토큰 버킷, 휴먼 인증 코드 및 Session 저장(미들웨어 계층)에 사용됩니다. 비즈니스 데이터는 애플리케이션 계층 캐시를 하지 않고 MySQL(읽기/쓰기 분리 + 커넥션 풀)을 직접 읽습니다.
 
+정적 리소스(업로드 파일)는 엣지에서 캐시됩니다: nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable`, CDN 엣지에서도 동일하게 7일 immutable 캐시(Origin-Pull).
+
 ### 7.4 커넥션 풀 최적화
 
 | 리소스 | 최대 연결 | 최소 연결 | 대기 타임아웃 | 유휴 타임아웃 | 하트비트 |
@@ -439,6 +449,8 @@ docker-compose.yml:
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 네트워크: erik-net bridge | 데이터 볼륨 영구화
 라우팅: api.erik.xyz→service | admin.erik.xyz→admin
+업로드 볼륨: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
+CDN: Origin-Pull — Cdn::url() → https://{CDN_DOMAIN}{path} | nginx 엣지 캐시 7d immutable
 ```
 
 ---
@@ -490,7 +502,7 @@ cd service && php vendor/bin/phpunit tests/
 | 미들웨어 | 14 |
 | 유틸리티 클래스 | 8 |
 | 스케줄 작업 | 12 |
-| 설정 항목 | 35+ |
+| 설정 항목 | 36+ |
 | 테스트 | 22 tests, 45 assertions |
 | Skills | 38 |
 | 문서 | 9 |

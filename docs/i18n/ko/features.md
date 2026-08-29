@@ -49,6 +49,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **리스크 컴플라이언스** | 규칙 엔진(바이패스 스코어링: 주소 검증/우편번호 매칭/3DS/대량 가입/화물 가액 이상), KYC 실명, GDPR/CCPA 데이터 요청, Cookie Consent 버전 관리 | 완전 |
 | **보안 방어** | SecurityMiddleware가 security-php 31개 탐지기 래핑: XSS(13개)/SQL 인젝션(13개)/CRLF/경로 탐색(인코딩+null byte)/Body 크기/Content-Type/파일 업로드/HTTP 보안 헤더/무차별 대입(Redis 카운터)/XXE/SSRF/메서드/Host/민감 데이터 마스킹/CORS | 완전 |
 | **고동시성** | 토큰 버킷 속도 제한(슬라이딩 윈도우+6엔드포인트 규칙), 서킷 브레이커(결제/소셜 로그인, 5회 실패→30s 차단+반개 복구), DB 읽기/쓰기 분리(2개 읽기 복제본+sticky), 커넥션 풀(DB 50/10+Redis 30/5), OPCache(128MB, Docker 환경) | 완전 |
+| **CDN 액셀러레이션** | Origin-Pull 모델(업로드는 admin 오리진 로컬 디스크, DB에는 상대 경로만 저장), Cdn::url()이 https://{CDN_DOMAIN}{path}로 재작성, 멀티 프로바이더(Cloudflare/CloudFront/Aliyun/Tencent), admin CDN 관리 페이지(Config/Purge/Logs), 자동 purge fail-open, 엣지 캐시 7일 immutable | 완전 |
 | **회원 성장** | 회원 등급+혜택, 포인트 규칙+거래 내역, 기프트 카드(잔액+교환), 가격 인하/입고 알림, 즐겨찾기, 상품 비교, 조회 기록, 구독 정기 구매, AB 테스트(트래픽 배분+신뢰도) | 완전 |
 | **콘텐츠 관리** | CMS 다국어 페이지(Landing/Blog), FAQ 다국어, 지식 베이스 다국어, 사이즈 대조표(의류/신발+US/UK/EU/JP/CN 변환), 이메일 템플릿(다국어), 상품 Feed(Google/Meta+정기 동기화) | 완전 |
 | **고객 서비스** | WebSocket 실시간 IM(chat_sessions/chat_messages), 지식 베이스 다국어 | 테이블 구조 완전, WS 구현 대기 |
@@ -75,6 +76,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 성장 도구 | B2B 도매/구독 정기 구매/AB 테스트 | P2-P3 | ✅ |
 | 고객 서비스 | WebSocket 실시간 IM/지식 베이스 | P3 | ✅ |
 | 인프라 | Snowflake ID/JWT/Hashids/Encryption/Poster/API 버전/GeoIP | P0 | ✅ |
+| CDN 액셀러레이션 | CDN 프로바이더 추상화/origin-pull/자동 purge/purge 로그 | P1 | ✅ |
 
 ---
 

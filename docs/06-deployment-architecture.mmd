@@ -1,6 +1,7 @@
 graph TB
     subgraph Internet["互联网"]
         User["用户 全球访问"]
+        CDN["CDN 边缘层<br/>Cloudflare · CloudFront<br/>阿里云 · 腾讯云<br/>CNAME 回源 admin 域名<br/>静态资源缓存 expires 7d"]
     end
 
     subgraph VPS["云服务器 / VPS"]
@@ -33,6 +34,8 @@ graph TB
             V2["erik_redis Redis 数据"]
             V3["erik_es ES 索引"]
             V4["erik_logs 应用日志"]
+            V5["admin_uploads<br/>admin 上传目录<br/>/app/plugin/admin/public/upload"]
+            V6["service_public<br/>service 文档目录<br/>/app/public/documents"]
         end
     end
 
@@ -43,7 +46,8 @@ graph TB
         SMTP["邮件服务<br/>多语言模板<br/>(email_templates 表)"]
     end
 
-    User --> NGX
+    User --> CDN
+    CDN -->|CDN_DOMAIN 回源| NGX
     NGX -->|api.erik.xyz| SVC
     NGX -->|admin.erik.xyz| ADM
     SVC --> MYSQL
@@ -59,6 +63,8 @@ graph TB
     REDIS -.-> V2
     ES -.-> V3
     SVC -.-> V4
+    SVC -.-> V6
+    ADM -.-> V5
 
     style Internet fill:#e8eaf6
     style VPS fill:#e8f5e9

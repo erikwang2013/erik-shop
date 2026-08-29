@@ -162,6 +162,7 @@ shop-php/
 | **Gestão de conteúdo** | Páginas CMS multi-idioma, FAQ, base de conhecimento, tabela de tamanhos, modelos de e-mail, sincronização de feeds de produtos |
 | **Atendimento ao cliente** | IM em tempo real via WebSocket, base de conhecimento (estrutura de tabelas criada) |
 | **Infraestrutura** | ID distribuído Snowflake, ofuscação de interface Hashids, autenticação JWT, criptografia AES, identificação regional GeoIP |
+| **CDN** | Origin-pull (Cloudflare/CloudFront/Aliyun/Tencent): uploads permanecem no admin, URLs reescritas via `Cdn::url()`, edge cache imutável de 7 dias, depuração automática no CRUD de produtos/banners (fail-open) |
 | **Cobertura multi-dispositivo** | Flutter (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS) + Web Admin |
 | **Rastreamento de plataforma** | Identificação de origem em 8 plataformas (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + registro em DB |
 | **Testes** | 22 testes / 45 assertions — ALL PASS (Security+Jwt+ApiResponse+Redis) |
@@ -191,7 +192,8 @@ shop-php/
 | [Documento de arquitetura](../../architecture.md) | Estrutura de diretórios, cadeia de herança de modelos, pacotes-chave |
 | [Documentação da API](../../api.md) | 71 endpoints de API (documentação estática) |
 | [Documentação de interface hg/apidoc](http://localhost:8787/apidoc/) | Gerado automaticamente pelo hg/apidoc (6 grupos: autenticação/produtos/transações/logística e alfândega/marketing de usuários/operações) |
-| [Documentação de implantação](../../deployment.md) | Implantação Docker/manual, variáveis de ambiente, comandos de operação |
+| [Documentação de implantação](../../deployment.md) | Implantação Docker/manual, variáveis de ambiente (incl. 13 `CDN_*`), comandos de operação |
+| [PLAN-CDN.md](../../PLAN-CDN.md) | Plano de integração de CDN (origin-pull, provedores, configuração) |
 
 
 ## Open source não é fácil, agradecemos o apoio
@@ -229,6 +231,16 @@ shop-php/
   - Nome do banco: THE BANK OF NEW YORK MELLON
   - Código SWIFT: IRVTUS3NXXX
   - Endereço do banco: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Doação em criptomoedas (Crypto Donation)
+
+Se este projeto ajudar você, escaneie o código QR para doar, obrigado!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

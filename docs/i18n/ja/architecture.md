@@ -19,11 +19,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/           業務API (251 PHPファイル)
-    config/            35設定 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36設定 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39コントローラー (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111モデル (BaseModel + 110業務モデル)
     app/middleware/     14ミドルウェア (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
-    app/common/          8ユーティリティクラス (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions)
+    app/common/          9ユーティリティクラス (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions/Cdn)
     database/          schema.sql (ルートの install.sql に置き換え済み) + seeders
     tests/              4テストクラス (22 tests, 45 assertions)
   admin/             管理バックエンド (239 PHPファイル)
@@ -79,6 +79,7 @@ cd service && php start.php start -d
 cd admin && php start.php start -d
 ```
 
+- **CDN アクセラレーション**: Origin-Pull モデル — アップロードは admin オリジンのローカルディスクに保持、DB には相対パスのみ保存し、出力境界で `Cdn::url()` が `https://{CDN_DOMAIN}{path}` へ書き換え; マルチプロバイダー抽象化（Cloudflare/CloudFront/Aliyun/Tencent）、admin の CDN 管理ページ（Config/Purge/Logs）、自動パージ fail-open、エッジキャッシュ 7日 immutable
 - **多言語 (i18n)**: 5言語翻訳ファイル + LocaleMiddleware + Flutter AppLocalizations
 - **APIドキュメント**: hg/apidoc自動生成 (6グループ, コントローラーアノテーション駆動)
 - **プラットフォーム追跡**: 8プラットフォーム X-Platform header + DB記録

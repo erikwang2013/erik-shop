@@ -42,6 +42,7 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    C[CDN Edge<br/>Cloudflare/CloudFront/Aliyun/Tencent<br/>иммутабельный кэш 7d /app/admin/upload/]
     subgraph Gateway[Слой доступа]
         N[Nginx :80/:443]
     end
@@ -54,9 +55,8 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F & H & W --> C
+    C --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -75,10 +75,11 @@ graph TB
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
-    subgraph Gateway["2. Слой доступа Nginx :80"]
+    CEDGE[CDN Edge: Cloudflare/CloudFront/Aliyun/Tencent<br/>иммутабельный кэш /app/admin/upload/<br/>URL переписываются на домен CDN]
+    subgraph Gateway["3. Слой доступа Nginx :80"]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
     end
-    subgraph Security["3. Слой безопасности SecurityMiddleware 6 проверок"]
+    subgraph Security["4. Слой безопасности SecurityMiddleware 6 проверок"]
         CT{Content-Type?} -->|Y| BS{Body Size?}
         BS -->|Y| XS{XSS?}
         XS -->|pass| SQ{SQLi?}
@@ -86,7 +87,7 @@ graph TB
         CR -->|pass| PT{Path?}
         PT -->|pass| PASS[Pass]
     end
-    subgraph Pipeline["4. Конвейер промежуточного ПО 10 глобальных+2 маршрутных"]
+    subgraph Pipeline["5. Конвейер промежуточного ПО 10 глобальных+2 маршрутных"]
         CORS[Cors] --> SEC[Security WAF]
         SEC --> RATE[RateLimit токен-бакет]
         RATE --> PLAT[Platform]
@@ -99,29 +100,30 @@ graph TB
         JWT --> HENC[HashidsEncode]
         HENC --> ENC[Encryption шифрование интерфейсов]
     end
-    subgraph Controllers["5. Контроллеры 39"]
+    subgraph Controllers["6. Контроллеры 39"]
         AUTH[Auth] & PROD[Product] & CART[Cart]
         ORD[Order] & PAY[Payment] & SHIP[Shipping]
         TARI[Tariff] & USER[User] & COUP[Coupon]
         RET[Return] & NOTI[Notify] & EXPORT[Export]
     end
-    subgraph Models["6. Слой моделей 111 Models"]
+    subgraph Models["7. Слой моделей 111 Models"]
         BM[BaseModel: первичный ключ Snowflake ID]
         REL[Relations: hasMany/belongsTo]
         SRCH[Searchable: синхронизация ES, многоязычная токенизация]
     end
-    subgraph Data["7. Слой данных"]
+    subgraph Data["8. Слой данных"]
         MySQL[(MySQL 8.0<br/>110 tables<br/>erik_ prefix)]
         Redis[(Redis 7<br/>cache/session<br/>limit/poster)]
         ES[(ES 8<br/>multilingual<br/>search)]
     end
-    subgraph Response["8. Возврат ответа"]
+    subgraph Response["9. Возврат ответа"]
         JSON[JSON: code msg data]
         OUTENC[HashidsEncode: кодирование ID]
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CEDGE
+    CEDGE --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,13 +149,14 @@ graph TB
 | Слой | Описание |
 |----|------|
 | 1. Клиентский слой | Flutter 5 платформ + HarmonyOS + Web Admin, вся связь через HTTP/JSON |
-| 2. Слой доступа | Nginx распределяет по доменам: api → service, admin → admin |
-| 3. Слой безопасности | SecurityMiddleware, 31 детектор атак, при срабатывании возвращается код ошибки/403 |
-| 4. Конвейер промежуточного ПО | 10 глобальных MW последовательно + 2 маршрутных MW (PosterVerify для чувствительных операций, JwtAuth для аутентифицируемых интерфейсов) |
-| 5. Слой контроллеров | 39 API-контроллеров, сгруппированы по функциям, обрабатывают всю бизнес-логику |
-| 6. Слой моделей | 111 моделей Eloquent, BaseModel предоставляет первичный ключ Snowflake ID, 45 моделей используют SoftDelete |
-| 7. Слой данных | MySQL (110 таблиц с префиксом erik_ / первичный ключ snowflake) + Redis (кэш/Session/лимитирование/Poster) + ES (многоязычный поиск) |
-| 8. Возврат ответа | Единый формат JSON → HashidsEncode кодирует ID → Encryption шифрует (X-Encrypt-Response) → возврат клиенту |
+| 2. Граничный слой CDN | CDN Edge (origin-pull, Cloudflare/CloudFront/Aliyun/Tencent): статические ресурсы `/app/admin/upload/` с иммутабельным кэшем (7 дней); URL переписываются через `Cdn::url()` в `https://{CDN_DOMAIN}{path}` |
+| 3. Слой доступа | Nginx распределяет по доменам: api → service, admin → admin |
+| 4. Слой безопасности | SecurityMiddleware, 31 детектор атак, при срабатывании возвращается код ошибки/403 |
+| 5. Конвейер промежуточного ПО | 10 глобальных MW последовательно + 2 маршрутных MW (PosterVerify для чувствительных операций, JwtAuth для аутентифицируемых интерфейсов) |
+| 6. Слой контроллеров | 39 API-контроллеров, сгруппированы по функциям, обрабатывают всю бизнес-логику |
+| 7. Слой моделей | 111 моделей Eloquent, BaseModel предоставляет первичный ключ Snowflake ID, 45 моделей используют SoftDelete |
+| 8. Слой данных | MySQL (110 таблиц с префиксом erik_ / первичный ключ snowflake) + Redis (кэш/Session/лимитирование/Poster) + ES (многоязычный поиск) |
+| 9. Возврат ответа | Единый формат JSON → HashidsEncode кодирует ID → Encryption шифрует (X-Encrypt-Response) → возврат клиенту |
 
 ### 2.2 Модель процессов
 
@@ -405,7 +408,7 @@ graph LR
 
 ### 7.2 Использование Redis
 
-Redis используется для токен-бакета лимитирования, кодов человеко-машинной проверки и хранения Session (на уровне промежуточного ПО); бизнес-данные не кэшируются на уровне приложения, читаются напрямую из MySQL (разделение чтения/записи + пул соединений).
+Redis используется для токен-бакета лимитирования, кодов человеко-машинной проверки и хранения Session (на уровне промежуточного ПО); бизнес-данные не кэшируются на уровне приложения, читаются напрямую из MySQL (разделение чтения/записи + пул соединений). Статические ресурсы (загрузки) раздаются граничным CDN с иммутабельным кэшем (nginx `/app/admin/upload/`, `expires 7d`); инвалидация — автоочисткой (purge) при CRUD товаров/каруселей, fail-open (естественное истечение через 7 дней как запасной вариант).
 
 ### 7.4 Оптимизация пула соединений
 
@@ -438,11 +441,10 @@ docker-compose.yml:
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 Сеть: erik-net bridge | персистентные тома данных
-Маршрутизация: api.erik.xyz→service | admin.erik.xyz→admin
+Маршрутизация: api.erik.xyz→service | admin.erik.xyz→admin | CDN: edge origin-pull (Cloudflare/CloudFront/Aliyun/Tencent; nginx /app/admin/upload/ expires 7d + immutable; CNAME→admin) | Тома: admin_uploads:/app/plugin/admin/public/upload, service_public:/app/public/documents
 ```
 
 ---
-
 
 ## 8. Интернационализация (i18n)
 
@@ -490,7 +492,7 @@ cd service && php vendor/bin/phpunit tests/
 | Промежуточное ПО | 14 |
 | Классы утилит | 8 |
 | Планировщики задач | 12 |
-| Параметры конфигурации | 35+ |
+| Параметры конфигурации | 36+ |
 | Тесты | 22 теста, 45 утверждений |
 | Skills | 38 |
 | Документы | 9 |

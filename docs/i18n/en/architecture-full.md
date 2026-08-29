@@ -43,6 +43,7 @@ graph TD
         W[Web Browser Admin]
     end
     subgraph Gateway[Access Layer Gateway]
+        CDN[CDN Edge<br/>Origin-Pull Cache]
         N[Nginx :80/:443]
     end
     subgraph Apps[Application Layer]
@@ -54,9 +55,10 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F --> CDN
+    H --> CDN
+    W --> CDN
+    CDN --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -75,8 +77,9 @@ graph TB
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
-    subgraph Gateway["2. Access Layer Nginx :80"]
-        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
+    subgraph Gateway["2. Access Layer CDN Edge + Nginx :80"]
+        CDN["CDN Edge: origin-pull /app/admin/upload/"]
+        NG["Nginx: api.erik.xyz→service / admin.erik.xyz→admin"]
     end
     subgraph Security["3. Security Layer SecurityMiddleware 6 Checks"]
         CT{Content-Type?} -->|Y| BS{Body Size?}
@@ -121,7 +124,8 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CDN
+    CDN --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,7 +151,7 @@ graph TB
 | Layer | Description |
 |----|------|
 | 1. Client Layer | Flutter 5 platforms + HarmonyOS + Web Admin, all communicating over HTTP/JSON |
-| 2. Access Layer | Nginx routes by domain: api→service, admin→admin |
+| 2. Access Layer | CDN edge (origin-pull, 7-day immutable cache) in front of Nginx, which routes by domain: api→service, admin→admin |
 | 3. Security Layer | SecurityMiddleware 31 attack detectors, returns error code/403 on hit |
 | 4. Middleware Pipeline | 10 global middleware in series + 2 route-level middleware (PosterVerify for sensitive operations, JwtAuth for authenticated endpoints) |
 | 5. Controller Layer | 39 API controllers grouped by function, handling all business logic |
@@ -405,7 +409,7 @@ graph LR
 
 ### 7.2 Redis Usage
 
-Redis is used for rate limiting token buckets, human verification codes, and Session storage (middleware layer); business data is not cached at the application layer, it reads MySQL directly (read/write split + connection pool).
+Redis is used for rate limiting token buckets, human verification codes, Session storage (middleware layer), and CDN global on/off propagation to the service (shared key prefix `shop:`, 60s TTL); business data is not cached at the application layer, it reads MySQL directly (read/write split + connection pool). Static uploads (products/banners) are cached at the CDN edge (nginx `location /app/admin/upload/` → `expires 7d; Cache-Control public, max-age=604800, immutable`).
 
 ### 7.4 Connection Pool Optimization
 
@@ -438,7 +442,10 @@ docker-compose.yml:
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 Network: erik-net bridge | Persistent data volumes
-Routing: api.erik.xyz→service | admin.erik.xyz→admin
+Routing: CDN edge → api.erik.xyz→service | admin.erik.xyz→admin
+Upload volumes: admin_uploads (/app/plugin/admin/public/upload) + service_public (/app/public/documents)
+CDN: origin-pull — DB stores relative paths only, Cdn::url() rewrites to https://{CDN_DOMAIN}{path};
+     edge cache 7-day immutable; auto-purge (fail-open) on product/banner CRUD
 ```
 
 ---
@@ -490,7 +497,7 @@ cd service && php vendor/bin/phpunit tests/
 | Middleware | 14 |
 | Utility classes | 8 |
 | Scheduled tasks | 12 |
-| Config items | 35+ |
+| Config items | 36+ |
 | Tests | 22 tests, 45 assertions |
 | Skills | 38 |
 | Documents | 9 |

@@ -105,6 +105,13 @@ return [
                 'type' => 1,
                 'weight' => 500,
             ],
+            [
+                'title' => 'CDN 管理',
+                'key' => 'plugin\\admin\\app\\controller\\shop\\CdnProviderController',
+                'href' => '/app/admin/shop/CdnProvider/index',
+                'type' => 1,
+                'weight' => 50,
+            ],
         ]
     ],
     [

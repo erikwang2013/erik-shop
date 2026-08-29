@@ -56,6 +56,8 @@ docker compose logs -f admin
 - [ ] ルートディレクトリの `install.sql` をデータベースにインポート済み（117 テーブル、Web インストールウィザードが自動インポート）
 - [ ] ESインデックス作成済み: `php start.php scout:import "app\model\Products"`
 - [ ] MySQL/Redis/ES データボリュームのバックアップを設定済み
+- [ ] CDN プロバイダーを設定済み（admin 管理ページ: Config タブでプロバイダー有効化 + 認証情報入力 + 接続テスト）
+- [ ] CDN ドメインの CNAME 解決を admin ドメインに設定済み（Origin-Pull、DB には相対パスのみ保存）
 
 ## 2. 手動デプロイ
 
@@ -93,6 +95,12 @@ php start.php start -d
 # docker/nginx/conf.d/shop.conf を参照
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+
+# アップロードファイルのエッジキャッシュ (CDN Origin-Pull + nginx 最終防衛線)
+location /app/admin/upload/ {
+    expires 7d;
+    add_header Cache-Control "public, max-age=604800, immutable";
+}
 ```
 
 ## 3. データベース初期化
@@ -128,6 +136,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Stripeキー |
 | STRIPE_WEBHOOK_SECRET | - | Stripe Webhook署名検証 |
+| CDN_ENABLED | false | CDN 全体オン/オフ（admin 管理ページからも設定可、DB 設定が .env より優先） |
+| CDN_DEFAULT_PROVIDER | cloudflare | デフォルトプロバイダー (cloudflare/cloudfront/aliyun/tencent) |
+| CDN_DOMAIN | - | CDN ドメイン（`Cdn::url()` が相対パスを `https://{CDN_DOMAIN}{path}` へ書き換え） |
+| CF_API_TOKEN | - | Cloudflare API Token |
+| CF_ZONE_ID | - | Cloudflare Zone ID |
+| AWS_ACCESS_KEY_ID | - | AWS Access Key ID (CloudFront) |
+| AWS_SECRET_ACCESS_KEY | - | AWS Secret Access Key (CloudFront) |
+| CLOUDFRONT_DISTRIBUTION_ID | - | CloudFront ディストリビューション ID |
+| AWS_REGION | us-east-1 | AWS リージョン |
+| ALIYUN_ACCESS_KEY_ID | - | Aliyun AccessKey ID |
+| ALIYUN_ACCESS_KEY_SECRET | - | Aliyun AccessKey Secret |
+| TENCENT_SECRET_ID | - | Tencent Cloud SecretId |
+| TENCENT_SECRET_KEY | - | Tencent Cloud SecretKey |
 
 ## 5. 運用コマンド
 

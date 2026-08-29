@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\Cdn;
 use app\model\Products;
 use app\model\ProductTranslations;
 use app\model\Categories;
@@ -70,6 +71,7 @@ class ProductController extends \app\controller\BaseApiController
             if ($t) {
                 $p->title = $t->title ?: $p->title;
             }
+            $p->main_image = Cdn::url($p->main_image);
         }
         return ApiResponse::paginate($items, $paginator->total(), $page, $perPage);
     }
@@ -132,6 +134,9 @@ class ProductController extends \app\controller\BaseApiController
             'code' => $h->hsCode->code ?? '',
             'is_primary' => (bool)$h->is_primary,
         ]);
+        // 输出边界重写为 CDN URL（DB 仍存相对路径，零迁移）
+        $product->main_image = Cdn::url($product->main_image);
+        $product->images->each(fn($img) => $img->url = Cdn::url($img->url));
         Products::where('id', $product->id)->increment('view_count');
         return ApiResponse::success($product);
     }

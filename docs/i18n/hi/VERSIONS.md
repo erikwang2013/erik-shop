@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 CDN समर्थन
+
+- **ओरिजिन-पुल (Origin-Pull) मॉडल**: अपलोड admin ओरिजिन की स्थानीय डिस्क पर ही रहते हैं; DB केवल रिलेटिव पाथ संग्रहीत करता है (शून्य माइग्रेशन); आउटपुट बाउंड्री पर `Cdn::url()` लिंक को `https://{CDN_DOMAIN}{path}` में रीराइट करता है; CDN डोमेन CNAME से admin डोमेन पर वापस जाता है
+- **यूनिफाइड प्रोवाइडर एब्स्ट्रैक्शन**: `CdnProviderInterface` (purge / purgeByTag / preload) Cloudflare, AWS CloudFront, Aliyun, Tencent पर लागू (Fastly/Akamai आरक्षित); क्षमता मैट्रिक्स: purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- **एडमिन पैनल कॉन्फ़िगरेशन**: CDN प्रबंधन पृष्ठ (3 टैब: Config/Purge/Logs) — प्रोवाइडर सक्षम स्विच, क्रेडेंशियल (config JSON एन्क्रिप्टेड एट रेस्ट), कनेक्टिविटी टेस्ट, मैनुअल purge/preload, purge लॉग (wa_cdn_providers / wa_cdn_purge_logs टेबल); DB कॉन्फ़िग .env को ओवरराइड करता है; ग्लोबल ऑन/ऑफ शेयर्ड Redis से service तक पहुँचता है (prefix `shop:`, TTL 60s)
+- **ऑटो-पर्ज (fail-open)**: प्रोडक्ट व बैनर CRUD स्वतः purge ट्रिगर करते हैं; CDN विफलता कभी भी एडमिन CRUD को ब्लॉक नहीं करती
+- **एज कैशिंग**: nginx `location /app/admin/upload/` → `expires 7d; Cache-Control public, max-age=604800, immutable`; अपलोड डायरेक्टरी docker वॉल्यूम से स्थायी रहती हैं (admin_uploads:/app/plugin/admin/public/upload व service_public:/app/public/documents)
+- **कॉन्फ़िग**: `config/cdn.php` (admin + service) + 13 `CDN_*` .env वेरिएबल (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / प्रति-प्रोवाइडर क्रेडेंशियल)
+
+---
+
 ## 2026-08-07 मरम्मत रिकॉर्ड
 
 | # | समस्या | गंभीरता | सुधार |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | टोकन बकेट रेट लिमिट | — | — | ✅ |
 | DB रीड/राइट स्प्लिटिंग | — | — | ✅ |
 | Cron शेड्यूल्ड कार्य (11) | — | — | ✅ |
+| CDN एज कैशिंग | ✅ | ✅ | ✅ |
 
 ### सामग्री और वृद्धि
 

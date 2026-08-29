@@ -97,7 +97,7 @@ Redis 熔断器（`app\common\CircuitBreaker`）: 支付网关/社交登录等�
 
 ### 4.3 Redis 用途
 
-Redis 用于限流令牌桶（`support\Redis` 门面）、熔断器计数、人机验证码与 Session 存储；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）。
+Redis 用于限流令牌桶（`support\Redis` 门面）、熔断器计数、人机验证码与 Session 存储，以及 CDN 全局开关传播（prefix `shop:`，60s TTL，admin → service）；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）；静态资源（上传图片/文档）由 `Cdn::url()` 在输出边界重写为 CDN 域名，经 CDN 边缘缓存分发（`expires 7d, immutable`）。
 
 ### 4.4 连接池
 

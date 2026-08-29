@@ -53,6 +53,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **コンテンツ管理** | CMS多言語ページ(Landing/Blog)、FAQ多言語、知識庫多言語、サイズ換算表(衣料/靴+US/UK/EU/JP/CN変換)、メールテンプレート(多言語)、商品Feed(Google/Meta+定期同期) | 完全 |
 | **カスタマーサポート** | WebSocketリアルタイムIM(chat_sessions/chat_messages)、知識庫多言語 | テーブル構造は完全、WSは実装待ち |
 | **インフラ** | Snowflake分散ID(bigint非自增)、HashidsインターフェースID難読化、JWT認証(HS256+access/refreshデュアルトークン更新)、AES暗号化復号(インターフェース+DB三層暗号化)、GeoIP地域識別(MaxMind)、Poster人機認証(スライダー/パズル/クリック) | 完全 |
+| **CDN アクセラレーション** | Origin-Pull モデル（アップロードは admin オリジンのローカルディスク、DB には相対パスのみ保存）、`Cdn::url()` が `https://{CDN_DOMAIN}{path}` へ書き換え、マルチプロバイダー（Cloudflare/CloudFront/Aliyun/Tencent）、admin の CDN 管理ページ（Config/Purge/Logs）、自動パージ fail-open、エッジキャッシュ 7日 immutable | 完全 |
 | **多端カバー** | Flutter 5プラットフォーム(iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS(ArkTS 9ページ) + Web Admin(LayUI+ECharts) + API | Flutter 25ファイル、HarmonyOS 14ファイル、Admin 239ファイル |
 | **プラットフォーム追跡** | 8プラットフォーム識別(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+X-Platform header+6テーブル記録(orders/payments/operation_logs/users/search_logs/chat_messages) | 完全 |
 | **テスト** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | ユニットテストは完全、統合テストは追加待ち |
@@ -75,6 +76,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 成長ツール | B2B卸売/サブスクリプション周期購/ABテスト | P2-P3 | ✅ |
 | カスタマーサポート | WebSocketリアルタイムIM/知識庫 | P3 | ✅ |
 | インフラ | Snowflake ID/JWT/Hashids/Encryption/Poster/APIバージョン/GeoIP | P0 | ✅ |
+| CDN アクセラレーション | CDN プロバイダー抽象化/origin-pull/自動パージ/パージログ | P1 | ✅ |
 
 ---
 

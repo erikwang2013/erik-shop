@@ -21,7 +21,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/            Geschäfts-API (251 PHP-Dateien)
-    config/            35 Konfigurationen (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36 Konfigurationen (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39 Controller (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111 Modelle (BaseModel + 110 Geschäftsmodelle)
     app/middleware/     14 Middleware (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
@@ -81,6 +81,7 @@ cd service && php start.php start -d
 cd admin && php start.php start -d
 ```
 
+- **CDN**: Origin-Pull-Edge-Caching — Ressourcen-URLs werden an der Ausgabe über die CDN-Domain ausgegeben (`Cdn::url()`-Rewriting auf `https://{CDN_DOMAIN}`, CNAME-Rückführung auf die Admin-Domain); nginx-`immutable`-Cache-Header (7 Tage); Auto-Invalidierung beim Produkt-/Banner-CRUD (fail-open)
 - **Mehrsprachigkeit (i18n)**: Übersetzungsdateien für 5 Sprachen + LocaleMiddleware + Flutter AppLocalizations
 - **API-Dokumentation**: automatisch von hg/apidoc generiert (6 Gruppen, controller-annotationsgesteuert)
 - **Plattform-Tracking**: X-Platform-Header für 8 Plattformen + DB-Aufzeichnung

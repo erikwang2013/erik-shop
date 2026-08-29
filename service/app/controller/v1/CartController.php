@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\Cdn;
 use app\common\DistributedLock;
 use app\model\Carts;
 use app\model\ProductSkus;
@@ -34,7 +35,7 @@ class CartController extends \app\controller\BaseApiController
                     'sku_id' => $sku->id,
                     'product_id' => $sku->product_id,
                     'title' => $sku->product->title ?? '',
-                    'image' => $sku->image ?: ($sku->product->main_image ?? ''),
+                    'image' => Cdn::url($sku->image ?: ($sku->product->main_image ?? '')),
                     'attrs' => $sku->attrs,
                     'price' => $price ? $price->price : $sku->default_price,
                     'currency' => $currencyCode,

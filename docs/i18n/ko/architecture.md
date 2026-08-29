@@ -19,11 +19,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/            비즈니스 API (251 PHP파일)
-    config/            35개 설정 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36개 설정 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39컨트롤러 (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111모델 (BaseModel + 110비즈니스 모델)
     app/middleware/     14미들웨어 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
-    app/common/          8유틸리티 클래스 (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions)
+    app/common/          9유틸리티 클래스 (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions/Cdn)
     database/          schema.sql (루트 install.sql로 대체됨) + seeders
     tests/              4테스트 클래스 (22 tests, 45 assertions)
   admin/              관리 백엔드 (239 PHP파일)
@@ -79,6 +79,7 @@ cd service && php start.php start -d
 cd admin && php start.php start -d
 ```
 
+- **CDN 액셀러레이션**: Origin-Pull 모델 — 업로드는 admin 오리진 로컬 디스크에 유지, DB에는 상대 경로만 저장, 출력 경계에서 `Cdn::url()`이 `https://{CDN_DOMAIN}{path}`로 재작성; 멀티 프로바이더 추상화(Cloudflare/CloudFront/Aliyun/Tencent), admin CDN 관리 페이지(Config/Purge/Logs), 자동 purge fail-open, 엣지 캐시 7일 immutable
 - **다국어 (i18n)**: 5개 언어 번역 파일 + LocaleMiddleware + Flutter AppLocalizations
 - **API 문서**: hg/apidoc 자동 생성 (6개 그룹, 컨트롤러 어노테이션 기반)
 - **플랫폼 추적**: 8플랫폼 X-Platform header + DB 기록

@@ -23,6 +23,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | প্ল্যাটফর্ম | `X-Platform: ios|ipados|macos|windows|linux|android|harmonyos|web` header |
 | Content-Type | `application/json` (POST/PUT) |
 | হিউম্যান ভেরিফিকেশন | `X-Poster-Token: <token>` header (সংবেদনশীল অপারেশন) |
+| রিসোর্স URL | রিসোর্স URL (প্রোডাক্ট/ব্যানার ইমেজ, ডকুমেন্ট) `Cdn::url()` দিয়ে আউটপুট হয় এবং CDN চালু থাকলে `https://{CDN_DOMAIN}{path}` ফরম্যাটে রিরাইট হয় |
 
 ### রেসপন্স ফরম্যাট
 

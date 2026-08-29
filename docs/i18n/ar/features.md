@@ -53,6 +53,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **إدارة المحتوى** | صفحات CMS متعددة اللغات (Landing/Blog)، FAQ متعدد اللغات، قاعدة معرفة متعددة اللغات، جدول مقاسات (ملابس/أحذية + تحويل US/UK/EU/JP/CN)، قوالب البريد (متعددة اللغات)، خلاصات المنتجات (Google/Meta + مزامنة مجدولة) | كامل |
 | **خدمة العملاء** | محادثة فورية WebSocket (chat_sessions/chat_messages)، قاعدة معرفة متعددة اللغات | بنية الجداول مكتملة، WS قيد التنفيذ |
 | **البنية التحتية** | معرّف Snowflake الموزع (bigint غير ذاتي الزيادة)، إخفاء معرّفات الواجهة Hashids، مصادقة JWT (HS256 + تجديد رمز مزدوج access/refresh)، تشفير/فك تشفير AES (تشفير ثلاثي الطبقات للواجهة وقاعدة البيانات)، تمييز المنطقة GeoIP (MaxMind)، التحقق البشري Poster (شريط انزلاق/لغز/نقر) | كامل |
+| **تسريع CDN** | نموذج سحب الأصل (تبقى الرفوعات على قرص admin الأصلي، DB تخزن مسارات نسبية — صفر ترحيل)، إعادة كتابة `Cdn::url()` إلى `https://{CDN_DOMAIN}{path}` عند حدود الإخراج، 4 مزوّدين (Cloudflare/CloudFront/Aliyun/Tencent)، تطهير تلقائي fail-open عند CRUD المنتجات واللافتات، تخزين مؤقت للحافة immutable لمدة 7 أيام | كامل |
 | **التغطية متعددة الأطراف** | Flutter 5 منصات (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 صفحات) + Web Admin (LayUI+ECharts) + API | Flutter 25 ملفًا، HarmonyOS 14 ملفًا، Admin 239 ملفًا |
 | **تتبع المنصات** | تمييز 8 منصات (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + ترويسة X-Platform + تسجيل في 6 جداول (orders/payments/operation_logs/users/search_logs/chat_messages) | كامل |
 | **الاختبارات** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | اختبارات الوحدة كاملة، اختبارات التكامل قيد الإضافة |
@@ -75,6 +76,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | أدوات النمو | جملة B2B/شراء دوري بالاشتراك/اختبار AB | P2-P3 | ✅ |
 | خدمة العملاء | محادثة فورية WebSocket/قاعدة معرفة | P3 | ✅ |
 | البنية التحتية | Snowflake ID/JWT/Hashids/Encryption/Poster/إصدار API/GeoIP | P0 | ✅ |
+| CDN | سحب الأصل/4 مزوّدين/تطهير تلقائي/تسخين/تخزين مؤقت للحافة | P1 | ✅ |
 
 ---
 

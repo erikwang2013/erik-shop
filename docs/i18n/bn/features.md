@@ -55,6 +55,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **কনটেন্ট ম্যানেজমেন্ট** | CMS মাল্টি-ল্যাঙ্গুয়েজ পেজ (Landing/Blog), FAQ মাল্টি-ল্যাঙ্গুয়েজ, নলেজ বেস মাল্টি-ল্যাঙ্গুয়েজ, সাইজ চার্ট (কাপড়/জুতা + US/UK/EU/JP/CN কনভার্সন), ইমেইল টেমপ্লেট (মাল্টি-ল্যাঙ্গুয়েজ), প্রোডাক্ট Feed (Google/Meta + শিডিউলড সিঙ্ক) | সম্পূর্ণ |
 | **কাস্টমার সার্ভিস** | WebSocket রিয়েল-টাইম IM (chat_sessions/chat_messages), নলেজ বেস মাল্টি-ল্যাঙ্গুয়েজ | টেবিল স্ট্রাকচার সম্পূর্ণ, WS বাস্তবায়ন বাকি |
 | **ইনফ্রাস্ট্রাকচার** | Snowflake ডিস্ট্রিবিউটেড ID (bigint নন-অটো-ইনক্রিমেন্ট), Hashids ইন্টারফেস ID অবফাসকেশন, JWT অথেনটিকেশন (HS256 + access/refresh ডুয়াল-টোকেন রিফ্রেশ), AES এনক্রিপশন/ডিক্রিপশন (ইন্টারফেস + ডেটাবেস তিন স্তর), GeoIP অঞ্চল আইডেন্টিফিকেশন (MaxMind), Poster হিউম্যান ভেরিফিকেশন (স্লাইডার/পাজল/ক্লিক) | সম্পূর্ণ |
+| **CDN এক্সিলারেশন** | অরিজিন-পুল মডেল (আপলোড admin অরিজিন ডিস্কে থাকে, DB রিলেটিভ পাথ সংরক্ষণ করে — শূন্য মাইগ্রেশন), আউটপুট বাউন্ডারিতে `Cdn::url()` রিরাইট করে `https://{CDN_DOMAIN}{path}`, ৪টি প্রোভাইডার (Cloudflare/CloudFront/Aliyun/Tencent), প্রোডাক্ট ও ব্যানার CRUD-এ অটো-পার্জ fail-open, ৭ দিনের immutable এজ ক্যাশিং | সম্পূর্ণ |
 | **মাল্টি-এন্ড কভারেজ** | Flutter 5 প্ল্যাটফর্ম (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 পেজ) + Web Admin (LayUI+ECharts) + API | Flutter 25 ফাইল, HarmonyOS 14 ফাইল, Admin 239 ফাইল |
 | **প্ল্যাটফর্ম ট্র্যাকিং** | 8 প্ল্যাটফর্ম আইডেন্টিফিকেশন (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + X-Platform header + 6 টেবিলে রেকর্ড (orders/payments/operation_logs/users/search_logs/chat_messages) | সম্পূর্ণ |
 | **টেস্ট** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | ইউনিট টেস্ট সম্পূর্ণ, ইন্টিগ্রেশন টেস্ট বাকি |
@@ -77,6 +78,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | গ্রোথ টুল | B2B হোলসেল/সাবস্ক্রিপশন পিরিয়ডিক পারচেজ/AB টেস্ট | P2-P3 | ✅ |
 | কাস্টমার সার্ভিস | WebSocket রিয়েল-টাইম IM/নলেজ বেস | P3 | ✅ |
 | ইনফ্রাস্ট্রাকচার | Snowflake ID/JWT/Hashids/Encryption/Poster/API ভার্সন/GeoIP | P0 | ✅ |
+| CDN | অরিজিন-পুল/৪ প্রোভাইডার/অটো-পার্জ/প্রিলোড/এজ ক্যাশিং | P1 | ✅ |
 
 ---
 

@@ -57,6 +57,8 @@ docker compose logs -f admin
 - [ ] SSL সার্টিফিকেট কনফিগার করা আছে (nginx+Let's Encrypt)
 - [ ] ডেটাবেসে রুটের `install.sql` ইমপোর্ট করা হয়েছে (117 টি টেবিল, ওয়েব ইনস্টলেশন উইজার্ড স্বয়ংক্রিয়ভাবে ইমপোর্ট করে)
 - [ ] ES ইনডেক্স তৈরি হয়েছে: `php start.php scout:import "app\model\Products"`
+- [ ] CDN কনফিগার করা হয়েছে: `CDN_ENABLED=true` + `CDN_DOMAIN` (CNAME admin ডোমেইনে) + নির্বাচিত প্রোভাইডারের ক্রেডেনশিয়াল
+- [ ] আপলোড docker ভলিউম স্থায়ী (admin_uploads / service_public)
 - [ ] MySQL/Redis/ES ডেটা ভলিউম ব্যাকআপ কনফিগার করা আছে
 
 ## 2. ম্যানুয়াল ডিপ্লয়মেন্ট
@@ -95,6 +97,8 @@ php start.php start -d
 # docker/nginx/conf.d/shop.conf দেখুন
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+# এজ ক্যাশিং (CDN-এর অরিজিন রেসপন্স):
+# location /app/admin/upload/ { expires 7d; add_header Cache-Control "public, max-age=604800, immutable"; }
 ```
 
 ## 3. ডেটাবেস ইনিশিয়ালাইজেশন
@@ -130,6 +134,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Stripe কী |
 | STRIPE_WEBHOOK_SECRET | - | Stripe Webhook সিগনেচার ভেরিফিকেশন |
+| CDN_ENABLED | false | CDN গ্লোবাল সুইচ (true = URL রিরাইট + পার্জ সক্ষম) |
+| CDN_DEFAULT_PROVIDER | cloudflare | ডিফল্ট প্রোভাইডার (cloudflare/cloudfront/aliyun/tencent) |
+| CDN_DOMAIN | - | CDN ডোমেইন (যেমন cdn.erik.xyz, CNAME admin ডোমেইনে) |
+| CF_API_TOKEN | - | Cloudflare API Token |
+| CF_ZONE_ID | - | Cloudflare Zone ID |
+| AWS_ACCESS_KEY_ID | - | AWS কী (CloudFront) |
+| AWS_SECRET_ACCESS_KEY | - | AWS সিক্রেট |
+| AWS_REGION | us-east-1 | AWS অঞ্চল |
+| CLOUDFRONT_DISTRIBUTION_ID | - | CloudFront ডিস্ট্রিবিউশন ID |
+| ALIYUN_ACCESS_KEY_ID | - | Aliyun AccessKey ID |
+| ALIYUN_ACCESS_KEY_SECRET | - | Aliyun AccessKey Secret |
+| TENCENT_SECRET_ID | - | Tencent SecretId |
+| TENCENT_SECRET_KEY | - | Tencent SecretKey |
 
 ## 5. অপারেশন কমান্ড
 

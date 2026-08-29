@@ -85,6 +85,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 3 | Feature Module Map | Feature | Shows 17 major feature modules and their sub-features |
 | 4 | Request Lifecycle Diagram | Lifecycle | Shows the complete sequence from request to response and interactions at each stage |
 | 5 | Order Lifecycle Diagram | Lifecycle | Shows all state transitions of an order from cart to completed/refunded |
-| 6 | Deployment Architecture Diagram | Architecture | Shows Docker Compose container orchestration, network, and data volumes |
+| 6 | Deployment Architecture Diagram | Architecture | Shows the CDN edge layer (origin-pull cache), Docker Compose container orchestration, network, and persistent data volumes (admin_uploads / service_public) |
 | 7 | Security Architecture Diagram | Architecture | Shows the 6-layer defense-in-depth system: boundary→WAF→traffic/resilience (rate limiting + circuit breaker)→auth→data→response |
 | 8 | Multi-Currency Settlement Flow Diagram | Flow | Shows the complete chain: per-currency pricing→payment→settlement→settlement allocation→FX gains/losses |

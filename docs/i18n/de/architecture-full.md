@@ -44,6 +44,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    subgraph Cdn[CDN-Ebene]
+        C[CDN Edge<br/>Cloudflare CloudFront Aliyun Tencent]
+    end
     subgraph Gateway[Zugriffsebene]
         N[Nginx :80/:443]
     end
@@ -56,9 +59,10 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F --> C
+    H --> C
+    W --> C
+    C --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -78,6 +82,7 @@ graph TB
         WB[Web Browser: Admin]
     end
     subgraph Gateway["2. Zugriffsebene Nginx :80"]
+        CD[CDN Edge: Cloudflare/CloudFront/Aliyun/Tencent<br/>Origin-Pull, URL-Rewriting auf CDN-Domain]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
     end
     subgraph Security["3. Sicherheitsebene SecurityMiddleware 6 Prüfungen"]
@@ -123,7 +128,8 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CD
+    CD --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -149,7 +155,7 @@ graph TB
 | Ebene | Beschreibung |
 |----|------|
 | 1. Client-Ebene | Flutter 5 Plattformen + HarmonyOS + Web Admin, alle kommunizieren über HTTP/JSON |
-| 2. Zugangsebene | Nginx leitet nach Domain: api→service, admin→admin |
+| 2. Zugangsebene | CDN-Edge (Origin-Pull, `Cdn::url()`-URL-Rewriting auf `https://{CDN_DOMAIN}`) → Nginx leitet nach Domain: api→service, admin→admin |
 | 3. Sicherheitsebene | SecurityMiddleware mit 31 Angriffserkennungstypen, bei Treffer Fehlercode/403 |
 | 4. Middleware-Pipeline | 10 globale MW seriell + 2 Routing-MW (PosterVerify für sensible Operationen, JwtAuth für geschützte Schnittstellen) |
 | 5. Controller-Ebene | 39 API-Controller nach Funktion gruppiert, verarbeiten die gesamte Geschäftslogik |
@@ -407,7 +413,7 @@ graph LR
 
 ### 7.2 Redis-Verwendung
 
-Redis dient für das Rate-Limiting-Token-Bucket, Mensch-Maschine-Verifizierungscodes und Session-Speicherung (Middleware-Ebene); Geschäftsdaten werden nicht auf Anwendungsebene gecacht, sondern direkt aus MySQL gelesen (Read/Write-Splitting + Verbindungspool).
+Redis dient für das Rate-Limiting-Token-Bucket, Mensch-Maschine-Verifizierungscodes und Session-Speicherung (Middleware-Ebene); Geschäftsdaten werden nicht auf Anwendungsebene gecacht, sondern direkt aus MySQL gelesen (Read/Write-Splitting + Verbindungspool). Statische Ressourcen (Bilder/Dokumente) werden an der CDN-Edge zwischengespeichert (Origin-Pull, `expires 7d` / `Cache-Control: immutable`).
 
 ### 7.4 Verbindungspool-Optimierung
 
@@ -434,12 +440,14 @@ Redis dient für das Rate-Limiting-Token-Bucket, Mensch-Maschine-Verifizierungsc
 ## 8. Bereitstellungsarchitektur
 
 ```
+CDN-Ebene: https://{CDN_DOMAIN} → CNAME-Rückführung auf die Admin-Domain (Origin-Pull)
 docker-compose.yml:
-  nginx (alpine) :80 :443
+  nginx (alpine) :80 :443 — location /app/admin/upload/ → expires 7d, Cache-Control public, max-age=604800, immutable
   service (php:8.3) :8787 intern, 32 Worker
   admin (php:8.3) :8788 intern
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 Netzwerk: erik-net bridge | Daten-Volumes persistent
+Volumes: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
 Routing: api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
@@ -492,7 +500,7 @@ cd service && php vendor/bin/phpunit tests/
 | Middleware | 14 |
 | Utility-Klassen | 8 |
 | Geplante Aufgaben | 12 |
-| Konfigurationspunkte | 35+ |
+| Konfigurationspunkte | 36+ |
 | Tests | 22 Tests, 45 Assertions |
 | Skills | 38 |
 | Dokumente | 9 |

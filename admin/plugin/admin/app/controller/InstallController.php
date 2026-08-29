@@ -76,6 +76,7 @@ class InstallController extends Base
         // 所有需要安装的表
         $tables_to_install = [
             'wa_admins', 'wa_admin_roles', 'wa_roles', 'wa_rules', 'wa_options', 'wa_users', 'wa_uploads',
+            'wa_cdn_providers', 'wa_cdn_purge_logs',
             'shop_users', 'shop_user_addresses', 'shop_user_social_accounts', 'shop_user_kyc', 'shop_user_wishlists',
             'shop_membership_levels', 'shop_membership_benefits', 'shop_categories', 'shop_products',
             'shop_product_translations', 'shop_product_skus', 'shop_product_sku_prices', 'shop_product_images',

@@ -42,6 +42,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    subgraph Edge[CDNエッジ層]
+        CDN[CDN Edge<br/>Cloudflare/CloudFront/Aliyun/Tencent<br/>アップロードキャッシュ 7日 immutable]
+    end
     subgraph Gateway[接入层]
         N[Nginx :80/:443]
     end
@@ -54,9 +57,10 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F --> CDN
+    H --> CDN
+    W --> CDN
+    CDN --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -74,6 +78,9 @@ graph TB
         FL[Flutter: iOS Android macOS Win Linux]
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
+    end
+    subgraph CDNEdge["CDN エッジ層"]
+        CDN2[CDN: Cloudflare/CloudFront/Aliyun/Tencent<br/>origin-pull アップロードキャッシュ 7日]
     end
     subgraph Gateway["2. 接入层 Nginx :80"]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
@@ -121,7 +128,8 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CDN2
+    CDN2 --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,7 +155,7 @@ graph TB
 | 層 | 説明 |
 |----|------|
 | 1.クライアント層 | Flutter 5プラットフォーム + HarmonyOS + Web Admin、すべて HTTP/JSON で通信 |
-| 2.アクセス層 | Nginx がドメインごとに振り分け: api→service, admin→admin |
+| 2.アクセス層 | CDN エッジ（origin-pull、静的リソースのキャッシュ）→ Nginx がドメインごとに振り分け: api→service, admin→admin |
 | 3.安全層 | SecurityMiddleware 31類の攻撃検出器、ヒットするとエラーコード/403 を返す |
 | 4.ミドルウェアパイプライン | 10個のグローバルMWを直列処理 + 2個のルート級MW(PosterVerify敏感操作, JwtAuth認証インターフェース) |
 | 5.コントローラー層 | 39個のAPIコントローラーが機能ごとにグループ化、全業務ロジックを処理 |
@@ -405,7 +413,7 @@ graph LR
 
 ### 7.2 Redis の用途
 
-Redis は限流トークンバケット、人機認証コードと Session の保存に使用（ミドルウェア層）；業務データはアプリケーション層のキャッシュをせず、直接 MySQL を読み取る（読み書き分離 + コネクションプール）。
+Redis は限流トークンバケット、人機認証コードと Session の保存に使用（ミドルウェア層）；業務データはアプリケーション層のキャッシュをせず、直接 MySQL を読み取る（読み書き分離 + コネクションプール）。静的アセット（商品/バナー/ドキュメントのアップロード）は CDN エッジ + nginx（`location /app/admin/upload/`、`expires 7d; Cache-Control public, max-age=604800, immutable`）でキャッシュします。
 
 ### 7.4 コネクションプール最適化
 
@@ -437,8 +445,10 @@ docker-compose.yml:
   service (php:8.3) :8787 internal, 32 workers
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
-网络: erik-net bridge | 数据卷持久化
-路由: api.erik.xyz→service | admin.erik.xyz→admin
+ネットワーク: erik-net bridge | データボリューム永続化
+アップロードボリューム: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
+CDN: origin-pull — Cdn::url() → https://{CDN_DOMAIN}{path} | nginx エッジキャッシュ 7日 immutable
+ルーティング: api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
 ---
@@ -490,7 +500,7 @@ cd service && php vendor/bin/phpunit tests/
 | ミドルウェア | 14 |
 | ユーティリティクラス | 8 |
 | 定時タスク | 12 |
-| 設定項目 | 35+ |
+| 設定項目 | 36+ |
 | テスト | 22 tests, 45 assertions |
 | Skills | 38 |
 | ドキュメント | 9 |

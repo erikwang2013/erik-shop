@@ -52,7 +52,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **Рост участников** | Уровни членства + привилегии, правила баллов + журнал, подарочные карты (баланс + активация), уведомления о снижении цены/поступлении, избранное, сравнение товаров, история просмотров, подписочные покупки, AB-тесты (распределение трафика + достоверность) | Полная |
 | **Управление контентом** | Многоязычные CMS-страницы (Landing/Blog), многоязычный FAQ, многоязычная база знаний, таблицы размеров (одежда/обувь + конвертация US/UK/EU/JP/CN), шаблоны писем (многоязычные), товарные Feed (Google/Meta + периодическая синхронизация) | Полная |
 | **Поддержка** | Веб-сокеты, real-time IM (chat_sessions/chat_messages), многоязычная база знаний | Структура таблиц готова, WS предстоит |
-| **Инфраструктура** | Snowflake распределённый ID (bigint, не автоинкремент), Hashids обфускация ID интерфейсов, JWT-аутентификация (HS256 + пара access/refresh с обновлением), шифрование AES (трёхуровневое шифрование интерфейсов и БД), определение региона GeoIP (MaxMind), Poster человеко-машинная проверка (слайдер/пазл/клик) | Полная |
+| **Инфраструктура** | Snowflake распределённый ID (bigint, не автоинкремент), Hashids обфускация ID интерфейсов, JWT-аутентификация (HS256 + пара access/refresh с обновлением), шифрование AES (трёхуровневое шифрование интерфейсов и БД), определение региона GeoIP (MaxMind), Poster человеко-машинная проверка (слайдер/пазл/клик), CDN origin-pull (Cloudflare/CloudFront/Aliyun/Tencent, `Cdn::url()`, автоочистка fail-open) | Полная |
 | **Мультиплатформенное покрытие** | Flutter 5 платформ (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 страниц) + Web Admin (LayUI+ECharts) + API | Flutter 25 файлов, HarmonyOS 14 файлов, Admin 239 файлов |
 | **Отслеживание платформ** | Идентификация 8 платформ (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + header X-Platform + запись в 6 таблиц (orders/payments/operation_logs/users/search_logs/chat_messages) | Полная |
 | **Тестирование** | 22 теста / 45 утверждений — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | Модульное тестирование полное, интеграционное предстоит |
@@ -74,7 +74,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Управление контентом | CMS/FAQ/база знаний/шаблоны писем/уведомления/таблицы размеров | P2 | ✅ |
 | Инструменты роста | B2B-опт/подписочные покупки/AB-тесты | P2-P3 | ✅ |
 | Поддержка | Веб-сокеты, real-time IM/база знаний | P3 | ✅ |
-| Инфраструктура | Snowflake ID/JWT/Hashids/Encryption/Poster/версии API/GeoIP | P0 | ✅ |
+| Инфраструктура | Snowflake ID/JWT/Hashids/Encryption/Poster/версии API/GeoIP/CDN | P0 | ✅ |
 
 ---
 

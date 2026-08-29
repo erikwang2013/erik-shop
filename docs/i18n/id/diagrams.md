@@ -85,6 +85,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 3 | Peta Panorama Modul Fitur | Diagram fitur | Menampilkan 17 modul fitur besar beserta titik-titik fitur rincinya |
 | 4 | Diagram Siklus Hidup Permintaan | Siklus hidup | Menampilkan urutan waktu lengkap dari permintaan hingga respons serta interaksi setiap tahap |
 | 5 | Diagram Siklus Hidup Pesanan | Siklus hidup | Menampilkan semua alur status pesanan dari keranjang hingga selesai/refund |
-| 6 | Diagram Arsitektur Deployment | Diagram arsitektur | Menampilkan orkestrasi kontainer Docker Compose, jaringan, volume data |
+| 6 | Diagram Arsitektur Deployment | Diagram arsitektur | Menampilkan orkestrasi kontainer Docker Compose, lapisan edge CDN, jaringan, volume data (termasuk volume unggahan admin_uploads/service_public) |
 | 7 | Diagram Arsitektur Keamanan | Diagram arsitektur | Menampilkan sistem pertahanan berlapis 6 tingkat: batas→WAF→lalu lintas/ketahanan (rate limiting+circuit breaker)→autentikasi→data→respons |
 | 8 | Diagram Alir Settlement Multi-Mata Uang | Diagram alir | Menampilkan rantai lengkap penetapan harga per mata uang→pembayaran→pembagian dana→settlement→laba/rugi kurs |

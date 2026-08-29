@@ -46,6 +46,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 All ID fields in the API are hashids-encoded strings (e.g. `Ab3xK9pq`), automatically encoded/decoded by middleware. No manual handling needed on the frontend.
 
+### Resource URLs (CDN)
+
+Image/document URLs in responses are stored as relative paths in the DB (e.g. `/app/admin/upload/xxx.jpg`). When CDN is enabled, they are rewritten at the output boundary by `Cdn::url()` to `https://{CDN_DOMAIN}{path}` (origin-pull model — the CDN domain CNAMEs back to the admin origin, so paths stay valid even if CDN is disabled). Edge caching: `Cache-Control public, max-age=604800, immutable` (7 days).
+
 ---
 
 ## 1. Authentication APIs

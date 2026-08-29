@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 Поддержка CDN
+
+- Новая поддержка CDN в обоих проектах (service + admin), модель origin-pull (возврат к источнику): загрузки по-прежнему сохраняются на локальный диск admin (источник); в БД хранятся только относительные пути (нулевая миграция); на выходных границах `Cdn::url()` переписывает URL в `https://{CDN_DOMAIN}{path}`; домен CDN по CNAME указывает обратно на домен admin
+- Единая абстракция провайдеров `CdnProviderInterface` (purge / purgeByTag / preload) реализована для Cloudflare, AWS CloudFront, Aliyun и Tencent Cloud (Fastly/Akamai зарезервированы); матрица возможностей: purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- Настройка из админ-панели: страница управления CDN (3 вкладки: Конфигурация/Очистка/Логи) — переключатели включения провайдеров, учётные данные (JSON конфигурации шифруется в покое), проверка связи, ручная очистка/прогрев, логи очистки (таблицы `wa_cdn_providers` / `wa_cdn_purge_logs`); конфигурация в БД переопределяет `.env`; глобальный вкл/выкл распространяется на service через общий Redis (префикс `shop:`, TTL 60s)
+- Автоочистка (fail-open): CRUD товаров и каруселей автоматически запускает очистку кэша; отказ CDN никогда не блокирует CRUD админки
+- Кэш на границе: nginx `location /app/admin/upload/` с `expires 7d; Cache-Control public, max-age=604800, immutable`; каталоги загрузок персистентны через docker-тома (`admin_uploads:/app/plugin/admin/public/upload`, `service_public:/app/public/documents`)
+- Конфигурация: `config/cdn.php` (admin + service) + 13 переменных окружения `CDN_*` (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / учётные данные каждого провайдера)
+
+---
+
 ## Журнал исправлений 2026-08-07
 
 | # | Проблема | Серьёзность | Исправление |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Лимитирование токен-бакетом | — | — | ✅ |
 | Разделение чтения/записи БД | — | — | ✅ |
 | Cron-задачи (11) | — | — | ✅ |
+| CDN (Cloudflare/CloudFront/Aliyun/Tencent, origin-pull) | — | — | ✅ |
 
 ### Контент и рост
 

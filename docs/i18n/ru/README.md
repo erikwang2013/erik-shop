@@ -162,6 +162,7 @@ shop-php/
 | **Управление контентом** | Многоязычные страницы CMS, FAQ, база знаний, таблицы размеров, шаблоны писем, синхронизация товарных фидов |
 | **Поддержка клиентов** | WebSocket-чат в реальном времени, база знаний (структура таблиц создана) |
 | **Инфраструктура** | Snowflake-распределённые ID, обфускация интерфейсов Hashids, JWT-аутентификация, AES-шифрование, GeoIP-определение региона |
+| **CDN** | Origin-pull (Cloudflare/CloudFront/Aliyun/Tencent): загрузки остаются на admin, URL переписываются через `Cdn::url()`, иммутабельный граничный кэш 7 дней, автоочистка при CRUD товаров/каруселей (fail-open) |
 | **Покрытие платформ** | Flutter (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS) + Web Admin |
 | **Трекинг платформ** | Определение 8 источников (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + запись в БД |
 | **Тестирование** | 22 tests / 45 assertions — ALL PASS (Security+Jwt+ApiResponse+Redis) |
@@ -191,7 +192,8 @@ shop-php/
 | [Архитектура](architecture.md) | Структура каталогов, цепочка наследования моделей, ключевые пакеты |
 | [API](api.md) | 71 конечная точка API (статическая документация) |
 | [Документация API hg/apidoc](http://localhost:8787/apidoc/) | Автогенерация hg/apidoc (6 групп: аутентификация/товары/транзакции/логистика и таможня/пользователи и маркетинг/операции) |
-| [Развёртывание](deployment.md) | Docker/ручное развёртывание, переменные окружения, команды эксплуатации |
+| [Развёртывание](deployment.md) | Docker/ручное развёртывание, переменные окружения (вкл. 13 `CDN_*`), команды эксплуатации |
+| [PLAN-CDN.md](../../PLAN-CDN.md) | План интеграции CDN (origin-pull, провайдеры, конфигурация) |
 
 ## Открытый исходный код — это нелегко; поддержите проект
 
@@ -228,6 +230,16 @@ shop-php/
   - Название банка: THE BANK OF NEW YORK MELLON
   - SWIFT Code: IRVTUS3NXXX
   - Адрес банка: THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Пожертвование в криптовалюте (Crypto Donation)
+
+Если этот проект помог вам, отсканируйте QR-код, чтобы сделать пожертвование, спасибо!
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

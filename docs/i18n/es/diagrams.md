@@ -85,6 +85,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 3 | Mapa general de módulos funcionales | Diagrama de funciones | Muestra los 17 grandes módulos funcionales y sus funciones detalladas |
 | 4 | Diagrama del ciclo de vida de las solicitudes | Ciclo de vida | Muestra la secuencia completa desde la solicitud hasta la respuesta y las interacciones de cada fase |
 | 5 | Diagrama del ciclo de vida de los pedidos | Ciclo de vida | Muestra todas las transiciones de estado del pedido, desde el carrito hasta la finalización/reembolso |
-| 6 | Diagrama de arquitectura de despliegue | Diagrama de arquitectura | Muestra la orquestación de contenedores Docker Compose, la red y los volúmenes de datos |
+| 6 | Diagrama de arquitectura de despliegue | Diagrama de arquitectura | Muestra la orquestación de contenedores Docker Compose, la red, la capa CDN de borde (origin-pull) y los volúmenes de datos persistentes (incl. volúmenes de subida admin_uploads/service_public) |
 | 7 | Diagrama de arquitectura de seguridad | Diagrama de arquitectura | Muestra el sistema de defensa en profundidad de 6 capas: límite→WAF→tráfico/resiliencia (limitación + disyuntor)→autenticación→datos→respuesta |
 | 8 | Diagrama de flujo de liquidación multimoneda | Diagrama de flujo | Muestra la cadena completa: precio por moneda→pago→reparto→liquidación→pérdidas y ganancias cambiarias |

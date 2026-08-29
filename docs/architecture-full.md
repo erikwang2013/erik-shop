@@ -43,6 +43,7 @@ graph TD
         W[Web Browser Admin]
     end
     subgraph Gateway[接入层]
+        C[CDN 边缘层<br/>Origin-Pull 回源<br/>静态资源缓存]
         N[Nginx :80/:443]
     end
     subgraph Apps[应用层]
@@ -54,9 +55,8 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F & H & W --> C
+    C --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -75,7 +75,8 @@ graph TB
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
-    subgraph Gateway["2. 接入层 Nginx :80"]
+    subgraph Gateway["2. 接入层 CDN + Nginx :80"]
+        CDN[CDN 边缘层: CNAME 回源 admin 域名<br/>静态资源缓存 expires 7d]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
     end
     subgraph Security["3. 安全层 SecurityMiddleware 6道检测"]
@@ -121,7 +122,7 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CDN --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,7 +148,7 @@ graph TB
 | 层 | 说明 |
 |----|------|
 | 1.客户端层 | Flutter 5平台 + HarmonyOS + Web Admin, 全部通过 HTTP/JSON 通信 |
-| 2.接入层 | Nginx 按域名分流: api→service, admin→admin |
+| 2.接入层 | CDN 边缘层(Origin-Pull 回源, 静态资源缓存) → Nginx 按域名分流: api→service, admin→admin |
 | 3.安全层 | SecurityMiddleware 31类攻击检测器, 命中即返回错误码/403 |
 | 4.中间件管道 | 10个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
 | 5.控制器层 | 39个API控制器按功能分组, 处理全部业务逻辑 |
@@ -406,7 +407,7 @@ graph LR
 
 ### 7.2 Redis 用途
 
-Redis 用于限流令牌桶、人机验证码与 Session 存储（中间件层）；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）。
+Redis 用于限流令牌桶、人机验证码与 Session 存储（中间件层）以及 CDN 全局开关传播（prefix `shop:`，60s TTL）；业务数据不做应用层缓存，直接读取 MySQL（读写分离 + 连接池）；静态资源（上传图片/文档）由 `Cdn::url()` 在输出边界重写为 CDN 域名，经 CDN 边缘缓存（`expires 7d, immutable`）分发。
 
 ### 7.4 连接池优化
 
@@ -434,16 +435,16 @@ Redis 用于限流令牌桶、人机验证码与 Session 存储（中间件层�
 
 ```
 docker-compose.yml:
+  CDN (Cloudflare/CloudFront/阿里云/腾讯云) — CNAME 回源 admin 域名
   nginx (alpine) :80 :443
   service (php:8.3) :8787 internal, 32 workers
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
-网络: erik-net bridge | 数据卷持久化
-路由: api.erik.xyz→service | admin.erik.xyz→admin
+网络: erik-net bridge | 数据卷持久化 (erik_data/erik_redis/erik_es/erik_logs + admin_uploads:/app/plugin/admin/public/upload + service_public:/app/public/documents)
+路由: api.erik.xyz→service | admin.erik.xyz→admin | CDN_DOMAIN→admin(回源)
 ```
 
 ---
-
 
 ## 8. 国际化 (i18n)
 
@@ -491,7 +492,7 @@ cd service && php vendor/bin/phpunit tests/
 | 中间件 | 14 |
 | 工具类 | 8 |
 | 定时任务 | 12 |
-| 配置项 | 35+ |
+| 配置项 | 36+ |
 | 测试 | 22 tests, 45 assertions |
 | Skills | 38 |
 | 文档 | 9 |

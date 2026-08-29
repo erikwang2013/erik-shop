@@ -97,7 +97,7 @@ Disjuntor Redis (`app\common\CircuitBreaker`): chamadas de API externas de gatew
 
 ### 4.3 Usos do Redis
 
-O Redis é usado para token bucket de limitação de taxa (facade `support\Redis`), contagem do disjuntor, códigos de verificação humano e armazenamento de Session; os dados de negócio não têm cache em nível de aplicação, são lidos diretamente do MySQL (separação leitura/escrita + pool de conexões).
+O Redis é usado para token bucket de limitação de taxa (facade `support\Redis`), contagem do disjuntor, códigos de verificação humano e armazenamento de Session; os dados de negócio não têm cache em nível de aplicação, são lidos diretamente do MySQL (separação leitura/escrita + pool de conexões). A chave global liga/desliga do CDN é propagada do admin para o service via Redis compartilhado (prefixo `shop:`, TTL 60s); recursos estáticos são servidos pelo edge CDN com cache imutável e depuração automática (purge) no CRUD de produtos/banners, sempre fail-open.
 
 ### 4.4 Pool de conexões
 

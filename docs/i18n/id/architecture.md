@@ -19,11 +19,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/           API bisnis (251 file PHP)
-    config/            35 konfigurasi (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36 konfigurasi (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39 controller (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111 model (BaseModel + 110 model bisnis)
     app/middleware/     14 middleware (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
-    app/common/          8 kelas utilitas (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions)
+    app/common/          9 kelas utilitas (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions/Cdn)
     database/          schema.sql (telah digantikan oleh install.sql di root) + seeders
     tests/              4 kelas pengujian (22 tests, 45 assertions)
   admin/             Panel admin (239 file PHP)
@@ -80,6 +80,7 @@ cd admin && php start.php start -d
 ```
 
 - **Multibahasa (i18n)**: 5 file terjemahan bahasa + LocaleMiddleware + Flutter AppLocalizations
+- **CDN**: Origin-Pull multi-provider (Cloudflare/CloudFront/Aliyun/Tencent) — `Cdn::url()` menulis ulang ke `https://{CDN_DOMAIN}{path}`, cache edge 7d immutable (volume unggahan: admin_uploads/service_public)
 - **Dokumentasi API**: dibuat otomatis oleh hg/apidoc (6 grup, didorong anotasi controller)
 - **Pelacakan platform**: 8 platform header X-Platform + pencatatan DB
 

@@ -162,6 +162,7 @@ shop-php/
 | **Gestion des risques et conformité** | Moteur de règles (scoring en parallèle), KYC, demandes de données GDPR/CCPA, consentement Cookie |
 | **Protection de la sécurité** | Détection de 31 types d'attaques (XSS/Injection SQL/XXE/SSRF/CRLF/traversée de chemin/téléversement de fichiers/force brute/méthodes HTTP/Host/CORS, etc.) |
 | **Haute concurrence** | Limitation de débit par seau à jetons, séparation lecture/écriture DB, optimisation des pools de connexions |
+| **Prise en charge CDN** | Cache périphérique origin-pull, abstraction unifiée des fournisseurs (Cloudflare/CloudFront/Aliyun/Tencent), invalidation automatique (fail-open), page de gestion CDN (Configuration/Invalidation/Journal) |
 | **Croissance des membres** | Règles de points, avantages des niveaux de membre, cartes cadeaux, alertes de baisse de prix, abonnements récurrents, tests AB |
 | **Gestion de contenu** | Pages CMS multilingues, FAQ, base de connaissances, tableaux de tailles, modèles d'e-mail, synchronisation des flux produits |
 | **Service client** | Messagerie instantanée WebSocket, base de connaissances (structure de tables créée) |
@@ -195,7 +196,7 @@ shop-php/
 | [Document d'architecture](architecture.md) | Structure des répertoires, chaîne d'héritage des modèles, paquets clés |
 | [Documentation des interfaces API](api.md) | 71 points de terminaison API (documentation statique) |
 | [Documentation d'interface hg/apidoc](http://localhost:8787/apidoc/) | Génération automatique hg/apidoc (6 groupes : authentification/produits/transactions/logistique et douanes/marketing utilisateur/opérations) |
-| [Documentation de déploiement](deployment.md) | Déploiement Docker/manuel, variables d'environnement, commandes d'exploitation |
+| [Documentation de déploiement](deployment.md) | Déploiement Docker/manuel, variables d'environnement (dont `CDN_*`), commandes d'exploitation |
 
 
 ## Le logiciel libre ne se fait pas sans efforts, merci de votre soutien
@@ -233,6 +234,16 @@ shop-php/
   - Nom de la banque : THE BANK OF NEW YORK MELLON
   - Code SWIFT : IRVTUS3NXXX
   - Adresse de la banque : THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### Don en cryptomonnaie (Crypto Donation)
+
+Si ce projet vous est utile, scannez le code QR pour faire un don, merci !
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

@@ -46,6 +46,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 Semua field ID di seluruh antarmuka merupakan string ter-encode hashids (mis. `Ab3xK9pq`), di-encode/decode otomatis oleh middleware. Frontend tidak perlu menangani secara manual.
 
+### URL Sumber Daya (CDN)
+
+URL sumber daya statis (gambar produk/banner/dokumen) diproduksi melalui rewrite domain CDN saat output: `https://{CDN_DOMAIN}{path}` (model Origin-Pull; saat CDN dinonaktifkan, URL dikembalikan ke domain origin apa adanya).
+
 ---
 
 ## 1. Antarmuka Autentikasi

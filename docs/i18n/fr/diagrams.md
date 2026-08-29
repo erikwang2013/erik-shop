@@ -85,6 +85,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | III | Vue d'ensemble des modules fonctionnels | Diagramme fonctionnel | Les 17 grands modules fonctionnels et leurs points fonctionnels détaillés |
 | IV | Diagramme de cycle de vie des requêtes | Cycle de vie | Séquence complète de la requête à la réponse et les interactions de chaque phase |
 | V | Diagramme de cycle de vie des commandes | Cycle de vie | Toutes les transitions d'état des commandes, du panier à la réalisation/au remboursement |
-| VI | Diagramme d'architecture de déploiement | Diagramme d'architecture | Orchestration des conteneurs Docker Compose, réseau, volumes de données |
+| VI | Diagramme d'architecture de déploiement | Diagramme d'architecture | Orchestration des conteneurs Docker Compose, réseau, couche CDN périphérique (origin-pull) et volumes de données persistants (dont volumes de téléversement admin_uploads/service_public) |
 | VII | Diagramme d'architecture de sécurité | Diagramme d'architecture | Système de défense en profondeur sur 6 couches : frontière → WAF → trafic/résilience (limitation + disjoncteur) → authentification → données → réponses |
 | VIII | Diagramme de flux de règlement multidevise | Diagramme de flux | Chaîne complète : tarification par devise → paiement → répartition → règlement → gains et pertes de change |

@@ -54,7 +54,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **Mitgliederwachstum** | Mitgliedsstufen + Berechtigungen, Punktregeln + Transaktionen, Geschenkkarten (Guthaben + Einlösung), Preis-/Warenverfügbarkeitsalarme, Favoriten, Produktvergleich, Verlauf, Abo-Kauf, AB-Tests (Traffic-Verteilung + Konfidenz) | Vollständig |
 | **Content-Management** | Mehrsprachige CMS-Seiten (Landing/Blog), mehrsprachiges FAQ, mehrsprachige Wissensdatenbank, Größentabellen (Bekleidung/Schuhe + US/UK/EU/JP/CN-Umrechnung), E-Mail-Vorlagen (mehrsprachig), Produkt-Feeds (Google/Meta + geplante Synchronisierung) | Vollständig |
 | **Kundenservice** | WebSocket-Echtzeit-IM (chat_sessions/chat_messages), mehrsprachige Wissensdatenbank | Tabellenstruktur vollständig, WS ausstehend |
-| **Infrastruktur** | Snowflake-verteilte IDs (bigint, nicht autoinkrementierend), Hashids-Schnittstellen-ID-Verschleierung, JWT-Authentifizierung (HS256 + access/refresh Dual-Token-Refresh), AES-Verschlüsselung (Drei-Schichten-Verschlüsselung Schnittstelle + Datenbank), GeoIP-Regionserkennung (MaxMind), Poster-Mensch-Maschine-Verifizierung (Schieberegler/Puzzle/Klick) | Vollständig |
+| **Infrastruktur** | Snowflake-verteilte IDs (bigint, nicht autoinkrementierend), Hashids-Schnittstellen-ID-Verschleierung, JWT-Authentifizierung (HS256 + access/refresh Dual-Token-Refresh), AES-Verschlüsselung (Drei-Schichten-Verschlüsselung Schnittstelle + Datenbank), GeoIP-Regionserkennung (MaxMind), Poster-Mensch-Maschine-Verifizierung (Schieberegler/Puzzle/Klick), CDN-Edge-Caching (Origin-Pull, Cloudflare/CloudFront/Aliyun/Tencent, Auto-Invalidierung) | Vollständig |
 | **Multi-Endgeräte** | Flutter 5 Plattformen (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 Seiten) + Web-Admin (LayUI+ECharts) + API | Flutter 25 Dateien, HarmonyOS 14 Dateien, Admin 239 Dateien |
 | **Plattform-Tracking** | 8-Plattform-Erkennung (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + X-Platform-Header + Aufzeichnung in 6 Tabellen (orders/payments/operation_logs/users/search_logs/chat_messages) | Vollständig |
 | **Tests** | 22 Tests / 45 Assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | Unit-Tests vollständig, Integrationstests ausstehend |
@@ -76,7 +76,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Content-Management | CMS/FAQ/Wissensdatenbank/E-Mail-Vorlagen/Benachrichtigungen/Größentabellen | P2 | ✅ |
 | Wachstums-Tools | B2B-Großhandel/Abo-Kauf/AB-Tests | P2-P3 | ✅ |
 | Kundenservice | WebSocket-Echtzeit-IM/Wissensdatenbank | P3 | ✅ |
-| Infrastruktur | Snowflake-ID/JWT/Hashids/Encryption/Poster/API-Version/GeoIP | P0 | ✅ |
+| Infrastruktur | Snowflake-ID/JWT/Hashids/Encryption/Poster/API-Version/GeoIP/CDN (Origin-Pull + Auto-Invalidierung) | P0 | ✅ |
 
 ---
 

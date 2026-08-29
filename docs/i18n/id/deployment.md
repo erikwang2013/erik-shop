@@ -56,6 +56,8 @@ docker compose logs -f admin
 - [ ] Database telah mengimpor `install.sql` di root (117 tabel, diimpor otomatis oleh wizard instalasi Web)
 - [ ] Indeks ES telah dibuat: `php start.php scout:import "app\model\Products"`
 - [ ] Volume data MySQL/Redis/ES telah dikonfigurasi backup
+- [ ] CDN dikonfigurasi: `CDN_ENABLED=true` + `CDN_DOMAIN` di `.env` (mis. `cdn.erik.xyz`), domain CDN CNAME kembali ke domain admin
+- [ ] Volume unggahan persisten telah dibuat: `admin_uploads` dan `service_public`
 
 ## 2. Deployment Manual
 
@@ -93,6 +95,12 @@ php start.php start -d
 # Lihat docker/nginx/conf.d/shop.conf
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+
+# Cache edge untuk unggahan admin (7 hari, immutable)
+location /app/admin/upload/ {
+    expires 7d;
+    add_header Cache-Control "public, max-age=604800, immutable";
+}
 ```
 
 ## 3. Inisialisasi Database
@@ -128,6 +136,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Kunci Stripe |
 | STRIPE_WEBHOOK_SECRET | - | Verifikasi tanda tangan Webhook Stripe |
+| CDN_ENABLED | false | Sakelar total CDN |
+| CDN_DEFAULT_PROVIDER | cloudflare | Provider default: cloudflare/cloudfront/aliyun/tencent |
+| CDN_DOMAIN | - | Domain CDN (CNAME kembali ke domain admin), mis. cdn.erik.xyz |
+| CF_API_TOKEN | - | Token API Cloudflare |
+| CF_ZONE_ID | - | Zone ID Cloudflare |
+| AWS_ACCESS_KEY_ID | - | Access Key ID CloudFront |
+| AWS_SECRET_ACCESS_KEY | - | Secret Access Key CloudFront |
+| CLOUDFRONT_DISTRIBUTION_ID | - | Distribution ID CloudFront |
+| AWS_REGION | us-east-1 | Region AWS |
+| ALIYUN_ACCESS_KEY_ID | - | AccessKey ID Aliyun |
+| ALIYUN_ACCESS_KEY_SECRET | - | AccessKey Secret Aliyun |
+| TENCENT_SECRET_ID | - | SecretId Tencent Cloud |
+| TENCENT_SECRET_KEY | - | SecretKey Tencent Cloud |
 
 ## 5. Perintah Operasional
 

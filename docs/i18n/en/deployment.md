@@ -56,6 +56,8 @@ docker compose logs -f admin
 - [ ] Database imported from root `install.sql` (117 tables, auto-imported by the Web installation wizard)
 - [ ] ES index created: `php start.php scout:import "app\model\Products"`
 - [ ] MySQL/Redis/ES data volume backups configured
+- [ ] CDN enabled: `CDN_ENABLED=true`, `CDN_DOMAIN`, `CDN_DEFAULT_PROVIDER` and per-provider credentials in `.env` (or configure in the admin CDN page, which overrides .env)
+- [ ] CDN domain CNAME points back to the admin domain (origin-pull)
 
 ## 2. Manual Deployment
 
@@ -93,6 +95,12 @@ php start.php start -d
 # See docker/nginx/conf.d/shop.conf
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+
+# CDN edge caching for admin uploads (served through the CDN domain):
+location /app/admin/upload/ {
+    expires 7d;
+    add_header Cache-Control "public, max-age=604800, immutable";
+}
 ```
 
 ## 3. Database Initialization
@@ -128,6 +136,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Stripe secret key |
 | STRIPE_WEBHOOK_SECRET | - | Stripe webhook signature verification |
+| CDN_ENABLED | false | CDN global on/off (propagated to service via shared Redis, prefix `shop:`, 60s TTL) |
+| CDN_DEFAULT_PROVIDER | cloudflare | Default provider: cloudflare / cloudfront / aliyun / tencent |
+| CDN_DOMAIN | - | Origin-pull CDN domain (no scheme); URL rewrite target, e.g. cdn.erik.xyz (CNAME back to the admin domain) |
+| CF_API_TOKEN | - | Cloudflare API token |
+| CF_ZONE_ID | - | Cloudflare zone ID |
+| AWS_ACCESS_KEY_ID | - | CloudFront access key ID |
+| AWS_SECRET_ACCESS_KEY | - | CloudFront secret access key |
+| CLOUDFRONT_DISTRIBUTION_ID | - | CloudFront distribution ID |
+| AWS_REGION | us-east-1 | CloudFront region |
+| ALIYUN_ACCESS_KEY_ID | - | Aliyun CDN access key ID |
+| ALIYUN_ACCESS_KEY_SECRET | - | Aliyun CDN access key secret |
+| TENCENT_SECRET_ID | - | Tencent Cloud CDN secret ID |
+| TENCENT_SECRET_KEY | - | Tencent Cloud CDN secret key |
 
 ## 5. Operations Commands
 

@@ -42,6 +42,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    subgraph Cdn[Couche CDN]
+        C[CDN Edge<br/>Cloudflare CloudFront Aliyun Tencent]
+    end
     subgraph Gateway[Couche d'accès]
         N[Nginx :80/:443]
     end
@@ -54,9 +57,10 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F --> C
+    H --> C
+    W --> C
+    C --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -76,6 +80,7 @@ graph TB
         WB[Web Browser: Admin]
     end
     subgraph Gateway["2. Couche d'accès Nginx :80"]
+        CD[CDN Edge: Cloudflare/CloudFront/Aliyun/Tencent<br/>Origin-pull, réécriture d'URL vers le domaine CDN]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
     end
     subgraph Security["3. Couche de sécurité SecurityMiddleware 6 contrôles"]
@@ -121,7 +126,8 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CD
+    CD --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,7 +153,7 @@ graph TB
 | Couche | Description |
 |----|------|
 | 1. Couche client | Flutter 5 plateformes + HarmonyOS + Web Admin, tous communiquent via HTTP/JSON |
-| 2. Couche d'accès | Nginx répartit par nom de domaine : api→service, admin→admin |
+| 2. Couche d'accès | CDN Edge (origin-pull, réécriture d'URL `Cdn::url()` vers `https://{CDN_DOMAIN}`) → Nginx répartit par nom de domaine : api→service, admin→admin |
 | 3. Couche de sécurité | SecurityMiddleware, 31 types de détecteurs d'attaques, renvoie un code d'erreur/403 en cas de détection |
 | 4. Pipeline de middlewares | 10 middlewares globaux traités en série + 2 middlewares de routage (PosterVerify pour les opérations sensibles, JwtAuth pour les interfaces authentifiées) |
 | 5. Couche contrôleurs | 39 contrôleurs API regroupés par fonction, gèrent toute la logique métier |
@@ -405,7 +411,7 @@ graph LR
 
 ### 7.2 Usages de Redis
 
-Redis est utilisé pour la limitation par seau à jetons, les codes de vérification homme-machine et le stockage des sessions (couche middleware) ; les données métier ne font pas de cache applicatif, elles sont lues directement dans MySQL (séparation lecture/écriture + pool de connexions).
+Redis est utilisé pour la limitation par seau à jetons, les codes de vérification homme-machine et le stockage des sessions (couche middleware) ; les données métier ne font pas de cache applicatif, elles sont lues directement dans MySQL (séparation lecture/écriture + pool de connexions). Les ressources statiques (images/documents) sont mises en cache en périphérie CDN (origin-pull, `expires 7d` / `Cache-Control: immutable`).
 
 ### 7.4 Optimisation du pool de connexions
 
@@ -432,12 +438,14 @@ Redis est utilisé pour la limitation par seau à jetons, les codes de vérifica
 ## 8. Architecture de déploiement
 
 ```
+Couche CDN : https://{CDN_DOMAIN} → CNAME vers le domaine admin (origin-pull)
 docker-compose.yml:
-  nginx (alpine) :80 :443
+  nginx (alpine) :80 :443 — location /app/admin/upload/ → expires 7d, Cache-Control public, max-age=604800, immutable
   service (php:8.3) :8787 interne, 32 workers
   admin (php:8.3) :8788 interne
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 Réseau : erik-net bridge | volumes de données persistants
+Volumes : admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
 Routage : api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
@@ -490,7 +498,7 @@ cd service && php vendor/bin/phpunit tests/
 | Middlewares | 14 |
 | Classes utilitaires | 8 |
 | Tâches planifiées | 12 |
-| Éléments de configuration | 35+ |
+| Éléments de configuration | 36+ |
 | Tests | 22 tests, 45 assertions |
 | Skills | 38 |
 | Documentation | 9 |

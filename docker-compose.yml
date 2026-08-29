@@ -22,7 +22,8 @@ services:
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./service/public:/var/www/static:ro
+      # 与 service 容器共享的可写 public（service 运行时生成单据 PDF，nginx 只读挂载）
+      - service_public:/var/www/static:ro
     depends_on:
       - service
       - admin
@@ -56,8 +57,12 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-base64:Y2hhbmdlX21lXzMyX2J5dGVfa2V5X2hlcmVfMDEyMzQ=}
       - ENCRYPTION_CIPHER=${ENCRYPTION_CIPHER:-AES-256-CBC}
       - ENCRYPTION_PREVIOUS_KEYS=${ENCRYPTION_PREVIOUS_KEYS:-}
+      - CDN_ENABLED=${CDN_ENABLED:-false}
+      - CDN_DOMAIN=${CDN_DOMAIN:-}
     volumes:
       - /app/runtime
+      # service 运行时生成的单据 PDF（nginx 只读挂载同名卷），收窄避免遮蔽镜像内 favicon.ico 等
+      - service_public:/app/public/documents
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8787/health"]
       interval: 30s
@@ -99,8 +104,24 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-base64:Y2hhbmdlX21lXzMyX2J5dGVfa2V5X2hlcmVfMDEyMzQ=}
       - ENCRYPTION_CIPHER=${ENCRYPTION_CIPHER:-AES-256-CBC}
       - ENCRYPTION_PREVIOUS_KEYS=${ENCRYPTION_PREVIOUS_KEYS:-}
+      # CDN（purge/preload 由 admin 触发，凭据仅经 env 传入）
+      - CDN_ENABLED=${CDN_ENABLED:-false}
+      - CDN_DEFAULT_PROVIDER=${CDN_DEFAULT_PROVIDER:-cloudflare}
+      - CDN_DOMAIN=${CDN_DOMAIN:-}
+      - CF_API_TOKEN=${CF_API_TOKEN:-}
+      - CF_ZONE_ID=${CF_ZONE_ID:-}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - CLOUDFRONT_DISTRIBUTION_ID=${CLOUDFRONT_DISTRIBUTION_ID:-}
+      - ALIYUN_ACCESS_KEY_ID=${ALIYUN_ACCESS_KEY_ID:-}
+      - ALIYUN_ACCESS_KEY_SECRET=${ALIYUN_ACCESS_KEY_SECRET:-}
+      - TENCENT_SECRET_ID=${TENCENT_SECRET_ID:-}
+      - TENCENT_SECRET_KEY=${TENCENT_SECRET_KEY:-}
     volumes:
       - /app/runtime
+      # 上传文件持久化：只挂 upload 子目录，避免遮蔽 plugin/admin/public 下 admin/、component/、resource/ 等框架前端资源
+      - admin_uploads:/app/plugin/admin/public/upload
     healthcheck:
       test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8788/health"]
       interval: 30s
@@ -187,6 +208,8 @@ volumes:
   mysql_data:
   redis_data:
   es_data:
+  service_public:
+  admin_uploads:
 
 networks:
   erik-net:

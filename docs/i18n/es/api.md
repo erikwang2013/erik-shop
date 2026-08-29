@@ -21,6 +21,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Plataforma | header `X-Platform: ios|ipados|macos|windows|linux|android|harmonyos|web` |
 | Content-Type | `application/json` (POST/PUT) |
 | Verificación humano-máquina | header `X-Poster-Token: <token>` (operaciones sensibles) |
+| URLs de recursos | Con CDN activado, las imágenes/documentos se emiten por el dominio CDN (`https://{CDN_DOMAIN}{ruta}`, reescritura de URL origin-pull vía `Cdn::url()`) |
 
 ### Formato de las respuestas
 

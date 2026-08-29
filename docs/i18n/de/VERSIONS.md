@@ -29,6 +29,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 CDN-Unterstützung
+
+- **Origin-Pull-Modell**: Uploads bleiben auf der lokalen Festplatte der Admin-Origin; die Datenbank speichert nur relative Pfade (Null-Migration); an den Ausgabegrenzen schreibt `Cdn::url()` auf `https://{CDN_DOMAIN}{pfad}` um; die CDN-Domain zeigt per CNAME zurück auf die Admin-Domain
+- **Einheitliche Provider-Abstraktion**: `CdnProviderInterface` (purge / purgeByTag / preload), implementiert für Cloudflare, AWS CloudFront, Aliyun und Tencent Cloud (Fastly/Akamai reserviert); Fähigkeitsmatrix: purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- **Verwaltungskonfiguration**: CDN-Verwaltungsseite (3 Tabs: Konfiguration/Invalidierung/Protokolle) — Provider-Aktivierungsschalter, Zugangsdaten (Konfigurations-JSON verschlüsselt gespeichert), Verbindungstest, manuelle Invalidierung/Preload, Invalidierungsprotokolle (Tabellen `wa_cdn_providers` / `wa_cdn_purge_logs`); DB-Konfiguration überschreibt .env; der globale Ein/Aus-Schalter propagiert über gemeinsames Redis (Präfix `shop:`, 60s TTL) an den Service
+- **Auto-Invalidierung (fail-open)**: Produkt- und Banner-CRUD löst die Invalidierung automatisch aus; ein CDN-Ausfall blockiert den Admin-CRUD nie
+- **Edge-Caching**: nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable`; Upload-Verzeichnisse bleiben über Docker-Volumes persistent (`admin_uploads:/app/plugin/admin/public/upload`, `service_public:/app/public/documents`)
+- **Konfiguration**: `config/cdn.php` (admin + service) + 13 `CDN_*`-Umgebungsvariablen (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / Zugangsdaten je Provider)
+
+---
+
 ## Fehlerbehebungsprotokoll 2026-08-07
 
 | # | Problem | Schweregrad | Lösung |
@@ -179,6 +190,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Token-Bucket-Limiting | — | — | ✅ |
 | DB-Read/Write-Splitting | — | — | ✅ |
 | Cron-Jobs (11) | — | — | ✅ |
+| CDN-Edge-Caching (Origin-Pull) | ✅ | ✅ | ✅ |
 
 ### Content & Wachstum
 

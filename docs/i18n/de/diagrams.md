@@ -87,6 +87,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 3 | Funktionsmodul-Übersicht | Funktionsdiagramm | Zeigt die 17 Hauptfunktionsmodule und ihre Unterfunktionen |
 | 4 | Anfrage-Lebenszyklus | Lebenszyklus | Zeigt die vollständige Sequenz von der Anfrage bis zur Antwort und die Interaktionen der einzelnen Phasen |
 | 5 | Bestell-Lebenszyklus | Lebenszyklus | Zeigt alle Statusübergänge einer Bestellung vom Warenkorb bis zur Fertigstellung/Rückerstattung |
-| 6 | Bereitstellungsarchitektur | Architekturdiagramm | Zeigt die Docker-Compose-Container-Orchestrierung, das Netzwerk und die Datenvolumes |
+| 6 | Bereitstellungsarchitektur | Architekturdiagramm | Zeigt die Docker-Compose-Container-Orchestrierung, das Netzwerk, die CDN-Edge-Ebene (Origin-Pull) und die persistenten Datenvolumes (inkl. Upload-Volumes admin_uploads/service_public) |
 | 7 | Sicherheitsarchitektur | Architekturdiagramm | Zeigt das 6-stufige Defense-in-Depth-System: Boundary → WAF → Traffic/Resilienz (Rate-Limiting + Circuit Breaker) → Auth → Daten → Antwort |
 | 8 | Mehrwährungs-Abwicklungsfluss | Flussdiagramm | Zeigt die vollständige Kette: währungsbezogene Preisgestaltung → Zahlung → Aufteilung → Abrechnung → Wechselkurs-Gewinne/-Verluste |

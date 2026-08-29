@@ -53,6 +53,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **सामग्री प्रबंधन** | CMS बहुभाषी पृष्ठ (Landing/Blog), FAQ बहुभाषी, ज्ञानकोष बहुभाषी, साइज़ चार्ट (कपड़े/जूते + US/UK/EU/JP/CN रूपांतरण), ईमेल टेम्पलेट (बहुभाषी), उत्पाद Feed (Google/Meta + निर्धारित सिंक) | पूर्ण |
 | **ग्राहक सेवा** | WebSocket रीयल-टाइम IM (chat_sessions/chat_messages), ज्ञानकोष बहुभाषी | तालिका संरचना पूर्ण, WS कार्यान्वयन लंबित |
 | **बुनियादी ढाँचा** | Snowflake वितरित ID (bigint गैर-ऑटोइंक्रीमेंट), Hashids इंटरफ़ेस ID अस्पष्टीकरण, JWT प्रमाणीकरण (HS256 + access/refresh दोहरा टोकन रिफ्रेश), AES एन्क्रिप्शन/डिक्रिप्शन (इंटरफ़ेस + डेटाबेस तीन-परत एन्क्रिप्शन), GeoIP क्षेत्र पहचान (MaxMind), Poster मानव-सत्यापन (स्लाइडर/पहेली/क्लिक) | पूर्ण |
+| **CDN त्वरण** | ओरिजिन-पुल मॉडल (अपलोड admin ओरिजिन डिस्क पर रहते हैं, DB रिलेटिव पाथ संग्रहीत करता है — शून्य माइग्रेशन), आउटपुट बाउंड्री पर `Cdn::url()` से `https://{CDN_DOMAIN}{path}` रीराइट, 4 प्रोवाइडर (Cloudflare/CloudFront/Aliyun/Tencent), प्रोडक्ट व बैनर CRUD पर ऑटो-पर्ज fail-open, 7 दिन की immutable एज कैशिंग | पूर्ण |
 | **बहु-प्लेटफ़ॉर्म कवरेज** | Flutter 5 प्लेटफ़ॉर्म (iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS (ArkTS 9 पृष्ठ) + Web Admin (LayUI+ECharts) + API | Flutter 25 फ़ाइलें, HarmonyOS 14 फ़ाइलें, Admin 239 फ़ाइलें |
 | **प्लेटफ़ॉर्म ट्रैकिंग** | 8 प्लेटफ़ॉर्म पहचान (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + X-Platform header + 6 तालिका रिकॉर्ड (orders/payments/operation_logs/users/search_logs/chat_messages) | पूर्ण |
 | **परीक्षण** | 22 tests / 45 assertions — ALL PASS (SecurityTest 12: XSS+SQLi+XXE+SSRF+Path / JwtTest 4 / ApiResponseTest 3 / RedisFacadeTest 3) | यूनिट टेस्ट पूर्ण, इंटीग्रेशन टेस्ट लंबित |
@@ -75,6 +76,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | विकास उपकरण | B2B थोक/सदस्यता चक्र खरीद/AB परीक्षण | P2-P3 | ✅ |
 | ग्राहक सेवा | WebSocket रीयल-टाइम IM/ज्ञानकोष | P3 | ✅ |
 | बुनियादी ढाँचा | Snowflake ID/JWT/Hashids/Encryption/Poster/API संस्करण/GeoIP | P0 | ✅ |
+| CDN | ओरिजिन-पुल/4 प्रोवाइडर/ऑटो-पर्ज/प्रीलोड/एज कैशिंग | P1 | ✅ |
 
 ---
 

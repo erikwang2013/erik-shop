@@ -5,6 +5,7 @@
 
 namespace app\controller\v1;
 use app\common\ApiResponse;
+use app\common\Cdn;
 use app\model\Banners;
 use Webman\Http\Request;
 
@@ -28,6 +29,9 @@ class BannerController extends \app\controller\BaseApiController
                 $q->whereNull('countries')->orWhereJsonContains('countries', $country);
             })
             ->orderBy('sort')->get();
+
+        // 输出边界重写为 CDN URL（DB 仍存相对路径）
+        $banners->each(fn($b) => $b->image = Cdn::url($b->image));
 
         return ApiResponse::success($banners);
     }

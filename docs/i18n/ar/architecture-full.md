@@ -42,8 +42,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    E1[CDN Edge<br/>Cloudflare / CloudFront / Aliyun / Tencent<br/>https://{CDN_DOMAIN}{path}]
     subgraph Gateway[طبقة الوصول]
-        N[Nginx :80/:443]
+        N[Nginx :80/:443<br/>location /app/admin/upload/<br/>expires 7d immutable]
     end
     subgraph Apps[طبقة التطبيقات]
         S[Service API :8787<br/>39 متحكمًا 111 نموذجًا 14 وسيطة]
@@ -54,9 +55,8 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F & H & W --> E1
+    E1 -->|CNAME| N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -75,8 +75,8 @@ graph TB
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
-    subgraph Gateway["2. طبقة الوصول Nginx :80"]
-        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
+    subgraph Gateway["2. طبقة الوصول Nginx :80 (خلف حافة CDN)"]
+        NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin<br/>حافة: location /app/admin/upload/ expires 7d immutable]
     end
     subgraph Security["3. الطبقة الأمنية SecurityMiddleware 6 عمليات فحص"]
         CT{Content-Type?} -->|Y| BS{Body Size?}
@@ -147,7 +147,7 @@ graph TB
 | الطبقة | الوصف |
 |----|------|
 | 1. طبقة العملاء | Flutter 5 منصات + HarmonyOS + Web Admin، جميعها تتواصل عبر HTTP/JSON |
-| 2. طبقة الوصول | Nginx يوزّع حسب النطاق: api→service، admin→admin |
+| 2. طبقة الوصول | خلف حافة CDN (Cloudflare/CloudFront/Aliyun/Tencent، CNAME إلى نطاق admin) يوزّع Nginx حسب النطاق: api→service، admin→admin؛ `/app/admin/upload/` مخزّن مؤقتًا 7 أيام immutable |
 | 3. الطبقة الأمنية | SecurityMiddleware بـ 31 كاشف هجوم، عند الإصابة يُرجع رمز خطأ/403 |
 | 4. خط أنابيب الوسائط | 10 وسائط عامة MW تسلسلية + وسيطتا توجيه (PosterVerify للعمليات الحساسة، JwtAuth للواجهات المصادقة) |
 | 5. طبقة المتحكمين | 39 متحكم API مقسمون حسب الوظيفة، يعالجون جميع منطق الأعمال |
@@ -406,7 +406,7 @@ graph LR
 
 ### 7.2 استخدامات Redis
 
-يُستخدم Redis لتحديد المعدل بدلو الرموز والتحقق البشري وتخزين Session (طبقة الوسائط)؛ بيانات الأعمال لا تخضع للتخزين المؤقت على مستوى التطبيق، وتُقرأ مباشرة من MySQL (فصل القراءة/الكتابة + تجمع الاتصالات).
+يُستخدم Redis لتحديد المعدل بدلو الرموز والتحقق البشري وتخزين Session (طبقة الوسائط)؛ بيانات الأعمال لا تخضع للتخزين المؤقت على مستوى التطبيق، وتُقرأ مباشرة من MySQL (فصل القراءة/الكتابة + تجمع الاتصالات). أما الملفات الثابتة (صور المنتجات/اللافتات) فتُخزَّن مؤقتًا عند حافة CDN (immutable لمدة 7 أيام)، ويُطهَّر التخزين المؤقت تلقائيًا عند تعديل/حذف المنتجات أو اللافتات.
 
 ### 7.4 تحسين تجمع الاتصالات
 
@@ -438,8 +438,9 @@ docker-compose.yml:
   service (php:8.3) :8787 internal, 32 workers
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
-الشبكة: erik-net bridge | استمرار أحجام البيانات
-التوجيه: api.erik.xyz→service | admin.erik.xyz→admin
+حافة CDN: Cloudflare/CloudFront/Aliyun/Tencent (CNAME إلى نطاق admin) + nginx /app/admin/upload/ expires 7d immutable
+أحجام رفع مستمرة: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
+الشبكة: erik-net bridge | استمرار أحجام البيانات | التوجيه: api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
 ---
@@ -491,7 +492,7 @@ cd service && php vendor/bin/phpunit tests/
 | الوسائط | 14 |
 | فئات الأدوات | 8 |
 | المهام المجدولة | 12 |
-| عناصر الإعداد | 35+ |
+| عناصر الإعداد | 36+ |
 | الاختبارات | 22 tests, 45 assertions |
 | المهارات | 38 |
 | الوثائق | 9 |

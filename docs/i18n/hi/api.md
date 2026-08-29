@@ -21,6 +21,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | प्लेटफ़ॉर्म | `X-Platform: ios|ipados|macos|windows|linux|android|harmonyos|web` header |
 | Content-Type | `application/json` (POST/PUT) |
 | मानव-सत्यापन | `X-Poster-Token: <token>` header (संवेदनशील ऑपरेशन) |
+| संसाधन URL | संसाधन URL (प्रोडक्ट/बैनर चित्र, दस्तावेज़) `Cdn::url()` से आउटपुट होते हैं और CDN सक्षम होने पर `https://{CDN_DOMAIN}{path}` में रीराइट होते हैं |
 
 ### रिस्पॉन्स फ़ॉर्मेट
 

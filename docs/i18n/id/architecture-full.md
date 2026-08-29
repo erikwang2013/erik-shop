@@ -42,6 +42,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    subgraph Edge[Lapisan CDN Edge]
+        CDN[CDN Edge<br/>Cloudflare/CloudFront/Aliyun/Tencent<br/>cache unggahan 7d immutable]
+    end
     subgraph Gateway[Lapisan Akses]
         N[Nginx :80/:443]
     end
@@ -54,9 +57,10 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F --> CDN
+    H --> CDN
+    W --> CDN
+    CDN --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -74,6 +78,9 @@ graph TB
         FL[Flutter: iOS Android macOS Win Linux]
         HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
+    end
+    subgraph CDNEdge["Lapisan CDN Edge"]
+        CDN2[CDN: Cloudflare/CloudFront/Aliyun/Tencent<br/>origin-pull cache unggahan 7d]
     end
     subgraph Gateway["2. Lapisan Akses Nginx :80"]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
@@ -121,7 +128,8 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CDN2
+    CDN2 --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,7 +155,7 @@ graph TB
 | Lapisan | Penjelasan |
 |----|------|
 | 1. Lapisan klien | Flutter 5 platform + HarmonyOS + Web Admin, semuanya berkomunikasi melalui HTTP/JSON |
-| 2. Lapisan akses | Nginx memilah berdasarkan domain: api→service, admin→admin |
+| 2. Lapisan akses | CDN edge (origin-pull, cache sumber daya statis) → Nginx memilah berdasarkan domain: api→service, admin→admin |
 | 3. Lapisan keamanan | SecurityMiddleware 31 jenis detektor serangan, jika terdeteksi langsung mengembalikan kode error/403 |
 | 4. Pipa middleware | 10 MW global diproses serial + 2 MW tingkat rute (PosterVerify operasi sensitif, JwtAuth antarmuka autentikasi) |
 | 5. Lapisan controller | 39 controller API dikelompokkan berdasarkan fungsi, menangani seluruh logika bisnis |
@@ -405,7 +413,7 @@ graph LR
 
 ### 7.2 Penggunaan Redis
 
-Redis digunakan untuk rate limiting token bucket, kode verifikasi manusia, dan penyimpanan Session (lapisan middleware); data bisnis tidak melakukan cache lapisan aplikasi, langsung membaca MySQL (pemisahan baca/tulis + kumpulan koneksi).
+Redis digunakan untuk rate limiting token bucket, kode verifikasi manusia, dan penyimpanan Session (lapisan middleware); data bisnis tidak melakukan cache lapisan aplikasi, langsung membaca MySQL (pemisahan baca/tulis + kumpulan koneksi). Aset statis (unggahan produk/banner/dokumen) di-cache di edge CDN + nginx (`location /app/admin/upload/`, `expires 7d; Cache-Control public, max-age=604800, immutable`).
 
 ### 7.4 Optimasi Kumpulan Koneksi
 
@@ -438,6 +446,8 @@ docker-compose.yml:
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 Jaringan: erik-net bridge | Persistensi volume data
+Volume unggahan: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
+CDN: origin-pull — Cdn::url() → https://{CDN_DOMAIN}{path} | cache edge nginx 7d immutable
 Routing: api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
@@ -490,7 +500,7 @@ cd service && php vendor/bin/phpunit tests/
 | Middleware | 14 |
 | Kelas utilitas | 8 |
 | Tugas terjadwal | 12 |
-| Item konfigurasi | 35+ |
+| Item konfigurasi | 36+ |
 | Pengujian | 22 tests, 45 assertions |
 | Skills | 38 |
 | Dokumentasi | 9 |

@@ -97,7 +97,7 @@ Redis circuit breaker (`app\common\CircuitBreaker`): all external API calls such
 
 ### 4.3 Redis Usage
 
-Redis is used for rate limiting token buckets (`support\Redis` facade), human verification codes, and Session storage; business data is not cached at the application layer, it reads MySQL directly (read/write split + connection pool).
+Redis is used for rate limiting token buckets (`support\Redis` facade), human verification codes, Session storage, and CDN global on/off propagation to the service (shared key prefix `shop:`, 60s TTL); business data is not cached at the application layer, it reads MySQL directly (read/write split + connection pool). Static uploads (products/banners) are served through the CDN edge (7-day immutable cache, auto-purge on CRUD).
 
 ### 4.4 Connection Pools
 

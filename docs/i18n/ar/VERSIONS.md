@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 دعم CDN
+
+- **نموذج سحب الأصل (Origin-Pull)**: تبقى الملفات المرفوعة على القرص المحلي لخادم admin الأصلي؛ تخزّن DB المسارات النسبية فقط (صفر ترحيل)؛ عند حدود الإخراج يُعيد `Cdn::url()` كتابة الرابط إلى `https://{CDN_DOMAIN}{path}`؛ نطاق CDN يُربط عبر CNAME إلى نطاق admin
+- **تجريد موحد لمزوّدي CDN**: `CdnProviderInterface` (purge / purgeByTag / preload) مطبّق لـ Cloudflare وAWS CloudFront وAliyun وTencent (Fastly/Akamai محجوزة)؛ مصفوفة القدرات: purge 4/4، preload 2/4 (Aliyun/Tencent)، purgeByTag 1/4 (Cloudflare)
+- **إدارة CDN في لوحة الإدارة**: صفحة إدارة CDN (3 تبويبات: الإعداد/التطهير/السجلات) — مفاتيح تفعيل المزوّدين، بيانات الاعتماد (JSON مُشفّر عند التخزين)، اختبار الاتصال، تطهير/تسخين يدوي، سجلات التطهير (جدولا wa_cdn_providers / wa_cdn_purge_logs)؛ إعداد DB يتجاوز .env؛ التفعيل العام ينتقل إلى service عبر Redis المشترك (بادئة `shop:`، TTL 60 ثانية)
+- **التطهير التلقائي (fail-open)**: عمليات CRUD للمنتجات واللافتات تُطلق التطهير تلقائيًا؛ فشل CDN لا يعطّل أبدًا عمليات CRUD في لوحة الإدارة
+- **التخزين المؤقت للحافة**: في nginx `location /app/admin/upload/` → `expires 7d; Cache-Control public, max-age=604800, immutable`؛ أدلة الرفع تبقى عبر أحجام docker (admin_uploads:/app/plugin/admin/public/upload وservice_public:/app/public/documents)
+- **الإعداد**: `config/cdn.php` (admin + service) + 13 متغيرات `CDN_*` في .env (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / بيانات اعتماد كل مزوّد)
+
+---
+
 ## سجل الإصلاحات 2026-08-07
 
 | # | المشكلة | الخطورة | الإصلاح |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | تحديد المعدل بدلو الرموز | — | — | ✅ |
 | فصل القراءة/الكتابة في DB | — | — | ✅ |
 | المهام المجدولة Cron (11 مهمة) | — | — | ✅ |
+| تخزين مؤقت لحافة CDN | ✅ | ✅ | ✅ |
 
 ### المحتوى والنمو
 

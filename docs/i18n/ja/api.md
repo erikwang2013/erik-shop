@@ -46,6 +46,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 すべてのインターフェースの ID フィールドは hashids エンコード済み文字列（例 `Ab3xK9pq`）で、ミドルウェアが自動でエンコード/デコードします。フロントエンド側での手動処理は不要です。
 
+### リソース URL（CDN）
+
+画像・ファイルなどの静的リソースは DB に相対パスのみ保存され、出力境界で `Cdn::url()` が `https://{CDN_DOMAIN}{path}` へ書き換えます（CDN 未設定時は admin オリジンの URL をそのまま返します）。クライアントはレスポンスの URL を直接使用してください（CDN ドメインは CNAME で admin ドメインに解決され、Origin-Pull でオリジンから取得されます）。
+
 ---
 
 ## 1. 認証インターフェース

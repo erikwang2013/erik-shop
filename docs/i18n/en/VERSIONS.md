@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 CDN Support
+
+- **Origin-pull model** (service + admin): uploads stay on the admin origin local disk, the DB stores relative paths only (zero migration); at output boundaries `Cdn::url()` rewrites to `https://{CDN_DOMAIN}{path}`; the CDN domain CNAMEs back to the admin domain
+- **Unified provider abstraction**: `CdnProviderInterface` (purge / purgeByTag / preload) implemented for Cloudflare, AWS CloudFront, Aliyun, Tencent Cloud (Fastly/Akamai reserved); capability matrix — purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- **Admin-panel configuration**: CDN management page (Layui 3 tabs: Config/Purge/Logs) — provider enable switches, credentials (config JSON encrypted at rest via encryptable cast), connectivity test, manual purge/preload, purge logs (`wa_cdn_providers` / `wa_cdn_purge_logs` tables); DB config overrides .env; global on/off propagates to service via shared Redis (prefix `shop:`, 60s TTL)
+- **Auto-purge (fail-open)**: product & banner CRUD triggers purge automatically; CDN failure never blocks admin CRUD (Log::error + purge log)
+- **Edge caching**: nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable`; upload dirs persist via docker volumes (`admin_uploads` / `service_public`)
+- Config: `config/cdn.php` (admin + service) + 13 `CDN_*` .env vars (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / per-provider credentials)
+
+---
+
 ## 2026-08-07 Fix Log
 
 | # | Issue | Severity | Fix |
@@ -203,6 +214,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Admin ECharts dashboard | ✅ | ✅ | ✅ |
 | Admin Excel/PDF export | ✅ | ✅ | ✅ |
 | Multilingual interface (5 languages) | ✅ | ✅ | ✅ |
+| CDN edge caching + auto-purge | — | — | ✅ |
 
 ---
 

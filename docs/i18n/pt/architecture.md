@@ -19,7 +19,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/           API de negócio (251 arquivos PHP)
-    config/            35 configurações (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36 configurações (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39 controladores (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111 modelos (BaseModel + 110 modelos de negócio)
     app/middleware/     14 middlewares (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
@@ -82,5 +82,6 @@ cd admin && php start.php start -d
 - **Multilíngue (i18n)**: arquivos de tradução de 5 idiomas + LocaleMiddleware + AppLocalizations Flutter
 - **Documentação da API**: gerada automaticamente por hg/apidoc (6 grupos, orientada por anotações nos controladores)
 - **Rastreamento de plataforma**: 8 plataformas, header X-Platform + registro em DB
+- **CDN (origin-pull)**: uploads permanecem no admin; URLs reescritas por `Cdn::url()` para `https://{CDN_DOMAIN}{path}`; edge cache imutável de 7 dias em `/app/admin/upload/` (nginx `expires 7d`); depuração automática (fail-open) no CRUD de produtos/banners; provedores Cloudflare/CloudFront/Aliyun/Tencent
 
 Consulte: [Documentação de implantação](deployment.md) | [Documento de arquitetura completo](architecture-full.md) | [Documento de design funcional](features.md)

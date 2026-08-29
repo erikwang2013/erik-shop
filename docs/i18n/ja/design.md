@@ -99,6 +99,8 @@ Redis サーキットブレーカー（`app\common\CircuitBreaker`）: 決済ゲ
 
 Redis は限流トークンバケット（`support\Redis` ファサード）、人機認証コードと Session 保存に使用します。業務データはアプリケーション層キャッシュをせず、MySQL を直接読み取ります（読み書き分離 + コネクションプール）。
 
+また、admin の CDN 全体オン/オフ状態は共有 Redis（prefix `shop:`、TTL 60s）経由で service に伝播します。
+
 ### 4.4 コネクションプール
 
 MySQL: 50max/10min/2sタイムアウト | 読み書き分離: 30max/5min (2リードレプリカ、sticky=true) | Redis: 30max/5min

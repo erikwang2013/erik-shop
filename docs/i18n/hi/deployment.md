@@ -55,6 +55,8 @@ docker compose logs -f admin
 - [ ] SSL प्रमाणपत्र कॉन्फ़िगरेशन (nginx+Let's Encrypt)
 - [ ] डेटाबेस में रूट `install.sql` आयात (117 टेबलें, Web स्थापना विज़ार्ड स्वतः आयात करता है)
 - [ ] ES इंडेक्स बनाया गया: `php start.php scout:import "app\model\Products"`
+- [ ] CDN कॉन्फ़िगर किया गया: `CDN_ENABLED=true` + `CDN_DOMAIN` (CNAME admin डोमेन पर) + चुने गए प्रोवाइडर के क्रेडेंशियल
+- [ ] अपलोड docker वॉल्यूम स्थायी हैं (admin_uploads / service_public)
 - [ ] MySQL/Redis/ES डेटा वॉल्यूम बैकअप कॉन्फ़िगर किया गया
 
 ## 2. मैनुअल तैनाती
@@ -93,6 +95,8 @@ php start.php start -d
 # docker/nginx/conf.d/shop.conf देखें
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+# एज कैशिंग (CDN का ओरिजिन रिस्पॉन्स):
+# location /app/admin/upload/ { expires 7d; add_header Cache-Control "public, max-age=604800, immutable"; }
 ```
 
 ## 3. डेटाबेस आरंभीकरण
@@ -128,6 +132,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Stripe कुंजी |
 | STRIPE_WEBHOOK_SECRET | - | Stripe Webhook हस्ताक्षर सत्यापन |
+| CDN_ENABLED | false | CDN ग्लोबल स्विच (true = URL रीराइट + purge सक्षम) |
+| CDN_DEFAULT_PROVIDER | cloudflare | डिफ़ॉल्ट प्रोवाइडर (cloudflare/cloudfront/aliyun/tencent) |
+| CDN_DOMAIN | - | CDN डोमेन (जैसे cdn.erik.xyz, CNAME admin डोमेन पर) |
+| CF_API_TOKEN | - | Cloudflare API Token |
+| CF_ZONE_ID | - | Cloudflare Zone ID |
+| AWS_ACCESS_KEY_ID | - | AWS कुंजी (CloudFront) |
+| AWS_SECRET_ACCESS_KEY | - | AWS सीक्रेट |
+| AWS_REGION | us-east-1 | AWS क्षेत्र |
+| CLOUDFRONT_DISTRIBUTION_ID | - | CloudFront डिस्ट्रीब्यूशन ID |
+| ALIYUN_ACCESS_KEY_ID | - | Aliyun AccessKey ID |
+| ALIYUN_ACCESS_KEY_SECRET | - | Aliyun AccessKey Secret |
+| TENCENT_SECRET_ID | - | Tencent SecretId |
+| TENCENT_SECRET_KEY | - | Tencent SecretKey |
 
 ## 5. संचालन कमांड
 

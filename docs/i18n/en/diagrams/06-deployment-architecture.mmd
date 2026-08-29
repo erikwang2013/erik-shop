@@ -3,6 +3,10 @@ graph TB
         User["Users · Worldwide Access"]
     end
 
+    subgraph Edge["CDN Edge Layer"]
+        CDN["CDN Edge<br/>Origin-Pull: /app/admin/upload/<br/>Cache-Control: public, max-age=604800, immutable<br/>CNAME → Admin Origin"]
+    end
+
     subgraph VPS["Cloud Server / VPS"]
         subgraph Docker["Docker Compose"]
             direction TB
@@ -33,6 +37,8 @@ graph TB
             V2["erik_redis Redis Data"]
             V3["erik_es ES Index"]
             V4["erik_logs App Logs"]
+            V5["admin_uploads Admin Uploads<br/>(/app/plugin/admin/public/upload)"]
+            V6["service_public Service Documents<br/>(/app/public/documents)"]
         end
     end
 
@@ -43,7 +49,8 @@ graph TB
         SMTP["Email Service<br/>Multilingual Templates<br/>(email_templates table)"]
     end
 
-    User --> NGX
+    User --> CDN
+    CDN --> NGX
     NGX -->|api.erik.xyz| SVC
     NGX -->|admin.erik.xyz| ADM
     SVC --> MYSQL
@@ -59,8 +66,11 @@ graph TB
     REDIS -.-> V2
     ES -.-> V3
     SVC -.-> V4
+    ADM -.-> V5
+    SVC -.-> V6
 
     style Internet fill:#e8eaf6
+    style Edge fill:#fff8e1
     style VPS fill:#e8f5e9
     style Docker fill:#f3e5f5
     style Net fill:#e1f5fe

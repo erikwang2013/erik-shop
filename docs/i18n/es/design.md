@@ -97,7 +97,7 @@ Disyuntor Redis (`app\common\CircuitBreaker`): todas las llamadas a API externas
 
 ### 4.3 Usos de Redis
 
-Redis se usa para el token bucket de limitación (facade `support\Redis`), los códigos de verificación humano-máquina y el almacenamiento de Session; los datos de negocio no tienen caché a nivel de aplicación, se leen directamente de MySQL (separación lectura/escritura + pool de conexiones).
+Redis se usa para el token bucket de limitación (facade `support\Redis`), los códigos de verificación humano-máquina y el almacenamiento de Session; los datos de negocio no tienen caché a nivel de aplicación, se leen directamente de MySQL (separación lectura/escritura + pool de conexiones). Los recursos estáticos (imágenes/documentos) se sirven mediante caché de borde CDN (origin-pull, 7 días immutable, invalidación automática vía `Cdn::purge` en el CRUD, fail-open).
 
 ### 4.4 Pool de conexiones
 

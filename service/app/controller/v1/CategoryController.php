@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\Cdn;
 use app\model\Categories;
 use Webman\Http\Request;
 
@@ -30,8 +31,8 @@ class CategoryController extends \app\controller\BaseApiController
                 'id' => $c->id,
                 'name' => $c->name,
                 'slug' => $c->slug,
-                'icon' => $c->icon,
-                'image' => $c->image,
+                'icon' => Cdn::url($c->icon),
+                'image' => Cdn::url($c->image),
                 'level' => $c->level,
                 'is_hot' => (bool) $c->is_hot,
                 'children' => [],  // 前端按需懒加载

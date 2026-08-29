@@ -56,6 +56,8 @@ docker compose logs -f admin
 - [ ] Base de datos importada con el `install.sql` de la raíz (117 tablas, el asistente de instalación web lo importa automáticamente)
 - [ ] Índice ES creado: `php start.php scout:import "app\model\Products"`
 - [ ] Copias de seguridad configuradas para los volúmenes de datos de MySQL/Redis/ES
+- [ ] CDN configurado: `CDN_ENABLED=true`, `CDN_DOMAIN` definido y CNAME de DNS apuntando al dominio de admin
+- [ ] Credenciales del proveedor CDN en `.env` (Cloudflare/CloudFront/Aliyun/Tencent)
 
 ## 2. Despliegue manual
 
@@ -93,6 +95,8 @@ php start.php start -d
 # Ver docker/nginx/conf.d/shop.conf
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+# Recursos estáticos (origin-pull del CDN, caché immutable):
+# location /app/admin/upload/ { expires 7d; add_header Cache-Control "public, max-age=604800, immutable"; }
 ```
 
 ## 3. Inicialización de la base de datos
@@ -128,6 +132,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | Worker ID de Snowflake (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Clave de Stripe |
 | STRIPE_WEBHOOK_SECRET | - | Verificación de firma del Webhook de Stripe |
+| CDN_ENABLED | false | Interruptor global de CDN (reescritura de URL + invalidación) |
+| CDN_DEFAULT_PROVIDER | cloudflare | Proveedor CDN por defecto (cloudflare/cloudfront/aliyun/tencent) |
+| CDN_DOMAIN | - | Dominio CDN (p. ej. cdn.erik.xyz, CNAME de vuelta al dominio de admin) |
+| CF_API_TOKEN | - | Token de API de Cloudflare |
+| CF_ZONE_ID | - | ID de zona de Cloudflare |
+| AWS_ACCESS_KEY_ID | - | ID de clave de acceso de AWS (CloudFront) |
+| AWS_SECRET_ACCESS_KEY | - | Secreto de clave de acceso de AWS (CloudFront) |
+| AWS_REGION | us-east-1 | Región de AWS (CloudFront) |
+| CLOUDFRONT_DISTRIBUTION_ID | - | ID de distribución de CloudFront |
+| ALIYUN_ACCESS_KEY_ID | - | AccessKey ID de Aliyun |
+| ALIYUN_ACCESS_KEY_SECRET | - | AccessKey Secret de Aliyun |
+| TENCENT_SECRET_ID | - | SecretId de Tencent |
+| TENCENT_SECRET_KEY | - | SecretKey de Tencent |
 
 ## 5. Comandos de operación
 

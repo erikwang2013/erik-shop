@@ -42,6 +42,9 @@ graph TD
         H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
+    subgraph Cdn[Capa CDN]
+        C[CDN Edge<br/>Cloudflare CloudFront Aliyun Tencent]
+    end
     subgraph Gateway[Capa de acceso]
         N[Nginx :80/:443]
     end
@@ -54,9 +57,10 @@ graph TD
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F --> N
-    H --> N
-    W --> N
+    F --> C
+    H --> C
+    W --> C
+    C --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
     S --> M
@@ -76,6 +80,7 @@ graph TB
         WB[Web Browser: Admin]
     end
     subgraph Gateway["2. Capa de acceso Nginx :80"]
+        CD[CDN Edge: Cloudflare/CloudFront/Aliyun/Tencent<br/>Origin-pull, reescritura de URL al dominio CDN]
         NG[Nginx: api.erik.xyz→service / admin.erik.xyz→admin]
     end
     subgraph Security["3. Capa de seguridad SecurityMiddleware 6 comprobaciones"]
@@ -121,7 +126,8 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> NG
+    FL & HM & WB --> CD
+    CD --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -147,7 +153,7 @@ graph TB
 | Capa | Descripción |
 |----|------|
 | 1. Capa de cliente | Flutter 5 plataformas + HarmonyOS + Web Admin, todas comunican vía HTTP/JSON |
-| 2. Capa de acceso | Nginx distribuye por dominio: api→service, admin→admin |
+| 2. Capa de acceso | CDN Edge (origin-pull, reescritura de URL `Cdn::url()` a `https://{CDN_DOMAIN}`) → Nginx distribuye por dominio: api→service, admin→admin |
 | 3. Capa de seguridad | SecurityMiddleware con 31 detectores de ataques, al detectar devuelve código de error/403 |
 | 4. Pipeline de middlewares | 10 MW globales en serie + 2 MW de nivel de ruta (PosterVerify para operaciones sensibles, JwtAuth para interfaces autenticadas) |
 | 5. Capa de controladores | 39 controladores API agrupados por función, procesan toda la lógica de negocio |
@@ -405,7 +411,7 @@ graph LR
 
 ### 7.2 Usos de Redis
 
-Redis se usa para el token bucket de limitación, los códigos de verificación humano-máquina y el almacenamiento de Session (capa de middlewares); los datos de negocio no tienen caché a nivel de aplicación, se leen directamente de MySQL (separación lectura/escritura + pool de conexiones).
+Redis se usa para el token bucket de limitación, los códigos de verificación humano-máquina y el almacenamiento de Session (capa de middlewares); los datos de negocio no tienen caché a nivel de aplicación, se leen directamente de MySQL (separación lectura/escritura + pool de conexiones). Los recursos estáticos (imágenes/documentos) se cachean en el borde CDN (origin-pull, `expires 7d` / `Cache-Control: immutable`).
 
 ### 7.4 Optimización de pool de conexiones
 
@@ -432,12 +438,14 @@ Redis se usa para el token bucket de limitación, los códigos de verificación 
 ## 8. Arquitectura de despliegue
 
 ```
+Capa CDN: https://{CDN_DOMAIN} → CNAME de vuelta al dominio de admin (origin-pull)
 docker-compose.yml:
-  nginx (alpine) :80 :443
+  nginx (alpine) :80 :443 — location /app/admin/upload/ → expires 7d, Cache-Control public, max-age=604800, immutable
   service (php:8.3) :8787 internal, 32 workers
   admin (php:8.3) :8788 internal
   mysql (8.0) :3306 / redis (7) :6379 / es (8) :9200
 Red: erik-net bridge | volúmenes de datos persistentes
+Volúmenes: admin_uploads:/app/plugin/admin/public/upload | service_public:/app/public/documents
 Rutas: api.erik.xyz→service | admin.erik.xyz→admin
 ```
 
@@ -490,7 +498,7 @@ cd service && php vendor/bin/phpunit tests/
 | Middlewares | 14 |
 | Clases de utilidades | 8 |
 | Tareas programadas | 12 |
-| Elementos de configuración | 35+ |
+| Elementos de configuración | 36+ |
 | Pruebas | 22 tests, 45 assertions |
 | Skills | 38 |
 | Documentos | 9 |

@@ -97,7 +97,7 @@ Circuit breaker Redis (`app\common\CircuitBreaker`): panggilan API eksternal sep
 
 ### 4.3 Penggunaan Redis
 
-Redis digunakan untuk rate limiting token bucket (facade `support\Redis`), kode verifikasi manusia, dan penyimpanan Session; data bisnis tidak melakukan cache lapisan aplikasi, langsung membaca MySQL (pemisahan baca/tulis + kumpulan koneksi).
+Redis digunakan untuk rate limiting token bucket (facade `support\Redis`), kode verifikasi manusia, dan penyimpanan Session; data bisnis tidak melakukan cache lapisan aplikasi, langsung membaca MySQL (pemisahan baca/tulis + kumpulan koneksi). Selain itu, status on/off global CDN admin disebarkan ke service melalui Redis bersama (prefix shop:, TTL 60s).
 
 ### 4.4 Kumpulan Koneksi
 

@@ -21,6 +21,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | المنصة | ترويسة `X-Platform: ios|ipados|macos|windows|linux|android|harmonyos|web` |
 | Content-Type | `application/json` (POST/PUT) |
 | التحقق البشري | ترويسة `X-Poster-Token: <token>` (للعمليات الحساسة) |
+| الموارد | عناوين الموارد (صور المنتجات/اللافتات/المستندات) تُخرج عبر `Cdn::url()` وتُعاد كتابتها إلى `https://{CDN_DOMAIN}{path}` عند تفعيل CDN |
 
 ### تنسيق الاستجابة
 

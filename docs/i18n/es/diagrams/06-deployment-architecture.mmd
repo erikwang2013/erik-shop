@@ -1,6 +1,7 @@
 graph TB
     subgraph Internet["Internet"]
         User["Usuarios acceso global"]
+        CdnEdge["CDN Edge: Cloudflare / CloudFront / Aliyun / Tencent<br/>Origin-pull: cdn.erik.xyz → dominio de admin<br/>Caché immutable 7 días"]
     end
 
     subgraph VPS["Servidor en la nube / VPS"]
@@ -33,6 +34,8 @@ graph TB
             V2["erik_redis datos Redis"]
             V3["erik_es índice ES"]
             V4["erik_logs logs de aplicación"]
+            V5["admin_uploads: /app/plugin/admin/public/upload<br/>Subidas del origin de admin (persistentes)"]
+            V6["service_public: /app/public/documents<br/>Documentos públicos del service (persistentes)"]
         end
     end
 
@@ -43,7 +46,8 @@ graph TB
         SMTP["Servicio de correo<br/>Plantillas multilingües<br/>(tabla email_templates)"]
     end
 
-    User --> NGX
+    User --> CdnEdge
+    CdnEdge --> NGX
     NGX -->|api.erik.xyz| SVC
     NGX -->|admin.erik.xyz| ADM
     SVC --> MYSQL
@@ -59,6 +63,8 @@ graph TB
     REDIS -.-> V2
     ES -.-> V3
     SVC -.-> V4
+    SVC -.-> V6
+    ADM -.-> V5
 
     style Internet fill:#e8eaf6
     style VPS fill:#e8f5e9

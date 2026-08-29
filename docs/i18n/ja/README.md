@@ -158,6 +158,7 @@ shop-php/
 | **リスクコンプライアンス** | ルールエンジン(バイパス採点)、KYC実名、GDPR/CCPAデータリクエスト、Cookie Consent |
 | **セキュリティ防護** | 31種の攻撃検知(XSS/SQLインジェクション/XXE/SSRF/CRLF/パストラバーサル/ファイルアップロード/ブルートフォース/HTTPメソッド/Host/CORSなど) |
 | **高並行処理** | トークンバケットレート制限、サーキットブレーカー(決済/ソーシャルログイン)、DB読み書き分離、コネクションプール最適化 |
+| **CDN** | マルチプロバイダーOrigin-Pull (Cloudflare/CloudFront/Aliyun/Tencent)、`Cdn::url()` が `https://{CDN_DOMAIN}{path}` へ書き換え、admin CDN管理ページ(Config/Purge/Logs)、自動パージfail-open、エッジキャッシュ7日immutable |
 | **会員成長** | ポイントルール、会員レベル特典、ギフトカード、値下げ通知、定期購入、ABテスト |
 | **コンテンツ管理** | CMS多言語ページ、FAQ、ナレッジベース、サイズ換算表、メールテンプレート、商品Feed同期 |
 | **カスタマーサポート** | WebSocketリアルタイムIM、ナレッジベース(テーブル構造は作成済み) |
@@ -191,7 +192,7 @@ shop-php/
 | [アーキテクチャドキュメント](architecture.md) | ディレクトリ構造、モデル継承チェーン、主要パッケージ |
 | [APIインターフェースドキュメント](api.md) | 71個のAPIエンドポイント (静的ドキュメント) |
 | [hg/apidocインターフェースドキュメント](http://localhost:8787/apidoc/) | hg/apidoc自動生成 (6グループ: 認証/商品/取引/物流税関/ユーザーマーケティング/運営) |
-| [デプロイドキュメント](deployment.md) | Docker/手動デプロイ、環境変数、運用コマンド |
+| [デプロイドキュメント](deployment.md) | Docker/手動デプロイ、環境変数（CDN含む）、運用コマンド |
 
 
 ## オープンソース開発の継続にご支援をお願いします
@@ -229,6 +230,16 @@ shop-php/
   - 銀行名：THE BANK OF NEW YORK MELLON
   - SWIFT Code：IRVTUS3NXXX
   - 銀行所在地：THE BANK OF NEW YORK MELLON, 240 GREENWICH STREET, NEW YORK, United States
+
+### 仮想通貨の寄付 (Crypto Donation)
+
+このプロジェクトがお役に立ったら、QRコードをスキャンして寄付してください。ありがとうございます！
+
+| <img src="../../coin/1.jpg" width="200" alt="BNB Smart Chain (BEP20)"><br>**BNB Smart Chain (BEP20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/2.jpg" width="200" alt="Tron (TRC20)"><br>**Tron (TRC20)**<br>`TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
+| <img src="../../coin/3.jpg" width="200" alt="Ethereum (ERC20)"><br>**Ethereum (ERC20)**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/4.jpg" width="200" alt="Aptos"><br>**Aptos**<br>`0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
+| <img src="../../coin/5.jpg" width="200" alt="Plasma"><br>**Plasma**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/6.jpg" width="200" alt="Polygon POS"><br>**Polygon POS**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
+| <img src="../../coin/7.jpg" width="200" alt="Solana"><br>**Solana**<br>`2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` | <img src="../../coin/8.jpg" width="200" alt="The Open Network (TON)"><br>**The Open Network (TON)**<br>`UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
+| <img src="../../coin/9.jpg" width="200" alt="Arbitrum One"><br>**Arbitrum One**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` | <img src="../../coin/10.jpg" width="200" alt="AVAX C-Chain"><br>**AVAX C-Chain**<br>`0x355d429f97511897ccb4e271ec888205f9ab6629` |
 
 ---
 

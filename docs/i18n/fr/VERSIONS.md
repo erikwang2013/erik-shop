@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 Prise en charge CDN
+
+- **Modèle origin-pull** : les téléversements restent sur le disque local de l'origin admin ; la base de données ne stocke que des chemins relatifs (migration zéro) ; aux frontières de sortie, `Cdn::url()` réécrit vers `https://{CDN_DOMAIN}{chemin}` ; le domaine CDN pointe par CNAME vers le domaine admin
+- **Abstraction unifiée des fournisseurs** : `CdnProviderInterface` (purge / purgeByTag / preload), implémentée pour Cloudflare, AWS CloudFront, Aliyun et Tencent Cloud (Fastly/Akamai réservés) ; matrice de capacités : purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- **Configuration dans le panneau d'administration** : page de gestion CDN (3 onglets : Configuration/Invalidation/Journal) — interrupteurs d'activation par fournisseur, identifiants (JSON de configuration chiffré au repos), test de connectivité, invalidation/preload manuels, journal d'invalidation (tables `wa_cdn_providers` / `wa_cdn_purge_logs`) ; la configuration en base remplace .env ; l'interrupteur global se propage au service via Redis partagé (préfixe `shop:`, TTL 60s)
+- **Invalidation automatique (fail-open)** : le CRUD produits et bannières déclenche l'invalidation automatiquement ; une panne CDN ne bloque jamais le CRUD admin
+- **Cache périphérique** : nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable` ; les répertoires de téléversement persistent via des volumes Docker (`admin_uploads:/app/plugin/admin/public/upload`, `service_public:/app/public/documents`)
+- **Configuration** : `config/cdn.php` (admin + service) + 13 variables d'environnement `CDN_*` (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / identifiants par fournisseur)
+
+---
+
 ## Journal des corrections 2026-08-07
 
 | # | Problème | Sévérité | Correction |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Limitation par seau à jetons | — | — | ✅ |
 | Séparation lecture/écriture DB | — | — | ✅ |
 | Tâches planifiées Cron (11) | — | — | ✅ |
+| Cache périphérique CDN (origin-pull) | ✅ | ✅ | ✅ |
 
 ### Contenu et croissance
 

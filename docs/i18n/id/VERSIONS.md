@@ -26,6 +26,17 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-08-29 Dukungan CDN
+
+- Model Origin-Pull: unggahan tetap berada di disk lokal origin admin; DB hanya menyimpan path relatif (nol migrasi); pada batas output `Cdn::url()` menulis ulang menjadi `https://{CDN_DOMAIN}{path}`; domain CDN CNAME kembali ke domain admin
+- Abstraksi provider terpadu: `CdnProviderInterface` (purge / purgeByTag / preload) diimplementasikan untuk Cloudflare, AWS CloudFront, Aliyun, Tencent Cloud (Fastly/Akamai dicadangkan); matriks kemampuan: purge 4/4, preload 2/4 (Aliyun/Tencent), purgeByTag 1/4 (Cloudflare)
+- Konfigurasi panel admin: halaman manajemen CDN (3 tab: Config/Purge/Logs) — sakelar aktif per provider, kredensial (JSON konfigurasi terenkripsi saat disimpan), tes konektivitas, purge/preload manual, log purge (tabel wa_cdn_providers / wa_cdn_purge_logs); konfigurasi DB menggantikan .env; on/off global disebarkan ke service melalui Redis bersama (prefix shop:, TTL 60s)
+- Auto-purge (fail-open): CRUD produk & banner memicu purge otomatis; kegagalan CDN tidak pernah memblokir CRUD admin
+- Cache edge: nginx `location /app/admin/upload/` `expires 7d; Cache-Control public, max-age=604800, immutable`; direktori unggahan bertahan melalui volume docker (admin_uploads:/app/plugin/admin/public/upload, service_public:/app/public/documents)
+- Konfigurasi: `config/cdn.php` (admin + service) + 13 variabel .env `CDN_*` (CDN_ENABLED / CDN_DEFAULT_PROVIDER / CDN_DOMAIN / kredensial per provider)
+
+---
+
 ## Catatan Perbaikan 2026-08-07
 
 | # | Masalah | Tingkat Keparahan | Perbaikan |
@@ -176,6 +187,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Rate limiting token bucket | — | — | ✅ |
 | Pemisahan baca/tulis DB | — | — | ✅ |
 | Tugas terjadwal Cron (11) | — | — | ✅ |
+| CDN multi-provider (Cloudflare/CloudFront/Aliyun/Tencent) | — | ✅ | ✅ |
 
 ### Konten & Pertumbuhan
 

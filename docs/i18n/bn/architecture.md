@@ -21,7 +21,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ```
 shop-php/
   service/            বিজনেস API (251 PHP ফাইল)
-    config/            35 কনফিগ (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/...)
+    config/            36 কনফিগ (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    39 কন্ট্রোলার (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111 মডেল (BaseModel + 110 বিজনেস মডেল)
     app/middleware/     14 মিডলওয়্যার (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
@@ -84,5 +84,6 @@ cd admin && php start.php start -d
 - **মাল্টি-ল্যাঙ্গুয়েজ (i18n)**: 5 ভাষার ট্রান্সলেশন ফাইল + LocaleMiddleware + Flutter AppLocalizations
 - **API ডকুমেন্টেশন**: hg/apidoc স্বয়ংক্রিয় জেনারেশন (6 গ্রুপ, কন্ট্রোলার অ্যানোটেশন ড্রাইভেন)
 - **প্ল্যাটফর্ম ট্র্যাকিং**: 8 প্ল্যাটফর্ম X-Platform header + DB রেকর্ড
+- **CDN এক্সিলারেশন**: অরিজিন-পুল মডেল — আপলোড admin অরিজিন ডিস্কে থাকে এবং রিসোর্স URL আউটপুটে `Cdn::url()` দিয়ে `https://{CDN_DOMAIN}{path}` রিরাইট হয়; ৪টি প্রোভাইডার (Cloudflare/CloudFront/Aliyun/Tencent) fail-open অটো-পার্জ ও ৭ দিনের এজ ক্যাশিংসহ
 
 বিস্তারিত: [ডিপ্লয়মেন্ট ডকুমেন্ট](deployment.md) | [সম্পূর্ণ আর্কিটেকচার ডকুমেন্ট](architecture-full.md) | [ফিচার ডিজাইন ডকুমেন্ট](features.md)

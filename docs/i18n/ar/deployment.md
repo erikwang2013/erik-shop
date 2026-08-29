@@ -55,6 +55,8 @@ docker compose logs -f admin
 - [ ] تكوين شهادة SSL (nginx + Let's Encrypt)
 - [ ] تم استيراد قاعدة البيانات من `install.sql` في الجذر (117 جدولًا، يستورده معالج التثبيت عبر الويب تلقائيًا)
 - [ ] تم إنشاء فهارس ES: `php start.php scout:import "app\model\Products"`
+- [ ] تم تكوين CDN: `CDN_ENABLED=true` + `CDN_DOMAIN` (CNAME إلى نطاق admin) + بيانات اعتماد المزوّد المختار
+- [ ] أحجام docker للرفع مستمرة (admin_uploads / service_public)
 - [ ] تم إعداد نسخ احتياطي لأحجام بيانات MySQL/Redis/ES
 
 ## 2. النشر اليدوي
@@ -93,6 +95,8 @@ php start.php start -d
 # انظر docker/nginx/conf.d/shop.conf
 # api.erik.xyz → service:8787
 # admin.erik.xyz → admin:8787
+# تخزين مؤقت للحافة (استجابة origin لـ CDN):
+# location /app/admin/upload/ { expires 7d; add_header Cache-Control "public, max-age=604800, immutable"; }
 ```
 
 ## 3. تهيئة قاعدة البيانات
@@ -128,6 +132,19 @@ require 'vendor/autoload.php';
 | SNOWFLAKE_WORKER_ID | 1 | معرّف عامل Snowflake (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | مفتاح Stripe |
 | STRIPE_WEBHOOK_SECRET | - | التحقق من توقيع Stripe Webhook |
+| CDN_ENABLED | false | مفتاح CDN العام (true = إعادة كتابة URL + تمكين التطهير) |
+| CDN_DEFAULT_PROVIDER | cloudflare | المزوّد الافتراضي (cloudflare/cloudfront/aliyun/tencent) |
+| CDN_DOMAIN | - | نطاق CDN (مثال cdn.erik.xyz، CNAME إلى نطاق admin) |
+| CF_API_TOKEN | - | رمز Cloudflare API Token |
+| CF_ZONE_ID | - | معرّف منطقة Cloudflare Zone ID |
+| AWS_ACCESS_KEY_ID | - | مفتاح AWS (CloudFront) |
+| AWS_SECRET_ACCESS_KEY | - | سر AWS |
+| AWS_REGION | us-east-1 | منطقة AWS |
+| CLOUDFRONT_DISTRIBUTION_ID | - | معرّف توزيعة CloudFront |
+| ALIYUN_ACCESS_KEY_ID | - | مفتاح Aliyun AccessKey |
+| ALIYUN_ACCESS_KEY_SECRET | - | سر Aliyun AccessKey |
+| TENCENT_SECRET_ID | - | معرّف Tencent SecretId |
+| TENCENT_SECRET_KEY | - | مفتاح Tencent SecretKey |
 
 ## 5. أوامر التشغيل والصيانة
 

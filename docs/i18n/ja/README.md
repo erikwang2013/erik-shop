@@ -63,6 +63,7 @@ webman ファミリーパッケージで構築したフルスタック越境EC�
 ### 機能モジュール全景図
 
 ![機能モジュール全景図](diagrams/03-feature-module-map.svg)
+> 機能図は 19 の大機能モジュール（レポートセンター、プラットフォーム統計を含む）を網羅しています。
 
 ### リクエストライフサイクル図
 
@@ -129,13 +130,42 @@ docker-compose up -d
 
 詳細は [デプロイドキュメント](deployment.md) を参照
 
+## 使用説明
+
+### 管理バックエンド
+
+ブラウザで `http://127.0.0.1:8788/app/admin` にアクセスして管理バックエンドにログインします（初回はインストールウィザードで管理者アカウントを作成）：
+
+- **ダッシュボード**: GMV・注文数・ユーザー増加などの主要指標を一覧表示
+- **レポートセンター**: 売上サマリー、30日トレンド、TOP商品、支払い方法/注文ステータス分布
+- 商品・注文・マーケティング・サプライチェーンなどの日常管理
+
+### API 呼び出し
+
+```bash
+# 商品リストを取得
+curl http://127.0.0.1:8787/api/products \
+  -H "API-Version: 2026-05-20" \
+  -H "X-Platform: web"
+
+# スタートページのプラットフォーム統計（ユーザー/商品/注文/GMV 総数と本日増分）
+curl http://127.0.0.1:8787/
+```
+
+> API バージョンは `API-Version` ヘッダーで指定します（URL には含めません）。認証が必要なエンドポイントには `Authorization: Bearer <token>`（JWT）を付与します。
+
+### クライアント
+
+- **Flutter クライアント**: `apps/flutter/`（iOS / Android / macOS / Windows / Linux）
+- **HarmonyOS クライアント**: `apps/harmonyos/`（HarmonyOS NEXT、ArkTS + ArkUI）
+
 ## プロジェクト構成
 
 ```
 shop-php/
   install.sql       # ワンクリックインストール SQL（117 テーブル）、Web インストールウィザードが自動インポート
   service/          PHP業務API (webman)        — 39コントローラー + 111モデル + 14ミドルウェア
-  admin/            管理バックエンド (webman-admin)      — 82コントローラー + 76モデル + EChartsダッシュボード + Webインストールウィザード
+  admin/            管理バックエンド (webman-admin)      — 83コントローラー + 76モデル + EChartsダッシュボード + Webインストールウィザード
   apps/flutter/     Flutterクライアント              — 11ページ + 5言語 + PCレスポンシブ
   apps/harmonyos/   鴻蒙クライアント                  — 9ページ + ArkTS
   docker/           Dockerデプロイ                  — Nginx + PHP + MySQL + Redis + ES
@@ -159,6 +189,8 @@ shop-php/
 | **セキュリティ防護** | 31種の攻撃検知(XSS/SQLインジェクション/XXE/SSRF/CRLF/パストラバーサル/ファイルアップロード/ブルートフォース/HTTPメソッド/Host/CORSなど) |
 | **高並行処理** | トークンバケットレート制限、サーキットブレーカー(決済/ソーシャルログイン)、DB読み書き分離、コネクションプール最適化 |
 | **CDN** | マルチプロバイダーOrigin-Pull (Cloudflare/CloudFront/Aliyun/Tencent)、`Cdn::url()` が `https://{CDN_DOMAIN}{path}` へ書き換え、admin CDN管理ページ(Config/Purge/Logs)、自動パージfail-open、エッジキャッシュ7日immutable |
+| **レポート分析** | 管理画面レポートセンター：売上サマリー、30日トレンド、TOP商品、支払い方法/注文ステータス分布 |
+| **プラットフォーム統計** | service スタートページ統計：ユーザー/商品/注文/GMV の総数と本日増分 |
 | **会員成長** | ポイントルール、会員レベル特典、ギフトカード、値下げ通知、定期購入、ABテスト |
 | **コンテンツ管理** | CMS多言語ページ、FAQ、ナレッジベース、サイズ換算表、メールテンプレート、商品Feed同期 |
 | **カスタマーサポート** | WebSocketリアルタイムIM、ナレッジベース(テーブル構造は作成済み) |

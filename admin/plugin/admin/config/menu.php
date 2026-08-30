@@ -157,6 +157,7 @@ return [
         'children' => [
             ['title' => '跨境面板', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopDashboardController', 'href' => '/app/admin/shop/ShopDashboard/index', 'type' => 1, 'weight' => 100],
             ['title' => '数据导出', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopExportController', 'href' => '/app/admin/shop/ShopExport/index', 'type' => 1, 'weight' => 90],
+            ['title' => '报表中心', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopReportController', 'href' => '/app/admin/shop/ShopReport/index', 'type' => 1, 'weight' => 80],
         ],
     ],
     [

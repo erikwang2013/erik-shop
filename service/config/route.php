@@ -200,5 +200,8 @@ Route::post('/api/admin/chat/sessions/{id:\w+}/close', [app\controller\v1\ChatCo
 // ===== 健康检查（无需JWT，供探活/负载均衡） =====
 Route::get('/health', [app\controller\v1\HealthController::class, 'index']);
 
+// ===== 起始页统计（无需JWT） =====
+Route::get('/', [app\controller\v1\StatsController::class, 'index']);
+
 // ===== 关闭默认路由 =====
 Route::disableDefaultRoute();

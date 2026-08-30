@@ -63,6 +63,7 @@ Plataforma de comercio electrónico transfronterizo full-stack construida sobre 
 ### Mapa general de módulos funcionales
 
 ![Mapa general de módulos funcionales](diagrams/03-feature-module-map.svg)
+> El mapa cubre 19 módulos funcionales principales (incluidos el centro de informes y las estadísticas de plataforma).
 
 ### Diagrama del ciclo de vida de las solicitudes
 
@@ -131,13 +132,42 @@ docker-compose up -d
 
 Ver [documento de despliegue](deployment.md)
 
+## Uso
+
+### Panel de administración
+
+Abra `http://127.0.0.1:8788/app/admin` en su navegador para iniciar sesión en el panel de administración (en el primer uso cree la cuenta de administrador mediante el asistente de instalación):
+
+- **Panel**: GMV, volumen de pedidos, crecimiento de usuarios y otras métricas clave de un vistazo
+- **Centro de informes**: resumen de ventas, tendencia de 30 días, TOP productos, distribución por método de pago / estado de pedido
+- Gestión diaria de productos, pedidos, marketing, cadena de suministro y otros módulos
+
+### Llamadas a la API
+
+```bash
+# Obtener la lista de productos
+curl http://127.0.0.1:8787/api/products \
+  -H "API-Version: 2026-05-20" \
+  -H "X-Platform: web"
+
+# Estadísticas de la página de inicio de la plataforma (totales de usuarios/productos/pedidos/GMV y nuevos de hoy)
+curl http://127.0.0.1:8787/
+```
+
+> La versión de la API se indica mediante el encabezado `API-Version` (no en la URL); los endpoints sensibles requieren `Authorization: Bearer <token>` (JWT).
+
+### Clientes
+
+- **Cliente Flutter**: `apps/flutter/` (iOS / Android / macOS / Windows / Linux)
+- **Cliente HarmonyOS**: `apps/harmonyos/` (HarmonyOS NEXT, ArkTS + ArkUI)
+
 ## Estructura del proyecto
 
 ```
 shop-php/
   install.sql       # SQL de instalación con un clic (117 tablas), importado automáticamente por el asistente web
   service/          API de negocio PHP (webman)        — 39 controladores + 111 modelos + 14 middlewares
-  admin/            Panel de administración (webman-admin)      — 82 controladores + 76 modelos + panel ECharts + asistente de instalación web
+  admin/            Panel de administración (webman-admin)      — 83 controladores + 76 modelos + panel ECharts + asistente de instalación web
   apps/flutter/     Cliente Flutter              — 11 páginas + 5 idiomas + adaptación PC
   apps/harmonyos/   Cliente HarmonyOS                  — 9 páginas + ArkTS
   docker/           Despliegue Docker                  — Nginx + PHP + MySQL + Redis + ES
@@ -161,6 +191,8 @@ shop-php/
 | **Protección de seguridad** | Detección de 31 tipos de ataques (XSS/SQL injection/XXE/SSRF/CRLF/path traversal/subida de archivos/fuerza bruta/métodos HTTP/Host/CORS, etc.) |
 | **Alta concurrencia** | Limitación de velocidad con token bucket, separación lectura/escritura de la BD, optimización de pool de conexiones |
 | **Soporte CDN** | Caché de borde origin-pull, abstracción unificada de proveedores (Cloudflare/CloudFront/Aliyun/Tencent), invalidación automática (fail-open), página de gestión CDN (Configuración/Invalidación/Registros) |
+| **Análisis de informes** | Centro de informes del panel de administración: resumen de ventas, tendencia de 30 días, TOP productos, distribución por método de pago / estado de pedido |
+| **Estadísticas de plataforma** | Estadísticas de la página de inicio de service: totales de usuarios/productos/pedidos/GMV y nuevos de hoy |
 | **Crecimiento de miembros** | Reglas de puntos, beneficios por nivel de membresía, tarjetas de regalo, alertas de bajada de precio, compras por suscripción, pruebas A/B |
 | **Gestión de contenido** | Páginas CMS multilingües, FAQ, base de conocimientos, tabla de tallas, plantillas de correo, sincronización de feeds de productos |
 | **Atención al cliente** | IM en tiempo real por WebSocket, base de conocimientos (estructura de tablas creada) |

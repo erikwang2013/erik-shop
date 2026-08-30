@@ -57,6 +57,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ![功能模块全景图](docs/03-feature-module-map.svg)
 
+> 功能图涵盖 19 大功能模块（含报表中心、平台统计）。
+
 ### 请求生命周期图
 
 ![请求生命周期图](docs/04-request-lifecycle.svg)
@@ -122,13 +124,42 @@ docker-compose up -d
 
 详见 [部署文档](docs/deployment.md)
 
+## 使用说明
+
+### 管理后台
+
+浏览器访问 `http://127.0.0.1:8788/app/admin` 登录管理后台（首次使用请通过安装向导创建管理员账号）：
+
+- **仪表盘**：GMV、订单量、用户增长等核心指标一览
+- **报表中心**：销售摘要、30 天趋势、TOP 商品、支付方式 / 订单状态分布
+- 商品、订单、营销、供应链等模块的日常管理
+
+### API 调用
+
+```bash
+# 获取商品列表
+curl http://127.0.0.1:8787/api/products \
+  -H "API-Version: 2026-05-20" \
+  -H "X-Platform: web"
+
+# 起始页平台统计（用户/商品/订单/GMV 总量与今日新增）
+curl http://127.0.0.1:8787/
+```
+
+> API 版本通过 `API-Version` header 指定（不在 URL 中）；敏感接口需携带 `Authorization: Bearer <token>`（JWT）。
+
+### 客户端
+
+- **Flutter 客户端**：`apps/flutter/`（iOS / Android / macOS / Windows / Linux）
+- **鸿蒙客户端**：`apps/harmonyos/`（HarmonyOS NEXT，ArkTS + ArkUI）
+
 ## 项目结构
 
 ```
 shop-php/
   install.sql       # 一键安装 SQL（117 张表），Web 安装向导自动导入
   service/          PHP业务API (webman)        — 39控制器 + 111模型 + 14中间件
-  admin/            管理后台 (webman-admin)      — 82控制器 + 76模型 + ECharts仪表盘 + Web安装向导
+  admin/            管理后台 (webman-admin)      — 83控制器 + 76模型 + ECharts仪表盘 + Web安装向导
   apps/flutter/     Flutter客户端              — 11页面 + 5语言 + PC自适应
   apps/harmonyos/   鸿蒙客户端                  — 9页面 + ArkTS
   docker/           Docker部署                  — Nginx + PHP + MySQL + Redis + ES
@@ -152,6 +183,8 @@ shop-php/
 | **安全防护** | 31类攻击检测(XSS/SQL注入/XXE/SSRF/CRLF/路径遍历/文件上传/暴力破解/HTTP方法/Host/CORS等) |
 | **高并发** | 令牌桶限流、DB读写分离、连接池优化 |
 | **CDN内容分发** | Origin-Pull回源(零迁移)、4家提供商(Cloudflare/CloudFront/阿里云/腾讯云)、管理端配置+手动刷新/预热+自动刷新(fail-open)、边缘缓存(expires 7d immutable) |
+| **报表分析** | 管理端报表中心：销售摘要、30天趋势、TOP商品、支付方式/订单状态分布 |
+| **平台统计** | service 起始页统计：用户/商品/订单/GMV 总量与今日新增 |
 | **会员增长** | 积分规则、会员等级权益、礼品卡、降价提醒、订阅周期购、AB测试 |
 | **内容管理** | CMS多语言页面、FAQ、知识库、尺码对照表、邮件模板、商品Feed同步 |
 | **客服** | WebSocket实时IM、知识库(表结构已建) |

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+	<meta charset="utf-8">
+	<title><?=$title ?? '报表中心'?></title>
+	<meta name="renderer" content="webkit">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+	<link rel="stylesheet" href="/app/admin/component/layui/css/layui.css?v=2.8.12" />
+	<link rel="stylesheet" href="/app/admin/component/pear/css/pear.css" />
+	<style>
+		.kpi-number { font-size: 26px; font-weight: 700; color: #28333E; }
+		.kpi-label { font-size: 13px; color: #999; }
+		.chart-box { height: 360px; }
+	</style>
+</head>
+<body class="pear-container">
+	<div class="layui-row layui-col-space10">
+		<div class="layui-col-xs6 layui-col-md3">
+			<div class="layui-card">
+				<div class="layui-card-body" style="text-align:center;padding:20px">
+					<div class="kpi-label">今日GMV</div>
+					<div class="kpi-number" id="kpi-today-gmv">-</div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-xs6 layui-col-md3">
+			<div class="layui-card">
+				<div class="layui-card-body" style="text-align:center;padding:20px">
+					<div class="kpi-label">今日订单</div>
+					<div class="kpi-number" id="kpi-today-orders">-</div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-xs6 layui-col-md3">
+			<div class="layui-card">
+				<div class="layui-card-body" style="text-align:center;padding:20px">
+					<div class="kpi-label">近30天GMV</div>
+					<div class="kpi-number" id="kpi-day30-gmv">-</div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-xs6 layui-col-md3">
+			<div class="layui-card">
+				<div class="layui-card-body" style="text-align:center;padding:20px">
+					<div class="kpi-label">近30天订单</div>
+					<div class="kpi-number" id="kpi-day30-orders">-</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="layui-row layui-col-space10" style="margin-top:10px">
+		<div class="layui-col-md8">
+			<div class="layui-card">
+				<div class="layui-card-header">近30天销售趋势</div>
+				<div class="layui-card-body">
+					<div id="chart-trend" class="chart-box"></div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-md4">
+			<div class="layui-card">
+				<div class="layui-card-header">销量TOP10商品</div>
+				<div class="layui-card-body">
+					<div id="chart-top" class="chart-box"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="layui-row layui-col-space10" style="margin-top:10px">
+		<div class="layui-col-md6">
+			<div class="layui-card">
+				<div class="layui-card-header">支付方式分布</div>
+				<div class="layui-card-body">
+					<div id="chart-pay" class="chart-box"></div>
+				</div>
+			</div>
+		</div>
+		<div class="layui-col-md6">
+			<div class="layui-card">
+				<div class="layui-card-header">订单状态分布</div>
+				<div class="layui-card-body">
+					<div id="chart-status" class="chart-box"></div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="/app/admin/component/layui/layui.js?v=2.8.12"></script>
+	<script src="/app/admin/component/pear/pear.js"></script>
+	<script>
+		layui.use(['echarts', 'jquery'], function() {
+			var $ = layui.jquery,
+				echarts = layui.echarts;
+			var colors = ['#5B8FF9', '#61DDAA', '#F6BD16', '#F6903D', '#E8684A', '#6DC8EC', '#9270CA', '#269A99', '#FF99C3', '#A0A0A0'];
+			var fmt = function(n, d) {
+				return Number(n || 0).toLocaleString('zh-CN', { maximumFractionDigits: d === undefined ? 2 : d });
+			};
+
+			function pieOption(seriesData) {
+				return {
+					tooltip: { trigger: 'item' },
+					legend: { bottom: 0, type: 'scroll' },
+					series: [{
+						type: 'pie',
+						radius: ['40%', '68%'],
+						center: ['50%', '45%'],
+						itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
+						label: { formatter: '{b}: {c}' },
+						data: seriesData
+					}]
+				};
+			}
+
+			// 销售摘要
+			fetch('/app/admin/shop/ShopReport/summary').then(function(r) { return r.json(); }).then(function(res) {
+				if (res.code !== 0) return;
+				var d = res.data;
+				$('#kpi-today-gmv').text('$' + fmt(d.today.gmv));
+				$('#kpi-today-orders').text(fmt(d.today.orders, 0));
+				$('#kpi-day30-gmv').text('$' + fmt(d.day30.gmv));
+				$('#kpi-day30-orders').text(fmt(d.day30.orders, 0));
+			});
+
+			// 近30天趋势 [date, gmv, orders]
+			fetch('/app/admin/shop/ShopReport/trend').then(function(r) { return r.json(); }).then(function(res) {
+				if (res.code !== 0) return;
+				var rows = res.data;
+				var chart = echarts.init(document.getElementById('chart-trend'));
+				chart.setOption({
+					tooltip: { trigger: 'axis' },
+					legend: { data: ['GMV', '订单'], bottom: 0 },
+					grid: { left: 60, right: 50, top: 20, bottom: 40 },
+					xAxis: { type: 'category', data: rows.map(function(x) { return x[0].slice(5); }) },
+					yAxis: [
+						{ type: 'value', name: 'GMV', axisLabel: { formatter: function(v) { return '$' + v; } } },
+						{ type: 'value', name: '单' }
+					],
+					series: [
+						{ name: 'GMV', type: 'bar', barMaxWidth: 24, itemStyle: { color: colors[0] }, data: rows.map(function(x) { return x[1]; }) },
+						{ name: '订单', type: 'line', yAxisIndex: 1, smooth: true, itemStyle: { color: colors[4] }, data: rows.map(function(x) { return x[2]; }) }
+					]
+				});
+			});
+
+			// TOP10商品（按销量横向条形图）
+			fetch('/app/admin/shop/ShopReport/topProducts').then(function(r) { return r.json(); }).then(function(res) {
+				if (res.code !== 0) return;
+				var items = res.data;
+				var chart = echarts.init(document.getElementById('chart-top'));
+				chart.setOption({
+					tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
+					grid: { left: 8, right: 40, top: 10, bottom: 10, containLabel: true },
+					xAxis: { type: 'value', name: '销量' },
+					yAxis: {
+						type: 'category',
+						inverse: true,
+						data: items.map(function(i) { return i.title; }),
+						axisLabel: { width: 110, overflow: 'truncate' }
+					},
+					series: [{
+						type: 'bar',
+						barMaxWidth: 18,
+						itemStyle: { color: colors[0], borderRadius: [0, 4, 4, 0] },
+						label: { show: true, position: 'right' },
+						data: items.map(function(i) { return i.quantity; })
+					}]
+				});
+			});
+
+			// 支付方式分布
+			fetch('/app/admin/shop/ShopReport/paymentMethods').then(function(r) { return r.json(); }).then(function(res) {
+				if (res.code !== 0) return;
+				echarts.init(document.getElementById('chart-pay')).setOption(pieOption(
+					res.data.map(function(i) { return { name: i.method, value: i.amount }; })
+				));
+			});
+
+			// 订单状态分布
+			fetch('/app/admin/shop/ShopReport/orderStatus').then(function(r) { return r.json(); }).then(function(res) {
+				if (res.code !== 0) return;
+				echarts.init(document.getElementById('chart-status')).setOption(pieOption(
+					res.data.map(function(i) { return { name: i.name, value: i.count }; })
+				));
+			});
+
+			window.onresize = function() {
+				['chart-trend', 'chart-top', 'chart-pay', 'chart-status'].forEach(function(id) {
+					var chart = echarts.getInstanceByDom(document.getElementById(id));
+					if (chart) chart.resize();
+				});
+			};
+		});
+	</script>
+</body>
+</html>

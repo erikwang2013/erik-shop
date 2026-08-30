@@ -63,6 +63,7 @@ webman 풀스택 제품군 기반의 풀스택 크로스보더 전자상거래 �
 ### 기능 모듈 전체도
 
 ![기능 모듈 전체도](./diagrams/03-feature-module-map.svg)
+> 기능도는 19개 대형 기능 모듈(리포트 센터, 플랫폼 통계 포함)을 다룹니다.
 
 ### 요청 라이프사이클 다이어그램
 
@@ -129,13 +130,42 @@ docker-compose up -d
 
 자세한 내용은 [배포 문서](deployment.md) 참조
 
+## 사용 설명
+
+### 관리 백엔드
+
+브라우저에서 `http://127.0.0.1:8788/app/admin`으로 관리 백엔드에 로그인합니다 (최초 사용 시 설치 마법사로 관리자 계정 생성):
+
+- **대시보드**: GMV, 주문량, 사용자 증가 등 핵심 지표 한눈에 보기
+- **리포트 센터**: 매출 요약, 30일 추이, TOP 상품, 결제 수단/주문 상태 분포
+- 상품, 주문, 마케팅, 공급망 등 모듈의 일상 관리
+
+### API 호출
+
+```bash
+# 상품 목록 조회
+curl http://127.0.0.1:8787/api/products \
+  -H "API-Version: 2026-05-20" \
+  -H "X-Platform: web"
+
+# 시작 페이지 플랫폼 통계 (사용자/상품/주문/GMV 총계와 오늘 신규)
+curl http://127.0.0.1:8787/
+```
+
+> API 버전은 `API-Version` 헤더로 지정합니다 (URL에 포함하지 않음). 민감한 엔드포인트에는 `Authorization: Bearer <token>`(JWT)이 필요합니다.
+
+### 클라이언트
+
+- **Flutter 클라이언트**: `apps/flutter/` (iOS / Android / macOS / Windows / Linux)
+- **HarmonyOS 클라이언트**: `apps/harmonyos/` (HarmonyOS NEXT, ArkTS + ArkUI)
+
 ## 프로젝트 구조
 
 ```
 shop-php/
   install.sql       # 원클릭 설치 SQL（117개 테이블）, Web 설치 마법사 자동 임포트
   service/          PHP 비즈니스 API (webman)        — 39개 컨트롤러 + 111개 모델 + 14개 미들웨어
-  admin/            관리 백엔드 (webman-admin)      — 82개 컨트롤러 + 76개 모델 + ECharts 대시보드 + Web 설치 마법사
+  admin/            관리 백엔드 (webman-admin)      — 83개 컨트롤러 + 76개 모델 + ECharts 대시보드 + Web 설치 마법사
   apps/flutter/     Flutter 클라이언트              — 11개 페이지 + 5개 언어 + PC 반응형
   apps/harmonyos/   HarmonyOS 클라이언트            — 9개 페이지 + ArkTS
   docker/           Docker 배포                  — Nginx + PHP + MySQL + Redis + ES
@@ -159,6 +189,8 @@ shop-php/
 | **보안 방어** | 31종 공격 탐지(XSS/SQL 인젝션/XXE/SSRF/CRLF/경로 탐색/파일 업로드/무차별 대입/HTTP 메서드/Host/CORS 등) |
 | **고성능** | 토큰 버킷 속도 제한, 서킷 브레이커(결제/소셜 로그인, 5회 실패→30s 차단+반개 복구), DB 읽기/쓰기 분리, 커넥션 풀 최적화 |
 | **CDN** | 멀티 프로바이더 Origin-Pull (Cloudflare/CloudFront/Aliyun/Tencent), `Cdn::url()`이 `https://{CDN_DOMAIN}{path}`로 재작성, admin CDN 관리 페이지(Config/Purge/Logs), 자동 purge fail-open, 엣지 캐시 7일 immutable |
+| **리포트 분석** | 관리자 리포트 센터: 매출 요약, 30일 추이, TOP 상품, 결제 수단/주문 상태 분포 |
+| **플랫폼 통계** | service 시작 페이지 통계: 사용자/상품/주문/GMV 총계와 오늘 신규 |
 | **회원 성장** | 포인트 규칙, 회원 등급 혜택, 기프트 카드, 가격 인하 알림, 구독 정기 구매, AB 테스트 |
 | **콘텐츠 관리** | CMS 다국어 페이지, FAQ, 지식 베이스, 사이즈 표, 이메일 템플릿, 상품 Feed 동기화 |
 | **고객 서비스** | WebSocket 실시간 IM, 지식 베이스(테이블 구조 생성 완료) |

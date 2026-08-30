@@ -63,6 +63,7 @@ A full-stack cross-border e-commerce platform built on the webman ecosystem, cov
 ### Feature Module Map
 
 ![Feature Module Map](./diagrams/03-feature-module-map.svg)
+> The map covers 19 major feature modules (including Report Center and Platform Stats).
 
 ### Request Lifecycle Diagram
 
@@ -131,13 +132,42 @@ docker-compose up -d
 
 See the [deployment documentation](../../deployment.md)
 
+## Usage
+
+### Admin Panel
+
+Open `http://127.0.0.1:8788/app/admin` in your browser to log in (create the admin account via the installation wizard on first use):
+
+- **Dashboard**: GMV, order volume, user growth and other key metrics at a glance
+- **Report Center**: sales summary, 30-day trend, TOP products, payment method / order status distribution
+- Daily management of products, orders, marketing, supply chain and other modules
+
+### API Calls
+
+```bash
+# Get product list
+curl http://127.0.0.1:8787/api/products \
+  -H "API-Version: 2026-05-20" \
+  -H "X-Platform: web"
+
+# Homepage platform stats (user/product/order/GMV totals and today's new counts)
+curl http://127.0.0.1:8787/
+```
+
+> API versioning is done via the `API-Version` header (not in the URL); sensitive endpoints require `Authorization: Bearer <token>` (JWT).
+
+### Clients
+
+- **Flutter client**: `apps/flutter/` (iOS / Android / macOS / Windows / Linux)
+- **HarmonyOS client**: `apps/harmonyos/` (HarmonyOS NEXT, ArkTS + ArkUI)
+
 ## Project Structure
 
 ```
 shop-php/
   install.sql       # One-click installation SQL (117 tables), auto-imported by the Web installer
   service/          PHP business API (webman)        — 39 controllers + 111 models + 14 middleware
-  admin/            Admin console (webman-admin)      — 82 controllers + 76 models + ECharts dashboard + Web installer
+  admin/            Admin console (webman-admin)      — 83 controllers + 76 models + ECharts dashboard + Web installer
   apps/flutter/     Flutter client              — 11 pages + 5 languages + PC responsive
   apps/harmonyos/   HarmonyOS client                  — 9 pages + ArkTS
   docker/           Docker deployment                  — Nginx + PHP + MySQL + Redis + ES
@@ -160,6 +190,8 @@ shop-php/
 | **Risk & Compliance** | Rule engine (side-channel scoring), KYC, GDPR/CCPA data requests, Cookie Consent |
 | **Security** | 31 attack detection types (XSS/SQLi/XXE/SSRF/CRLF/path traversal/file upload/brute force/HTTP method/Host/CORS etc.) |
 | **High Concurrency** | Token bucket rate limiting, DB read/write split, connection pool optimization, CDN edge caching + auto-purge (origin-pull) |
+| **Reporting** | Admin report center: sales summary, 30-day trend, TOP products, payment method / order status distribution |
+| **Platform Stats** | Service homepage stats: user/product/order/GMV totals and today's new counts |
 | **Membership Growth** | Points rules, membership level benefits, gift cards, price drop alerts, subscription orders, AB testing |
 | **Content Management** | CMS multilingual pages, FAQ, knowledge base, size charts, email templates, product Feed sync |
 | **Customer Service** | WebSocket real-time IM, knowledge base (schema built) |

@@ -63,6 +63,7 @@ Platform e-commerce lintas batas full-stack yang dibangun di atas ekosistem webm
 ### Peta Modul Fitur
 
 ![Peta Modul Fitur](./diagrams/03-feature-module-map.svg)
+> Peta ini mencakup 19 modul fitur utama (termasuk Pusat Laporan dan Statistik Platform).
 
 ### Diagram Siklus Hidup Permintaan
 
@@ -129,13 +130,42 @@ docker-compose up -d
 
 Lihat [Dokumen Deployment](deployment.md)
 
+## Panduan Penggunaan
+
+### Panel Admin
+
+Buka `http://127.0.0.1:8788/app/admin` di browser dan login ke panel admin (pada penggunaan pertama buat akun admin melalui wizard instalasi):
+
+- **Dasbor**: GMV, volume pesanan, pertumbuhan pengguna, dan metrik utama lainnya sekilas
+- **Pusat Laporan**: ringkasan penjualan, tren 30 hari, produk TOP, distribusi metode pembayaran / status pesanan
+- Manajemen harian produk, pesanan, pemasaran, rantai pasokan, dan modul lainnya
+
+### Panggilan API
+
+```bash
+# Dapatkan daftar produk
+curl http://127.0.0.1:8787/api/products \
+  -H "API-Version: 2026-05-20" \
+  -H "X-Platform: web"
+
+# Statistik platform halaman awal (total pengguna/produk/pesanan/GMV dan tambahan hari ini)
+curl http://127.0.0.1:8787/
+```
+
+> Versi API ditentukan melalui header `API-Version` (bukan di URL); endpoint sensitif memerlukan `Authorization: Bearer <token>` (JWT).
+
+### Klien
+
+- **Klien Flutter**: `apps/flutter/` (iOS / Android / macOS / Windows / Linux)
+- **Klien HarmonyOS**: `apps/harmonyos/` (HarmonyOS NEXT, ArkTS + ArkUI)
+
 ## Struktur Proyek
 
 ```
 shop-php/
   install.sql       # SQL instalasi sekali klik (117 tabel), diimpor otomatis oleh wizard instalasi web
   service/          API bisnis PHP (webman)        — 39 controller + 111 model + 14 middleware
-  admin/            Panel admin (webman-admin)      — 82 controller + 76 model + dasbor ECharts + wizard instalasi web
+  admin/            Panel admin (webman-admin)      — 83 controller + 76 model + dasbor ECharts + wizard instalasi web
   apps/flutter/     Klien Flutter              — 11 halaman + 5 bahasa + adaptif PC
   apps/harmonyos/   Klien HarmonyOS                  — 9 halaman + ArkTS
   docker/           Deployment Docker                  — Nginx + PHP + MySQL + Redis + ES
@@ -159,6 +189,8 @@ shop-php/
 | **Perlindungan keamanan** | Deteksi 31 jenis serangan (XSS/Injeksi SQL/XXE/SSRF/CRLF/path traversal/unggah file/brute force/metode HTTP/Host/CORS, dll.) |
 | **Konkurensi tinggi** | Rate limiting token bucket, circuit breaker (pembayaran/login sosial), pemisahan baca/tulis DB, optimasi kumpulan koneksi |
 | **CDN** | Origin-Pull multi-provider (Cloudflare/CloudFront/Aliyun/Tencent), `Cdn::url()` rewrite ke `https://{CDN_DOMAIN}{path}`, halaman manajemen CDN admin (Config/Purge/Logs), auto-purge fail-open, cache edge 7d immutable |
+| **Analisis Laporan** | Pusat laporan admin: ringkasan penjualan, tren 30 hari, produk TOP, distribusi metode pembayaran / status pesanan |
+| **Statistik Platform** | Statistik halaman awal service: total pengguna/produk/pesanan/GMV dan tambahan hari ini |
 | **Pertumbuhan anggota** | Aturan poin, hak-hak level keanggotaan, kartu hadiah, pengingat penurunan harga, pembelian berlangganan, uji AB |
 | **Manajemen konten** | Halaman CMS multi-bahasa, FAQ, basis pengetahuan, tabel konversi ukuran, template email, sinkronisasi Feed produk |
 | **Layanan pelanggan** | IM real-time WebSocket, basis pengetahuan (struktur tabel sudah dibuat) |

@@ -63,6 +63,7 @@ Full-Stack-Cross-Border-E-Commerce-Plattform auf Basis des webman-Ökosystems, m
 ### Funktionsmodul-Übersicht
 
 ![Funktionsmodul-Übersicht](diagrams/03-feature-module-map.svg)
+> Die Karte umfasst 19 große Funktionsmodule (einschließlich Berichtszentrum und Plattformstatistik).
 
 ### Anfrage-Lebenszyklus
 
@@ -129,13 +130,42 @@ docker-compose up -d
 
 Siehe [Bereitstellungsdokumentation](deployment.md)
 
+## Verwendung
+
+### Verwaltungskonsole
+
+Öffnen Sie `http://127.0.0.1:8788/app/admin` im Browser und melden Sie sich in der Verwaltungskonsole an (beim ersten Mal wird das Administratorkonto über den Installationsassistenten erstellt):
+
+- **Dashboard**: GMV, Bestellvolumen, Nutzerwachstum und weitere Kernkennzahlen auf einen Blick
+- **Berichtszentrum**: Verkaufsübersicht, 30-Tage-Trend, TOP-Produkte, Verteilung nach Zahlungsart/Bestellstatus
+- Tägliche Verwaltung von Produkten, Bestellungen, Marketing, Lieferkette und anderen Modulen
+
+### API-Aufrufe
+
+```bash
+# Produktliste abrufen
+curl http://127.0.0.1:8787/api/products \
+  -H "API-Version: 2026-05-20" \
+  -H "X-Platform: web"
+
+# Plattformstatistik der Startseite (Benutzer/Produkte/Bestellungen/GMV gesamt und heute neu)
+curl http://127.0.0.1:8787/
+```
+
+> Die API-Version wird über den `API-Version`-Header übergeben (nicht in der URL); geschützte Endpunkte erfordern `Authorization: Bearer <token>` (JWT).
+
+### Clients
+
+- **Flutter-Client**: `apps/flutter/` (iOS / Android / macOS / Windows / Linux)
+- **HarmonyOS-Client**: `apps/harmonyos/` (HarmonyOS NEXT, ArkTS + ArkUI)
+
 ## Projektstruktur
 
 ```
 shop-php/
   install.sql       # Einmaliges Installations-SQL (117 Tabellen), automatisch vom Web-Installationsassistenten importiert
   service/          PHP-Geschäfts-API (webman)          — 39 Controller + 111 Modelle + 14 Middleware
-  admin/            Verwaltungskonsole (webman-admin)   — 82 Controller + 76 Modelle + ECharts-Dashboard + Web-Installationsassistent
+  admin/            Verwaltungskonsole (webman-admin)   — 83 Controller + 76 Modelle + ECharts-Dashboard + Web-Installationsassistent
   apps/flutter/     Flutter-Client                      — 11 Seiten + 5 Sprachen + PC-adaptiv
   apps/harmonyos/   HarmonyOS-Client                    — 9 Seiten + ArkTS
   docker/           Docker-Bereitstellung               — Nginx + PHP + MySQL + Redis + ES
@@ -159,6 +189,8 @@ shop-php/
 | **Sicherheitsschutz** | 31 Angriffserkennungstypen (XSS/SQL-Injection/XXE/SSRF/CRLF/Pfad-Traversal/Datei-Upload/Brute-Force/HTTP-Methode/Host/CORS usw.) |
 | **Hohe Nebenläufigkeit** | Token-Bucket-Rate-Limiting, DB-Read/Write-Splitting, Verbindungspool-Optimierung |
 | **CDN-Unterstützung** | Origin-Pull-Edge-Caching, einheitliche Provider-Abstraktion (Cloudflare/CloudFront/Aliyun/Tencent), Auto-Invalidierung (fail-open), CDN-Verwaltungsseite (Konfiguration/Invalidierung/Protokolle) |
+| **Berichtsanalyse** | Berichtszentrum im Admin-Panel: Verkaufsübersicht, 30-Tage-Trend, TOP-Produkte, Zahlungsarten-/Bestellstatus-Verteilung |
+| **Plattformstatistik** | Statistiken auf der service-Startseite: Benutzer/Produkte/Bestellungen/GMV gesamt und heute neu |
 | **Mitgliederwachstum** | Punktregeln, Mitgliedsstufen-Berechtigungen, Geschenkkarten, Preisalarme, Abonnement-Kauf, AB-Tests |
 | **Content-Management** | Mehrsprachige CMS-Seiten, FAQ, Wissensdatenbank, Größentabellen, E-Mail-Vorlagen, Produkt-Feed-Synchronisierung |
 | **Kundenservice** | WebSocket-Echtzeit-IM, Wissensdatenbank (Tabellenstruktur vorhanden) |

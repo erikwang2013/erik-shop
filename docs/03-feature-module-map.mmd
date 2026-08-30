@@ -17,6 +17,8 @@ graph TB
     CENTER --> CMS["内容管理"]
     CENTER --> CS["客服系统"]
     CENTER --> INFRA["基础设施"]
+    CENTER --> REPORTS["报表中心"]
+    CENTER --> STATS["平台统计"]
     CENTER --> CLIENTS["多端覆盖"]
 
     B2C --> B2C_DETAIL["多语言商品 · 分币种定价<br/>SKU 库存 · 购物车<br/>订单 · 退款 · 退货"]
@@ -53,6 +55,10 @@ graph TB
 
     CLIENTS --> CLIENTS_DETAIL["Flutter 5平台<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>HarmonyOS ArkTS<br/>Web Admin LayUI+ECharts"]
 
+    REPORTS --> REPORTS_DETAIL["销售摘要 GMV/订单<br/>30天趋势<br/>TOP商品<br/>支付方式分布<br/>订单状态分布"]
+
+    STATS --> STATS_DETAIL["用户/商品/订单/GMV 总量<br/>今日新增统计"]
+
     style CENTER fill:#1565c0,color:#fff,stroke:#0d47a1
     style B2C fill:#e3f2fd
     style B2B fill:#e8f5e9
@@ -70,4 +76,6 @@ graph TB
     style CMS fill:#ffe0b2
     style CS fill:#d1c4e9
     style INFRA fill:#b2dfdb
+    style REPORTS fill:#fff9c4
+    style STATS fill:#dcedc8
     style CLIENTS fill:#bbdefb

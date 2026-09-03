@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\Money;
 use app\common\DistributedLock;
 use app\common\InventoryLogger;
 use app\common\RiskEngine;
@@ -153,14 +154,13 @@ class OrderController extends \app\controller\BaseApiController
                     'address_snapshot' => $address->toArray(),
                 ]);
 
-                // 批量查询分币种价格，避免循环内 N+1
+                // 批量查询分币种价格，避免循环内 N+1；decimal 列返回字符串，保留参与 Money 运算
                 $priceMap = ProductSkuPrices::whereIn('sku_id', $cartItems->pluck('sku_id'))
                     ->where('currency_code', $currencyCode)
                     ->pluck('price', 'sku_id')
-                    ->map(fn($p) => (float) $p)
                     ->toArray();
 
-                $totalAmount = 0;
+                $totalAmount = '0';
 
                 // 批量预取 SKU（含商品标题），避免循环内 N+1 查询
                 $skus = ProductSkus::with('product')
@@ -194,8 +194,8 @@ class OrderController extends \app\controller\BaseApiController
                         '下单扣减'
                     );
 
-                    $price = $priceMap[$sku->id] ?? (float) $sku->default_price;
-                    $subtotal = round($price * $cart->quantity, 2);
+                    $price = $priceMap[$sku->id] ?? (string) $sku->default_price;
+                    $subtotal = Money::round(Money::mul($price, (string) $cart->quantity));
 
                     OrderItems::create([
                         'order_id' => $order->id,
@@ -209,18 +209,18 @@ class OrderController extends \app\controller\BaseApiController
                         'subtotal' => $subtotal,
                     ]);
 
-                    $totalAmount += $subtotal;
+                    $totalAmount = Money::add($totalAmount, $subtotal);
                 }
 
-                // ===== 真实计费（对齐 api.md 5.3 / features.md 3.3） =====
-                $totalAmount = round($totalAmount, 2);
-                $discountAmount = 0.0;
+                // ===== 真实计费（对齐 api.md 5.3 / features.md 3.3；先聚合后舍入） =====
+                $totalAmount = Money::round($totalAmount);
+                $discountAmount = '0.00';
                 if (!empty($couponId)) {
                     $discountAmount = $this->applyCoupon($userId, $couponId, $totalAmount);
                 }
-                $shippingFee = $country ? $this->calcShipping($country, $weightGrams) : 0.0;
-                $taxAmount = $country ? $this->calcTax($country, $cartItems, $skus, $priceMap) : 0.0;
-                $payAmount = round($totalAmount - $discountAmount + $shippingFee + $taxAmount, 2);
+                $shippingFee = $country ? $this->calcShipping($country, $weightGrams) : '0.00';
+                $taxAmount = $country ? $this->calcTax($country, $cartItems, $skus, $priceMap) : '0.00';
+                $payAmount = Money::round(Money::add(Money::add(Money::sub($totalAmount, $discountAmount), $shippingFee), $taxAmount));
 
                 // 更新订单金额（discount/shipping/tax 字段已存在，此前从未写入）
                 $order->total_amount = $totalAmount;
@@ -257,7 +257,7 @@ class OrderController extends \app\controller\BaseApiController
                 $order->save();
 
                 // 核销优惠券（事务内，与订单同生共死）
-                if (!empty($couponId) && $discountAmount > 0) {
+                if (!empty($couponId) && Money::cmp($discountAmount, '0') > 0) {
                     UserCoupons::where('user_id', $userId)
                         ->where('coupon_id', $couponId)
                         ->where('status', 0)
@@ -283,11 +283,12 @@ class OrderController extends \app\controller\BaseApiController
                 return [
                     'order_id' => $order->id,
                     'order_no' => $order->order_no,
-                    'total_amount' => $totalAmount,
-                    'discount_amount' => $discountAmount,
-                    'shipping_fee' => $shippingFee,
-                    'tax_amount' => $taxAmount,
-                    'pay_amount' => $payAmount,
+                    // JSON 输出边界 (float) 展示转换（已结算金额为字符串，不再参与运算）
+                    'total_amount' => (float) $totalAmount,
+                    'discount_amount' => (float) $discountAmount,
+                    'shipping_fee' => (float) $shippingFee,
+                    'tax_amount' => (float) $taxAmount,
+                    'pay_amount' => (float) $payAmount,
                     'currency_code' => $currencyCode,
                 ];
             }));
@@ -309,10 +310,10 @@ class OrderController extends \app\controller\BaseApiController
     }
 
     /**
-     * 优惠券折扣计算（校验 + 计费）
+     * 优惠券折扣计算（校验 + 计费），返回金额字符串
      * type: 1=满减(value=金额) / 2=折扣(value=折扣率%，如10=减10%) / 3=固定金额(value=金额)
      */
-    private function applyCoupon(int $userId, string $couponId, float $subtotal): float
+    private function applyCoupon(int $userId, string $couponId, string $subtotal): string
     {
         $userCoupon = UserCoupons::where('user_id', $userId)
             ->where('coupon_id', $couponId)
@@ -331,32 +332,35 @@ class OrderController extends \app\controller\BaseApiController
         if (($coupon->start_at && $now < $coupon->start_at) || ($coupon->end_at && $now > $coupon->end_at)) {
             throw new \RuntimeException('优惠券不在有效期内');
         }
-        // 满减门槛
-        if ((float) $coupon->min_amount > 0 && $subtotal < (float) $coupon->min_amount) {
+        // 满减门槛（十进制比较）
+        if (Money::cmp((string) $coupon->min_amount, '0') > 0 && Money::cmp($subtotal, (string) $coupon->min_amount) < 0) {
             throw new \RuntimeException('未达到优惠券使用门槛');
         }
         // 区域限定（countries JSON 非空时校验目的国——此处由调用方保证 country，简化按全量）
+        $value = (string) $coupon->value;
+        $cap = Money::cmp($value, $subtotal) < 0 ? $value : $subtotal;      // min(value, subtotal)
         $discount = match ((int) $coupon->type) {
-            1 => min((float) $coupon->value, $subtotal),                    // 满减
-            2 => round($subtotal * (float) $coupon->value / 100, 2),        // 折扣率
-            3 => min((float) $coupon->value, $subtotal),                    // 固定金额
-            default => 0.0,
+            1 => $cap,                                                       // 满减
+            2 => Money::round(Money::div(Money::mul($subtotal, $value), '100')), // 折扣率：subtotal×value%
+            3 => $cap,                                                       // 固定金额
+            default => '0.00',
         };
-        return min($discount, $subtotal);
+        // 折扣不超过订单小计
+        return Money::cmp($discount, $subtotal) < 0 ? $discount : $subtotal;
     }
 
     /**
-     * 运费计算：目的国 → 物流分区 → 费率阶梯（取最低价物流商）
+     * 运费计算：目的国 → 物流分区 → 费率阶梯（取最低价物流商），返回金额字符串
      */
-    private function calcShipping(Countries $country, int $weightGrams): float
+    private function calcShipping(Countries $country, int $weightGrams): string
     {
         $zone = ShippingZones::where('status', 1)
             ->whereJsonContains('countries', $country->iso_code_2)
             ->first();
         if (!$zone) {
-            return 0.0; // 无分区规则时不收运费（订单不阻断，运费后续可补）
+            return '0.00'; // 无分区规则时不收运费（订单不阻断，运费后续可补）
         }
-        $weightKg = $weightGrams / 1000;
+        $weightKg = $weightGrams / 1000; // SQL 阶梯区间匹配用，保持数值型
         $rates = ShippingZoneRates::where('zone_id', $zone->id)
             ->where('weight_from', '<=', $weightKg)
             ->where(function ($q) use ($weightKg) {
@@ -365,33 +369,34 @@ class OrderController extends \app\controller\BaseApiController
             ->get();
         $minFee = null;
         foreach ($rates as $rate) {
-            $fee = (float) $rate->price + $weightKg * (float) $rate->per_kg_price;
-            $minFee = ($minFee === null) ? $fee : min($minFee, $fee);
+            // 费用 = 起步价 + (克/1000) × 每公斤价；克→公斤用 Money::div 精确
+            $fee = Money::add((string) $rate->price, Money::mul(Money::div((string) $weightGrams, '1000'), (string) $rate->per_kg_price));
+            $minFee = ($minFee === null) ? $fee : (Money::cmp($minFee, $fee) <= 0 ? $minFee : $fee);
         }
-        return $minFee === null ? 0.0 : round($minFee, 2);
+        return $minFee === null ? '0.00' : Money::round($minFee);
     }
 
     /**
-     * 关税/VAT 估算：商品 HS Code → 目的国税率（无 HS 关联或税率规则则按 0）
+     * 关税/VAT 估算：商品 HS Code → 目的国税率（无 HS 关联或税率规则则按 0），返回金额字符串
      */
-    private function calcTax(Countries $country, $cartItems, $skus, array $priceMap): float
+    private function calcTax(Countries $country, $cartItems, $skus, array $priceMap): string
     {
         $destCountryId = $country->id;
         $vat = VatSettings::where('country_id', $destCountryId)->first();
-        $vatRate = (float) ($vat->vat_rate ?? 0);
-        $dutyFreeThreshold = (float) ($vat->duty_free_threshold ?? 0);
-        $vatFreeThreshold = (float) ($vat->vat_free_threshold ?? 0);
+        $vatRate = (string) ($vat->vat_rate ?? 0);
+        $dutyFreeThreshold = (string) ($vat->duty_free_threshold ?? 0);
+        $vatFreeThreshold = (string) ($vat->vat_free_threshold ?? 0);
 
-        $taxTotal = 0.0;
-        // 按商品维度聚合申报价值（避免同商品多 SKU 重复查 HS）
+        $taxTotal = '0';
+        // 按商品维度聚合申报价值（避免同商品多 SKU 重复查 HS；十进制字符串累加）
         $productValues = [];
         foreach ($cartItems as $cart) {
             $sku = $skus[$cart->sku_id] ?? null;
             if (!$sku) {
                 continue;
             }
-            $price = $priceMap[$sku->id] ?? (float) $sku->default_price;
-            $productValues[$sku->product_id] = ($productValues[$sku->product_id] ?? 0) + $price * (int) $cart->quantity;
+            $price = $priceMap[$sku->id] ?? (string) $sku->default_price;
+            $productValues[$sku->product_id] = Money::add($productValues[$sku->product_id] ?? '0', Money::mul($price, (string) $cart->quantity));
         }
 
         foreach ($productValues as $productId => $value) {
@@ -402,12 +407,13 @@ class OrderController extends \app\controller\BaseApiController
             $rule = TariffRules::where('dest_country_id', $destCountryId)
                 ->whereIn('hs_code_id', $hsCodeIds)
                 ->first();
-            $dutyRate = (float) ($rule->duty_rate ?? 0);
-            $duty = ($value >= $dutyFreeThreshold) ? round($value * $dutyRate / 100, 2) : 0.0;
-            $vatAmount = (($value + $duty) >= $vatFreeThreshold) ? round(($value + $duty) * $vatRate / 100, 2) : 0.0;
-            $taxTotal += $duty + $vatAmount;
+            $dutyRate = (string) ($rule->duty_rate ?? 0);
+            $duty = Money::cmp($value, $dutyFreeThreshold) >= 0 ? Money::round(Money::div(Money::mul($value, $dutyRate), '100')) : '0.00';
+            $base = Money::add($value, $duty);
+            $vatAmount = Money::cmp($base, $vatFreeThreshold) >= 0 ? Money::round(Money::div(Money::mul($base, $vatRate), '100')) : '0.00';
+            $taxTotal = Money::add($taxTotal, Money::add($duty, $vatAmount));
         }
-        return round($taxTotal, 2);
+        return Money::round($taxTotal);
     }
 
     /**

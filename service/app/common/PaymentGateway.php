@@ -54,7 +54,7 @@ class StripeGateway implements PaymentGatewayInterface
     private function doCreatePayment(array $data): array
     {
         $intent = $this->client->paymentIntents->create([
-            'amount' => (int) round($data['amount'] * 100),
+            'amount' => Money::toIntCents((string) $data['amount']),
             'currency' => strtolower($data['currency']),
             'payment_method_types' => $data['methods'] ?? ['card'],
             // 显式开启 3DS（automatic：按 Stripe 风控/卡组织要求自动触发），与 README「3DS验证」声明对齐
@@ -73,7 +73,7 @@ class StripeGateway implements PaymentGatewayInterface
             'txn_id' => $intent->id,
             'client_secret' => $intent->client_secret,
             'status' => $intent->status,
-            'amount' => $intent->amount / 100,
+            'amount' => (float) Money::fromCents($intent->amount),
             'currency' => $intent->currency,
         ];
     }
@@ -94,23 +94,23 @@ class StripeGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    public function refundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         return CircuitBreaker::call('stripe', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [CardException::class, InvalidRequestException::class]);
     }
 
-    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    private function doRefundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         $refund = $this->client->refunds->create([
             'payment_intent' => $txnId,
-            'amount' => (int) round($amount * 100),
+            'amount' => Money::toIntCents((string) $amount),
         ]);
 
         return [
             'refund_id' => $refund->id,
             'txn_id' => $txnId,
             'status' => $refund->status,
-            'amount' => $refund->amount / 100,
+            'amount' => (float) Money::fromCents($refund->amount),
         ];
     }
 
@@ -170,7 +170,8 @@ class PayPalGateway implements PaymentGatewayInterface
     private function doCreatePayment(array $data): array
     {
         $token = $this->getAccessToken();
-        $amount = number_format($data['amount'], 2, '.', '');
+        // PayPal 协议金额为 scale=2 十进制字符串（无千分位），Money::format 精确收敛
+        $amount = Money::format((string) $data['amount']);
 
         $response = $this->http->post('/v2/checkout/orders', [
             'headers' => [
@@ -223,17 +224,17 @@ class PayPalGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    public function refundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         return CircuitBreaker::call('paypal', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [GatewayBusinessException::class]);
     }
 
-    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    private function doRefundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         $token = $this->getAccessToken();
         $response = $this->http->post("/v2/payments/captures/{$txnId}/refund", [
             'headers' => ['Authorization' => "Bearer {$token}", 'Content-Type' => 'application/json'],
-            'json' => ['amount' => ['currency_code' => $currency, 'value' => number_format($amount, 2, '.', '')]],
+            'json' => ['amount' => ['currency_code' => $currency, 'value' => Money::format((string) $amount)]],
         ]);
         $result = json_decode($response->getBody(), true);
         if (empty($result['id'])) {

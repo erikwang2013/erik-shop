@@ -7,6 +7,7 @@ namespace app\controller\v1;
 
 use app\common\ApiResponse;
 use app\common\DistributedLock;
+use app\common\Money;
 use app\model\Orders;
 use app\model\Payments;
 use app\model\Refunds;
@@ -26,10 +27,11 @@ class RefundController extends \app\controller\BaseApiController
     {
         $userId = (int) $request->userId;
         $orderId = $this->decodedId((string) $request->input('order_id', ''));
-        $amount = (float) $request->input('amount', 0);
+        // 请求金额入参：Money::normalize 归一分位字符串（拒绝科学计数等 bcmath 不接受的形态），再参与十进制校验/入库
+        $amount = Money::normalize($request->input('amount', 0));
         $reason = (string) $request->input('reason', '');
 
-        if ($orderId === '' || $amount <= 0) {
+        if ($orderId === '' || Money::cmp($amount, '0') <= 0) {
             return ApiResponse::fail('订单与退款金额不能为空', 422);
         }
         if (mb_strlen($reason) > 256) {
@@ -55,10 +57,11 @@ class RefundController extends \app\controller\BaseApiController
                 }
 
                 // 可退余额 = 实付 - 已退(status=3) - 在审(status=0/1)，驳回(status=2)不占额度
-                $pending = (float) Refunds::where('order_id', $order->id)->whereIn('status', [0, 1])->sum('amount');
-                $refundable = round((float) $payment->amount - (float) $payment->refunded_amount - $pending, 2);
-                if ($amount > $refundable + 0.01) {
-                    return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max($refundable, 0.0), 2) . '）', 422);
+                $pending = (string) (Refunds::where('order_id', $order->id)->whereIn('status', [0, 1])->sum('amount') ?? 0);
+                $refundable = Money::round(Money::sub(Money::sub((string) $payment->amount, (string) $payment->refunded_amount), $pending));
+                // 超限校验保留原 1 分容差，改十进制比较；提示文案 max(0) 为纯展示层格式
+                if (Money::cmp($amount, Money::add($refundable, '0.01')) > 0) {
+                    return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max((float) $refundable, 0.0), 2) . '）', 422);
                 }
 
                 $refund = Refunds::create([

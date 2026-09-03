@@ -5,6 +5,7 @@
 
 namespace app\process;
 
+use app\common\Money;
 use app\model\Orders;
 use app\model\OrderItems;
 use app\model\Payments;
@@ -52,19 +53,20 @@ class SettlementCron
         $created = 0;
         foreach ($orders as $order) {
             $payment = Payments::where('order_id', $order->id)->where('status', 1)->first();
-            $total = (float) $order->pay_amount;
+            // decimal 列经 PDO 返回字符串，保留字符串参与 Money 运算（不转 float）
+            $total = (string) $order->pay_amount;
 
             // 费率统一：payment.gateway_fee / payment.platform_rate 为唯一费率源（与 webhook 同源），
-            // cron.* 仅作兼容回退，消除此前 webhook 与 cron 双源漂移
+            // cron.* 仅作兼容回退，消除此前 webhook 与 cron 双源漂移；费率以字符串进 Money 乘算
             $gateway = $payment->gateway ?? 'stripe';
             $gf = config("payment.gateway_fee.{$gateway}", []);
-            $gatewayFeeRate = (float) ($gf['rate'] ?? config('cron.payment_gateway_fee_rate', 2.90));
-            $gatewayFeeFixed = (float) ($gf['fixed'] ?? config('cron.payment_gateway_fee_fixed', 0.30));
-            $platformFeeRate = (float) (config('payment.platform_rate') ?? config('cron.platform_fee_rate', 3.00));
+            $gatewayFeeRate = (string) ($gf['rate'] ?? config('cron.payment_gateway_fee_rate', 2.90));
+            $gatewayFeeFixed = (string) ($gf['fixed'] ?? config('cron.payment_gateway_fee_fixed', 0.30));
+            $platformFeeRate = (string) (config('payment.platform_rate') ?? config('cron.platform_fee_rate', 3.00));
 
-            $platformFee = round($total * $platformFeeRate / 100, 2);
-            $gatewayFee = round($total * $gatewayFeeRate / 100 + $gatewayFeeFixed, 2);
-            $supplierAmount = round($total - $platformFee - $gatewayFee, 2);
+            $platformFee = Money::round(Money::div(Money::mul($total, $platformFeeRate), '100'));
+            $gatewayFee = Money::round(Money::add(Money::div(Money::mul($total, $gatewayFeeRate), '100'), $gatewayFeeFixed));
+            $supplierAmount = Money::round(Money::sub($total, Money::add($platformFee, $gatewayFee)));
 
             PlatformSettlements::create([
                 'order_id' => $order->id,
@@ -73,7 +75,7 @@ class SettlementCron
                 'platform_fee' => $platformFee,
                 'platform_fee_rate' => $platformFeeRate,
                 'payment_gateway_fee' => $gatewayFee,
-                'supplier_amount' => max(0, $supplierAmount),
+                'supplier_amount' => Money::cmp($supplierAmount, '0') > 0 ? $supplierAmount : '0.00',
                 'affiliate_amount' => 0,
                 'currency_code' => $order->currency_code ?: 'USD',
                 'status' => 0,
@@ -120,22 +122,22 @@ class SettlementCron
                 continue;
             }
             $mid = $link->merchant_id;
-            $byMerchant[$mid] = ($byMerchant[$mid] ?? 0) + (float) $item->subtotal;
+            $byMerchant[$mid] = Money::add($byMerchant[$mid] ?? '0', (string) $item->subtotal);
         }
 
         foreach ($byMerchant as $mid => $amount) {
             if (MerchantSettlements::where('order_id', $order->id)->where('merchant_id', $mid)->exists()) {
                 continue;
             }
-            $rate = (float) ($merchants[$mid]->commission_rate ?? 5.0);
-            $commission = round($amount * $rate / 100, 2);
+            $rate = (string) ($merchants[$mid]->commission_rate ?? 5.0);
+            $commission = Money::round(Money::div(Money::mul($amount, $rate), '100'));
             MerchantSettlements::create([
                 'merchant_id' => $mid,
                 'order_id' => $order->id,
-                'order_amount' => round($amount, 2),
+                'order_amount' => Money::round($amount),
                 'commission_rate' => $rate,
                 'commission_amount' => $commission,
-                'settlement_amount' => round($amount - $commission, 2),
+                'settlement_amount' => Money::round(Money::sub($amount, $commission)),
                 'status' => 0,
             ]);
         }
@@ -163,7 +165,7 @@ class SettlementCron
         foreach ($items as $item) {
             $sid = (int) ($supplierIds[$item->product_id] ?? 0);
             if ($sid > 0) {
-                $bySupplier[$sid] = ($bySupplier[$sid] ?? 0) + (float) $item->subtotal;
+                $bySupplier[$sid] = Money::add($bySupplier[$sid] ?? '0', (string) $item->subtotal);
             }
         }
 
@@ -179,15 +181,15 @@ class SettlementCron
                     'period_start' => $monthStart,
                     'period_end' => $monthEnd,
                     'total_orders' => 1,
-                    'total_amount' => round($amount, 2),
+                    'total_amount' => Money::round($amount),
                     'platform_fee_deducted' => 0,
-                    'net_amount' => round($amount, 2),
+                    'net_amount' => Money::round($amount),
                     'currency_code' => $order->currency_code ?: 'USD',
                     'status' => 0,
                 ]);
             } else {
                 $row->total_orders = (int) $row->total_orders + 1;
-                $row->total_amount = round((float) $row->total_amount + $amount, 2);
+                $row->total_amount = Money::round(Money::add((string) $row->total_amount, $amount));
                 $row->net_amount = $row->total_amount;
                 $row->save();
             }
@@ -210,8 +212,8 @@ class SettlementCron
         if (!$link || (int) $link->status !== 1) {
             return;
         }
-        $rate = (float) $link->commission_rate;
-        $amount = round((float) $order->pay_amount * $rate / 100, 2);
+        $rate = (string) $link->commission_rate;
+        $amount = Money::round(Money::div(Money::mul((string) $order->pay_amount, $rate), '100'));
 
         AffiliateCommissions::create([
             'affiliate_link_id' => $link->id,
@@ -222,7 +224,7 @@ class SettlementCron
         ]);
         // 更新推广链接统计
         $link->total_orders = (int) $link->total_orders + 1;
-        $link->total_commission = round((float) $link->total_commission + $amount, 2);
+        $link->total_commission = Money::round(Money::add((string) $link->total_commission, $amount));
         $link->save();
     }
 }

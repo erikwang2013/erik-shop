@@ -77,7 +77,7 @@ class PlatformOrderSyncCron
                         'status' => (string) ($order['status'] ?? ''),
                         'buyer_name' => (string) ($order['buyer_name'] ?? ''),
                         'buyer_email' => (string) ($order['buyer_email'] ?? ''),
-                        'total_amount' => (float) ($order['total_amount'] ?? 0),
+                        'total_amount' => (string) ($order['total_amount'] ?? 0), // decimal 列直存字符串
                         'currency' => (string) ($order['currency'] ?? 'USD'),
                         'raw_data' => $order,
                         'synced_at' => date('Y-m-d H:i:s'),

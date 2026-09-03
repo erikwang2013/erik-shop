@@ -32,7 +32,7 @@ class StatsController extends \app\controller\BaseApiController
 
         return ApiResponse::success([
             'app' => 'Shop',
-            'version' => '1.3.0',
+            'version' => '1.4.0',
             'timestamp' => date('c'),
             'total' => [
                 'users' => Users::count(),

@@ -53,7 +53,7 @@ class AdyenGateway implements PaymentGatewayInterface
                 'reference' => (string) ($data['order_no'] ?? $data['order_id'] ?? ''),
                 'amount' => [
                     'currency' => $data['currency'] ?? 'USD',
-                    'value' => (int) round($data['amount'] * 100),
+                    'value' => Money::toIntCents((string) $data['amount']),
                 ],
                 'returnUrl' => (string) ($data['return_url'] ?? ''),
                 'countryCode' => $data['country'] ?? 'US',
@@ -98,19 +98,19 @@ class AdyenGateway implements PaymentGatewayInterface
     /**
      * 退款：txnId 传 Adyen 的 paymentPspReference
      */
-    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    public function refundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         return CircuitBreaker::call('adyen', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [GatewayBusinessException::class]);
     }
 
-    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    private function doRefundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         $response = $this->http->post("/v71/payments/{$txnId}/refunds", [
             'json' => [
                 'merchantAccount' => $this->merchantAccount,
                 'amount' => [
                     'currency' => $currency,
-                    'value' => (int) round($amount * 100),
+                    'value' => Money::toIntCents((string) $amount),
                 ],
             ],
         ]);

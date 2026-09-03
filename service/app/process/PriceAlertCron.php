@@ -7,6 +7,7 @@ namespace app\process;
 
 use app\model\Notifications;
 use app\model\PriceAlerts;
+use app\common\Money;
 use app\model\ProductSkuPrices;
 use app\model\ProductSkus;
 use support\Log;
@@ -50,11 +51,12 @@ class PriceAlertCron
                 ->where('currency_code', 'USD')
                 ->value('price');
             if ($currentPrice === null) {
-                $currentPrice = (float) $sku->default_price;
+                $currentPrice = $sku->default_price; // decimal 列返回字符串
             }
-            $currentPrice = (float) $currentPrice;
+            // 现价与目标价均为字符串，降价判定走十进制比较
+            $currentPrice = Money::round((string) $currentPrice);
             $alert->current_price = $currentPrice;
-            if ($currentPrice <= (float) $alert->target_price) {
+            if (Money::cmp($currentPrice, (string) $alert->target_price) <= 0) {
                 $alert->is_notified = 1;
                 $alert->notified_at = date('Y-m-d H:i:s');
                 $alert->save();

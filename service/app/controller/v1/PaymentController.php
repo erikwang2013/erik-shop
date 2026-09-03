@@ -8,6 +8,7 @@ namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\common\CircuitBreakerOpenException;
 use app\common\DistributedLock;
+use app\common\Money;
 use app\common\PaymentGateway as Gateway;
 use app\common\RefundHelper;
 use app\common\RiskEngine;
@@ -104,7 +105,7 @@ class PaymentController extends \app\controller\BaseApiController
                 $riskContext = [
                     'user_id' => $userId,
                     'ip' => $request->getRealIp(),
-                    'amount' => (float) $order->pay_amount,
+                    'amount' => (string) $order->pay_amount, // 金额入参统一字符串（RiskEngine 内归一）
                     'order_id' => $order->id,
                 ];
                 RiskEngine::log('payment_create', $riskContext, RiskEngine::score('payment_create', $riskContext));
@@ -283,19 +284,24 @@ class PaymentController extends \app\controller\BaseApiController
             $payment->save();
 
             $order = Orders::find($payment->order_id);
-            $platformRate = config('payment.platform_rate', 5.0);
-            $gatewayFeeRate = config("payment.gateway_fee.{$payment->gateway}.rate", 2.9);
-            $gatewayFixedFee = config("payment.gateway_fee.{$payment->gateway}.fixed", 0.30);
+            // decimal 列/配置经字符串入 Money：先乘除聚合、末位一次 round(2)（与 SettlementCron 同口径）
+            $total = (string) $order->pay_amount;
+            $platformRate = (string) config('payment.platform_rate', 5.0);
+            $gatewayFeeRate = (string) config("payment.gateway_fee.{$payment->gateway}.rate", 2.9);
+            $gatewayFixedFee = (string) config("payment.gateway_fee.{$payment->gateway}.fixed", 0.30);
+            $platformFee = Money::round(Money::div(Money::mul($total, $platformRate), '100'));
+            $gatewayFee = Money::round(Money::add(Money::div(Money::mul($total, $gatewayFeeRate), '100'), $gatewayFixedFee));
+            $supplierAmount = Money::sub(Money::sub($total, $platformFee), $gatewayFee);
 
             // 创建分账记录
             PlatformSettlements::create([
                 'order_id' => $order->id,
                 'payment_id' => $payment->id,
-                'total_amount' => $order->pay_amount,
-                'platform_fee' => round($order->pay_amount * $platformRate / 100, 2),
+                'total_amount' => $total,
+                'platform_fee' => $platformFee,
                 'platform_fee_rate' => $platformRate,
-                'payment_gateway_fee' => round($order->pay_amount * $gatewayFeeRate / 100 + $gatewayFixedFee, 2),
-                'supplier_amount' => max(0, round($order->pay_amount - $order->pay_amount * $platformRate / 100 - ($order->pay_amount * $gatewayFeeRate / 100 + $gatewayFixedFee), 2)),
+                'payment_gateway_fee' => $gatewayFee,
+                'supplier_amount' => Money::cmp($supplierAmount, '0') > 0 ? $supplierAmount : '0.00',
                 'affiliate_amount' => 0,
                 'currency_code' => $order->currency_code,
                 'status' => 0,
@@ -310,17 +316,17 @@ class PaymentController extends \app\controller\BaseApiController
     {
         $eventId = $event['id'] ?? '';
         if ($eventType === 'payment_intent.refunded') {
-            // Stripe：amount_refunded 为累计已退金额，按与本地已退的差值增量入账
+            // Stripe：amount_refunded 为累计已退金额（分），先 ÷100 还原为元级字符串
             $object = $event['data']['object'] ?? [];
             $txnId = (string) ($object['id'] ?? '');
-            $refundedTotal = (float) ($object['amount_refunded'] ?? 0) / 100;
+            $refundedTotal = Money::fromCents((string) ($object['amount_refunded'] ?? 0));
         } else {
-            // PayPal：resource.amount 为单笔退款金额
+            // PayPal：resource.amount 为单笔退款金额（元）
             $resource = $event['data']['resource'] ?? [];
             $txnId = (string) ($resource['supplementary_data']['related_ids']['order_id'] ?? $resource['capture_id'] ?? $resource['id'] ?? '');
-            $refundedTotal = (float) ($resource['amount']['value'] ?? 0);
+            $refundedTotal = Money::round((string) ($resource['amount']['value'] ?? '0'));
         }
-        if ($txnId === '' || $refundedTotal <= 0 || $eventId === '') {
+        if ($txnId === '' || Money::cmp($refundedTotal, '0') <= 0 || $eventId === '') {
             return;
         }
 
@@ -329,14 +335,14 @@ class PaymentController extends \app\controller\BaseApiController
             return; // 无支付记录或未支付完成，忽略
         }
 
-        // 增量口径：Stripe 累计值取差值，PayPal 单笔金额直接用
+        // 增量口径：Stripe 累计值取差值，PayPal 单笔金额直接用（十进制差后 round 2 位）
         $amount = $eventType === 'payment_intent.refunded'
-            ? round($refundedTotal - (float) $payment->refunded_amount, 2)
+            ? Money::round(Money::sub($refundedTotal, (string) $payment->refunded_amount))
             : $refundedTotal;
 
         // 事件幂等：refund_no 由事件 ID 派生，重复投递跳过（uk_refund_no 兜底防并发重复插入）
         $refundNo = 'WH' . substr(md5($eventId), 0, 29);
-        if ($amount <= 0 || Refunds::where('refund_no', $refundNo)->exists()) {
+        if (Money::cmp($amount, '0') <= 0 || Refunds::where('refund_no', $refundNo)->exists()) {
             return;
         }
 

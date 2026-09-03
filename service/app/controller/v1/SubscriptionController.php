@@ -7,6 +7,7 @@ namespace app\controller\v1;
 
 use app\common\ApiResponse;
 use app\common\DistributedLock;
+use app\common\Money;
 use app\model\Orders;
 use app\model\OrderItems;
 use app\model\ProductSkus;
@@ -60,9 +61,9 @@ class SubscriptionController extends \app\controller\BaseApiController
                 ]);
 
                 // 首期订单（简化：按 sku 默认币种价格直接建单，不走购物车）
-                $price = ProductSkuPrices::where('sku_id', $sku->id)->where('currency_code', 'USD')->value('price');
-                $price = (float) ($price ?? $sku->default_price);
-                $subtotal = round($price * $quantity, 2);
+                // decimal 列返回字符串，保留字符串参与 Money 乘算
+                $price = (string) (ProductSkuPrices::where('sku_id', $sku->id)->where('currency_code', 'USD')->value('price') ?? $sku->default_price);
+                $subtotal = Money::round(Money::mul($price, (string) $quantity));
                 $order = Orders::create([
                     'order_no' => 'SUB' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8)),
                     'user_id' => $userId,
@@ -99,7 +100,8 @@ class SubscriptionController extends \app\controller\BaseApiController
                     'order_id' => $order->id,
                     'order_no' => $order->order_no,
                     'next_billing_at' => $subscription->next_billing_at,
-                    'first_amount' => $subtotal,
+                    // JSON 输出边界 (float) 展示转换
+                    'first_amount' => (float) $subtotal,
                 ];
             }));
         } catch (\RuntimeException $e) {

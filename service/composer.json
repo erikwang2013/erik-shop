@@ -19,6 +19,7 @@
   ],
   "require": {
     "php": ">=8.3",
+    "ext-bcmath": "*",
     "workerman/webman-framework": "^2.1",
     "monolog/monolog": "^2.0",
     "webman/database": "^2.0",

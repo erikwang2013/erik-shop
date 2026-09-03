@@ -6,6 +6,7 @@
 namespace app\common;
 
 use app\model\OrderLogs;
+
 use app\model\Orders;
 use app\model\Payments;
 use app\model\Refunds;
@@ -31,17 +32,18 @@ class RefundHelper
     /**
      * 将一笔退款标记为已退款，并联动支付/订单状态（同一事务内原子执行）
      */
-    public static function markRefunded(Refunds $refund, Payments $payment, float $amount, string $operator = 'system', string $remark = ''): void
+    public static function markRefunded(Refunds $refund, Payments $payment, int|string|float $amount, string $operator = 'system', string $remark = ''): void
     {
         Db::transaction(function () use ($refund, $payment, $amount, $operator, $remark) {
             $refund->status = 3;
             $refund->refunded_at = date('Y-m-d H:i:s');
             $refund->save();
 
-            // 原子累加已退金额，防并发退款互相覆盖
-            Payments::where('id', $payment->id)->increment('refunded_amount', $amount);
+            // 原子累加已退金额，防并发退款互相覆盖（decimal 字符串入 SQL，MySQL decimal 列精确累加）
+            Payments::where('id', $payment->id)->increment('refunded_amount', (string) $amount);
             $payment->refresh();
-            $fullRefund = (float) $payment->refunded_amount >= (float) $payment->amount - 0.01;
+            // 全额判定：已退 >= 实付 - 0.01（保留原 1 分容差语义，十进制精确比较）
+            $fullRefund = Money::cmp((string) $payment->refunded_amount, Money::sub((string) $payment->amount, '0.01')) >= 0;
             $payment->status = $fullRefund ? 2 : 1;
             $payment->save();
 

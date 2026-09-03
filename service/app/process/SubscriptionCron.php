@@ -10,6 +10,7 @@ use app\model\Orders;
 use app\model\ProductSkuPrices;
 use app\model\ProductSkus;
 use app\model\SubscriptionLogs;
+use app\common\Money;
 use app\model\SubscriptionOrders;
 use app\model\Subscriptions;
 use support\Db;
@@ -72,10 +73,10 @@ class SubscriptionCron
             return false;
         }
 
-        $price = ProductSkuPrices::where('sku_id', $sku->id)->where('currency_code', 'USD')->value('price');
-        $price = (float) ($price ?? $sku->default_price);
+        // decimal 列返回字符串；金额×数量十进制运算（与 SubscriptionController::store 同口径）
+        $price = (string) (ProductSkuPrices::where('sku_id', $sku->id)->where('currency_code', 'USD')->value('price') ?? $sku->default_price);
         $quantity = (int) $subscription->quantity;
-        $subtotal = round($price * $quantity, 2);
+        $subtotal = Money::round(Money::mul($price, (string) $quantity));
 
         Db::transaction(function () use ($subscription, $sku, $price, $quantity, $subtotal) {
             $order = Orders::create([

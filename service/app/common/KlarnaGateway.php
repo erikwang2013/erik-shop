@@ -54,7 +54,7 @@ class KlarnaGateway implements PaymentGatewayInterface
                 'purchase_country' => $data['country'] ?? 'US',
                 'purchase_currency' => $data['currency'] ?? 'USD',
                 'locale' => $data['locale'] ?? 'en-US',
-                'order_amount' => (int) round($data['amount'] * 100),
+                'order_amount' => Money::toIntCents((string) $data['amount']),
                 'order_lines' => $data['order_lines'] ?? [],
                 'merchant_references' => [
                     'order_id' => (string) ($data['order_id'] ?? ''),
@@ -98,15 +98,15 @@ class KlarnaGateway implements PaymentGatewayInterface
         ];
     }
 
-    public function refundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    public function refundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         return CircuitBreaker::call('klarna', fn() => $this->doRefundPayment($txnId, $amount, $currency), null, [GatewayBusinessException::class]);
     }
 
-    private function doRefundPayment(string $txnId, float $amount, string $currency = 'USD'): array
+    private function doRefundPayment(string $txnId, int|string|float $amount, string $currency = 'USD'): array
     {
         $response = $this->http->post("/ordermanagement/v1/orders/{$txnId}/refunds", [
-            'json' => ['refunded_amount' => (int) round($amount * 100)],
+            'json' => ['refunded_amount' => Money::toIntCents((string) $amount)],
         ]);
         $result = json_decode($response->getBody(), true);
 

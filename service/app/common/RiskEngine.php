@@ -53,7 +53,8 @@ class RiskEngine
         $userId = (int) ($context['user_id'] ?? 0);
         $ip = (string) ($context['ip'] ?? '');
         $email = (string) ($context['email'] ?? '');
-        $amount = (float) ($context['amount'] ?? 0);
+        // 金额入参统一归一为字符串（decimal 列/接口均字符串进入），比较走十进制
+        $amount = (string) ($context['amount'] ?? 0);
 
         try {
             // 1. 临时邮箱域名
@@ -90,10 +91,10 @@ class RiskEngine
 
             // 3. 金额异常
             if (($event === 'order_create' || $event === 'payment_create') && ($checks['amount_anomaly'] ?? true)) {
-                if ($amount >= 20000) {
+                if (Money::cmp($amount, '20000') >= 0) {
                     $score += 40;
                     $details['amount'] = "大额订单 {$amount}";
-                } elseif ($amount >= 5000) {
+                } elseif (Money::cmp($amount, '5000') >= 0) {
                     $score += 20;
                     $details['amount'] = "较大金额 {$amount}";
                 }

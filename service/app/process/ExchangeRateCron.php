@@ -5,6 +5,7 @@
 
 namespace app\process;
 
+use app\common\Money;
 use app\model\Currencies;
 use app\model\ExchangeRates;
 use GuzzleHttp\Client as HttpClient;
@@ -56,11 +57,15 @@ class ExchangeRateCron
             if (!isset($rates[$code]) || $code === 'USD') {
                 continue;
             }
-            $rate = (float) $rates[$code];
-            if ($rate <= 0) {
+            // 汇率为换算乘数（DECIMAL(18,8) 消费方）：%.8F 定点到存储精度——
+            // (string) 对 <1e-4 的 float（VND/IDR 等）产出科学计数法，bcmath 抛 ValueError 会使整轮中断
+            $rate = sprintf('%.8F', $rates[$code]);
+            if (Money::cmp($rate, '0') <= 0) {
                 continue;
             }
-            foreach ([['USD', $code, $rate], [$code, 'USD', 1 / $rate]] as [$from, $to, $value]) {
+            // 倒数：9 位中间精度算毕再收敛到 8 位（舍入入库，与历史 float 路径存储值一致；bcdiv 直截会系统性偏小 1e-8）
+            $inverse = Money::round(Money::div('1', $rate, Money::SCALE_MID + 1), Money::SCALE_MID);
+            foreach ([['USD', $code, $rate], [$code, 'USD', $inverse]] as [$from, $to, $value]) {
                 $exists = ExchangeRates::where('from_currency', $from)->where('to_currency', $to)->first();
                 if ($exists) {
                     $exists->rate = $value;

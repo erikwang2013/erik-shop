@@ -6,6 +6,7 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\Money;
 use app\model\GiftCards;
 use app\model\Users;
 use support\Db;
@@ -40,8 +41,9 @@ class GiftCardController extends \app\controller\BaseApiController
             if (!$card) return ApiResponse::fail('礼品卡不存在或已使用', 404);
             if ($card->expire_at && $card->expire_at < date('Y-m-d')) return ApiResponse::fail('礼品卡已过期', 422);
 
-            $amount = (float)$card->balance;
-            if ($amount <= 0) return ApiResponse::fail('礼品卡余额无效', 422);
+            // 余额为 decimal 字符串，比较与入账均十进制
+            $amount = (string) $card->balance;
+            if (Money::cmp($amount, '0') <= 0) return ApiResponse::fail('礼品卡余额无效', 422);
 
             // 原子扣减：状态置 2 必须带条件更新，防止行锁竞态下重复入账
             $updated = GiftCards::where('id', $card->id)
@@ -52,7 +54,8 @@ class GiftCardController extends \app\controller\BaseApiController
 
             Users::where('id', $request->userId)->increment('money', $amount);
 
-            return ApiResponse::success(['amount' => $amount, 'currency' => $card->currency_code], '兑换成功');
+            // JSON 输出边界 (float) 展示转换
+            return ApiResponse::success(['amount' => (float) $amount, 'currency' => $card->currency_code], '兑换成功');
         });
     }
 }

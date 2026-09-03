@@ -7,6 +7,7 @@ namespace app\controller\v1;
 
 use app\common\ApiResponse;
 use app\common\Cdn;
+use app\common\Money;
 use app\model\Products;
 use app\model\ProductTranslations;
 use app\model\Categories;
@@ -110,17 +111,21 @@ class ProductController extends \app\controller\BaseApiController
         $destCountry = Countries::where('iso_code_2', $destCountryCode)->first();
         // VAT 税率与目的国无关SKU，循环外查一次
         $destCountryId = $destCountry->id ?? null;
-        $vatRate = $destCountryId
+        // decimal 列返回字符串，税率以字符串进 Money 乘算
+        $vatRate = (string) ($destCountryId
             ? (VatSettings::where('country_id', $destCountryId)->value('vat_rate') ?? 0)
-            : 0;
+            : 0);
         foreach ($product->skus as $sku) {
             $cp = $sku->prices->where('currency_code', $currencyCode)->first();
-            $bp = $cp ? $cp->price : $this->convertPrice($sku->default_price, 'CNY', $currencyCode);
+            $bp = $cp ? (string) $cp->price : $this->convertPrice((string) $sku->default_price, 'CNY', $currencyCode);
+            // 含税 = 不含税 + 不含税×率÷100；金额十进制运算，JSON 输出边界 (float) 展示
+            $taxExclusive = Money::round($bp);
+            $vatAmount = Money::round(Money::div(Money::mul($bp, $vatRate), '100'));
             $sku->display_price = [
-                'tax_exclusive' => round($bp, 2),
-                'tax_inclusive' => round($bp * (1 + $vatRate / 100), 2),
-                'vat_amount' => round($bp * $vatRate / 100, 2),
-                'vat_rate' => $vatRate,
+                'tax_exclusive' => (float) $taxExclusive,
+                'tax_inclusive' => (float) Money::round(Money::add($taxExclusive, $vatAmount)),
+                'vat_amount' => (float) $vatAmount,
+                'vat_rate' => (float) $vatRate,
                 'currency' => $currencyCode,
                 'display_mode' => $destCountry->price_display_mode ?? 'tax_exclusive',
             ];
@@ -141,10 +146,15 @@ class ProductController extends \app\controller\BaseApiController
         return ApiResponse::success($product);
     }
 
-    private function convertPrice(float $amount, string $from, string $to): float
+    /**
+     * 币种换算：金额×汇率（汇率 decimal 字符串入 Money），返回分位字符串
+     */
+    private function convertPrice(int|string|float $amount, string $from, string $to): string
     {
-        if ($from === $to) return $amount;
-        $rate = ExchangeRates::where('from_currency',$from)->where('to_currency',$to)->value('rate');
-        return $rate ? round($amount*(float)$rate,2) : $amount;
+        if ($from === $to) {
+            return (string) $amount;
+        }
+        $rate = ExchangeRates::where('from_currency', $from)->where('to_currency', $to)->value('rate');
+        return $rate ? Money::round(Money::mul((string) $amount, (string) $rate)) : (string) $amount;
     }
 }

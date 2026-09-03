@@ -8,6 +8,7 @@ namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\common\CircuitBreakerOpenException;
 use app\common\HashidsHelper;
+use app\common\Money;
 use app\common\PaymentGateway as Gateway;
 use app\common\RefundHelper;
 use app\model\OrderLogs;
@@ -51,11 +52,11 @@ class AdminOpsController extends \app\controller\BaseApiController
             return ApiResponse::fail('该订单无已支付记录，无法退款', 422);
         }
 
-        // 部分退款校验：可退余额 = 实付金额 - 累计已退金额
-        $refundable = round((float) $payment->amount - (float) $payment->refunded_amount, 2);
-        $amount = (float) $refund->amount;
-        if ($amount <= 0 || $amount > $refundable + 0.01) {
-            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max($refundable, 0.0), 2) . '）', 422);
+        // 部分退款校验：可退余额 = 实付金额 - 累计已退金额（decimal 字符串，十进制运算，保留 1 分容差）
+        $refundable = Money::round(Money::sub((string) $payment->amount, (string) $payment->refunded_amount));
+        $amount = Money::round((string) $refund->amount);
+        if (Money::cmp($amount, '0') <= 0 || Money::cmp($amount, Money::add($refundable, '0.01')) > 0) {
+            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max((float) $refundable, 0.0), 2) . '）', 422);
         }
 
         try {
@@ -105,7 +106,8 @@ class AdminOpsController extends \app\controller\BaseApiController
         return ApiResponse::success([
             'refund_id' => $refund->id,
             'refund_no' => $refund->refund_no,
-            'refund_amount' => $amount,
+            // JSON 输出边界 (float) 展示转换
+            'refund_amount' => (float) $amount,
             'gateway_refund_id' => $result['refund_id'] ?? '',
         ], '退款执行成功');
     }
@@ -127,10 +129,11 @@ class AdminOpsController extends \app\controller\BaseApiController
         if (!$payment) {
             return ApiResponse::fail('该订单无已支付记录，无法退款', 422);
         }
-        $amount = (float) $refund->amount;
-        $refundable = round((float) $payment->amount - (float) $payment->refunded_amount, 2);
-        if ($amount <= 0 || $amount > $refundable + 0.01) {
-            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max($refundable, 0.0), 2) . '）', 422);
+        // 可退余额与退款金额十进制校验（保留 1 分容差，与 executeRefund 同口径）
+        $amount = Money::round((string) $refund->amount);
+        $refundable = Money::round(Money::sub((string) $payment->amount, (string) $payment->refunded_amount));
+        if (Money::cmp($amount, '0') <= 0 || Money::cmp($amount, Money::add($refundable, '0.01')) > 0) {
+            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max((float) $refundable, 0.0), 2) . '）', 422);
         }
 
         try {
@@ -156,7 +159,8 @@ class AdminOpsController extends \app\controller\BaseApiController
         return ApiResponse::success([
             'refund_id' => $refund->id,
             'refund_no' => $refund->refund_no,
-            'refund_amount' => $amount,
+            // JSON 输出边界 (float) 展示转换
+            'refund_amount' => (float) $amount,
         ], '退款审核通过，已执行');
     }
 

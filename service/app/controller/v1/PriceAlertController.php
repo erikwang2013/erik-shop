@@ -5,6 +5,7 @@
 
 namespace app\controller\v1;
 use app\common\ApiResponse;
+use app\common\Money;
 use app\model\PriceAlerts;
 use app\model\ProductSkus;
 use Webman\Http\Request;
@@ -28,7 +29,8 @@ class PriceAlertController extends \app\controller\BaseApiController
         if (!$sku) {
             return ApiResponse::fail('SKU不存在', 404);
         }
-        $targetPrice = (float) $request->input('target_price', 0);
+        // 目标价入参归一：Money::normalize 归一分位字符串，存 decimal 列（Cron 侧十进制比较）
+        $targetPrice = Money::normalize($request->input('target_price', 0));
 
         PriceAlerts::updateOrCreate(
             ['user_id' => $request->userId, 'sku_id' => $sku->id],

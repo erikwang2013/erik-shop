@@ -5,6 +5,7 @@
 
 namespace app\controller\v1;
 use app\common\ApiResponse;
+use app\common\Money;
 use app\model\ShippingZones;
 use app\model\ShippingZoneRates;
 use app\model\Countries;
@@ -45,7 +46,8 @@ class ShippingController extends \app\controller\BaseApiController
             ->map(fn($r) => [
                 'logistics_name' => $r->logistics->name ?? '',
                 'logistics_code' => $r->logistics->code ?? '',
-                'fee' => round($r->price + $weightKg * (float) $r->per_kg_price, 2),
+                // 运费 = 起步价 + (克/1000) × 每公斤价（十进制），JSON 边界 (float) 展示
+                'fee' => (float) Money::round(Money::add((string) $r->price, Money::mul(Money::div((string) $weightGrams, '1000'), (string) $r->per_kg_price))),
                 'estimated_days' => $r->logistics->estimated_days ?? '7-15',
                 'tracking_url' => $r->logistics->tracking_url ?? '',
             ]);

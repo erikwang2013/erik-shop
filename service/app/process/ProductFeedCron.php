@@ -5,6 +5,7 @@
 
 namespace app\process;
 
+use app\common\Money;
 use app\model\ProductFeedLogs;
 use app\model\ProductFeeds;
 use app\model\Products;
@@ -54,13 +55,14 @@ class ProductFeedCron
                 $lines = ["id\ttitle\tlink\timage_link\tprice\tavailability\tbrand"];
                 foreach ($products as $product) {
                     $sku = ProductSkus::where('product_id', $product->id)->first();
-                    $price = $sku ? (float) $sku->default_price : 0;
+                    // Feed 金额字段：协议边界十进制收敛（Money::format），不落 float
+                    $price = $sku ? Money::format((string) $sku->default_price) : '0.00';
                     $lines[] = implode("\t", [
                         $product->id,
                         str_replace(["\t", "\n"], ' ', (string) $product->title),
                         config('app.app_url', 'https://erik.xyz') . '/product/' . $product->id,
                         $product->image ?? '',
-                        $price > 0 ? number_format($price, 2, '.', '') . ' USD' : '',
+                        Money::cmp($price, '0') > 0 ? $price . ' USD' : '',
                         'in_stock',
                         $product->brand ?? '',
                     ]);

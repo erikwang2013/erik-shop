@@ -4,6 +4,14 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="../../pet.svg" width="180" alt="Snowy — Erik Shop プロジェクトマスコット">
+</p>
+
+## プロジェクトマスコット — Snowy
+
+プロジェクトのマスコットは **Snowy（スノウィ）** —— 雪の結晶の冠を戴き、経緯線をまとった地球の精霊が、越境荷物を抱えています。雪の結晶は Snowflake 分散 ID を、地球は越境 EC を、荷物は国際物流を表します。詳細は[中国語 README](../../../README.md#项目宠物--雪球-snowy)をご覧ください。
+
 ## バージョン
 
 > 簡易版 (MITオープンソース): `lite` | 標準版 (商用): `standard` | 完全版 (商用): `full`

@@ -2,6 +2,10 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="pet.svg" width="180" alt="Snowy — Erik Shop project pet">
+</p>
+
 ## Editions
 
 > Lite (MIT Open Source): `lite` | Standard (Commercial): `standard` | Full (Commercial): `full`
@@ -11,6 +15,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 ## Overview
 
 A full-stack cross-border e-commerce platform built on the webman ecosystem, covering B2C, B2B, and multi-vendor marketplace scenarios.
+
+The project mascot is **Snowy** — a globe sprite wearing a snowflake crown and meridian lines, hugging a cross-border parcel. Full design notes: [Project Pet — Snowy](../README.md#项目宠物--雪球-snowy).
 
 ### Architecture
 
@@ -50,7 +56,11 @@ A full-stack cross-border e-commerce platform built on the webman ecosystem, cov
 
 ![Request Lifecycle](04-request-lifecycle.svg)
 
-> See [full diagram collection](diagrams.md) for 8 diagrams including order lifecycle, deployment, security architecture, and multi-currency settlement.
+### Order Lifecycle
+
+![Order Lifecycle](05-order-lifecycle.svg)
+
+> See [full diagram collection](diagrams.md) for 8 diagrams including deployment, security architecture, and multi-currency settlement.
 
 ### Security Architecture
 
@@ -145,13 +155,28 @@ docker-compose up -d
 ```
 shop-php/
   install.sql       # One-click install SQL (117 tables), auto-imported by web installer
-  service/          PHP API (webman)            — 39 controllers + 111 models + 14 middleware
-  admin/            Admin panel (webman-admin)   — 83 controllers + 76 models + web installer
-  apps/flutter/     Flutter client              — 11 pages + 5 languages + PC adaptive layout
-  apps/harmonyos/   HarmonyOS client            — 9 pages + ArkTS
+  service/          PHP API (webman)            — 44 controllers + 111 models + 14 middleware + 16 processes
+  admin/            Admin panel (webman-admin)   — 85 controllers + 78 models + ECharts dashboard + web installer
+  apps/flutter/     Flutter client              — 6 feature modules + 13 pages + 5 languages + PC adaptive layout
+  apps/harmonyos/   HarmonyOS client            — 10 pages + 3 security components (ArkTS + ArkUI)
   docker/           Docker deployment           — Nginx + PHP + MySQL + Redis + ES
-  docs/             Design documentation
+  scripts/          Tooling                     — e2e / smoke_controllers / check_install_tables
+  docs/             Design documentation + diagram set
+    pet.svg           Project pet "Snowy" (canonical source)
+    01-08-*.svg       8 diagrams: system architecture / request flow / feature map / request lifecycle /
+                      order lifecycle / deployment / security / multi-currency settlement (*.mmd = Mermaid source)
+    i18n/             READMEs in 13 languages
 ```
+
+### Runtime Directories
+
+| Path | Contents |
+|------|----------|
+| `service/public/`, `admin/public/` | Static asset roots (incl. `pet.svg`, `favicon.ico`) |
+| `service/app/view/`, `admin/plugin/admin/app/view/` | View templates (admin login / dashboard / installer) |
+| `service/app/process/` | Custom processes and cron jobs (exchange rates, shipment tracking, settlement, reconciliation, feed sync) |
+| `service/database/seeders/` | Seed data (countries / HS codes / exchange rates / shipping zones / compliance / size charts / risk rules) |
+| `service/runtime/`, `admin/runtime/` | Runtime cache and logs (not version-controlled) |
 
 ## Feature Coverage
 
@@ -195,7 +220,8 @@ shop-php/
 | [INSTALL.md](INSTALL.md) | Installation guide (web installer + manual) |
 | [AUDIT-REPORT.md](AUDIT-REPORT.md) | Installation system audit report |
 | [Features](features.md) | Complete feature matrix, workflows, API endpoints, state machines |
-| [Diagrams](diagrams.md) | Architecture, flowchart, feature map, lifecycle, deployment, multi-currency settlement (8 Mermaid diagrams) |
+| [Diagrams](diagrams.md) | Architecture, flowchart, feature map, lifecycle, deployment, multi-currency settlement (8 diagrams, Mermaid sources included) |
+| [Project Pet — Snowy](pet.svg) | Mascot SVG source (design rationale, integration points, reuse & regeneration in the [Chinese README](../README.md#项目宠物--雪球-snowy)) |
 | [Architecture](architecture-full.md) | System architecture diagrams, middleware pipeline, data/security/payment architecture, CDN edge layer |
 | [Design](design.md) | Database schema, API specification, security, i18n |
 | [API Reference](api.md) | 71 API endpoints (static documentation) |

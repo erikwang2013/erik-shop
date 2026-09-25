@@ -18,23 +18,26 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ```
 shop-php/
-  service/           业务API (251 PHP文件)
+  service/           业务API (308 PHP文件)
     config/            36配置 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
-    app/controller/    39控制器 (38 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
+    app/controller/    45控制器 (44 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
     app/model/         111模型 (BaseModel + 110业务模型)
     app/middleware/     14中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
-    app/common/          8工具类 (Snowflake/HashidsHelper/ApiResponse/Encryption/Jwt/PaymentGateway/SocialAuth/Definitions)
+    app/common/         19工具类 (Snowflake/HashidsHelper/ApiResponse/Money/Encryption/Jwt/SecureEncrypter/CircuitBreaker/DistributedLock/Cdn/RiskEngine/RefundHelper/SocialAuth/PaymentGateway + Stripe/PayPal/Klarna/Adyen 网关 + InventoryLogger/Definitions)
+    app/process/        16自定义进程 (汇率/物流轨迹/分账结算/支付对账/Feed同步/推荐/合规/退货超时/降价提醒/订阅 + ChatWs/Monitor/Http/SnowflakeWorker/PrivacyComplianceTask)
     database/          schema.sql (已被根目录 install.sql 替代) + seeders
-    tests/              4测试类 (22 tests, 45 assertions)
-  admin/             管理后台 (239 PHP文件)
-    plugin/admin/app/controller/shop/ 82控制器 (含 CdnProvider 控制器)
-    plugin/admin/app/model/shop/      76模型 (含 CdnProviders/CdnPurgeLogs)
+    tests/             24测试类 (全量结果见 docs/test-reports/)
+  admin/             管理后台 (259 PHP文件)
+    plugin/admin/app/controller/shop/ 70控制器 (插件控制器合计 85，含 CdnProvider)
+    plugin/admin/app/model/shop/      69模型 (插件模型合计 78，含 CdnProviders/CdnPurgeLogs)
     plugin/admin/app/view/shop/       ECharts仪表盘 + CDN管理页(Layui 3-tab)
     app/middleware/    5中间件 (Security/Platform/HashidsDecode/HashidsEncode/StaticFile)
   apps/              客户端
-    flutter/lib/      25 Dart (11页面 + 核心层 + 路由)
-    harmonyos/        14 ArkTS (9页面 + API客户端 + 全局状态)
-  docs/               5个设计文档
+    flutter/lib/      26 Dart (13页面 + 6功能模块 + 核心层 + 路由)
+    harmonyos/        16 ArkTS (10页面 + 3安全组件 + API客户端 + 全局状态)
+  docs/               15篇设计文档 + 图集
+    pet.svg             项目宠物「雪球 Snowy」规范源文件
+    01-08-*.svg         8张架构/流程/功能/生命周期图 (*.mmd = Mermaid 源)
   .claude/skills/     38个开发规范Skills
 ```
 

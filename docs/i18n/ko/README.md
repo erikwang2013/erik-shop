@@ -4,6 +4,14 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="../../pet.svg" width="180" alt="Snowy — Erik Shop 프로젝트 마스코트">
+</p>
+
+## 프로젝트 마스코트 — Snowy
+
+프로젝트 마스코트는 **Snowy(스노위)** 입니다 — 눈송이 왕관을 쓰고 경위선을 두른 지구 정령이 국경 간 택배 상자를 안고 있습니다. 눈송이 왕관은 Snowflake 분산 ID를, 지구는 국경 간 전자상거래를, 상자는 국제 물류를 상징합니다. 전체 설명: [중국어 README](../../../README.md#项目宠物--雪球-snowy).
+
 ## 버전
 
 > 간소화판 (MIT 오픈소스): `lite` | 표준판 (상용): `standard` | 전체판 (상용): `full`

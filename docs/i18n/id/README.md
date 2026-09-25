@@ -4,6 +4,14 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="../../pet.svg" width="180" alt="Snowy — maskot proyek Erik Shop">
+</p>
+
+## Maskot Proyek — Snowy
+
+Maskot proyek ini adalah **Snowy** — roh-globe bermahkota kepingan salju dan bergaris meridian, memeluk paket lintas negara. Kepingan salju melambangkan ID terdistribusi Snowflake, globe melambangkan perdagangan lintas negara, dan paket melambangkan logistik internasional. Penjelasan lengkap: [README bahasa Mandarin](../../../README.md#项目宠物--雪球-snowy).
+
 ## Versi
 
 > Versi Ringkas (open source MIT): `lite` | Versi Standar (komersial): `standard` | Versi Lengkap (komersial): `full`

@@ -2,6 +2,14 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="../../pet.svg" width="180" alt="Snowy — mascote do projeto Erik Shop">
+</p>
+
+## Mascote do projeto — Snowy
+
+O mascote do projeto é **Snowy** — um espírito-globo com coroa de floco de neve e meridianos, abraçando um pacote transfronteiriço. O floco representa os IDs distribuídos Snowflake, o globo o comércio transfronteiriço e o pacote a logística internacional. Descrição completa: [README em chinês](../../../README.md#项目宠物--雪球-snowy).
+
 ## Versões
 
 > Versão simplificada (open source MIT): `lite` | Versão padrão (comercial): `standard` | Versão completa (comercial): `full`

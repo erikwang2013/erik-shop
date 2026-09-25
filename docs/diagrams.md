@@ -90,3 +90,13 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 六 | 部署架构图 | 架构图 | 展示 Docker Compose 容器编排、网络、数据卷（含 CDN 边缘层与上传目录持久化） |
 | 七 | 安全架构图 | 架构图 | 展示 6 层纵深防御体系：边界→WAF→流量/韧性(限流+熔断)→认证→数据→响应 |
 | 八 | 多币种结算流程图 | 流程图 | 展示分币种定价→支付→分账→结算→汇兑损益的完整链路 |
+
+---
+
+## 附、项目宠物 — 雪球 Snowy
+
+<p align="center">
+  <img src="pet.svg" width="160" alt="雪球 Snowy — Erik Shop 项目宠物">
+</p>
+
+形象释义与整合点见根目录 [README 项目宠物](../README.md#项目宠物--雪球-snowy) 一节。规范源文件为同目录 [pet.svg](pet.svg)，仅此一份，另有两份静态副本分别位于 `service/public/pet.svg` 与 `admin/public/pet.svg`（供 favicon 与管理端登录页使用）。

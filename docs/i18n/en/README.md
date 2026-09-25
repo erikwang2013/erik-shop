@@ -4,6 +4,14 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="../../pet.svg" width="180" alt="Snowy — Erik Shop project pet">
+</p>
+
+## Project Pet — Snowy
+
+The project mascot is **Snowy** — a globe sprite wearing a snowflake crown and meridian lines, hugging a cross-border parcel. Every design element maps to a core platform concept: the snowflake crown to Snowflake distributed IDs, the globe to cross-border commerce, and the parcel to international logistics. Full design notes: [Chinese README](../../../README.md#项目宠物--雪球-snowy).
+
 ## Version
 
 > Lite (MIT open source): `lite` | Standard (commercial): `standard` | Full (commercial): `full`

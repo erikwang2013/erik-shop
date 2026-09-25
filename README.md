@@ -2,6 +2,9 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="docs/pet.svg" width="180" alt="雪球 Snowy — Erik Shop 项目宠物">
+</p>
 
 ## 语言 / Languages
 
@@ -25,6 +28,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 基于 webman 全家桶构建的全栈跨境电商平台，覆盖 B2C/B2B 场景和第三方卖家入驻。
 
+项目宠物是 **雪球 Snowy** —— 一只头顶雪花冠、身披经纬线的地球精灵，怀抱跨境包裹（详见 [项目宠物](#项目宠物--雪球-snowy)）。
+
 ### 技术架构
 
 | 层级 | 技术 | 目录 |
@@ -40,6 +45,43 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 **核心包：** snowflake-php, hashids, jwt-webman, encryption, encryptable, poster-php, webman-scout, season
 **支付：** Stripe, PayPal（完整）；Klarna, Adyen（占位，`PaymentGateway::make` 未实现，见 docs/PLAN.md）
 **客户端：** Flutter 3.x (Riverpod + GoRouter + Dio), HarmonyOS API 12+ (ArkTS + ArkUI)
+
+## 项目宠物 — 雪球 Snowy
+
+<p align="center">
+  <img src="docs/pet.svg" width="120" alt="雪球 Snowy">
+</p>
+
+**雪球 Snowy** 是本项目的吉祥物。形象不是随手画的，每一处都对应平台的一项核心设计：
+
+| 造型元素 | 对应设计 | 说明 |
+|---------|---------|------|
+| ❄ 雪花冠 | Snowflake 分布式 ID | 117 张表全部使用 `erikwang2013/snowflake-php` 生成的 bigint 主键 |
+| 🌐 地球身体 | 跨境电商 | B2C/B2B + 第三方卖家入驻，面向全球市场 |
+| 经纬线 | 多语言 / 多币种 / 多平台 | 13 语言、分币种定价、8 平台来源识别 |
+| 📦 怀抱包裹 | 国际物流 | 物流分区运费、海外仓、HS 申报、商业发票/装箱单 |
+| `#2d8cf0` 主色 | 管理端主题色 | 与 Pear Admin 默认主题色一致 |
+
+### 资源文件
+
+| 文件 | 用途 |
+|------|------|
+| [docs/pet.svg](docs/pet.svg) | 规范源文件（README 主视觉，256×256，含 CSS 动画） |
+| `service/public/pet.svg` | API 服务静态资源 |
+| `admin/public/pet.svg` | 管理端静态资源 |
+| `service/public/favicon.ico`、`admin/public/favicon.ico` | 浏览器标签页图标（由 pet.svg 生成，多尺寸 64/48/32/16） |
+
+### 代码中的整合点
+
+- **浏览器标签页**：两个站点（`service:8787` / `admin:8788`）的 `favicon.ico` 均替换为雪球，浏览器自动发现，无需额外 `<link>`。
+- **管理端登录页**：`admin/plugin/admin/app/view/account/login.html` 顶部渲染雪球形象。
+- **README 主视觉**：本文档顶部与本节。
+
+### 复用与修改
+
+单文件 SVG，无脚本、无外部字体、无位图依赖，直接 `<img src="/pet.svg" width="96">` 即可嵌入任意页面。内置 `bob`（浮动）/ `blink`（眨眼）/ `spin`（雪花缓转）三段 CSS 动画，并已适配 `prefers-reduced-motion: reduce`（系统开启「减少动态效果」时自动静止）。
+
+> 修改形象时改 `docs/pet.svg`，然后同步两个副本；favicon 用 `rsvg-convert -w 256 -h 256 docs/pet.svg -o /tmp/pet.png && magick /tmp/pet.png -define icon:auto-resize=64,48,32,16 favicon.ico` 重新生成。
 
 ## 架构图集
 
@@ -63,7 +105,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ![请求生命周期图](docs/04-request-lifecycle.svg)
 
-> 更多细节见 [完整架构图集](docs/diagrams.md)（含订单生命周期、部署架构、安全架构、多币种结算等 8 张图）
+### 订单生命周期图
+
+![订单生命周期图](docs/05-order-lifecycle.svg)
+
+> 更多细节见 [完整架构图集](docs/diagrams.md)（含部署架构、安全架构、多币种结算等 8 张图）
 
 ### 安全架构图
 
@@ -158,13 +204,30 @@ curl http://127.0.0.1:8787/
 ```
 shop-php/
   install.sql       # 一键安装 SQL（117 张表），Web 安装向导自动导入
-  service/          PHP业务API (webman)        — 39控制器 + 111模型 + 14中间件
-  admin/            管理后台 (webman-admin)      — 83控制器 + 76模型 + ECharts仪表盘 + Web安装向导
-  apps/flutter/     Flutter客户端              — 11页面 + 5语言 + PC自适应
-  apps/harmonyos/   鸿蒙客户端                  — 9页面 + ArkTS
-  docker/           Docker部署                  — Nginx + PHP + MySQL + Redis + ES
-  docs/             设计文档
+  service/          PHP 业务 API (webman)      — 44 控制器 + 111 模型 + 14 中间件 + 16 自定义进程
+  admin/            管理后台 (webman-admin)    — 85 控制器 + 78 模型 + ECharts 仪表盘 + Web 安装向导
+  apps/flutter/     Flutter 客户端             — 6 功能模块 + 13 页面 + 5 语言 + PC 自适应
+    lib/features/     auth / home / product / cart / order / profile
+  apps/harmonyos/   鸿蒙客户端                  — ArkTS + ArkUI，10 页面 + 3 安全组件
+    entry/src/main/ets/pages/
+  docker/           Docker 部署                — Nginx + PHP + MySQL + Redis + ES
+  scripts/          工具脚本                    — e2e / smoke_controllers / check_install_tables
+  docs/             设计文档 + 架构图集
+    pet.svg           项目宠物「雪球 Snowy」规范源文件
+    01-08-*.svg       8 张图：系统架构 / 请求流程 / 功能全景 / 请求生命周期 /
+                      订单生命周期 / 部署架构 / 安全架构 / 多币种结算（*.mmd 为 Mermaid 源）
+    i18n/             13 语言 README
 ```
+
+### 运行时目录
+
+| 路径 | 内容 |
+|------|------|
+| `service/public/`、`admin/public/` | 静态资源根（含 `pet.svg`、`favicon.ico`） |
+| `service/app/view/`、`admin/plugin/admin/app/view/` | 视图模板（管理端登录页 / 仪表盘 / 安装向导） |
+| `service/app/process/` | 自定义进程与定时任务（汇率、物流轨迹、分账结算、对账、Feed 同步等） |
+| `service/database/seeders/` | 种子数据（国家 / HS Code / 汇率 / 物流分区 / 合规分类 / 尺码表 / 风控规则） |
+| `service/runtime/`、`admin/runtime/` | 运行时缓存与日志（不纳入版本控制） |
 
 ## 功能覆盖
 
@@ -213,7 +276,8 @@ shop-php/
 | [CDN支持方案](docs/PLAN-CDN.md) | CDN 内容分发实现方案（Origin-Pull 回源 + 统一 Provider 抽象 + 4 家提供商） |
 | [团队调研明细](docs/PLAN-RESEARCH.md) | 7 领域现状调研：已实现 / 差距 / 风险 / 建议 |
 | [功能设计文档](docs/features.md) | 完整功能矩阵、业务流程、状态机 |
-| [架构图集](docs/diagrams.md) | 架构图、流程图、功能图、生命周期图、部署图、多币种结算图（8张Mermaid图） |
+| [架构图集](docs/diagrams.md) | 架构图、流程图、功能图、生命周期图、部署图、多币种结算图（8 张图，含 Mermaid 源） |
+| [项目宠物 雪球 Snowy](docs/pet.svg) | 吉祥物 SVG 源文件（形象释义、整合点、复用与再生成方式见[项目宠物](#项目宠物--雪球-snowy)） |
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |

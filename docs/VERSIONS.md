@@ -17,6 +17,19 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-09-26 项目宠物「雪球 Snowy」+ 文档全量同步
+
+- **项目宠物**：新增 `docs/pet.svg`（256×256，单文件 SVG，无脚本 / 无外部依赖 / 无位图）。形象释义 —— 雪花冠 = Snowflake 分布式 ID、地球身体 + 经纬线 = 跨境电商与多语言多币种、怀抱包裹 = 国际物流、主色 `#2d8cf0` = 管理端 Pear Admin 主题色；内置 `bob`/`blink`/`spin` 三段 CSS 动画并适配 `prefers-reduced-motion`
+- **整合进代码**：`service/public/favicon.ico` 与 `admin/public/favicon.ico` 替换为雪球（多尺寸 64/48/32/16，浏览器自动发现，**零 HTML 改动**，两站同时生效）；管理端登录页 `admin/plugin/admin/app/view/account/login.html` 顶部渲染雪球（CSS 内联于该文件，避免插件升级被覆盖）
+- **静态资源副本**：`service/public/pet.svg`、`admin/public/pet.svg`（`docs/pet.svg` 的副本，favicon 再生成命令见 README）
+- **README**：新增「项目宠物 — 雪球 Snowy」章节（形象释义表 / 资源清单 / 代码整合点 / 复用与再生成）；顶部主视觉；内联「订单生命周期图」（此前仅在 `docs/diagrams.md` 索引中，README 未展示）
+- **i18n 同步**：12 个语言 README 增加宠物主视觉 + 本地化简介段落（中文原版为第 13 份）
+- **项目结构校正**（README / `docs/README-EN.md` / `docs/architecture.md` 三处对齐实测值）：service 控制器 39→44、工具类 8→19、PHP 文件 251→308；admin 控制器 83→85、模型 76→78、PHP 文件 239→259；Flutter 11→13 页面；HarmonyOS 9→10 页面；`docs/` 5→15 篇
+- **文档**：`docs/diagrams.md` 增加宠物附录；`docs/README-EN.md` 同步英文内容
+- StatsController 版本元数据 1.4.0 → 1.5.0
+
+---
+
 ## 2026-08-27 全量测试轮次（5 人测试团队）
 
 - 结果：service 单元/集成 211 tests / 1000 assertions ✅、admin 2/7 ✅、API 自动化 4 套件 213 项断言 ✅、UI E2E 26 PASS / 21 FAIL / 1 WARN ⚠️（Go/Rust 无代码库 N/A）

@@ -4,6 +4,14 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
+<p align="center">
+  <img src="../../pet.svg" width="180" alt="Snowy — das Projektmaskottchen von Erik Shop">
+</p>
+
+## Projektmaskottchen — Snowy
+
+Das Projektmaskottchen ist **Snowy** — ein Globus-Geist mit Schneeflockenkrone und Längengraden, der ein Paket umarmt. Die Schneeflockenkrone steht für Snowflake-IDs, der Globus für grenzüberschreitenden Handel, das Paket für internationale Logistik. Vollständige Beschreibung: [chinesisches README](../../../README.md#项目宠物--雪球-snowy).
+
 ## Version
 
 > Vereinfachte Version (MIT Open Source): `lite` | Standardversion (kommerziell): `standard` | Vollversion (kommerziell): `full`

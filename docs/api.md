@@ -638,14 +638,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 11.3 领取优惠券 `POST /api/coupons/{id}/claim` `[JWT]`
 
-### 11.4 秒杀列表 `GET /api/flash-sales`
-
-### 11.5 拼团列表 `GET /api/group-buys`
-
-### 11.6 分销链接 `GET /api/affiliate/links` `[JWT]`
-
-### 11.7 分销佣金 `GET /api/affiliate/commissions` `[JWT]`
-
 ---
 
 ## 12. 会员接口 `[JWT]`
@@ -711,14 +703,6 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 
 ```json
 {"product_id":"x","order_id":"x","rating":5,"content":"Good","images":[]}
-```
-
-### 13.15 礼品卡余额 `GET /api/gift-cards/balance?code=xxx` `[JWT]`
-
-### 13.16 礼品卡兑换 `POST /api/gift-cards/redeem` `[JWT]`
-
-```json
-{"code": "GIFT-CODE-HERE"}
 ```
 
 ### 13.17 GDPR请求 `POST /api/privacy/request` `[JWT]`
@@ -824,8 +808,6 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 | GET | /api/countries | 国家/货币/汇率列表 |
 | GET | /api/search | ES多语言搜索 |
 | GET | /api/reviews/{productId} | 商品评价列表 |
-| GET | /api/flash-sales | 当前秒杀 |
-| GET | /api/group-buys | 当前拼团 |
 | GET | /api/faq | FAQ(按语言+分类) |
 | GET | /api/cms/{slug} | CMS页面 |
 | GET | /api/settings | 公开配置 |
@@ -860,11 +842,8 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 | GET/PUT | /api/notifications[/{id}/read] | 通知 |
 | GET/POST/DELETE | /api/comparisons[/{id}] | 商品对比 |
 | GET | /api/recommendations | 个性化推荐 |
-| GET | /api/affiliate/links | 分销链接 |
-| GET | /api/affiliate/commissions | 分销佣金 |
 | GET | /api/membership | 会员等级 |
 | GET | /api/points | 积分流水 |
-| GET/POST | /api/gift-cards | 礼品卡 |
 | GET/POST | /api/b2b/quotes | B2B询价 |
 | GET/POST | /api/privacy/request | GDPR请求 |
 | GET | /api/export/orders | 导出订单 |

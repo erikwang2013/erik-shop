@@ -25,8 +25,6 @@ class ProfileScreen extends ConsumerWidget {
           ListTile(leading: const Icon(Icons.shopping_bag), title: Text(tr('orders')), onTap: () => context.push('/orders')),
           ListTile(leading: const Icon(Icons.favorite_outline), title: const Text('Wishlist'), onTap: () {}),
           ListTile(leading: const Icon(Icons.location_on_outlined), title: Text(tr('default_address')), onTap: () => context.push('/addresses')),
-          ListTile(leading: const Icon(Icons.card_giftcard), title: const Text('Gift Cards'), onTap: () {}),
-          ListTile(leading: const Icon(Icons.share), title: const Text('Affiliate Program'), onTap: () {}),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.language),

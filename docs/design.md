@@ -23,7 +23,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 支付与资金 | 5 | payment_gateways, payment_gateway_methods, platform_settlements, supplier_settlements, currency_exchange_gains_losses |
 | 物流 | 9 | logistics_companies, shipping_zones, shipping_zone_rates, warehouses, shipments, shipping_insurances, inventory_logs, inventory_transfers |
 | 海关与税务 | 5 | hs_codes, tariff_rules, vat_settings, country_compliance_rules |
-| 营销 | 8 | coupons, user_coupons, flash_sales, flash_sale_skus, group_buys, affiliate_links, affiliate_commissions, affiliate_payouts |
+| 营销 | 2 | coupons, user_coupons |
 | 供应链 | 5 | suppliers, purchase_orders, purchase_order_items, quality_inspections, quality_inspection_items |
 | 风控与合规 | 5 | risk_rules, risk_logs, privacy_requests, cookie_consents, privacy_policy_versions |
 | 多商家 | 5 | shops, merchants, merchant_products, merchant_settlements |

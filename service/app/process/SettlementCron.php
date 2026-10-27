@@ -14,8 +14,6 @@ use app\model\MerchantSettlements;
 use app\model\MerchantProducts;
 use app\model\Merchants;
 use app\model\SupplierSettlements;
-use app\model\AffiliateCommissions;
-use app\model\AffiliateLinks;
 use app\model\Products;
 use support\Log;
 use Workerman\Worker;
@@ -76,7 +74,6 @@ class SettlementCron
                 'platform_fee_rate' => $platformFeeRate,
                 'payment_gateway_fee' => $gatewayFee,
                 'supplier_amount' => Money::cmp($supplierAmount, '0') > 0 ? $supplierAmount : '0.00',
-                'affiliate_amount' => 0,
                 'currency_code' => $order->currency_code ?: 'USD',
                 'status' => 0,
             ]);
@@ -87,8 +84,6 @@ class SettlementCron
             // 供应商周期结算：商品 supplier_id → 当月 SupplierSettlements 汇总
             self::createSupplierSettlements($order);
 
-            // 分销佣金：订单 affiliate_link_id → AffiliateCommissions
-            self::createAffiliateCommission($order);
             $created++;
         }
         Log::info("SettlementCron 完成，生成 {$created} 笔平台结算单");
@@ -194,37 +189,5 @@ class SettlementCron
                 $row->save();
             }
         }
-    }
-
-    /**
-     * 分销佣金（shop_affiliate_commissions）
-     * 数据链：shop_orders.affiliate_link_id → shop_affiliate_links.commission_rate
-     */
-    private static function createAffiliateCommission(Orders $order): void
-    {
-        if ((int) $order->affiliate_link_id <= 0) {
-            return;
-        }
-        if (AffiliateCommissions::where('order_id', $order->id)->exists()) {
-            return;
-        }
-        $link = AffiliateLinks::find($order->affiliate_link_id);
-        if (!$link || (int) $link->status !== 1) {
-            return;
-        }
-        $rate = (string) $link->commission_rate;
-        $amount = Money::round(Money::div(Money::mul((string) $order->pay_amount, $rate), '100'));
-
-        AffiliateCommissions::create([
-            'affiliate_link_id' => $link->id,
-            'order_id' => $order->id,
-            'amount' => $amount,
-            'rate' => $rate,
-            'status' => 0,   // 待确认
-        ]);
-        // 更新推广链接统计
-        $link->total_orders = (int) $link->total_orders + 1;
-        $link->total_commission = Money::round(Money::add((string) $link->total_commission, $amount));
-        $link->save();
     }
 }

@@ -95,11 +95,6 @@ class Orders extends BaseModel
         return $this->hasMany(CurrencyExchangeGainsLosses::class, "order_id");
     }
 
-    public function affiliateCommissions(): HasMany
-    {
-        return $this->hasMany(AffiliateCommissions::class, "order_id");
-    }
-
     public function qualityInspections(): HasMany
     {
         return $this->hasMany(QualityInspections::class, "order_id");

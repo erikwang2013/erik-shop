@@ -600,7 +600,6 @@ CREATE TABLE `shop_orders` (
     `platform` VARCHAR(16) NOT NULL DEFAULT 'web' COMMENT '操作来源端',
     `remark` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '订单备注',
     `address_snapshot` JSON COMMENT '地址快照',
-    `affiliate_link_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '分销推广链接ID（0=无分销）',
     `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` DATETIME NULL DEFAULT NULL,
@@ -1001,7 +1000,6 @@ CREATE TABLE `shop_platform_settlements` (
     `platform_fee_rate` DECIMAL(5,2) NOT NULL COMMENT '佣金率%',
     `payment_gateway_fee` DECIMAL(12,2) NOT NULL COMMENT '支付手续费',
     `supplier_amount` DECIMAL(12,2) NOT NULL COMMENT '应付供应商',
-    `affiliate_amount` DECIMAL(12,2) NOT NULL COMMENT '应付分销',
     `currency_code` CHAR(3) NOT NULL DEFAULT 'USD',
     `status` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待处理/1已结算',
     `settled_at` DATETIME NULL,
@@ -1087,94 +1085,6 @@ CREATE TABLE `shop_user_coupons` (
     PRIMARY KEY (`id`),
     KEY `idx_user_coupon` (`user_id`, `coupon_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户优惠券';
-
-CREATE TABLE `shop_flash_sales` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `title` VARCHAR(128) NOT NULL COMMENT '秒杀名称',
-    `start_at` DATETIME NOT NULL COMMENT '开始时间',
-    `end_at` DATETIME NOT NULL COMMENT '结束时间',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待开始/1进行中/2已结束',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` DATETIME NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    KEY `idx_status_time` (`status`, `start_at`, `end_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秒杀活动';
-
-CREATE TABLE `shop_flash_sale_skus` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `flash_sale_id` BIGINT UNSIGNED NOT NULL,
-    `sku_id` BIGINT UNSIGNED NOT NULL,
-    `price` DECIMAL(12,2) NOT NULL COMMENT '秒杀价格',
-    `stock` INT UNSIGNED NOT NULL COMMENT '秒杀库存',
-    `limit_per_user` INT UNSIGNED NOT NULL DEFAULT 1 COMMENT '每人限购',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_flash_sale_id` (`flash_sale_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='秒杀SKU';
-
-CREATE TABLE `shop_group_buys` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `title` VARCHAR(128) NOT NULL COMMENT '拼团名称',
-    `sku_id` BIGINT UNSIGNED NOT NULL,
-    `group_price` DECIMAL(12,2) NOT NULL COMMENT '拼团价格',
-    `required_count` TINYINT UNSIGNED NOT NULL DEFAULT 2 COMMENT '成团人数',
-    `expire_hours` INT UNSIGNED NOT NULL DEFAULT 24 COMMENT '拼团有效小时',
-    `start_at` DATETIME NULL,
-    `end_at` DATETIME NULL,
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` DATETIME NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    KEY `idx_status_time` (`status`, `start_at`, `end_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='拼团活动';
-
-CREATE TABLE `shop_affiliate_links` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `user_id` BIGINT UNSIGNED NOT NULL COMMENT '推广用户',
-    `code` VARCHAR(16) NOT NULL COMMENT '推广码',
-    `commission_rate` DECIMAL(5,2) NOT NULL DEFAULT 5.00 COMMENT '佣金率%',
-    `landing_url` VARCHAR(512) NOT NULL DEFAULT '' COMMENT '推广落地页',
-    `total_clicks` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '点击量',
-    `total_orders` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '订单量',
-    `total_commission` DECIMAL(12,2) NOT NULL DEFAULT 0.00 COMMENT '累计佣金',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    `deleted_at` DATETIME NULL DEFAULT NULL,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_code` (`code`),
-    KEY `idx_user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分销链接';
-
-CREATE TABLE `shop_affiliate_commissions` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `affiliate_link_id` BIGINT UNSIGNED NOT NULL,
-    `order_id` BIGINT UNSIGNED NOT NULL,
-    `amount` DECIMAL(12,2) NOT NULL COMMENT '佣金金额',
-    `rate` DECIMAL(5,2) NOT NULL COMMENT '佣金率',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待确认/1已确认/2已结算',
-    `settled_at` DATETIME NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_affiliate_link_id` (`affiliate_link_id`),
-    KEY `idx_order_id` (`order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分销佣金';
-
-CREATE TABLE `shop_affiliate_payouts` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `user_id` BIGINT UNSIGNED NOT NULL,
-    `amount` DECIMAL(12,2) NOT NULL COMMENT '提现金额',
-    `method` VARCHAR(32) NOT NULL DEFAULT 'paypal' COMMENT '提现方式',
-    `account` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '提现账号(加密)',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待审/1已付/2驳回',
-    `paid_at` DATETIME NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='分销提现';
 
 -- -------------------------------------------------------------
 -- 模块8: 供应链 (7张)
@@ -1617,23 +1527,6 @@ CREATE TABLE `shop_point_logs` (
     PRIMARY KEY (`id`),
     KEY `idx_user_id` (`user_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='积分流水';
-
-CREATE TABLE `shop_gift_cards` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `code` VARCHAR(32) NOT NULL COMMENT '礼品卡码',
-    `denomination` DECIMAL(10,2) NOT NULL COMMENT '面额',
-    `balance` DECIMAL(10,2) NOT NULL COMMENT '余额',
-    `currency_code` CHAR(3) NOT NULL DEFAULT 'USD',
-    `sender_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '购买人',
-    `receiver_email` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '接收人邮件(加密)',
-    `message` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '祝福语',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '0未激活/1已激活/2已用完/3已过期',
-    `expire_at` DATE NULL COMMENT '过期日',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='礼品卡';
 
 CREATE TABLE `shop_b2b_prices` (
     `id` BIGINT UNSIGNED NOT NULL,

@@ -47,10 +47,6 @@ Route::group('/api', function () {
     // 评价
     Route::get('/reviews/{productId:\w+}', [app\controller\v1\ReviewController::class, 'index']);
 
-    // 营销
-    Route::get('/flash-sales', [app\controller\v1\FlashSaleController::class, 'index']);
-    Route::get('/group-buys', [app\controller\v1\GroupBuyController::class, 'index']);
-
     // 公共服务
     Route::get('/size-charts', [app\controller\v1\SizeChartController::class, 'index']);
     Route::get('/tariff/estimate', [app\controller\v1\TariffController::class, 'estimate']);
@@ -142,10 +138,6 @@ Route::group('/api', function () {
     // 推荐
     Route::get('/recommendations', [app\controller\v1\RecommendationController::class, 'index']);
 
-    // 分销
-    Route::get('/affiliate/links', [app\controller\v1\AffiliateController::class, 'links']);
-    Route::get('/affiliate/commissions', [app\controller\v1\AffiliateController::class, 'commissions']);
-
     // 隐私
     Route::get('/privacy/request', [app\controller\v1\PrivacyController::class, 'index']);
     Route::post('/privacy/request', [app\controller\v1\PrivacyController::class, 'create']);
@@ -154,10 +146,6 @@ Route::group('/api', function () {
     // 会员
     Route::get('/membership', [app\controller\v1\MembershipController::class, 'index']);
     Route::get('/points', [app\controller\v1\MembershipController::class, 'points']);
-
-    // 礼品卡
-    Route::get('/gift-cards/balance', [app\controller\v1\GiftCardController::class, 'balance']);
-    Route::post('/gift-cards/redeem', [app\controller\v1\GiftCardController::class, 'redeem']);
 
     // 导出
     Route::get('/export/orders', [app\controller\v1\ExportController::class, 'orders']);

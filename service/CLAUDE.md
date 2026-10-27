@@ -57,8 +57,6 @@ shop-php/
         TariffController.php
         WishlistController.php
         CountryController.php
-        FlashSaleController.php
-        GroupBuyController.php
         ...
     model/            # 模型（extends BaseModel，110张业务表）
     middleware/       # 中间件（含 VersionRoute, PosterVerify, LocaleMiddleware, GeoIpMiddleware）

@@ -93,16 +93,6 @@ class Users extends BaseModel
         return $this->hasMany(UserCoupons::class, "user_id");
     }
 
-    public function affiliateLinks(): HasMany
-    {
-        return $this->hasMany(AffiliateLinks::class, "user_id");
-    }
-
-    public function affiliatePayouts(): HasMany
-    {
-        return $this->hasMany(AffiliatePayouts::class, "user_id");
-    }
-
     public function riskLogs(): HasMany
     {
         return $this->hasMany(RiskLogs::class, "user_id");

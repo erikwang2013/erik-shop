@@ -90,8 +90,7 @@ class InstallController extends Base
             'shop_hs_codes', 'shop_tariff_rules', 'shop_vat_settings', 'shop_country_compliance_rules',
             'shop_payment_gateways', 'shop_payment_gateway_methods', 'shop_platform_settlements',
             'shop_supplier_settlements', 'shop_currency_exchange_gains_losses', 'shop_coupons', 'shop_user_coupons',
-            'shop_flash_sales', 'shop_flash_sale_skus', 'shop_group_buys', 'shop_affiliate_links',
-            'shop_affiliate_commissions', 'shop_affiliate_payouts', 'shop_suppliers', 'shop_purchase_orders',
+            'shop_suppliers', 'shop_purchase_orders',
             'shop_purchase_order_items', 'shop_quality_inspections', 'shop_quality_inspection_items',
             'shop_risk_rules', 'shop_risk_logs', 'shop_privacy_requests', 'shop_cookie_consents',
             'shop_privacy_policy_versions', 'shop_shops', 'shop_merchants', 'shop_merchant_products',
@@ -99,7 +98,7 @@ class InstallController extends Base
             'shop_product_feed_logs', 'shop_size_charts', 'shop_size_chart_values', 'shop_notifications',
             'shop_email_logs', 'shop_price_alerts', 'shop_search_logs',
             'shop_operation_logs', 'shop_subscriptions', 'shop_subscription_orders', 'shop_subscription_logs',
-            'shop_point_logs', 'shop_gift_cards', 'shop_b2b_prices', 'shop_b2b_verifications',
+            'shop_point_logs', 'shop_b2b_prices', 'shop_b2b_verifications',
             'shop_b2b_quotes', 'shop_faq_translations',
             'shop_api_rate_limits', 'shop_api_docs', 'shop_settings',
         ];

@@ -302,7 +302,6 @@ class PaymentController extends \app\controller\BaseApiController
                 'platform_fee_rate' => $platformRate,
                 'payment_gateway_fee' => $gatewayFee,
                 'supplier_amount' => Money::cmp($supplierAmount, '0') > 0 ? $supplierAmount : '0.00',
-                'affiliate_amount' => 0,
                 'currency_code' => $order->currency_code,
                 'status' => 0,
             ]);

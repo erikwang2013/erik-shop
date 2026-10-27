@@ -221,9 +221,6 @@ return [
         'children' => [
             ['title' => '优惠券', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopCouponController', 'href' => '/app/admin/shop/ShopCoupon/index', 'type' => 1, 'weight' => 100],
             ['title' => '轮播图', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopBannerController', 'href' => '/app/admin/shop/ShopBanner/index', 'type' => 1, 'weight' => 90],
-            ['title' => '秒杀活动', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopFlashSaleController', 'href' => '/app/admin/shop/ShopFlashSale/index', 'type' => 1, 'weight' => 80],
-            ['title' => '拼团活动', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopGroupBuyController', 'href' => '/app/admin/shop/ShopGroupBuy/index', 'type' => 1, 'weight' => 70],
-            ['title' => '分销链接', 'key' => 'plugin\\admin\\app\\controller\\shop\\ShopAffiliateController', 'href' => '/app/admin/shop/ShopAffiliate/index', 'type' => 1, 'weight' => 60],
         ],
     ],
     [

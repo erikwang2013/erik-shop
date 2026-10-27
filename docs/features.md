@@ -333,7 +333,7 @@ erik_users ──┬── addresses, social_accounts, wishlists, kyc
              ├── carts, orders → order_items → payments
              ├── reviews, coupons(through user_coupons)
              ├── notifications, subscriptions, point_logs
-             ├── affiliate_links, b2b_verifications
+             ├── b2b_verifications
              └── privacy_requests
 
 erik_products ──┬── translations(product_id, locale)

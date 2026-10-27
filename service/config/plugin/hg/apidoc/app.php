@@ -28,7 +28,7 @@ return [
             ],
             [
                 'title' => '用户营销', 'path' => 'app\controller\v1', 'key' => 'user',
-                'groups' => [['name'=>'user','title'=>'用户'],['name'=>'wishlist','title'=>'收藏'],['name'=>'coupon','title'=>'优惠券'],['name'=>'banner','title'=>'轮播图'],['name'=>'flashsale','title'=>'秒杀'],['name'=>'groupbuy','title'=>'拼团'],['name'=>'affiliate','title'=>'分销']],
+                'groups' => [['name'=>'user','title'=>'用户'],['name'=>'wishlist','title'=>'收藏'],['name'=>'coupon','title'=>'优惠券'],['name'=>'banner','title'=>'轮播图']],
             ],
             [
                 'title' => '运营工具', 'path' => 'app\controller\v1', 'key' => 'ops',

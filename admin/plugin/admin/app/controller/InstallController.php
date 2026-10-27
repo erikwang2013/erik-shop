@@ -86,7 +86,7 @@ class InstallController extends Base
             'shop_order_items', 'shop_order_logs', 'shop_payments', 'shop_refunds', 'shop_return_orders',
             'shop_return_labels', 'shop_order_documents', 'shop_countries', 'shop_currencies', 'shop_exchange_rates',
             'shop_logistics_companies', 'shop_shipping_zones', 'shop_shipping_zone_rates', 'shop_warehouses',
-            'shop_shipments', 'shop_shipping_insurances', 'shop_inventory_logs', 'shop_inventory_transfers',
+            'shop_shipments', 'shop_inventory_logs', 'shop_inventory_transfers',
             'shop_hs_codes', 'shop_tariff_rules', 'shop_vat_settings', 'shop_country_compliance_rules',
             'shop_payment_gateways', 'shop_payment_gateway_methods', 'shop_platform_settlements',
             'shop_supplier_settlements', 'shop_currency_exchange_gains_losses', 'shop_coupons', 'shop_user_coupons',
@@ -98,12 +98,11 @@ class InstallController extends Base
             'shop_platform_orders', 'shop_platform_order_items', 'shop_merchants', 'shop_merchant_products',
             'shop_merchant_settlements', 'shop_cms_pages', 'shop_cms_page_translations', 'shop_product_feeds',
             'shop_product_feed_logs', 'shop_size_charts', 'shop_size_chart_values', 'shop_notifications',
-            'shop_email_templates', 'shop_email_logs', 'shop_price_alerts', 'shop_search_logs',
+            'shop_email_logs', 'shop_price_alerts', 'shop_search_logs',
             'shop_operation_logs', 'shop_subscriptions', 'shop_subscription_orders', 'shop_subscription_logs',
-            'shop_point_rules', 'shop_point_logs', 'shop_gift_cards', 'shop_b2b_prices', 'shop_b2b_verifications',
-            'shop_b2b_quotes', 'shop_knowledge_base',
-            'shop_knowledge_base_translations', 'shop_faq_translations', 'shop_ab_tests', 'shop_ab_test_variants',
-            'shop_ab_test_results', 'shop_api_rate_limits', 'shop_api_docs', 'shop_settings',
+            'shop_point_logs', 'shop_gift_cards', 'shop_b2b_prices', 'shop_b2b_verifications',
+            'shop_b2b_quotes', 'shop_faq_translations',
+            'shop_api_rate_limits', 'shop_api_docs', 'shop_settings',
         ];
 
         $tables_exist = [];

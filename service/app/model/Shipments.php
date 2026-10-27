@@ -20,9 +20,4 @@ class Shipments extends BaseModel
         return $this->belongsTo(Warehouses::class, "warehouse_id");
     }
 
-    public function shippingInsurances(): HasMany
-    {
-        return $this->hasMany(ShippingInsurances::class, "shipment_id");
-    }
-
 }

@@ -862,20 +862,6 @@ CREATE TABLE `shop_shipments` (
     KEY `idx_tracking_no` (`tracking_no`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='发货记录';
 
-CREATE TABLE `shop_shipping_insurances` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `order_id` BIGINT UNSIGNED NOT NULL,
-    `shipment_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `declared_value` DECIMAL(12,2) NOT NULL COMMENT '投保金额',
-    `premium` DECIMAL(10,2) NOT NULL COMMENT '保费',
-    `insurance_no` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '保单号',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '0待生效/1已生效/2理赔中/3已理赔',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_order_id` (`order_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物流保险';
-
 CREATE TABLE `shop_inventory_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `warehouse_id` BIGINT UNSIGNED NOT NULL,
@@ -1581,18 +1567,6 @@ CREATE TABLE `shop_notifications` (
     KEY `idx_user_read` (`user_id`, `is_read`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统通知';
 
-CREATE TABLE `shop_email_templates` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `code` VARCHAR(64) NOT NULL COMMENT '模板代码 order_confirmed/shipped/password_reset/welcome',
-    `locale` VARCHAR(10) NOT NULL DEFAULT 'en' COMMENT '语言',
-    `subject` VARCHAR(256) NOT NULL COMMENT '邮件标题',
-    `body` TEXT COMMENT '邮件正文(HTML)',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_code_locale` (`code`, `locale`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='邮件模板(多语言)';
-
 CREATE TABLE `shop_email_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
@@ -1697,19 +1671,6 @@ CREATE TABLE `shop_subscription_logs` (
     KEY `idx_subscription_id` (`subscription_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='订阅日志';
 
-CREATE TABLE `shop_point_rules` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `code` VARCHAR(32) NOT NULL COMMENT '规则代码 register/order/review/referral',
-    `name` VARCHAR(64) NOT NULL COMMENT '规则名称',
-    `points` INT NOT NULL COMMENT '积分值(正=获取/负=消耗)',
-    `limit_type` VARCHAR(16) NOT NULL DEFAULT 'unlimited' COMMENT 'unlimited/daily/monthly',
-    `limit_value` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '限制次数',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_code` (`code`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='积分规则';
-
 CREATE TABLE `shop_point_logs` (
     `id` BIGINT UNSIGNED NOT NULL,
     `user_id` BIGINT UNSIGNED NOT NULL,
@@ -1813,27 +1774,6 @@ CREATE TABLE `shop_chat_messages` (
     KEY `idx_session_id` (`session_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息';
 
-CREATE TABLE `shop_knowledge_base` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `category` VARCHAR(64) NOT NULL DEFAULT '' COMMENT '分类 shipping/return/payment/product',
-    `status` TINYINT UNSIGNED NOT NULL DEFAULT 1,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客服知识库';
-
-CREATE TABLE `shop_knowledge_base_translations` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `kb_id` BIGINT UNSIGNED NOT NULL,
-    `locale` VARCHAR(10) NOT NULL,
-    `title` VARCHAR(256) NOT NULL DEFAULT '',
-    `content` TEXT,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    UNIQUE KEY `uk_kb_locale` (`kb_id`, `locale`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='知识库多语言';
-
 CREATE TABLE `shop_faq_translations` (
     `id` BIGINT UNSIGNED NOT NULL,
     `category` VARCHAR(64) NOT NULL COMMENT '分类',
@@ -1849,47 +1789,8 @@ CREATE TABLE `shop_faq_translations` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='FAQ多语言';
 
 -- -------------------------------------------------------------
--- 模块14: AB测试/API治理/设置 (7张)
+-- 模块14: API治理/设置
 -- -------------------------------------------------------------
-
-CREATE TABLE `shop_ab_tests` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `name` VARCHAR(128) NOT NULL COMMENT '测试名称',
-    `goal` VARCHAR(64) NOT NULL COMMENT '目标 conversion/revenue/click',
-    `page` VARCHAR(128) NOT NULL COMMENT '测试页面 product/cart/checkout/landing',
-    `traffic_ratio` DECIMAL(4,2) NOT NULL DEFAULT 50.00 COMMENT '实验组流量比例%',
-    `start_at` DATETIME NULL COMMENT '开始时间',
-    `end_at` DATETIME NULL COMMENT '结束时间',
-    `status` VARCHAR(16) NOT NULL DEFAULT 'draft' COMMENT 'draft/running/stopped/completed',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AB测试';
-
-CREATE TABLE `shop_ab_test_variants` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `ab_test_id` BIGINT UNSIGNED NOT NULL,
-    `name` VARCHAR(64) NOT NULL COMMENT '变体名 control/experiment_a',
-    `is_control` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '是否对照组',
-    `config` JSON COMMENT '变体配置(页面元素的JSON)',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_ab_test_id` (`ab_test_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AB测试变体';
-
-CREATE TABLE `shop_ab_test_results` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `ab_test_id` BIGINT UNSIGNED NOT NULL,
-    `variant_id` BIGINT UNSIGNED NOT NULL,
-    `metric` VARCHAR(32) NOT NULL COMMENT '指标 impressions/clicks/conversions/revenue',
-    `value` DECIMAL(12,4) NOT NULL DEFAULT 0.0000 COMMENT '指标值',
-    `sample_size` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '样本量',
-    `confidence` DECIMAL(6,4) NOT NULL DEFAULT 0.0000 COMMENT '置信度',
-    `recorded_at` DATE NOT NULL COMMENT '记录日期',
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_ab_test_variant_date` (`ab_test_id`, `variant_id`, `recorded_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='AB测试结果';
 
 CREATE TABLE `shop_api_rate_limits` (
     `id` BIGINT UNSIGNED NOT NULL,

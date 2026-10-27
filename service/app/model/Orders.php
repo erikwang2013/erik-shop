@@ -85,11 +85,6 @@ class Orders extends BaseModel
         return $this->hasMany(Shipments::class, "order_id");
     }
 
-    public function shippingInsurances(): HasMany
-    {
-        return $this->hasMany(ShippingInsurances::class, "order_id");
-    }
-
     public function platformSettlements(): HasMany
     {
         return $this->hasMany(PlatformSettlements::class, "order_id");

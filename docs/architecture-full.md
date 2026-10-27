@@ -15,7 +15,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Service API | PHP 8.3 / webman 2.1 / illuminate database | 39控制器 + 111模型 + 14中间件 |
 | Admin | webman-admin / LayUI / ECharts | 82控制器 + 76模型 + 5中间件 |
 | Flutter | Riverpod / GoRouter / Dio | 25 Dart文件 / 11页面 |
-| HarmonyOS | ArkTS / ArkUI | 14 ETS文件 / 9页面 |
 | 数据库 | MySQL 8.0 + Redis 7 + ES 8 | 117张表 (110 `erik_` + 7 `wa_`) |
 
 ### 1.2 核心指标
@@ -39,7 +38,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 graph TD
     subgraph Clients[客户端层]
         F[Flutter 5平台<br/>iOS Android macOS Win Linux]
-        H[HarmonyOS ArkTS]
         W[Web Browser Admin]
     end
     subgraph Gateway[接入层]
@@ -72,7 +70,6 @@ graph TD
 graph TB
     subgraph Clients["1. 客户端层"]
         FL[Flutter: iOS Android macOS Win Linux]
-        HM[HarmonyOS: ArkTS]
         WB[Web Browser: Admin]
     end
     subgraph Gateway["2. 接入层 CDN + Nginx :80"]
@@ -147,7 +144,7 @@ graph TB
 
 | 层 | 说明 |
 |----|------|
-| 1.客户端层 | Flutter 5平台 + HarmonyOS + Web Admin, 全部通过 HTTP/JSON 通信 |
+| 1.客户端层 | Flutter 5平台 + Web Admin, 全部通过 HTTP/JSON 通信 |
 | 2.接入层 | CDN 边缘层(Origin-Pull 回源, 静态资源缓存) → Nginx 按域名分流: api→service, admin→admin |
 | 3.安全层 | SecurityMiddleware 31类攻击检测器, 命中即返回错误码/403 |
 | 4.中间件管道 | 10个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
@@ -486,7 +483,6 @@ cd service && php vendor/bin/phpunit tests/
 |------|------|
 | PHP源文件 | service:210 + admin:214 = 424 |
 | Dart (Flutter) | 25 |
-| ArkTS (HarmonyOS) | 14 |
 | 数据库表 | 110 |
 | API端点 | 73 |
 | 中间件 | 14 |

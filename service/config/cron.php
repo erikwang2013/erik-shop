@@ -18,9 +18,6 @@ return [
     // 合规规则外部源 URL（返回 [{country_id, compliance_category_id, rule, restriction_reason}]）；env COMPLIANCE_SOURCE_URL 可空
     'compliance_source_url' => getenv('COMPLIANCE_SOURCE_URL') ?: '',
 
-    // 平台订单同步 API 模板（{account_id} 占位符），需与 shop_platform_accounts.api_key 配合；env PLATFORM_SYNC_URL 可空
-    'platform_sync_url' => getenv('PLATFORM_SYNC_URL') ?: '',
-
     // 退货超时自动关闭天数
     'return_expire_days' => 7,
 

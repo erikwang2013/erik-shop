@@ -81,7 +81,6 @@ shop-php/
       PriceAlertCron.php        # 降价/到货通知
       PaymentReconcileCron.php  # 支付对账
       SettlementCron.php        # 分账结算
-      PlatformOrderSyncCron.php # 多平台订单同步
     search/           # Scout Searchable 定义
   database/
     schema.sql        # 原始业务表SQL（已被根目录 install.sql 替代，Web安装向导不再使用此文件）

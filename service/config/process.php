@@ -123,13 +123,6 @@ return [
         'reloadable' => false,
     ],
 
-    // 多平台订单同步（每5分钟）
-    'platform_order_sync_cron' => [
-        'handler' => app\process\PlatformOrderSyncCron::class,
-        'count' => 1,
-        'reloadable' => false,
-    ],
-
     // 隐私合规执行（每小时：数据删除宽限期/导出/opt-out）
     'privacy_compliance_cron' => [
         'handler' => app\process\PrivacyComplianceTask::class,

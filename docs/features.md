@@ -43,7 +43,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **国际物流** | 物流分区运费(重量阶梯)、DHL/UPS/FedEx/EMS、海外仓(发货+退货)、HS申报(电池/液体标识)、商业发票PDF/装箱单 | 完整 |
 | **支付** | Stripe PaymentIntent+3DS、PayPal REST、Klarna BNPL、Adyen、Webhook验签+分账 | Stripe完整,其他占位 |
 | **营销** | 优惠券(分区+新老客限定)、轮播图(区域可见)、秒杀(限时限量)、拼团(成团人数+有效期)、分销(链接+佣金+提现) | 完整 |
-| **多平台** | Amazon/eBay/Shopee/Lazada/Temu商品刊登+订单聚合、多店铺管理 | 完整 |
 | **供应链** | 供应商档案+评级、采购单(审核→发货→收货→质检)、质检(入库+出库门禁/外观/功能/合规标签检查)、库存流水(不可变账本:入库/出库/调拨/盘点) | 完整 |
 | **风控合规** | 规则引擎(旁路打分:地址校验/邮编匹配/3DS/批量注册/货值异常)、KYC实名、GDPR/CCPA数据请求、Cookie Consent版本管理 | 完整 |
 | **安全防护** | SecurityMiddleware 封装 security-php 31个检测器: XSS(13条)/SQL注入(13条)/CRLF/路径遍历(编码+null byte)/Body大小/Content-Type/文件上传/HTTP安全头/暴力破解(Redis计数器)/XXE/SSRF/方法/Host/敏感脱敏/CORS | 完整 |
@@ -70,7 +69,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 供应链 | 供应商/采购单/质检/库存流水 | P1 | ✅ |
 | 风控合规 | 规则引擎/GDPR/CCPA/Cookie Consent/平台追踪 | P1 | ✅ |
 | 安全防护 | XSS/SQL注入/CRLF/路径遍历/Content-Type/请求体 | P0 | ✅ |
-| 多平台 | Amazon/eBay/Shopee刊登+订单聚合/多商家入驻 | P2 | ✅ |
+| 多商家 | 第三方卖家入驻/店铺/商品/结算 | P2 | ✅ |
 | 内容管理 | CMS/FAQ/知识库/邮件模板/通知/尺码表 | P2 | ✅ |
 | 增长工具 | B2B批发/订阅周期购/AB测试 | P2-P3 | ✅ |
 | 基础设施 | Snowflake ID/JWT/Hashids/Encryption/Poster/API版本/GeoIP/CDN内容分发 | P0 | ✅ |

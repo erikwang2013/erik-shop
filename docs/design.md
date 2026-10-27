@@ -26,7 +26,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 营销 | 8 | coupons, user_coupons, flash_sales, flash_sale_skus, group_buys, affiliate_links, affiliate_commissions, affiliate_payouts |
 | 供应链 | 5 | suppliers, purchase_orders, purchase_order_items, quality_inspections, quality_inspection_items |
 | 风控与合规 | 5 | risk_rules, risk_logs, privacy_requests, cookie_consents, privacy_policy_versions |
-| 多平台 | 9 | shops, platform_accounts, platform_listings, platform_orders, platform_order_items, merchants, merchant_products, merchant_settlements |
+| 多商家 | 5 | shops, merchants, merchant_products, merchant_settlements |
 | 内容与体验 | 14 | cms_pages, cms_page_translations, size_charts, size_chart_values, product_feeds, notifications, email_templates, price_alerts, search_logs, operation_logs, settings |
 | 订阅与B2B | 9 | subscriptions, subscription_orders, point_rules, point_logs, gift_cards, b2b_prices, b2b_verifications, b2b_quotes |
 | 客服 | 5 | chat_sessions, chat_messages, knowledge_base, knowledge_base_translations, faq_translations |

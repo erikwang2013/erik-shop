@@ -16,16 +16,6 @@ class Shops extends BaseModel
     protected $table = "shop_shops";
     protected $encryptable = [];
 
-    public function platformAccounts(): HasMany
-    {
-        return $this->hasMany(PlatformAccounts::class, "shop_id");
-    }
-
-    public function platformOrders(): HasMany
-    {
-        return $this->hasMany(PlatformOrders::class, "shop_id");
-    }
-
     public function merchants(): HasMany
     {
         return $this->hasMany(Merchants::class, "shop_id");

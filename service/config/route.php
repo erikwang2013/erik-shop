@@ -185,8 +185,6 @@ Route::post('/api/admin/refunds/{id:\w+}/reject', [app\controller\v1\AdminOpsCon
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
 Route::post('/api/admin/orders/{id:\w+}/review', [app\controller\v1\AdminOpsController::class, 'reviewOrder'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
-Route::post('/api/admin/platform/listings', [app\controller\v1\AdminOpsController::class, 'createListing'])
-    ->middleware([app\middleware\AdminKeyMiddleware::class]);
 // ===== 健康检查（无需JWT，供探活/负载均衡） =====
 Route::get('/health', [app\controller\v1\HealthController::class, 'index']);
 

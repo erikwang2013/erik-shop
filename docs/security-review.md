@@ -108,12 +108,7 @@ admin 配置使用 `env('ENCRYPTION_KEY')` 无回退值，当环境变量缺失�
 | User PII | UserKyc | real_name, id_number |
 | User PII | UserSocialAccounts | access_token, refresh_token |
 | Privacy | PrivacyRequests | email |
-| Finance | GiftCards | receiver_email |
-| Finance | AffiliatePayouts | account |
 | Finance | PaymentGateways | name, api_key, api_secret, webhook_secret |
-| Platform | PlatformOrders | platform_account_id, buyer_name, buyer_email |
-| Platform | PlatformAccounts | account_name, api_key, api_secret |
-| Platform | PlatformListings | platform_account_id |
 | Logistics | LogisticsCompanies | name, api_key |
 | Supplier | Suppliers | name, email, phone |
 | Supplier | B2bVerifications | company_name |

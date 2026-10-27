@@ -12,10 +12,10 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 | 组件 | 技术栈 | 规模 |
 |------|--------|------|
-| Service API | PHP 8.3 / webman 2.1 / illuminate database | 39控制器 + 111模型 + 14中间件 |
-| Admin | webman-admin / LayUI / ECharts | 82控制器 + 76模型 + 5中间件 |
-| Flutter | Riverpod / GoRouter / Dio | 25 Dart文件 / 11页面 |
-| 数据库 | MySQL 8.0 + Redis 7 + ES 8 | 117张表 (110 `erik_` + 7 `wa_`) |
+| Service API | PHP 8.3 / webman 2.1 / illuminate database | 40控制器 + 90模型 + 14中间件 |
+| Admin | webman-admin / LayUI / ECharts | 71控制器 + 66模型 + 5中间件 |
+| Flutter | Riverpod / GoRouter / Dio | 12页面 |
+| 数据库 | MySQL 8.0 + Redis 7 + ES 8 | 98张表 (89 `shop_` + 9 `wa_`) |
 
 ### 1.2 核心指标
 
@@ -23,8 +23,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|-----|
 | API P99 | <200ms |
 | 并发 | 10000+ (32 worker常驻内存) |
-| 表数 | 110 |
-| 端点 | 73 |
+| 表数 | 98 |
+| 端点 | 90 |
 | 中间件 | 14 (service:10全局+2路由+AdminKey+StaticFile / admin:4全局+1内置) |
 | 语言 | zh_CN, zh_HK, en, ja, ko |
 | 币种 | 19种独立定价 |
@@ -45,15 +45,15 @@ graph TD
         N[Nginx :80/:443]
     end
     subgraph Apps[应用层]
-        S[Service API :8787<br/>39 Controllers 111 Models 14 MW]
-        A[Admin :8788<br/>82 Controllers 76 Models 5 MW]
+        S[Service API :8787<br/>40 Controllers 90 Models 14 MW]
+        A[Admin :8788<br/>71 Controllers 66 Models 5 MW]
     end
     subgraph Data[数据层]
-        M[(MySQL 8.0 :3306<br/>110 tables erik_)]
+        M[(MySQL 8.0 :3306<br/>89 tables shop_)]
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
-    F & H & W --> C
+    F & W --> C
     C --> N
     N -->|api.erik.xyz| S
     N -->|admin.erik.xyz| A
@@ -97,7 +97,7 @@ graph TB
         JWT --> HENC[HashidsEncode]
         HENC --> ENC[Encryption 接口加密]
     end
-    subgraph Controllers["5. 控制器 39个"]
+    subgraph Controllers["5. 控制器 40个"]
         AUTH[Auth] & PROD[Product] & CART[Cart]
         ORD[Order] & PAY[Payment] & SHIP[Shipping]
         TARI[Tariff] & USER[User] & COUP[Coupon]
@@ -119,7 +119,7 @@ graph TB
         HEADERS[Headers: CORS X-Platform]
     end
 
-    FL & HM & WB --> CDN --> NG
+    FL & WB --> CDN --> NG
     NG --> CORS
     PASS --> PLAT
     HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
@@ -130,7 +130,7 @@ graph TB
     SRCH --> ES
     MySQL & Redis & ES --> JSON
     JSON --> OUTENC --> HEADERS
-    HEADERS --> FL & HM & WB
+    HEADERS --> FL & WB
 
     style Security fill:#fff0f0
     style Pipeline fill:#f0f0ff
@@ -148,9 +148,9 @@ graph TB
 | 2.接入层 | CDN 边缘层(Origin-Pull 回源, 静态资源缓存) → Nginx 按域名分流: api→service, admin→admin |
 | 3.安全层 | SecurityMiddleware 31类攻击检测器, 命中即返回错误码/403 |
 | 4.中间件管道 | 10个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
-| 5.控制器层 | 39个API控制器按功能分组, 处理全部业务逻辑 |
-| 6.模型层 | 111个Eloquent模型, BaseModel提供Snowflake ID主键, 45个模型按表启用SoftDelete |
-| 7.数据层 | MySQL(110表erik_前缀/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
+| 5.控制器层 | 40个API控制器按功能分组, 处理全部业务逻辑 |
+| 6.模型层 | 90个Eloquent模型, BaseModel提供Snowflake ID主键, 45个模型按表启用SoftDelete |
+| 7.数据层 | MySQL(89表shop_前缀/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
 | 8.响应返回 | JSON统一格式 → HashidsEncode编码ID → Encryption加密(X-Encrypt-Response) → 返回客户端 |
 | 9.熔断与降级 | Redis 熔断器(CircuitBreaker): 支付网关/社交登录外部API, 连续5次失败→熔断30s, 半开探测恢复; 业务异常白名单; Redis故障降级放行(503) |
 
@@ -221,7 +221,7 @@ graph LR
 | # | Admin中间件 | 功能 |
 |---|------------|------|
 | 1 | SecurityMiddleware | XSS/SQL注入/CRLF/路径遍历/Content-Type/20MB |
-| 2 | PlatformMiddleware | X-Platform + UA 8平台识别 |
+| 2 | PlatformMiddleware | X-Platform + UA 7平台识别 |
 | 3 | HashidsDecode | 请求 hashid→snowflake ID |
 | - | AccessControl(内置) | 管理员角色权限验证 |
 | 4 | HashidsEncode | 响应 snowflake ID→hashid |
@@ -309,10 +309,9 @@ graph TD
 | Windows | Flutter `Platform.isWindows` / UA `Windows` | `windows` |
 | Linux | Flutter `Platform.isLinux` / UA `Linux` | `linux` |
 | Android | Flutter `Platform.isAndroid` / UA `Android` | `android` |
-| HarmonyOS | ArkTS硬编码 / UA `HarmonyOS` | `harmonyos` |
 | Web | UA无匹配 / 默认值 | `web` |
 
-记录表: `erik_orders.platform`, `erik_payments.platform`, `erik_operation_logs.platform`, `erik_users.last_login_platform`, `erik_search_logs.platform`, `erik_chat_messages.platform`
+记录表: `erik_orders.platform`, `erik_payments.platform`, `erik_operation_logs.platform`, `erik_users.last_login_platform`, `erik_search_logs.platform`
 
 ---
 
@@ -484,7 +483,7 @@ cd service && php vendor/bin/phpunit tests/
 | PHP源文件 | service:210 + admin:214 = 424 |
 | Dart (Flutter) | 25 |
 | 数据库表 | 110 |
-| API端点 | 73 |
+| API端点 | 90 |
 | 中间件 | 14 |
 | 工具类 | 8 |
 | 定时任务 | 12 |

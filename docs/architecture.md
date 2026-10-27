@@ -10,7 +10,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|------|
 | API | webman + illuminate/database | 2.1 / 11.x |
 | Admin | webman-admin + LayUI + ECharts | 2.0 |
-| 客户端 | Flutter (5平台) + HarmonyOS (ArkTS) | 3.x / API 12+ |
+| 客户端 | Flutter (5平台) | 3.x |
 | 数据库 | MySQL + Redis + Elasticsearch | 8.0 / 7 / 8 |
 | 支付 | Stripe / PayPal / Klarna / Adyen | — |
 
@@ -21,7 +21,7 @@ shop-php/
   service/           业务API (308 PHP文件)
     config/            36配置 (database/redis/jwt/snowflake/hashids/encryption/poster/scout/concurrency/cdn/...)
     app/controller/    45控制器 (44 v1 + BaseApiController: Auth/Product/Order/Payment/Shipping/Tariff/Health/...)
-    app/model/         111模型 (BaseModel + 110业务模型)
+    app/model/         90模型 (BaseModel + 89业务模型)
     app/middleware/     14中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
     app/common/         19工具类 (Snowflake/HashidsHelper/ApiResponse/Money/Encryption/Jwt/SecureEncrypter/CircuitBreaker/DistributedLock/Cdn/RiskEngine/RefundHelper/SocialAuth/PaymentGateway + Stripe/PayPal/Klarna/Adyen 网关 + InventoryLogger/Definitions)
     app/process/        15自定义进程 (汇率/物流轨迹/分账结算/支付对账/Feed同步/推荐/合规/退货超时/降价提醒/订阅 + Monitor/Http/SnowflakeWorker/PrivacyComplianceTask)
@@ -44,7 +44,7 @@ shop-php/
 ## 3. 中间件管道
 
 ```
-Service: Cors → Security(31类攻击检测) → RateLimit(令牌桶限流) → Platform(8平台识别)
+Service: Cors → Security(31类攻击检测) → RateLimit(令牌桶限流) → Platform(7平台识别)
         → GeoIp(区域) → Locale(语言) → HashidsDecode → VersionRoute
         → (PosterVerify 人机验证) → (JwtAuth Token) → HashidsEncode → Encryption(接口加密)
 
@@ -55,7 +55,7 @@ Admin:  Security → Platform → HashidsDecode → AccessControl(内置RBAC) �
 
 - **31类攻击检测**: XSS/SQL注入/命令注入/CRLF/路径遍历/Body/ContentType/文件上传/暴力破解/XXE/SSRF/反序列化/LDAP/邮件头/SSTI/NoSQL/开放重定向/JWT攻击/Host/请求走私/GraphQL/XPATH/Log4Shell/SSI/CSV公式/数据泄露/原型污染/WebSocket/CORS/DNS重绑定/HTTP方法/CSRF Origin
 - **三层加密**: 接口层(AES-256-CBC) + 数据库层(Encryptable trait) + ID混淆(Hashids)
-- **平台追踪**: 8平台(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + X-Platform header + 6表记录
+- **平台追踪**: 7平台(iOS/iPadOS/macOS/Windows/Linux/Android/Web) + X-Platform header + 5表记录
 
 ## 5. 高并发
 
@@ -84,7 +84,7 @@ cd admin && php start.php start -d
 
 - **多语言 (i18n)**: 5语言翻译文件 + LocaleMiddleware + Flutter AppLocalizations
 - **API文档**: hg/apidoc自动生成 (6分组, 控制器注解驱动)
-- **平台追踪**: 8平台 X-Platform header + DB记录
+- **平台追踪**: 7平台 X-Platform header + DB记录
 - **CDN (可选)**: Origin-Pull 回源 — 上传文件存 admin 本地磁盘, 输出边界 `Cdn::url()` 重写为 `https://{CDN_DOMAIN}{path}`; 4家提供商(Cloudflare/CloudFront/阿里云/腾讯云), 管理端配置+自动刷新, 详情见 [CDN 支持方案](PLAN-CDN.md)
 
 详见: [部署文档](deployment.md) | [完整架构文档](architecture-full.md) | [功能设计文档](features.md)

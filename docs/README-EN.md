@@ -8,7 +8,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ## Editions
 
-> Lite (MIT Open Source): `lite` | Standard (Commercial): `standard` | Full (Commercial): `full`
+> Lite (Personal Use Only): `lite` | Standard (Commercial): `standard` | Full (Commercial): `full`
 >
 > Commercial license inquiries: **erik@erik.xyz** | Edition comparison: [VERSIONS.md](VERSIONS.md)
 
@@ -25,14 +25,13 @@ The project mascot is **Snowy** — a globe sprite wearing a snowflake crown and
 | Business API | webman + illuminate/database + erikwang2013/* | `service/` |
 | Admin Panel | webman-admin + LayUI + ECharts | `admin/` |
 | Mobile/Desktop | Flutter (iOS/Android/macOS/Windows/Linux) | `apps/flutter/` |
-| HarmonyOS | ArkTS + ArkUI (HarmonyOS NEXT) | `apps/harmonyos/` |
 
 ### Tech Stack
 
 **Server:** PHP 8.3+, webman 2.1, MySQL 8.0, Redis 7, Elasticsearch 8
 **Core packages:** snowflake-php, hashids, jwt-webman, encryption, encryptable, poster-php, webman-scout, season
 **Payments:** Stripe, PayPal, Klarna, Adyen
-**Clients:** Flutter 3.x (Riverpod + GoRouter + Dio), HarmonyOS API 12+ (ArkTS + ArkUI)
+**Clients:** Flutter 3.x (Riverpod + GoRouter + Dio)
 
 ## Architecture Diagrams
 
@@ -80,7 +79,7 @@ The project mascot is **Snowy** — a globe sprite wearing a snowflake crown and
 
 **Native-currency capture**: Stripe / PayPal / Klarna / Adyen charge in the order currency; the payment webhook is signature-verified before payment and order status are updated.
 
-**Settlement splitting**: on successful payment, `PlatformSettlements` is auto-generated (order total + platform commission + gateway fee, booked in the order currency). Four independent settlement lines — merchant settlements `MerchantSettlements` (order amount → commission rate → settlement amount), supplier settlements `SupplierSettlements`, and affiliate payouts `AffiliatePayouts` — each with status 0 pending / 1 settled.
+**Settlement splitting**: on successful payment, `PlatformSettlements` is auto-generated (order total + platform commission + gateway fee, booked in the order currency). Three independent settlement lines — merchant settlements `MerchantSettlements` (order amount → commission rate → settlement amount), supplier settlements `SupplierSettlements`, and platform settlement `PlatformSettlements` — each with status 0 pending / 1 settled.
 
 **FX gain/loss**: `CurrencyExchangeGainsLosses` tracks the difference between the received and settled currencies, comparing the exchange rate at payment vs. at settlement; positive = FX gain, negative = FX loss, supporting multi-currency reconciliation and auditing for cross-border e-commerce.
 
@@ -103,7 +102,7 @@ php start.php start -d
 cd ../service && composer install && php start.php start -d
 ```
 
-> The web installer automatically: creates the database → imports 117 tables → generates `service/.env` and `admin/.env` (with random crypto keys) → creates the admin account → reloads services
+> The web installer automatically: creates the database → imports 98 tables → generates `service/.env` and `admin/.env` (with random crypto keys) → creates the admin account → reloads services
 
 ### Method 2: Manual Installation
 
@@ -136,7 +135,6 @@ curl http://127.0.0.1:8787/
 ### Clients
 
 - **Flutter client**: `apps/flutter/` (iOS / Android / macOS / Windows / Linux)
-- **HarmonyOS client**: `apps/harmonyos/` (HarmonyOS NEXT, ArkTS + ArkUI)
 
 ### Docker Deployment
 
@@ -154,18 +152,17 @@ docker-compose up -d
 
 ```
 shop-php/
-  install.sql       # One-click install SQL (117 tables), auto-imported by web installer
-  service/          PHP API (webman)            — 44 controllers + 111 models + 14 middleware + 16 processes
-  admin/            Admin panel (webman-admin)   — 85 controllers + 78 models + ECharts dashboard + web installer
-  apps/flutter/     Flutter client              — 6 feature modules + 13 pages + 5 languages + PC adaptive layout
-  apps/harmonyos/   HarmonyOS client            — 10 pages + 3 security components (ArkTS + ArkUI)
+  install.sql       # One-click install SQL (98 tables), auto-imported by web installer
+  service/          PHP API (webman)            — 40 controllers + 90 models + 14 middleware + 14 processes
+  admin/            Admin panel (webman-admin)   — 71 controllers + 66 models + ECharts dashboard + web installer
+  apps/flutter/     Flutter client              — 6 feature modules + 12 pages + 5 languages + PC adaptive layout
   docker/           Docker deployment           — Nginx + PHP + MySQL + Redis + ES
   scripts/          Tooling                     — e2e / smoke_controllers / check_install_tables
   docs/             Design documentation + diagram set
     pet.svg           Project pet "Snowy" (canonical source)
     01-08-*.svg       8 diagrams: system architecture / request flow / feature map / request lifecycle /
                       order lifecycle / deployment / security / multi-currency settlement (*.mmd = Mermaid source)
-    i18n/             READMEs in 13 languages
+    README-EN.md      English documentation (this file)
 ```
 
 ### Runtime Directories
@@ -188,24 +185,23 @@ shop-php/
 | **Cross-Border Compliance** | HS Code library, tariff rules, VAT/IOSS, compliance labels (FDA/CE/RoHS) |
 | **International Logistics** | Zone-based shipping rates, overseas warehouses, HS customs declaration, commercial invoices |
 | **Payments** | Stripe/PayPal/Klarna/Adyen, BNPL, 3DS verification |
-| **Marketing** | Coupons (zone-limited), banners (region-visible), flash sales, group buying, affiliate system |
-| **Multi-Platform** | Amazon/eBay/Shopee/Lazada/Temu product listings + order aggregation |
+| **Marketing** | Coupons (zone-limited), banners (region-visible) |
 | **Supply Chain** | Supplier ratings, purchase orders, quality inspection, inventory ledger (immutable), transfers |
 | **Risk & Compliance** | Rule engine (scoring pipeline), KYC verification, GDPR/CCPA data requests, Cookie consent |
 | **Security** | 31 attack detection types (XSS/SQLi/XXE/SSRF/CRLF/path traversal/file upload/brute force) |
 | **Performance** | Token bucket rate limiting, DB read/write split, connection pooling, CDN edge caching + auto-purge (origin-pull) |
 | **Reporting** | Admin report center: sales summary, 30-day trend, TOP products, payment method / order status distribution |
 | **Platform Stats** | Service homepage stats: user/product/order/GMV totals and today's new counts |
-| **Membership** | Points rules, membership tiers + benefits, gift cards, price alerts, subscription auto-buy, A/B testing |
-| **Content** | CMS multi-language pages, FAQ, knowledge base, size charts, email templates, product feed sync |
-| **Customer Service** | WebSocket real-time IM, knowledge base (schema ready) |
+| **Membership** | Points ledger, membership tiers + benefits, price alerts, subscription auto-buy |
+| **Content** | CMS multi-language pages, FAQ, size charts, product feed sync |
+| **Customer Service** | FAQ support |
 | **Infrastructure** | Snowflake distributed IDs, Hashids obfuscation, JWT auth, AES encryption, GeoIP detection |
-| **Multi-Platform Tracking** | 8 source platform identification (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + DB logging |
-| **Testing** | 22 tests / 45 assertions — ALL PASS (Security + JWT + API response + Redis) |
+| **Multi-Platform Tracking** | 7 source platform identification (iOS/iPadOS/macOS/Windows/Linux/Android/Web) + DB logging |
+| **Testing** | See `.github/workflows/ci.yml` |
 
 ## Core Design
 
-- **Snowflake PKs**: All 117 tables use `erikwang2013/snowflake-php` generated bigint IDs
+- **Snowflake PKs**: All 98 tables use `erikwang2013/snowflake-php` generated bigint IDs
 - **Hashids Interface**: Middleware auto-encodes/decodes — transparent to controllers
 - **Encryptable Fields**: email/mobile/address and other PII encrypted at database level
 - **JWT Auth**: HS256 + access/refresh dual-token auto-refresh
@@ -248,24 +244,14 @@ Latest full QA report: [test-reports/QA-REPORT-2026-08-27.md](test-reports/QA-RE
 **Known gaps fixed (2026-08-28)**: 19 admin page views + ShopExport export page implemented;
 E2E rerun 47 PASS / 0 FAIL / 1 WARN (100%). See report §8.
 
-## License
+## 项目授权 / Project License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
-### Crypto Donation
+- 本项目仅供个人学习、研究使用。
+- 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。
+- 商业授权请联系 **erik@erik.xyz**。
+- 未经授权的商业使用，作者将在全球范围内依法追究法律责任，并保留终身追责的权利。
+- 第三方组件仍遵循其各自原有的许可证；视觉资产适用仓库内的 ASSETS-LICENSE.md（如适用）。
 
-If this project helps you, scan the QR code to donate, thank you!
-
-| Network | QR Code | Wallet Address |
-|---|---|---|
-| BNB Smart Chain (BEP20) | [<img src="./coin/1.jpg" width="150" alt="BNB Smart Chain (BEP20)">](./coin/1.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Tron (TRC20) | [<img src="./coin/2.jpg" width="150" alt="Tron (TRC20)">](./coin/2.jpg) | `TEdDHWLajt1XvqtPDWmQctdrJaC3pzZZzz` |
-| Ethereum (ERC20) | [<img src="./coin/3.jpg" width="150" alt="Ethereum (ERC20)">](./coin/3.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Aptos | [<img src="./coin/4.jpg" width="150" alt="Aptos">](./coin/4.jpg) | `0x836e3780edfc3f7b2372b39e2a1a3a5d7adfaccd96c726f21cfde1b50dd68030` |
-| Plasma | [<img src="./coin/5.jpg" width="150" alt="Plasma">](./coin/5.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Polygon POS | [<img src="./coin/6.jpg" width="150" alt="Polygon POS">](./coin/6.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| Solana | [<img src="./coin/7.jpg" width="150" alt="Solana">](./coin/7.jpg) | `2hfhboHdmdrYsY25XfQSsEWxq5ip4EQsR7f4AzSRMUyr` |
-| The Open Network (TON) | [<img src="./coin/8.jpg" width="150" alt="The Open Network (TON)">](./coin/8.jpg) | `UQB9kFQohzmXUir9QSSZq01iwl9aQZIDdBpNmDklljRtCoGK` |
-| Arbitrum One | [<img src="./coin/9.jpg" width="150" alt="Arbitrum One">](./coin/9.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-| AVAX C-Chain | [<img src="./coin/10.jpg" width="150" alt="AVAX C-Chain">](./coin/10.jpg) | `0x355d429f97511897ccb4e271ec888205f9ab6629` |
-
+**English:** This project is provided for personal study and research only. Commercial use of any kind requires prior written authorization from the author (erik@erik.xyz). Unauthorized commercial use will be pursued for legal liability worldwide, and the author reserves the right to pursue such liability for life. Third-party components remain under their original licenses; visual assets are governed by ASSETS-LICENSE.md where applicable.

@@ -2,7 +2,6 @@ graph TB
     subgraph Clients["客户端层 Client Layer"]
         direction LR
         FL["Flutter App<br/>iOS · Android · macOS<br/>Windows · Linux · iPadOS<br/>Riverpod + GoRouter + Dio"]
-        HM["HarmonyOS App<br/>ArkTS + ArkUI<br/>API 12+"]
         WB["Web Admin<br/>LayUI + ECharts<br/>管理后台"]
     end
 
@@ -16,14 +15,14 @@ graph TB
             direction TB
             MW["全局中间件 10个<br/>Cors → Security → RateLimit<br/>→ Platform → GeoIp → Locale<br/>→ HashidsDecode → VersionRoute<br/>→ HashidsEncode → Encryption"]
             RT["路由中间件 2个<br/>PosterVerify · JwtAuth"]
-            CTRL["39 控制器<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · Affiliate<br/>B2b · Cms · Faq · FlashSale<br/>GroupBuy · GiftCard · Review<br/>Search · SocialAuth · Settings"]
-            MDL["111 模型 Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable 加密<br/>+ Searchable ES 同步<br/>+ SoftDelete 软删除<br/>45 表启用软删除"]
+            CTRL["40 控制器<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · B2b<br/>Cms · Faq · Review<br/>Search · SocialAuth · Settings"]
+            MDL["90 模型 Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable 加密<br/>+ Searchable ES 同步<br/>+ SoftDelete 软删除<br/>45 表启用软删除"]
         end
         subgraph Admin["Admin (webman-admin) :8788"]
             direction TB
             AMW["中间件 5个<br/>Security → Platform<br/>→ HashidsDecode<br/>→ AccessControl RBAC<br/>→ HashidsEncode"]
-            ACTRL["82 控制器<br/>商品 · 订单 · 用户 · 营销<br/>物流 · 供应链 · 风控<br/>CMS · 客服 · 系统"]
-            AMDL["76 模型"]
+            ACTRL["71 控制器<br/>商品 · 订单 · 用户 · 营销<br/>物流 · 供应链 · 风控<br/>CMS · 客服 · 系统"]
+            AMDL["66 模型"]
         end
     end
 
@@ -42,7 +41,6 @@ graph TB
     end
 
     FL --> CDN
-    HM --> CDN
     WB --> CDN
     CDN --> NG
     NG --> Service

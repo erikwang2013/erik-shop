@@ -56,7 +56,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 第四层 | 身份认证 | PosterVerify + JwtAuth HS256 | 人机验证(滑块/拼图/点击) + Bearer Token + 双token刷新 |
 | 第五层 | 数据安全 | Hashids + AES-256-CBC + Encryptable | 三层加密: ID混淆/传输加密/数据库字段加密 |
 | 第六层 | 响应安全 | HTTP 安全头 + 敏感脱敏 | nosniff/DENY/XSS-Protection/Referrer-Policy/日志脱敏 |
-| 持续 | 审计追溯 | PlatformMiddleware + OperationLogs | 8平台来源追踪 + 6表记录 + 操作日志 |
+| 持续 | 审计追溯 | PlatformMiddleware + OperationLogs | 7平台来源追踪 + 6表记录 + 操作日志 |
 
 ---
 
@@ -72,7 +72,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 **原币扣款**：Stripe / PayPal / Klarna / Adyen 按订单币种原币扣款，Webhook 验签确认到账后更新支付与订单状态。
 
-**分账结算**：支付成功后自动生成 `PlatformSettlements` 平台分账（订单总额 + 平台佣金 + 支付网关手续费，按订单币种记账）；卖家结算 `MerchantSettlements`（订单金额 → 抽成率 → 结算金额）、供应商结算 `SupplierSettlements`、分销佣金提现 `AffiliatePayouts` 四线独立结算，状态 0 待结算 / 1 已结算。
+**分账结算**：支付成功后自动生成 `PlatformSettlements` 平台分账（订单总额 + 平台佣金 + 支付网关手续费，按订单币种记账）；卖家结算 `MerchantSettlements`（订单金额 → 抽成率 → 结算金额）、供应商结算 `SupplierSettlements` 三线独立结算，状态 0 待结算 / 1 已结算。
 
 **汇兑损益**：`CurrencyExchangeGainsLosses` 追踪收款币种与结算币种差异，对比支付时汇率与结算时汇率，正数 = 汇兑收益、负数 = 汇兑亏损，支撑跨境电商多币种对账与审计。
 

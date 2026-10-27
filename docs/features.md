@@ -7,7 +7,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ## 平台追踪
 
-### 8平台识别
+### 7平台识别
 
 | 平台 | Header | Flutter | Admin |
 |------|--------|---------|-------|
@@ -17,7 +17,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Windows | `windows` | Platform.isWindows | UA Windows |
 | Linux | `linux` | Platform.isLinux | UA Linux |
 | Android | `android` | Platform.isAndroid | UA Android |
-| HarmonyOS | `harmonyos` | — | UA HarmonyOS |
 | Web | `web` | kIsWeb | 默认 |
 
 ### DB追踪字段
@@ -41,37 +40,37 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **多商家入驻** | 卖家审核、商品审核、分成分账 | 完整 |
 | **跨境合规** | HS Code编码库(6位基码)、关税规则(目的国+HS→税率)、VAT/IOSS、合规标签(FDA/CE/RoHS等10类) | 完整 |
 | **国际物流** | 物流分区运费(重量阶梯)、DHL/UPS/FedEx/EMS、海外仓(发货+退货)、HS申报(电池/液体标识)、商业发票PDF/装箱单 | 完整 |
-| **支付** | Stripe PaymentIntent+3DS、PayPal REST、Klarna BNPL、Adyen、Webhook验签+分账 | Stripe完整,其他占位 |
-| **营销** | 优惠券(分区+新老客限定)、轮播图(区域可见)、秒杀(限时限量)、拼团(成团人数+有效期)、分销(链接+佣金+提现) | 完整 |
+| **支付** | Stripe PaymentIntent+3DS、PayPal REST、Klarna BNPL、Adyen、Webhook验签+分账 | 完整 |
+| **营销** | 优惠券(分区+新老客限定)、轮播图(区域可见) | 完整 |
 | **供应链** | 供应商档案+评级、采购单(审核→发货→收货→质检)、质检(入库+出库门禁/外观/功能/合规标签检查)、库存流水(不可变账本:入库/出库/调拨/盘点) | 完整 |
 | **风控合规** | 规则引擎(旁路打分:地址校验/邮编匹配/3DS/批量注册/货值异常)、KYC实名、GDPR/CCPA数据请求、Cookie Consent版本管理 | 完整 |
 | **安全防护** | SecurityMiddleware 封装 security-php 31个检测器: XSS(13条)/SQL注入(13条)/CRLF/路径遍历(编码+null byte)/Body大小/Content-Type/文件上传/HTTP安全头/暴力破解(Redis计数器)/XXE/SSRF/方法/Host/敏感脱敏/CORS | 完整 |
 | **高并发** | 令牌桶限流(滑动窗口+6端点规则)、熔断器(支付/社交登录,5次失败→30s熔断+半开恢复)、DB读写分离(2读副本+sticky)、连接池(DB 50/10+Redis 30/5)、OPCache(128MB, Docker环境) | 完整 |
-| **会员增长** | 会员等级+权益、积分规则+流水、礼品卡(余额+兑换)、降价/到货提醒、收藏夹、商品对比、浏览历史、订阅周期购、AB测试(流量分配+置信度) | 完整 |
-| **内容管理** | CMS多语言页面(Landing/Blog)、FAQ多语言、知识库多语言、尺码对照表(服装/鞋类+US/UK/EU/JP/CN转换)、邮件模板(多语言)、商品Feed(Google/Meta+定时同步) | 完整 |
+| **会员增长** | 会员等级+权益、积分流水、降价/到货提醒、收藏夹、商品对比、浏览历史、订阅周期购 | 完整 |
+| **内容管理** | CMS多语言页面(Landing/Blog)、FAQ多语言、尺码对照表(服装/鞋类+US/UK/EU/JP/CN转换)、商品Feed(Google/Meta+定时同步) | 完整 |
 | **基础设施** | Snowflake分布式ID(bigint非自增)、Hashids接口ID混淆、JWT认证(HS256+access/refresh双token刷新)、AES加解密(接口+数据库三层加密)、GeoIP区域识别(MaxMind)、Poster人机验证(滑块/拼图/点击)、CDN内容分发(Origin-Pull回源+边缘缓存+自动刷新) | 完整 |
 | **报表分析** | 管理端报表中心(ShopReportController)：销售摘要(GMV/订单数/客单价)、30天趋势、TOP商品、支付方式分布、订单状态分布 | 完整 |
 | **平台统计** | service 起始页(GET /)平台统计：用户/商品/订单/GMV 总量与今日新增(StatsController) | 完整 |
-| **多端覆盖** | Flutter 5平台(iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS(ArkTS 9页面) + Web Admin(LayUI+ECharts) + API | Flutter 25文件,HarmonyOS 14文件,Admin 239文件 |
-| **平台追踪** | 8平台识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+X-Platform header+5表记录(orders/payments/operation_logs/users/search_logs) | 完整 |
-| **测试** | service 211 tests / 1000 assertions + admin 2/7 + API 4 套件 213 项断言全绿（2026-08-27 全量轮次，详见 [QA-REPORT](test-reports/QA-REPORT-2026-08-27.md)） | 单元/集成/API 完整；UI E2E 47 PASS / 0 FAIL（2026-08-28 全部缺口已实现） |
+| **多端覆盖** | Flutter 5平台(iOS/Android/macOS/Windows/Linux/iPadOS) + Web Admin(LayUI+ECharts) + API | Flutter 12页面,Admin 61视图 |
+| **平台追踪** | 7平台识别(iOS/iPadOS/macOS/Windows/Linux/Android/Web)+X-Platform header+5表记录(orders/payments/operation_logs/users/search_logs) | 完整 |
+| **测试** | 见 `.github/workflows/ci.yml` | CI 覆盖 |
 
 ### 1.1 模块矩阵
 
 | 一级模块 | 二级模块 | 优先级 | 状态 |
 |---------|---------|--------|------|
-| 用户系统 | 注册/登录/社交登录/KYC实名/地址/收藏/会员/积分/礼品卡 | P0-P2 | ✅ |
+| 用户系统 | 注册/登录/社交登录/KYC实名/地址/收藏/会员/积分 | P0-P2 | ✅ |
 | 商品系统 | 分类/SKU/多语言/多币种/图片/属性/合规/HS Code/ES搜索/Feed | P0-P1 | ✅ |
 | 交易系统 | 购物车/订单/支付(Stripe+PayPal+Klarna)/退款/退货/发票 | P0 | ✅ |
 | 物流系统 | 国际物流商/分区运费/海外仓/发货(HS申报)/物流保险 | P0-P1 | ✅ |
 | 海关税务 | HS Code库/关税规则/VAT/IOSS/各国合规限制 | P0 | ✅ |
-| 营销系统 | 优惠券/轮播图/秒杀/拼团/分销 | P1-P2 | ✅ |
+| 营销系统 | 优惠券/轮播图 | P1-P2 | ✅ |
 | 供应链 | 供应商/采购单/质检/库存流水 | P1 | ✅ |
 | 风控合规 | 规则引擎/GDPR/CCPA/Cookie Consent/平台追踪 | P1 | ✅ |
 | 安全防护 | XSS/SQL注入/CRLF/路径遍历/Content-Type/请求体 | P0 | ✅ |
 | 多商家 | 第三方卖家入驻/店铺/商品/结算 | P2 | ✅ |
-| 内容管理 | CMS/FAQ/知识库/邮件模板/通知/尺码表 | P2 | ✅ |
-| 增长工具 | B2B批发/订阅周期购/AB测试 | P2-P3 | ✅ |
+| 内容管理 | CMS/FAQ/通知/尺码表 | P2 | ✅ |
+| 增长工具 | B2B批发/订阅周期购 | P2-P3 | ✅ |
 | 基础设施 | Snowflake ID/JWT/Hashids/Encryption/Poster/API版本/GeoIP/CDN内容分发 | P0 | ✅ |
 | 报表中心 | 销售摘要/30天趋势/TOP商品/支付方式/订单状态分布 | P1 | ✅ |
 | 平台统计 | service 起始页 用户/商品/订单/GMV 统计 | P1 | ✅ |
@@ -218,7 +217,7 @@ ES搜索: GET /api/search?keyword=xxx
 Webhook: POST /webhook/payment/stripe
   → 验签 → payment_intent.succeeded:
      → Payment.status=已支付 → Order.status=已付款
-     → PlatformSettlement(平台佣金+网关费+供应商+分销)
+     → PlatformSettlement(平台佣金+网关费+供应商)
 ```
 
 ### 3.5 退货流程
@@ -290,7 +289,6 @@ Admin: Security → Platform → HashidsDecode → AccessControl → HashidsEnco
 | Windows | `windows` | Flutter `Platform.isWindows` |
 | Linux | `linux` | Flutter `Platform.isLinux` |
 | Android | `android` | Flutter `Platform.isAndroid` |
-| HarmonyOS | `harmonyos` | ArkTS 硬编码 |
 | Web | `web` | UA 降级 / 默认 |
 
 ---

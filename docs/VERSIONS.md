@@ -1,6 +1,8 @@
 # Erik Shop — 跨境电商平台
 基于 webman 全家桶构建的全栈跨境电商平台，覆盖 B2C/B2B 场景和第三方卖家入驻。
 
+> 历史版本记录。已移除的功能不再作为当前能力宣传，当前功能以 README.md 为准。
+
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
@@ -113,7 +115,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 社交登录 (Google/Apple/Facebook) | — | ✅ | ✅ |
 | 地址管理 | ✅ | ✅ | ✅ |
 | 会员等级 + 积分 | — | — | ◐ |
-| 礼品卡 | — | — | ✅ |
 | KYC实名认证 | — | — | ✅ |
 
 ### 商品系统
@@ -173,9 +174,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|:---:|:---:|:---:|
 | 优惠券 | ✅ | ✅ | ✅ |
 | 轮播图 | ✅ | ✅ | ✅ |
-| 秒杀 | — | ✅ | ✅ |
-| 拼团 | — | ✅ | ✅ |
-| 分销 (链接+佣金+提现) | — | ✅ | ✅ |
 | 区域促销 | — | ✅ | ✅ |
 
 ### 供应链
@@ -207,7 +205,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | GDPR/CCPA数据请求 | — | — | ✅ |
 | Cookie Consent管理 | — | — | ✅ |
 | 平台来源追踪 | — | ✅ | ✅ |
-| 平台来源追踪 (8平台) | — | ✅ | ✅ |
+| 平台来源追踪 (7平台) | — | ✅ | ✅ |
 
 ### 高并发
 
@@ -225,12 +223,9 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 功能 | Lite | Standard | Full |
 |------|:---:|:---:|:---:|
 | 系统通知 | ✅ | ✅ | ✅ |
-| 邮件模板 | — | — | ✅ |
 | CMS多语言页面 | — | — | ✅ |
-| FAQ + 知识库 | — | — | ◐ |
+| FAQ | — | — | ◐ |
 | 订阅周期购 | — | — | ✅ |
-| AB测试 | — | — | ◐ |
-| 实时客服 (WebSocket IM) | — | — | ✅ |
 
 ### 客户端
 
@@ -241,7 +236,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Flutter iPadOS | ✅ | ✅ | ✅ |
 | 国际化 (5语言翻译) | ✅ | ✅ | ✅ |
 | API文档 (hg/apidoc) | ✅ | ✅ | ✅ |
-| HarmonyOS (ArkTS) | — | — | ✅ |
 | Web Admin | ✅ | ✅ | ✅ |
 | Admin ECharts仪表盘 | ✅ | ✅ | ✅ |
 | Admin Excel/PDF导出 | ✅ | ✅ | ✅ |
@@ -294,8 +288,6 @@ Full:       Cors → Security(31类) → RateLimit(令牌桶) → Platform → G
 | Admin 模型 | 15 | 34 | 76 |
 | Admin 控制器 | 15 | 27 | 82 |
 | Flutter 页面 | 11 | 11 | 11 |
-| HarmonyOS | — | — | 9页面 |
-| PHPUnit测试 | 22 | 22 | 54 |
 
 ### 技术栈
 

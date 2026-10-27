@@ -27,10 +27,9 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 供应链 | 5 | suppliers, purchase_orders, purchase_order_items, quality_inspections, quality_inspection_items |
 | 风控与合规 | 5 | risk_rules, risk_logs, privacy_requests, cookie_consents, privacy_policy_versions |
 | 多商家 | 5 | shops, merchants, merchant_products, merchant_settlements |
-| 内容与体验 | 14 | cms_pages, cms_page_translations, size_charts, size_chart_values, product_feeds, notifications, email_templates, price_alerts, search_logs, operation_logs, settings |
-| 订阅与B2B | 9 | subscriptions, subscription_orders, point_rules, point_logs, gift_cards, b2b_prices, b2b_verifications, b2b_quotes |
-| 客服 | 5 | chat_sessions, chat_messages, knowledge_base, knowledge_base_translations, faq_translations |
-| AB测试 | 3 | ab_tests, ab_test_variants, ab_test_results |
+| 内容与体验 | 12 | cms_pages, cms_page_translations, size_charts, size_chart_values, product_feeds, notifications, price_alerts, search_logs, operation_logs, settings |
+| 订阅与B2B | 6 | subscriptions, subscription_orders, point_logs, b2b_prices, b2b_verifications, b2b_quotes |
+| FAQ | 1 | faq_translations |
 | API治理 | 2 | api_rate_limits, api_docs |
 | 基础数据 | 3 | countries, currencies, exchange_rates |
 
@@ -43,7 +42,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | operation_logs | platform VARCHAR(16) | 操作平台 |
 | users | last_login_platform VARCHAR(16) | 最后登录平台 |
 | search_logs | platform VARCHAR(16) | 搜索平台 |
-| chat_messages | platform VARCHAR(16) | 消息来源 |
 
 ---
 

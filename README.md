@@ -1,6 +1,6 @@
 # Erik Shop — 跨境电商平台
 
-Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+Copyright (c) 2026 erik erik@erik.xyz — https://erik.xyz
 
 ![雪球 Snowy — Erik Shop 项目宠物](docs/pet.svg)
 
@@ -361,7 +361,7 @@ CI/CD: `.github/workflows/ci.yml` — PHP 8.3/8.4 矩阵测试
 
 ## 项目授权 / Project License
 
-Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
+Copyright (c) 2026 erik erik@erik.xyz — https://erik.xyz
 
 - 本项目仅供个人学习、研究使用。
 - 未经作者书面授权，禁止任何形式的商业使用（包括但不限于商业部署、付费服务、二次销售、SaaS 运营及以本项目为基础提供商业服务）。

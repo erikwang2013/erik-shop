@@ -1743,36 +1743,8 @@ CREATE TABLE `shop_b2b_quotes` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='B2B询价';
 
 -- -------------------------------------------------------------
--- 模块13: 客服与FAQ (5张)
+-- 模块13: FAQ (1张)
 -- -------------------------------------------------------------
-
-CREATE TABLE `shop_chat_sessions` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `user_id` BIGINT UNSIGNED NOT NULL,
-    `agent_id` BIGINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '客服ID 0=未分配',
-    `topic` VARCHAR(256) NOT NULL DEFAULT '' COMMENT '会话主题',
-    `status` VARCHAR(16) NOT NULL DEFAULT 'waiting' COMMENT 'waiting/active/closed',
-    `closed_at` DATETIME NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_user_id` (`user_id`),
-    KEY `idx_agent_id` (`agent_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客服会话';
-
-CREATE TABLE `shop_chat_messages` (
-    `id` BIGINT UNSIGNED NOT NULL,
-    `session_id` BIGINT UNSIGNED NOT NULL,
-    `sender_type` VARCHAR(8) NOT NULL COMMENT 'user/agent/bot',
-    `sender_id` BIGINT UNSIGNED NOT NULL DEFAULT 0,
-    `platform` VARCHAR(16) NOT NULL DEFAULT 'web' COMMENT '消息来源端',
-    `content` TEXT COMMENT '消息内容',
-    `content_type` VARCHAR(16) NOT NULL DEFAULT 'text' COMMENT 'text/image/file',
-    `read_at` DATETIME NULL,
-    `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    KEY `idx_session_id` (`session_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息';
 
 CREATE TABLE `shop_faq_translations` (
     `id` BIGINT UNSIGNED NOT NULL,

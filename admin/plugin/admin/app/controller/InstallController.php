@@ -101,7 +101,7 @@ class InstallController extends Base
             'shop_email_templates', 'shop_email_logs', 'shop_price_alerts', 'shop_search_logs',
             'shop_operation_logs', 'shop_subscriptions', 'shop_subscription_orders', 'shop_subscription_logs',
             'shop_point_rules', 'shop_point_logs', 'shop_gift_cards', 'shop_b2b_prices', 'shop_b2b_verifications',
-            'shop_b2b_quotes', 'shop_chat_sessions', 'shop_chat_messages', 'shop_knowledge_base',
+            'shop_b2b_quotes', 'shop_knowledge_base',
             'shop_knowledge_base_translations', 'shop_faq_translations', 'shop_ab_tests', 'shop_ab_test_variants',
             'shop_ab_test_results', 'shop_api_rate_limits', 'shop_api_docs', 'shop_settings',
         ];

@@ -29,7 +29,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | erik_operation_logs | platform VARCHAR(16) | 操作平台 |
 | erik_users | last_login_platform VARCHAR(16) | 登录平台 |
 | erik_search_logs | platform VARCHAR(16) | 搜索平台 |
-| erik_chat_messages | platform VARCHAR(16) | 消息来源 |
 
 ## 1. 功能总览
 
@@ -51,12 +50,11 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | **高并发** | 令牌桶限流(滑动窗口+6端点规则)、熔断器(支付/社交登录,5次失败→30s熔断+半开恢复)、DB读写分离(2读副本+sticky)、连接池(DB 50/10+Redis 30/5)、OPCache(128MB, Docker环境) | 完整 |
 | **会员增长** | 会员等级+权益、积分规则+流水、礼品卡(余额+兑换)、降价/到货提醒、收藏夹、商品对比、浏览历史、订阅周期购、AB测试(流量分配+置信度) | 完整 |
 | **内容管理** | CMS多语言页面(Landing/Blog)、FAQ多语言、知识库多语言、尺码对照表(服装/鞋类+US/UK/EU/JP/CN转换)、邮件模板(多语言)、商品Feed(Google/Meta+定时同步) | 完整 |
-| **客服** | WebSocket实时IM(chat_sessions/chat_messages)、知识库多语言 | 表结构完整,WS待实现 |
 | **基础设施** | Snowflake分布式ID(bigint非自增)、Hashids接口ID混淆、JWT认证(HS256+access/refresh双token刷新)、AES加解密(接口+数据库三层加密)、GeoIP区域识别(MaxMind)、Poster人机验证(滑块/拼图/点击)、CDN内容分发(Origin-Pull回源+边缘缓存+自动刷新) | 完整 |
 | **报表分析** | 管理端报表中心(ShopReportController)：销售摘要(GMV/订单数/客单价)、30天趋势、TOP商品、支付方式分布、订单状态分布 | 完整 |
 | **平台统计** | service 起始页(GET /)平台统计：用户/商品/订单/GMV 总量与今日新增(StatsController) | 完整 |
 | **多端覆盖** | Flutter 5平台(iOS/Android/macOS/Windows/Linux/iPadOS) + HarmonyOS(ArkTS 9页面) + Web Admin(LayUI+ECharts) + API | Flutter 25文件,HarmonyOS 14文件,Admin 239文件 |
-| **平台追踪** | 8平台识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+X-Platform header+6表记录(orders/payments/operation_logs/users/search_logs/chat_messages) | 完整 |
+| **平台追踪** | 8平台识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+X-Platform header+5表记录(orders/payments/operation_logs/users/search_logs) | 完整 |
 | **测试** | service 211 tests / 1000 assertions + admin 2/7 + API 4 套件 213 项断言全绿（2026-08-27 全量轮次，详见 [QA-REPORT](test-reports/QA-REPORT-2026-08-27.md)） | 单元/集成/API 完整；UI E2E 47 PASS / 0 FAIL（2026-08-28 全部缺口已实现） |
 
 ### 1.1 模块矩阵
@@ -75,7 +73,6 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | 多平台 | Amazon/eBay/Shopee刊登+订单聚合/多商家入驻 | P2 | ✅ |
 | 内容管理 | CMS/FAQ/知识库/邮件模板/通知/尺码表 | P2 | ✅ |
 | 增长工具 | B2B批发/订阅周期购/AB测试 | P2-P3 | ✅ |
-| 客服 | WebSocket实时IM/知识库 | P3 | ✅ |
 | 基础设施 | Snowflake ID/JWT/Hashids/Encryption/Poster/API版本/GeoIP/CDN内容分发 | P0 | ✅ |
 | 报表中心 | 销售摘要/30天趋势/TOP商品/支付方式/订单状态分布 | P1 | ✅ |
 | 平台统计 | service 起始页 用户/商品/订单/GMV 统计 | P1 | ✅ |
@@ -337,7 +334,7 @@ erik_users ──┬── addresses, social_accounts, wishlists, kyc
              ├── carts, orders → order_items → payments
              ├── reviews, coupons(through user_coupons)
              ├── notifications, subscriptions, point_logs
-             ├── affiliate_links, chat_sessions, b2b_verifications
+             ├── affiliate_links, b2b_verifications
              └── privacy_requests
 
 erik_products ──┬── translations(product_id, locale)

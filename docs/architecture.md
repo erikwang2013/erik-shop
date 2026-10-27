@@ -24,7 +24,7 @@ shop-php/
     app/model/         111模型 (BaseModel + 110业务模型)
     app/middleware/     14中间件 (Cors/Security/RateLimit/Platform/GeoIp/Locale/HashidsDecode/VersionRoute/PosterVerify/JwtAuth/HashidsEncode/Encryption/StaticFile/AdminKey)
     app/common/         19工具类 (Snowflake/HashidsHelper/ApiResponse/Money/Encryption/Jwt/SecureEncrypter/CircuitBreaker/DistributedLock/Cdn/RiskEngine/RefundHelper/SocialAuth/PaymentGateway + Stripe/PayPal/Klarna/Adyen 网关 + InventoryLogger/Definitions)
-    app/process/        16自定义进程 (汇率/物流轨迹/分账结算/支付对账/Feed同步/推荐/合规/退货超时/降价提醒/订阅 + ChatWs/Monitor/Http/SnowflakeWorker/PrivacyComplianceTask)
+    app/process/        15自定义进程 (汇率/物流轨迹/分账结算/支付对账/Feed同步/推荐/合规/退货超时/降价提醒/订阅 + Monitor/Http/SnowflakeWorker/PrivacyComplianceTask)
     database/          schema.sql (已被根目录 install.sql 替代) + seeders
     tests/             24测试类 (全量结果见 docs/test-reports/)
   admin/             管理后台 (259 PHP文件)

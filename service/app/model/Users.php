@@ -163,11 +163,6 @@ class Users extends BaseModel
         return $this->hasMany(B2bQuotes::class, "user_id");
     }
 
-    public function chatSessions(): HasMany
-    {
-        return $this->hasMany(ChatSessions::class, "user_id");
-    }
-
     public function apiRateLimits(): HasMany
     {
         return $this->hasMany(ApiRateLimits::class, "user_id");

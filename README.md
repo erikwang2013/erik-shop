@@ -335,13 +335,16 @@ CI/CD: `.github/workflows/ci.yml` — PHP 8.3/8.4 矩阵测试
 
 | 维度 | 开源版 | 商业版 |
 |------|--------|--------|
-| PHP 源文件 | 484 | 536 |
-| 控制器 | 111 | 128 |
-| 数据模型 | 156 | 189 |
-| 数据表 | 98 | 119 |
-| 路由声明 | 93 | 106 |
-| 客户端 | Flutter + Web 管理端 | Flutter + HarmonyOS ArkTS + Web 管理端 |
-| 平台来源识别 | 7 平台 | 8 平台（含 HarmonyOS） |
+| 功能覆盖 | 111 控制器 / 156 模型 / 98 表 / 93 路由；B2C/B2B、多商家、跨境合规、国际物流、支付、优惠券、供应链、库存账本、风控/KYC、CMS、报表 | 128 控制器 / 189 模型 / 119 表 / 106 路由；在开源版全部能力上增加营销增长、多平台铺货、知识库/邮件模板/WebSocket IM、HarmonyOS 客户端 |
+| 安全防护 | 20 个中间件：JWT、AdminKey、RBAC、Hashids、字段加密、CORS、GeoIP、限流、Security 攻击检测、平台识别、版本路由；README 标注 31 类攻击检测 | 同一套 20 个中间件与 31 类检测器，未另起安全层；新增后台模块统一走 AdminAuth/AdminPermission/OperationLog/RateLimit 管线 |
+| 性能与规模 | webman 常驻，worker=CPU×4；Redis 缓存/限流/队列；Elasticsearch；13 个常驻进程（含汇率、物流、合规、推荐等定时任务） | 同一底座；15 个常驻进程，额外 `chat_ws`（WebSocket IM）与 `platform_order_sync_cron`（平台订单同步） |
+| 数据与检索 | 98 张表；MySQL + Elasticsearch；1 个 Searchable 模型；CDN 回源/边缘缓存 | 119 张表（+21 张商业模块表）；同一 MySQL/ES 检索底座；新增营销、IM、铺货、知识库等表 |
+| 测试与质量 | 25 个 PHPUnit 测试文件 + 1 个 Flutter 测试；2 个 GitHub Actions 工作流 | 商业版快照未包含 PHPUnit 测试目录，保留 1 个 Flutter 测试与 2 个 CI 工作流；质量证据以同源开源版测试为准，新增模块未附带同等测试 |
+| 部署与运维 | Docker Compose 六服务（nginx/service/admin/mysql/redis/ES）+ `/health` 健康检查 + 安装入口 + 运行时监控 | 同一六服务编排、健康检查与安装入口；新增模块随同一镜像/进程部署 |
+| 多端与国际化 | Flutter 客户端 + Flutter Web 管理端；服务端/后台各 5 种语言资源；文档仅中英文 | 增加 HarmonyOS ArkTS 客户端与 8 平台来源识别；同样 5 种运行时语言；保留 12 语种文档 |
+| 扩展性与二次开发 | 6 个支付网关类（Stripe/PayPal/Klarna/Adyen + 接口/工厂）；B2B/多商家、插件式后台、hg/apidoc API 文档 | 同一支付与 B2B/多商家底座；额外 17 个后台控制器、21 张表覆盖营销、IM、铺货、知识库，适合商业运营二次开发 |
+| 授权与商业支持 | 仅限个人学习/研究；商业使用需书面授权；无商业 SLA | 商业授权、交付与支持需联系 **erik@erik.xyz**；LICENSE 与开源版同一份 |
+| 适用场景 | 个人学习、研究、原型验证、小规模自建 | 商业部署、跨境零售/多商家运营，需要营销增长、多平台铺货、IM、HarmonyOS 的团队 |
 
 **商业版独有功能**
 

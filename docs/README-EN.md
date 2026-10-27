@@ -249,14 +249,17 @@ E2E rerun 47 PASS / 0 FAIL / 1 WARN (100%). See report §8.
 `shop-php` is the open-source base edition, ready to run as-is. The commercial edition is available separately on the same code baseline, adding marketing growth, multi-platform marketplace, content/support and a HarmonyOS client. Both share the same order, payment, inventory, cross-border compliance and security foundation.
 
 | Dimension | Open source | Commercial |
-|---|---:|---:|
-| PHP source files | 484 | 536 |
-| Controllers | 111 | 128 |
-| Data models | 156 | 189 |
-| Data tables | 98 | 119 |
-| Route declarations | 93 | 106 |
-| Clients | Flutter + Web admin | Flutter + HarmonyOS ArkTS + Web admin |
-| Platform detection | 7 platforms | 8 platforms (incl. HarmonyOS) |
+|---|---|---|
+| Feature coverage | 111 controllers / 156 models / 98 tables / 93 routes; B2C/B2B, multi-vendor, cross-border compliance, international logistics, payments, coupons, supply chain, inventory ledger, risk/KYC, CMS, reports | 128 controllers / 189 models / 119 tables / 106 routes; adds marketing growth, multi-platform marketplace, knowledge base/email templates/WebSocket IM, HarmonyOS client |
+| Security | 20 middleware: JWT, AdminKey, RBAC, Hashids, field encryption, CORS, GeoIP, rate limit, security attack detection, platform detection, version routing; README states 31 attack detectors | Same 20 middleware and 31 detectors, no separate security layer; new admin modules use the same AdminAuth/AdminPermission/OperationLog/RateLimit pipeline |
+| Performance & scale | webman workers = CPU×4; Redis cache/rate limit/queue; Elasticsearch; 13 resident processes (exchange rate, logistics, compliance, recommendations, etc.) | Same foundation; 15 resident processes, adding `chat_ws` (WebSocket IM) and `platform_order_sync_cron` (marketplace order sync) |
+| Data & search | 98 tables; MySQL + Elasticsearch; 1 Searchable model; CDN origin-pull/edge cache | 119 tables (+21 commercial-only tables); same MySQL/ES foundation; adds marketing, IM, marketplace and knowledge-base tables |
+| Testing & quality | 25 PHPUnit files + 1 Flutter test; 2 GitHub Actions workflows | The commercial snapshot does not include the PHPUnit test directory; it keeps 1 Flutter test and 2 CI workflows. Quality evidence is the same-source open edition; new modules do not ship equivalent tests |
+| Deployment & ops | Docker Compose with six services (nginx/service/admin/mysql/redis/ES) + `/health` + installer entry + runtime monitoring | Same six-service layout, health checks and installer entry; new modules deploy in the same image/processes |
+| Clients & i18n | Flutter client + Flutter Web admin; 5 runtime languages each for service/admin; docs in Chinese/English only | Adds HarmonyOS ArkTS client and 8-platform source detection; same 5 runtime languages; retains 12-language documentation |
+| Extensibility | 6 payment gateway classes (Stripe/PayPal/Klarna/Adyen + interface/factory); B2B/multi-vendor, plugin admin, hg/apidoc API docs | Same payment and B2B/multi-vendor foundation; 17 extra admin controllers and 21 tables for marketing, IM, marketplace and knowledge base — suitable for commercial secondary development |
+| Licensing & support | Personal study/research only; commercial use requires written authorization; no commercial SLA | Commercial licensing, delivery and support: **erik@erik.xyz**; same LICENSE text as the open edition |
+| Use cases | Personal learning, research, prototypes, small self-hosted deployments | Commercial deployment, cross-border retail/multi-vendor operations needing marketing growth, multi-platform marketplace, IM and HarmonyOS |
 
 **Commercial-only capabilities**
 

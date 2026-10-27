@@ -2,9 +2,7 @@
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
-<p align="center">
-  <img src="pet.svg" width="180" alt="Snowy — Erik Shop project pet">
-</p>
+![Snowy — Erik Shop project pet](pet.svg)
 
 ## Editions
 

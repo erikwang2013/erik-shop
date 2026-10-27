@@ -329,6 +329,33 @@ make fix              # php-cs-fixer 代码格式化
 
 CI/CD: `.github/workflows/ci.yml` — PHP 8.3/8.4 矩阵测试
 
+## 开源版 vs 商业版
+
+`shop-php` 是可直接运行的开源基础版；`open-project/shop-php` 是同一代码基线的商业版，额外交付营销增长、多平台铺货、内容客服与 HarmonyOS 客户端等能力。两版共用同一套订单、支付、库存、跨境合规与安全底座。
+
+| 维度 | 开源版 | 商业版 |
+|------|--------|--------|
+| PHP 源文件 | 484 | 536 |
+| 控制器 | 111 | 128 |
+| 数据模型 | 156 | 189 |
+| 数据表 | 98 | 119 |
+| 路由声明 | 93 | 106 |
+| 客户端 | Flutter + Web 管理端 | Flutter + HarmonyOS ArkTS + Web 管理端 |
+| 平台来源识别 | 7 平台 | 8 平台（含 HarmonyOS） |
+
+**商业版独有功能**
+
+- 营销增长：秒杀（含活动 SKU）、拼团、分销（推广链接/佣金/提现）、礼品卡、积分规则、AB 测试
+- 多平台铺货：Amazon / eBay / Shopee / Lazada / Temu 商品刊登与订单聚合
+- 内容与客服：知识库、邮件模板、WebSocket 实时 IM
+- 会员运营：积分规则、礼品卡、AB 测试
+- 客户端：HarmonyOS ArkTS 客户端
+- 数据模型：21 张商业版专有表（AB 测试 3、分销 3、聊天 2、秒杀 2、知识库 2、平台同步 4、礼品卡/拼团/积分规则/运费险/邮件模板各 1）
+
+**开源版保留**：B2C/B2B 零售与批发、多商家入驻、跨境合规、国际物流、Stripe/PayPal 支付（Klarna/Adyen/BNPL 占位）、优惠券、供应链、库存账本、风控/KYC、31 类攻击检测、限流与读写分离、CDN 回源与边缘缓存、报表、会员权益、CMS/FAQ、多语言/多币种、Flutter 多端与 Web 管理端。
+
+**授权说明**：开源版仅限个人学习、研究使用；商业部署、付费服务、SaaS 运营、二次销售等需取得作者书面授权。商业版授权与交付条款请联系 **erik@erik.xyz**。
+
 ## 项目授权 / Project License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz

@@ -244,6 +244,33 @@ Latest full QA report: [test-reports/QA-REPORT-2026-08-27.md](test-reports/QA-RE
 **Known gaps fixed (2026-08-28)**: 19 admin page views + ShopExport export page implemented;
 E2E rerun 47 PASS / 0 FAIL / 1 WARN (100%). See report §8.
 
+## Open Source vs Commercial Edition
+
+`shop-php` is the open-source base edition, ready to run as-is. `open-project/shop-php` is the commercial edition on the same code baseline, adding marketing growth, multi-platform marketplace, content/support and a HarmonyOS client. Both share the same order, payment, inventory, cross-border compliance and security foundation.
+
+| Dimension | Open source | Commercial |
+|---|---:|---:|
+| PHP source files | 484 | 536 |
+| Controllers | 111 | 128 |
+| Data models | 156 | 189 |
+| Data tables | 98 | 119 |
+| Route declarations | 93 | 106 |
+| Clients | Flutter + Web admin | Flutter + HarmonyOS ArkTS + Web admin |
+| Platform detection | 7 platforms | 8 platforms (incl. HarmonyOS) |
+
+**Commercial-only capabilities**
+
+- Marketing: flash sale (with activity SKUs), group buy, affiliate (links/commissions/payouts), gift cards, point rules, A/B testing
+- Multi-platform: Amazon / eBay / Shopee / Lazada / Temu listings and order aggregation
+- Content & support: knowledge base, email templates, WebSocket real-time IM
+- Membership: point rules, gift cards, A/B testing
+- Client: HarmonyOS ArkTS app
+- Data model: 21 commercial-only tables (A/B testing 3, affiliate 3, chat 2, flash sale 2, knowledge base 2, marketplace sync 4, gift card/group buy/point rules/shipping insurance/email templates 1 each)
+
+**Retained in the open-source edition:** B2C/B2B retail and wholesale, multi-vendor onboarding, cross-border compliance, international logistics, Stripe/PayPal payments (Klarna/Adyen/BNPL placeholders), coupons, supply chain, immutable inventory ledger, risk control/KYC, 31 attack detectors, rate limiting and read/write splitting, CDN origin-pull and edge cache, reports, membership benefits, CMS/FAQ, multi-language/multi-currency, Flutter clients and the Web admin.
+
+**Licensing:** the open-source edition is for personal study and research only. Commercial deployment, paid services, SaaS operation and resale require prior written authorization. For commercial licensing and delivery terms, contact **erik@erik.xyz**.
+
 ## 项目授权 / Project License
 
 Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz

@@ -246,7 +246,7 @@ E2E rerun 47 PASS / 0 FAIL / 1 WARN (100%). See report §8.
 
 ## Open Source vs Commercial Edition
 
-`shop-php` is the open-source base edition, ready to run as-is. `open-project/shop-php` is the commercial edition on the same code baseline, adding marketing growth, multi-platform marketplace, content/support and a HarmonyOS client. Both share the same order, payment, inventory, cross-border compliance and security foundation.
+`shop-php` is the open-source base edition, ready to run as-is. The commercial edition is available separately on the same code baseline, adding marketing growth, multi-platform marketplace, content/support and a HarmonyOS client. Both share the same order, payment, inventory, cross-border compliance and security foundation.
 
 | Dimension | Open source | Commercial |
 |---|---:|---:|

@@ -48,7 +48,7 @@ graph TB
     subgraph L3["第三层：流量控制 + 依赖韧性"]
         direction TB
         BRUTE["暴力破解防护<br/>Redis 计数器<br/>API: 10次/60s<br/>Admin: 5次/300s"]
-        RATE["令牌桶限流<br/>Redis ZSET 滑动窗口<br/>6 端点独立规则"]
+        RATE["令牌桶限流<br/>Redis ZSET 滑动窗口<br/>7 条端点独立规则<br/>password/reset 300s/5 次<br/>同邮箱失败 5 次锁定 30min"]
         CB["熔断器<br/>Redis 连续失败计数<br/>支付网关/社交登录<br/>5次失败 → 熔断 30s<br/>TTL 过期半开探测恢复<br/>Redis 故障降级放行"]
         BRUTE --> RATE
         RATE --> CB
@@ -70,7 +70,7 @@ graph TB
 
     subgraph L6["第六层：响应安全"]
         direction TB
-        SEC_HEADERS["HTTP 安全响应头<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· Server 隐藏<br/>· Cache-Control"]
+        SEC_HEADERS["HTTP 安全响应头<br/>· X-Content-Type-Options: nosniff<br/>· X-Frame-Options: DENY<br/>· X-XSS-Protection<br/>· Referrer-Policy<br/>· Permissions-Policy<br/>· Server 隐藏<br/>· Cache-Control: no-store, no-cache, must-revalidate<br/>· 禁止公共缓存"]
     end
 
     subgraph Audit["审计追溯"]

@@ -1,66 +1,72 @@
 sequenceDiagram
     participant Client as 客户端<br/>Flutter/Web
     participant Nginx as Nginx :80/:443
+    participant Cors as Cors<br/>Middleware
     participant Security as Security<br/>Middleware
-    participant Pipeline as 中间件管道<br/>10 Global MW
     participant RateLimit as RateLimit<br/>Middleware
+    participant Pre as 预处理管道<br/>④-⑧
     participant Route as 路由分发
-    participant Poster as PosterVerify
-    participant JWT as JwtAuth
+    participant Poster as PosterVerify<br/>路由级
+    participant JWT as JwtAuth<br/>路由级
     participant Controller as Controller
     participant Model as Model<br/>BaseModel
     participant MySQL as MySQL 8.0
     participant Redis as Redis 7
     participant ES as ES 8
-    participant Response as Response<br/>HashidsEncode
+    participant Response as Response<br/>HashidsEncode<br/>+ Encryption
 
     Client->>Nginx: HTTP Request<br/>api.erik.xyz/api/v1/...
-    Nginx->>Security: 转发请求
+    Nginx->>Cors: 转发请求
 
+    rect rgb(227, 242, 253)
+        Note over Cors: ① CORS 跨域处理
+        Cors->>Cors: 设置 Access-Control-* 响应头<br/>OPTIONS 预检返回 200
+    end
+
+    Cors->>Security: ② 安全检测
     rect rgb(255, 205, 210)
-        Note over Security: 安全检测阶段
-        Security->>Security: ① Content-Type 校验
-        Security->>Security: ② Body Size ≤ 10MB
-        Security->>Security: ③ XSS 检测 13规则
-        Security->>Security: ④ SQLi 检测 13规则
-        Security->>Security: ⑤ CRLF Header 注入
-        Security->>Security: ⑥ Path Traversal
+        Note over Security: ② SecurityMiddleware WAF
+        Security->>Security: Content-Type 校验
+        Security->>Security: Body Size ≤ 10MB
+        Security->>Security: XSS 检测 13规则
+        Security->>Security: SQLi 检测 13规则
+        Security->>Security: CRLF Header 注入
+        Security->>Security: Path Traversal
     end
 
     alt 攻击命中
         Security-->>Client: 4xxxx 错误响应
     end
 
-    Security->>Pipeline: 安全通过
-
-    rect rgb(227, 242, 253)
-        Note over Pipeline: 请求预处理阶段
-        Pipeline->>Pipeline: ⑦ Cors 响应头设置
-        Pipeline->>Pipeline: ⑧ Platform 来源识别
-        Pipeline->>Pipeline: ⑨ GeoIp 区域/币种
-        Pipeline->>Pipeline: ⑩ Locale 语言设置
-        Pipeline->>Pipeline: ⑪ HashidsDecode ID解码
-        Pipeline->>Pipeline: ⑫ VersionRoute API版本
-    end
-
-    Pipeline->>RateLimit: 限流检查
+    Security->>RateLimit: ③ 限流检查
 
     rect rgb(255, 249, 196)
         Note over RateLimit: 令牌桶限流
         RateLimit->>Redis: ZADD + ZREMRANGEBYSCORE<br/>滑动窗口计数
         Redis-->>RateLimit: 当前窗口请求数
+        RateLimit->>RateLimit: 7 条端点规则 + 默认 60s/100<br/>password/reset 300s/5<br/>同邮箱失败 5 次锁定 30min
     end
 
     alt 超限
         RateLimit-->>Client: 429 Retry-After
     end
 
-    RateLimit->>Route: 通过
+    RateLimit->>Pre: ④ Platform → ⑧ VersionRoute
 
+    rect rgb(227, 242, 253)
+        Note over Pre: 请求预处理阶段
+        Pre->>Pre: ④ Platform 来源识别
+        Pre->>Pre: ⑤ GeoIp 区域/币种
+        Pre->>Pre: ⑥ Locale 语言设置
+        Pre->>Pre: ⑦ HashidsDecode ID解码
+        Pre->>Pre: ⑧ VersionRoute API版本
+    end
+
+    Pre->>Route: 路由匹配
     Route->>Route: API-Version → 命名空间<br/>Controller 匹配
 
     alt 敏感操作 注册/下单/支付
-        Route->>Poster: 人机验证
+        Route->>Poster: 路由级 人机验证
         Poster->>Redis: GET poster_token:{key}
         Redis-->>Poster: token
         alt 验证失败
@@ -69,7 +75,7 @@ sequenceDiagram
     end
 
     alt 需认证接口
-        Route->>JWT: Bearer Token
+        Route->>JWT: 路由级 Bearer Token
         JWT->>JWT: HS256 验签 + 过期检查
         alt Token 无效
             JWT-->>Client: 401 Unauthorized
@@ -95,10 +101,10 @@ sequenceDiagram
 
     rect rgb(187, 222, 251)
         Note over Response: 响应后处理
-        Response->>Response: HashidsEncode ID编码
-        Response->>Response: AES 加密敏感字段
-        Response->>Response: JSON {code, msg, data}
+        Response->>Response: ⑨ HashidsEncode ID编码
+        Response->>Response: ⑩ Encryption 加密敏感字段
+        Response->>Response: JSON {code, msg, data}<br/>Cache-Control: no-store, no-cache, must-revalidate
     end
 
     Response->>Nginx: HTTP Response
-    Nginx->>Client: JSON + CORS Headers
+    Nginx->>Client: JSON + CORS + X-Platform<br/>Cache-Control: no-store

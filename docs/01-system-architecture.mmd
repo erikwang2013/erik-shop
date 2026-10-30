@@ -17,18 +17,20 @@ graph TB
             RT["路由中间件 2个<br/>PosterVerify · JwtAuth"]
             CTRL["40 控制器<br/>Auth · Product · Cart · Order<br/>Payment · Shipping · Tariff<br/>User · Coupon · Return<br/>Notify · Export · B2b<br/>Cms · Faq · Review<br/>Search · SocialAuth · Settings"]
             MDL["90 模型 Model<br/>BaseModel: Snowflake ID<br/>+ Encryptable 加密<br/>+ Searchable ES 同步<br/>+ SoftDelete 软删除<br/>45 表启用软删除"]
+            CMN["公共组件 25<br/>Snowflake · Hashids · JWT<br/>PaymentGateway · ApiResponse<br/>OrderCancellation · OrderPricing<br/>PaymentSuccessService<br/>SubscriptionOrderService<br/>BusinessException · LockTimeoutException"]
+            PROC["定时进程 Cron<br/>UnpaidOrderCron 每5分钟<br/>PaymentReconcileCron 每6小时<br/>SettlementCron 每日<br/>SubscriptionCron · ReturnExpireCron<br/>ExchangeRateCron · ShipmentTrackingCron"]
         end
         subgraph Admin["Admin (webman-admin) :8788"]
             direction TB
             AMW["中间件 5个<br/>Security → Platform<br/>→ HashidsDecode<br/>→ AccessControl RBAC<br/>→ HashidsEncode"]
-            ACTRL["71 控制器<br/>商品 · 订单 · 用户 · 营销<br/>物流 · 供应链 · 风控<br/>CMS · 客服 · 系统"]
+            ACTRL["73 控制器<br/>商品 · 订单 · 用户 · 营销<br/>物流 · 供应链 · 风控<br/>CMS · 客服 · 系统"]
             AMDL["66 模型"]
         end
     end
 
     subgraph Data["数据层 Data"]
         direction LR
-        MySQL[("MySQL 8.0 :3306<br/>117 表 · erik_ 前缀<br/>Snowflake bigint PK<br/>读写分离 2读副本")]
+        MySQL[("MySQL 8.0 :3306<br/>98 表 (89 shop_ + 9 wa_)<br/>Snowflake bigint PK<br/>读写分离 2读副本")]
         Redis[("Redis 7 :6379<br/>限流令牌桶<br/>Session · Poster 验证")]
         ES[("Elasticsearch 8 :9200<br/>多语言分词搜索<br/>商品 · 分类 · CMS")]
     end

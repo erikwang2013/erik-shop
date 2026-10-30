@@ -1,56 +1,77 @@
 stateDiagram-v2
-    [*] --> 购物车: 添加商品
+    state "购物车" as CART
+    state "待付款" as PENDING
+    state "待审核" as REVIEW
+    state "支付中" as PAYING
+    state "已支付" as PAID
+    state "已取消" as CANCELED
+    state "拣货中" as PICKING
+    state "已发货" as SHIPPED
+    state "运输中" as IN_TRANSIT
+    state "海关查验" as CUSTOMS
+    state "海关扣留" as HELD
+    state "已签收" as DELIVERED
+    state "配送异常" as DELIVERY_EXC
+    state "已退回" as RETURNED
+    state "已完成" as COMPLETED
+    state "退款中" as REFUNDING
+    state "待退货" as WAIT_RETURN
+    state "退货中" as RETURNING
+    state "已退款" as REFUNDED
 
-    购物车 --> 待支付: 提交订单<br/>POST /api/orders
-    购物车 --> [*]: 清空/过期
+    [*] --> CART : 添加商品
 
-    待支付 --> 已取消: 超时未付<br/>30min 自动取消
-    待支付 --> 已取消: 用户取消
-    待支付 --> 支付中: 发起支付<br/>POST /api/payment/create
+    CART --> PENDING : 提交订单 POST /api/orders<br/>预占库存 · 核销优惠券
+    CART --> [*] : 清空/过期
 
-    支付中 --> 待支付: 支付失败
-    支付中 --> 已支付: 支付成功<br/>Webhook 确认
+    PENDING --> CANCELED : 30min 超时<br/>UnpaidOrderCron 每5分钟
+    PENDING --> CANCELED : 用户取消
+    PENDING --> REVIEW : 仅 risk.mode=block<br/>且风控 review（支付前）
+    PENDING --> PAYING : 发起支付<br/>POST /api/payment/create
 
-    已支付 --> 待审核: 风控审核<br/>规则引擎评分
-    已支付 --> 拣货中: 审核通过
+    REVIEW --> PENDING : 审核通过
+    REVIEW --> CANCELED : 审核驳回<br/>恢复库存 + 退还优惠券
 
-    待审核 --> 拣货中: 审核通过
-    待审核 --> 已取消: 审核拒绝 → 退款
+    PAYING --> PENDING : 支付失败
+    PAYING --> PAID : 支付成功<br/>PaymentSuccessService 统一入账
 
-    拣货中 --> 已发货: 出库完成<br/>生成运单号
+    PAID --> PICKING : 已付款直接进入发货流程
+    PICKING --> SHIPPED : 出库完成<br/>生成运单号
 
-    已发货 --> 运输中: 物流揽收
-    已发货 --> 已发货: 更新物流轨迹
+    SHIPPED --> IN_TRANSIT : 物流揽收
+    SHIPPED --> SHIPPED : 更新物流轨迹
 
-    运输中 --> 海关查验: 到达目的国
-    海关查验 --> 运输中: 查验放行
-    海关查验 --> 海关扣留: 查验异常
-    海关扣留 --> 运输中: 补充资料通过
+    IN_TRANSIT --> CUSTOMS : 到达目的国
+    CUSTOMS --> IN_TRANSIT : 查验放行
+    CUSTOMS --> HELD : 查验异常
+    HELD --> IN_TRANSIT : 补充资料通过
 
-    运输中 --> 已签收: 客户签收
-    运输中 --> 配送异常: 地址/联系失败
+    IN_TRANSIT --> DELIVERED : 客户签收
+    IN_TRANSIT --> DELIVERY_EXC : 地址/联系失败
 
-    配送异常 --> 运输中: 重新配送
-    配送异常 --> 已退回: 退回寄件人
+    DELIVERY_EXC --> IN_TRANSIT : 重新配送
+    DELIVERY_EXC --> RETURNED : 退回寄件人
 
-    已签收 --> 已完成: 自动确认<br/>7天无售后
+    DELIVERED --> COMPLETED : 自动确认<br/>7天无售后
 
-    已签收 --> 退款中: 申请退货退款
-    退款中 --> 待退货: 商家同意
+    DELIVERED --> REFUNDING : 申请退货退款
+    REFUNDING --> WAIT_RETURN : 商家同意
 
-    待退货 --> 退货中: 客户发货
-    退货中 --> 已退回: 仓库签收
-    已退回 --> 退款中: 质检通过
-    已退回 --> 已签收: 质检不通过 → 退回客户
+    WAIT_RETURN --> RETURNING : 客户发货
+    RETURNING --> RETURNED : 仓库签收
+    RETURNED --> REFUNDING : 质检通过
+    RETURNED --> DELIVERED : 质检不通过 → 退回客户
 
-    退款中 --> 已退款: 退款完成<br/>原路返回
+    REFUNDING --> REFUNDED : 退款完成<br/>原路返回
 
-    已完成 --> [*]
-    已取消 --> [*]
-    已退款 --> [*]
+    COMPLETED --> [*]
+    CANCELED --> [*]
+    REFUNDED --> [*]
 
-    note right of 待支付: 库存预占 30min
-    note right of 支付中: Stripe/PayPal/Klarna/Adyen
-    note right of 已支付: 库存扣减 永久
-    note right of 运输中: Webhook 推送更新
-    note right of 已签收: 7天自动确认收货
+    note right of PENDING : 库存预占 30min<br/>超时取消跳过已发起网关支付的订单<br/>（shop_payments.status=0 且有 transaction_no）
+    note right of CANCELED : 用户取消/超时/风控驳回<br/>共用 OrderCancellation<br/>恢复库存 · 退还优惠券
+    note right of REVIEW : 审核在支付前<br/>通过→待付款 · 驳回→取消
+    note right of PAYING : Stripe/PayPal/Klarna/Adyen
+    note right of PAID : 订单 0→1 · 支付 0→1<br/>PlatformSettlements · 销量累加
+    note right of IN_TRANSIT : Webhook 推送更新
+    note right of DELIVERED : 7天自动确认收货

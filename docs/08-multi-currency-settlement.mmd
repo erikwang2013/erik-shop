@@ -5,13 +5,17 @@ flowchart TD
     C --> D["发起支付<br/>Stripe / PayPal / Klarna / Adyen<br/>按收款币种原币扣款"]
     D --> E["支付回调 Webhook<br/>payment_intent.succeeded<br/>验签 Gateway::verifyWebhook"]
 
-    E --> F["更新支付/订单<br/>Payments.status=1<br/>Orders.status=1"]
+    E --> R["PaymentReconcileCron 对账补单<br/>每6小时核对未完成支付<br/>迟到支付/订单不可入账 → warning"]
 
-    F --> G["平台分账 PlatformSettlements<br/>订单总额 total_amount<br/>平台佣金 platform_fee<br/>支付网关手续费 payment_gateway_fee<br/>currency_code = 订单币种"]
+    E --> PS["PaymentSuccessService 统一入账<br/>订单 0→1 · 支付 0→1<br/>PlatformSettlements · 销量累加<br/>单事务幂等 · 重复回调不重复入账"]
+    R --> PS
 
-    G --> H1["卖家结算 MerchantSettlements<br/>订单金额 → 抽成率 → 结算金额<br/>0待结算 / 1已结算"]
-    G --> H2["供应商结算 SupplierSettlements<br/>应付供应商货款"]
-    G --> H4["平台收益<br/>平台佣金 + 支付手续费"]
+    PS --> SC["SettlementCron 批量结算<br/>whereNotExists 未结算已付订单<br/>chunkById(500)<br/>单笔事务 + 订单行锁 lockForUpdate"]
+
+    SC --> G["平台分账 PlatformSettlements<br/>订单总额 total_amount<br/>平台佣金 platform_fee<br/>支付网关手续费 payment_gateway_fee<br/>currency_code = 订单币种"]
+    SC --> H1["卖家结算 MerchantSettlements<br/>订单金额 → 抽成率 → 结算金额<br/>0待结算 / 1已结算"]
+    SC --> H2["供应商结算 SupplierSettlements<br/>应付供应商货款（按月汇总）"]
+    SC --> H4["平台收益<br/>平台佣金 + 支付手续费"]
 
     H1 --> I["汇兑损益追踪 CurrencyExchangeGainsLosses<br/>收款金额/币种 ↔ 结算金额/币种<br/>支付时汇率 vs 结算时汇率<br/>正=汇兑收益 / 负=汇兑亏损"]
     H2 --> I
@@ -21,6 +25,6 @@ flowchart TD
     classDef pay fill:#e8f5e9,stroke:#2e7d32,stroke-width:2px;
     classDef settle fill:#fff3e0,stroke:#ef6c00,stroke-width:2px;
     classDef fx fill:#e3f2fd,stroke:#1565c0,stroke-width:2px;
-    class A,B,C,D,E,F pay;
-    class G,H1,H2,H4 settle;
+    class A,B,C,D,E,PS,R pay;
+    class G,H1,H2,H4,SC settle;
     class I,J fx;

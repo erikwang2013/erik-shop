@@ -21,31 +21,31 @@ graph TB
     CENTER --> STATS["平台统计"]
     CENTER --> CLIENTS["多端覆盖"]
 
-    B2C --> B2C_DETAIL["多语言商品 · 分币种定价<br/>SKU 库存 · 购物车<br/>订单 · 退款 · 退货"]
+    B2C --> B2C_DETAIL["多语言商品 · 分币种定价<br/>SKU 库存 · 购物车<br/>订单 · 退款 · 退货<br/>订单取消 30min 超时<br/>恢复库存 + 退还优惠券"]
 
     B2B --> B2B_DETAIL["阶梯定价 MOQ<br/>企业认证 税号/营业执照<br/>询价 报价"]
 
-    MART --> MART_DETAIL["卖家审核入驻<br/>商品审核上架<br/>分成分账结算"]
+    MART --> MART_DETAIL["卖家审核入驻<br/>商品审核上架<br/>分成分账 批量对账<br/>单笔事务 + 订单行锁"]
 
-    CROSS --> CROSS_DETAIL["HS Code 编码库<br/>关税规则 目的国+HS→税率<br/>VAT/IOSS 欧盟<br/>合规标签 FDA/CE/RoHS"]
+    CROSS --> CROSS_DETAIL["HS Code 编码库<br/>关税规则 目的国+HS→税率<br/>VAT/IOSS 欧盟<br/>免税阈值按整单判断<br/>VAT 基数含 duty<br/>合规标签 FDA/CE/RoHS"]
 
-    LOGISTICS --> LOGISTICS_DETAIL["物流分区运费 重量阶梯<br/>DHL/UPS/FedEx/EMS<br/>海外仓 发货+退货<br/>商业发票/装箱单 PDF"]
+    LOGISTICS --> LOGISTICS_DETAIL["物流分区运费 重量阶梯<br/>运费 = 商品重量 × 数量<br/>服务端计算<br/>DHL/UPS/FedEx/EMS<br/>海外仓 发货+退货<br/>商业发票/装箱单 PDF"]
 
-    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL 先买后付<br/>Adyen 全球支付<br/>3DS 验证 · Webhook 分账"]
+    PAY --> PAY_DETAIL["Stripe PaymentIntent<br/>PayPal REST API<br/>Klarna BNPL 先买后付<br/>Adyen 全球支付<br/>3DS 验证 · Webhook 分账<br/>PaymentSuccessService 统一入账<br/>订单/支付/分账/销量一次事务"]
 
-    MKT --> MKT_DETAIL["优惠券 分区+新老客<br/>轮播图 区域可见"]
+    MKT --> MKT_DETAIL["优惠券 国家/区域范围<br/>+ 新老客定向<br/>+ 分类/商品适用范围<br/>轮播图 区域可见"]
 
     MULTI --> MULTI_DETAIL["多商家<br/>卖家入驻 · 商品审核<br/>分成分账"]
 
     SUPPLY --> SUPPLY_DETAIL["供应商档案+评级<br/>采购单 审核→收货→质检<br/>库存流水 不可变账本<br/>调拨管理"]
 
-    RISK --> RISK_DETAIL["规则引擎 旁路打分<br/>KYC 实名认证<br/>GDPR/CCPA 数据请求<br/>Cookie Consent 版本管理"]
+    RISK --> RISK_DETAIL["规则引擎 旁路打分<br/>risk.mode=block 支付前审核<br/>审核通过→待付款<br/>驳回→取消并恢复库存/券<br/>KYC 实名认证<br/>GDPR/CCPA 数据请求<br/>Cookie Consent 版本管理"]
 
-    SECURITY --> SECURITY_DETAIL["31类攻击检测<br/>XSS · SQL注入 · CRLF<br/>路径遍历 · XXE · SSRF<br/>文件上传 · 暴力破解<br/>Host · CORS · 脱敏"]
+    SECURITY --> SECURITY_DETAIL["31类攻击检测<br/>XSS · SQL注入 · CRLF<br/>路径遍历 · XXE · SSRF<br/>文件上传 · 暴力破解<br/>Host · CORS · 脱敏<br/>密码重置 5次/邮箱锁定<br/>API 响应 no-store 禁止缓存"]
 
-    PERF --> PERF_DETAIL["令牌桶限流 滑动窗口<br/>6端点限流规则<br/>熔断器 支付/社交登录<br/>5次失败→熔断30s 半开恢复<br/>DB读写分离 2读副本+sticky<br/>连接池 DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
+    PERF --> PERF_DETAIL["令牌桶限流 滑动窗口<br/>7 条端点限流规则<br/>密码重置 300s/5<br/>熔断器 支付/社交登录<br/>5次失败→熔断30s 半开恢复<br/>DB读写分离 2读副本+sticky<br/>连接池 DB 50/10 · Redis 30/5<br/>OPCache 128MB"]
 
-    GROWTH --> GROWTH_DETAIL["会员等级+权益<br/>积分流水<br/>降价/到货提醒"]
+    GROWTH --> GROWTH_DETAIL["会员等级+权益<br/>积分流水<br/>订阅周期购 需 address_id<br/>原子扣库存 · 地址快照<br/>运费/税费服务端计算<br/>降价/到货提醒"]
 
     CMS --> CMS_DETAIL["CMS 多语言页面<br/>FAQ<br/>尺码对照表 服装/鞋类<br/>商品Feed Google/Meta"]
 

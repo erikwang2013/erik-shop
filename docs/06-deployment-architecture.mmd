@@ -14,7 +14,7 @@ graph TB
                 NGX["Nginx :80 :443<br/>alpine<br/>反向代理 + SSL 终端<br/>静态资源缓存"]
 
                 subgraph PHP_Service["Service Container"]
-                    SVC["PHP 8.3 + webman 2.1<br/>:8787 内部端口<br/>32 Worker (CPU×4)<br/>OPCache 128MB<br/>Snowflake Worker ID=1"]
+                    SVC["PHP 8.3 + webman 2.1<br/>:8787 内部端口<br/>32 Worker (CPU×4)<br/>OPCache 128MB<br/>Snowflake Worker ID=1<br/>自定义进程 15 个（12 个 Cron）<br/>含 UnpaidOrderCron 未付款取消<br/>PaymentReconcileCron · SettlementCron"]
                 end
 
                 subgraph PHP_Admin["Admin Container"]
@@ -22,7 +22,7 @@ graph TB
                 end
 
                 subgraph DB["数据库容器"]
-                    MYSQL[("MySQL 8.0 :3306<br/>117 表 (110 erik_ + 7 wa_)<br/>erik_data 数据卷<br/>character-set utf8mb4")]
+                    MYSQL[("MySQL 8.0 :3306<br/>98 表 (89 shop_ + 9 wa_)<br/>erik_data 数据卷<br/>character-set utf8mb4")]
                     REDIS[("Redis 7 :6379<br/>erik_redis 数据卷<br/>appendonly AOF 持久化<br/>requirepass 密码")]
                     ES[("Elasticsearch 8.11 :9200<br/>erik_es 数据卷<br/>官方镜像 多语言搜索")]
                 end

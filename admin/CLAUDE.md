@@ -36,9 +36,9 @@ http://127.0.0.1:8788/app/admin/install/step1
 
 安装向导（`InstallController`）自动完成：
 - 创建 MySQL 数据库
-- 导入根目录 `install.sql`（117张表：7 `wa_` + 110 `erik_`）
+- 导入根目录 `install.sql`（98张表：9 `wa_` + 89 `shop_`）
 - 生成 `plugin/admin/config/database.php` 和 `thinkorm.php`
-- 生成 `service/.env` 和 `admin/.env`（含随机 JWT/Hashids/AES/Encryption 密钥 + `JWT_SECRET_KEY`）
+- 生成 `service/.env` 和 `admin/.env`（含随机 JWT/Hashids/AES/Encryption 密钥 + `JWT_SECRET_KEY`；service/admin 共用同一把随机 32 字符 `ENCRYPTION_KEY`，admin 同时写入 `ENCRYPTION_KEY` + `ENCRYPTION_CIPHER`）
 - 创建管理员账号
 - SIGUSR1 重载服务
 
@@ -155,7 +155,7 @@ class ShopProductController extends Crud
 | 前缀 | 用途 | 示例 |
 |------|------|------|
 | `wa_` | webman-admin 系统表 | wa_admins, wa_roles, wa_rules, wa_uploads |
-| `erik_` | 商城业务表（110张） | erik_products, erik_orders, erik_hs_codes, erik_shipping_zones, erik_product_translations, erik_product_sku_prices 等 |
+| `shop_` | 商城业务表（89张） | shop_products, shop_orders, shop_hs_codes, shop_shipping_zones, shop_product_translations, shop_product_sku_prices 等 |
 
 ## 技术栈
 

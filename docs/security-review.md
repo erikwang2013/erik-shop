@@ -207,3 +207,17 @@ docs/security-review.md                           (本报告)
 - 无功能回归（22/22 测试通过）
 - 无中间件重复检测
 - Docker 部署环境变量完整
+
+---
+
+## 8. 2026-10-30 后续修复（v1.5.7）
+
+本节仅记录后续变更，不改变上文 2026-08-04 的审查结论。
+
+1. **响应缓存控制**：所有 API 响应统一加 `Cache-Control: no-store, no-cache, must-revalidate`，避免含用户数据的响应被浏览器/CDN 缓存。
+2. **密码重置防滥用**：`/api/auth/password/reset` 限流 300s/5 次，并增加每邮箱 5 次失败锁定；重新申请重置成功次数清零。
+3. **示例加密密钥移除**：仓库不再包含示例 `ENCRYPTION_KEY`；安装器为 service/admin 生成同一把随机密钥，admin 同时写入 `ENCRYPTION_CIPHER`。历史部署若使用过仓库示例密钥，必须轮换并通过 `ENCRYPTION_PREVIOUS_KEYS` 过渡后重加密。
+4. **异常分类不泄露实现细节**：预期业务错误 `BusinessException` 返回 422，锁超时 `LockTimeoutException` 返回 429，其他异常统一 500 且不回显 SQL。
+5. **限流规则补齐**：端点规则由 6 条增至 7 条（新增 password/reset；social 原已有），默认 60s/100 次；平台识别 8 个（新增 HarmonyOS）。
+6. **退款入口收敛**：删除无效的 `/api/admin/refunds/{id}/approve`，真实退款仅经 `/execute`，`/reject` 保留，减少误用入口。
+7. **结算并发安全**：`SettlementCron` 使用 `whereNotExists` + `chunkById(500)`，单笔事务 + 订单行锁 + 已有分账复查，避免重复分账。

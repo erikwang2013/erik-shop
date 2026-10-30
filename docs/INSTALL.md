@@ -47,9 +47,11 @@ php start.php start
 - 导入 `install.sql` 全部 98 张表（9 张 `wa_` + 89 张 `shop_`）
 - 导入管理后台菜单
 - 生成 `plugin/admin/config/database.php` 和 `thinkorm.php`
-- 生成 `service/.env`（含随机生成的 JWT/Hashids/加密密钥）
+- 生成 `service/.env` 和 `admin/.env`：两端写入**同一把**随机 `ENCRYPTION_KEY`，admin 另写 `ENCRYPTION_CIPHER=AES-256-CBC`
 - 创建超级管理员账号
 - 发送 SIGUSR1 信号触发服务重载
+
+> 安装器模板路径已修正为 `dirname(base_path(false))`，安装时请确保 `install.sql`、`service/.env.example` 与 `service/database/seeders/` 位于 admin 的上级目录。
 
 > 安装完成后，还需启动 service/ API 服务（见下方步骤 5）。
 
@@ -99,9 +101,12 @@ REDIS_PORT=6379
 JWT_SECRET=<随机32字节密钥>
 HASHIDS_SALT=<随机盐值>
 ENCRYPTION_KEY=<随机32字节密钥>
+ENCRYPTION_CIPHER=AES-256-CBC
 SNOWFLAKE_WORKER_ID=1
 SNOWFLAKE_DATACENTER_ID=1
 ```
+
+> **加密密钥安全提示**：仓库不再提供示例加密密钥。若已有部署使用过仓库旧示例密钥，请立即轮换——把旧密钥放入 `ENCRYPTION_PREVIOUS_KEYS`（service 与 admin 同步），设置新的 `ENCRYPTION_KEY`，用一次性脚本重新加密所有 Encryptable 字段，确认历史数据可读后再移除旧密钥。
 
 > **CDN 为可选配置**：默认 `CDN_ENABLED=false`，图片等资源直接从 admin 源站输出。开启 CDN 需在 `.env` 配置 `CDN_ENABLED=true`、`CDN_DEFAULT_PROVIDER`（cloudflare/cloudfront/aliyun/tencent）、`CDN_DOMAIN`（CNAME 回源 admin 域名）及对应厂商凭据，并确保管理端「CDN 管理」页连通性测试通过。未配置 CDN 不影响任何功能。
 
@@ -110,7 +115,8 @@ SNOWFLAKE_DATACENTER_ID=1
 ```bash
 cd admin/
 cp .env.example .env
-# 编辑 .env，填入与 service 相同的数据库信息
+# 编辑 .env：数据库信息与 service 相同，
+# ENCRYPTION_KEY 必须与 service/.env 一致，并设置 ENCRYPTION_CIPHER=AES-256-CBC
 ```
 
 ### 5. 创建管理员账号
@@ -141,7 +147,7 @@ docker-compose up -d
 # http://localhost/app/admin/install/step1
 ```
 
-Docker 服务：Nginx(:80) → service(:8787) + admin(:8788)，MySQL(:3306)，Redis(:6379)，ES(:9200)
+Docker 服务：Nginx(:80) → service(:8787) + admin(:8788)，MySQL(:3306)，Redis(:6379)，ES(:9200)。`ENCRYPTION_KEY` 由 compose 环境变量同时注入 service/admin，二者必须一致；compose 未设置 `ENCRYPTION_KEY` 会拒绝启动。
 
 ---
 
@@ -193,6 +199,8 @@ shop-php/
 │   ├── database/seeders/    # 种子数据
 │   └── start.php
 ```
+
+当前规模：98 张表（89 `shop_` + 9 `wa_`）/ 89 路由 / service 262 + admin 232 PHP 文件。
 
 ---
 

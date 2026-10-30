@@ -27,7 +27,7 @@
 
 ```
 shop-php/
-  install.sql       # 完整安装 SQL（117张表），Web安装向导自动导入
+  install.sql       # 完整安装 SQL（98张表），Web安装向导自动导入
   service/
     .env.example    # 环境变量模板，Web安装向导自动生成 .env
     .env            # 实际环境变量（首次安装自动生成，含 JWT_SECRET + JWT_SECRET_KEY + Hashids + AES 密钥）
@@ -58,9 +58,9 @@ shop-php/
         WishlistController.php
         CountryController.php
         ...
-    model/            # 模型（extends BaseModel，110张业务表）
+    model/            # 模型（extends BaseModel，89张业务表）
     middleware/       # 中间件（含 VersionRoute, PosterVerify, LocaleMiddleware, GeoIpMiddleware）
-    common/           # 工具类（15个）
+    common/           # 工具类（25个）
       Snowflake.php         # Snowflake分布式ID生成
       HashidsHelper.php     # Hashids ID 混淆
       ApiResponse.php       # 统一响应格式
@@ -79,6 +79,8 @@ shop-php/
       PriceAlertCron.php        # 降价/到货通知
       PaymentReconcileCron.php  # 支付对账
       SettlementCron.php        # 分账结算
+      UnpaidOrderCron.php       # 未付款订单超时取消（每 5 分钟，默认 30 分钟）
+      SubscriptionCron.php      # 订阅周期购续费
     search/           # Scout Searchable 定义
   database/
     schema.sql        # 原始业务表SQL（已被根目录 install.sql 替代，Web安装向导不再使用此文件）
@@ -101,18 +103,21 @@ LocaleMiddleware:
 ```
 
 ### 中间件栈（按顺序）
+全局（10 个）：
 1. `Cors` — CORS 跨域处理
 2. `Security` — WAF 攻击检测（基于 erikwang2013/security-php，31 类攻击检测器）+ 暴力破解防护
 3. `RateLimit` — 令牌桶限流
-4. `Platform` — 操作来源端识别（Web/App/iOS/Android）
+4. `Platform` — 操作来源端识别（8 平台：iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web）
 5. `GeoIpMiddleware` — IP 区域识别，自动设置语言/币种（未登录用户）
 6. `LocaleMiddleware` — 解析 `Accept-Language` header，设置当前语言
 7. `HashidsDecode` — 请求中的 hashid 参数自动解码为 snowflake ID
 8. `VersionRoute` — 读取 `API-Version` header，路由到版本控制器
-9. `PosterVerify` — 敏感操作随机验证（注册/下单/支付，路由级中间件）
-10. `JwtAuth` — JWT token 验证（路由级中间件）
-11. `HashidsEncode` — 响应中的 snowflake ID 自动编码为 hashids
-12. `Encryption` — 接口数据加解密（通过 `X-Encrypt-Response` / `X-Encrypted` header 触发）
+9. `HashidsEncode` — 响应中的 snowflake ID 自动编码为 hashids
+10. `Encryption` — 接口数据加解密（通过 `X-Encrypt-Response` / `X-Encrypted` header 触发）
+
+路由级（2 个，按接口配置）：
+- `PosterVerify` — 敏感操作随机验证（注册/下单/支付）
+- `JwtAuth` — JWT token 验证
 
 ### 多语言商品模式
 ```
@@ -209,7 +214,7 @@ php vendor/bin/phpunit      # 运行测试
 
 | 工具 | 配置 | 用途 |
 |------|------|------|
-| PHPUnit 12.5 | `phpunit.xml` | 单元+集成测试（70 tests, 338 assertions） |
+| PHPUnit 12.5 | `phpunit.xml` | `tests/Unit` 49 tests / 110 assertions（无需 DB）；3 组集成测试需 MySQL schema（CI 运行） |
 | phpstan | `phpstan.neon` (level 5) | 静态分析 |
 | php-cs-fixer | `.php-cs-fixer.php` | PSR-12 代码格式化 |
 | CI/CD | `.github/workflows/ci.yml` | PHP 8.3/8.4 矩阵测试 |

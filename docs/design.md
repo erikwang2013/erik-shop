@@ -13,7 +13,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 - 时间戳: `created_at`, `updated_at`, `deleted_at` (软删除)
 - 引擎: InnoDB, 字符集: utf8mb4_unicode_ci
 
-### 1.2 模块划分 (110表)
+### 1.2 模块划分 (98表，含 9 张 wa_ 系统表)
 
 | 模块 | 表数 | 核心表 |
 |------|------|--------|
@@ -43,11 +43,25 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | users | last_login_platform VARCHAR(16) | 最后登录平台 |
 | search_logs | platform VARCHAR(16) | 搜索平台 |
 
+### 1.4 核心业务服务（v1.5.7）
+
+| 组件 | 职责 | 调用方 |
+|------|------|--------|
+| OrderCancellation | 用户取消/超时取消/风控驳回共用：原子状态门闩、库存恢复、优惠券恢复、used_qty 回退、订单/库存日志 | OrderController、UnpaidOrderCron、风控驳回 |
+| OrderPricing | 运输分区运费（product.weight × qty）与关税/VAT 统一定价；整单免税阈值、VAT 基数含 duty | 下单、订阅建单 |
+| PaymentSuccessService | webhook 与 PaymentReconcileCron 共用入账：订单 0→1、支付 0→1、PlatformSettlements、Products/ProductSkus.sales_count；迟到支付记 warning | PaymentController webhook、PaymentReconcileCron |
+| SubscriptionOrderService | 订阅首期/续费统一建单：address_id 必填 + 地址快照、USD 报价、商品上架校验、原子扣库存、重量运费税费 | SubscriptionController、SubscriptionCron |
+| UnpaidOrderCron | 每 5 分钟取消超过 30 分钟未支付的 status=0 订单；跳过已有进行中网关支付的订单 | 独立进程（config/process.php；超时分钟数见 config/cron.php） |
+
+预期业务错误抛 `BusinessException`（422）、锁超时抛 `LockTimeoutException`（429），其余异常返回 500 且不泄露 SQL。
+
 ---
 
 ## 2. API设计
 
-API 版本控制、中间件管道、端点统计与统一响应规范，详见 [API接口文档](api.md)。
+API 版本控制、端点统计与统一响应规范，详见 [API接口文档](api.md)。
+
+中间件实际顺序：Cors → Security → RateLimit → Platform → GeoIp → Locale → HashidsDecode → VersionRoute → HashidsEncode → Encryption（10 全局），路由级 PosterVerify、JwtAuth。
 
 ---
 
@@ -87,7 +101,7 @@ API 版本控制、中间件管道、端点统计与统一响应规范，详见 
 
 ### 4.1 限流
 
-令牌桶滑动窗口(Redis ZSET, 经 support\Redis 门面): 默认60s/100次, 登录10次/60s, 注册5次/300s, 社交登录5次/300s, 支付5次/60s, 下单3次/10s, 搜索10次/1s
+令牌桶滑动窗口(Redis ZSET, 经 support\Redis 门面), 7 条端点规则 + 默认: 登录 10次/60s, 密码重置 5次/300s, 注册 5次/300s, 社交登录 5次/300s, 支付 5次/60s, 下单 3次/10s, 搜索 10次/1s, 默认 100次/60s。所有 API 响应带 `Cache-Control: no-store, no-cache, must-revalidate`；密码重置另有每邮箱 5 次失败锁定，重新申请清零。
 
 ### 4.2 熔断与降级
 
@@ -118,11 +132,12 @@ MySQL: 50max/10min/2s超时 | 读写分离: 30max/5min (2读副本, sticky=true)
 
 ## 7. 测试
 
-22 tests / 45 assertions — ALL PASS
+6 个测试文件 / 49 单元测试 / 110 断言 — 本地通过；3 组集成测试需 MySQL schema，本地未运行；CI PHP 8.3/8.4。
 
 ```bash
 cd service && php vendor/bin/phpunit tests/
-# SecurityTest (12) + JwtTest (4) + ApiResponseTest (3) + RedisFacadeTest (3)
+# 单元: HttpParsingTest + MoneyTest
+# 集成: OrderCancellationTest + OrderPricingTest + PaymentSuccessServiceTest
 ```
 
 详见: [功能设计文档](features.md) | [完整架构文档](architecture-full.md) | [部署文档](deployment.md)

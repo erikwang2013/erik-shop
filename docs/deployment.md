@@ -46,6 +46,8 @@ docker compose logs -f admin
 | redis | 6379 | Redis 7 |
 | elasticsearch | 9200 | ES 8 |
 
+service 内置 12 个 Cron/Task 进程（含 `UnpaidOrderCron`：每 5 分钟取消超过 30 分钟未付款的 `status=0` 订单，跳过已有进行中网关支付的订单）。超时分钟数由 `service/config/cron.php` 的 `unpaid_cancel_minutes` 配置（默认 30）。
+
 ### 1.4 生产环境检查清单
 
 - [ ] `.env` 中所有密钥已更改为随机值
@@ -53,7 +55,7 @@ docker compose logs -f admin
 - [ ] `APP_ENV=production`
 - [ ] `config/app.php` 中 `debug` 设为 `false`
 - [ ] SSL证书配置 (nginx+Let's Encrypt)
-- [ ] 数据库已导入根目录 `install.sql`（117 张表，Web 安装向导自动导入）
+- [ ] 数据库已导入根目录 `install.sql`（98 张表，Web 安装向导自动导入）
 - [ ] ES索引已创建: `php start.php scout:import "app\model\Products"`
 - [ ] MySQL/Redis/ES 数据卷已配置备份
 - [ ] CDN 已配置（可选）: CDN 域名 CNAME 回源 admin 域名 + `.env` 中 `CDN_ENABLED=true`/`CDN_DOMAIN` + 管理端「系统→CDN管理」填写提供商凭据并通过连通性测试
@@ -84,9 +86,11 @@ php start.php start -d
 
 ```bash
 cd admin
+cp .env.example .env
+# 编辑 .env: 数据库信息与 service 相同, ENCRYPTION_KEY/ENCRYPTION_CIPHER 与 service 保持一致
 composer install --no-dev --optimize-autoloader
 php start.php start -d
-# 监听: http://0.0.0.0:8787 (另一个端口需Nginx反向代理区分)
+# 监听: http://0.0.0.0:8788 (生产环境由Nginx反向代理区分)
 ```
 
 ### 2.4 Nginx 反向代理
@@ -94,7 +98,7 @@ php start.php start -d
 ```nginx
 # 见 docker/nginx/conf.d/shop.conf
 # api.erik.xyz → service:8787
-# admin.erik.xyz → admin:8787
+# admin.erik.xyz → admin:8788
 # /app/admin/upload/ → expires 7d; Cache-Control public, max-age=604800, immutable
 # CDN 域名 CNAME 回源到 admin 域名（Origin-Pull 回源，静态资源由 CDN 边缘缓存分发）
 ```
@@ -128,10 +132,18 @@ require 'vendor/autoload.php';
 | REDIS_HOST | 127.0.0.1 | Redis地址 |
 | JWT_SECRET | (必填) | JWT签名密钥(256bit) |
 | HASHIDS_SALT | (必填) | Hashids盐值 |
-| ENCRYPTION_KEY | (必填) | AES加密密钥 |
+| ENCRYPTION_KEY | (必填) | AES加密密钥；service 与 admin 必须为同一把（安装向导自动生成） |
+| ENCRYPTION_CIPHER | AES-256-CBC | 加密算法，service/admin 均需设置 |
+| ENCRYPTION_PREVIOUS_KEYS | (空) | 轮换前的旧密钥，用于解密历史数据 |
 | SNOWFLAKE_WORKER_ID | 1 | Snowflake worker ID (service=1, admin=2) |
 | STRIPE_SECRET_KEY | - | Stripe密钥 |
 | STRIPE_WEBHOOK_SECRET | - | Stripe Webhook验签 |
+
+### 加密密钥与轮换
+
+- 仓库已移除示例加密密钥。Web 安装向导会为 `service/.env` 与 `admin/.env` 生成**同一把**随机 `ENCRYPTION_KEY`，并写入 `ENCRYPTION_CIPHER=AES-256-CBC`；两端密钥不一致会导致数据库字段无法互解。
+- 如果历史部署曾使用仓库中的示例密钥，必须立即轮换：将旧密钥加入 `ENCRYPTION_PREVIOUS_KEYS`（逗号分隔），写入新 `ENCRYPTION_KEY`，然后用一次性脚本读出并重新加密所有 Encryptable 字段，确认无读取失败后再移除旧密钥。
+- 轮换期间保持 service/admin 同步更新；不要只改一端。
 
 ### CDN 环境变量（可选，共 13 个）
 

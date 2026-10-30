@@ -17,8 +17,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | Base URL | `http://localhost:8787/api` |
 | 版本控制 | `API-Version: 2026-05-20` header (不在URL中) |
 | 认证 | `Authorization: Bearer <token>` header |
-| 语言 | `Accept-Language: zh_CN|zh_HK|en|ja|ko` header |
-| 平台 | `X-Platform: ios|ipados|macos|windows|linux|android|harmonyos|web` header |
+| 语言 | `Accept-Language: zh_CN|zh_HK|en|ja|ko` header（支持 `ja-JP`→`ja`、`en-US`→`en`、`zh-CN`→`zh_CN`、`zh-TW`→`zh_HK`） |
+| 平台 | `X-Platform: ios|ipados|macos|windows|linux|android|harmonyos|web` header（共 8 个有效平台） |
 | Content-Type | `application/json` (POST/PUT) |
 | 人机验证 | `X-Poster-Token: <token>` header (敏感操作) |
 
@@ -39,8 +39,27 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 // 40005 请求体过大  40006 Content-Type错误  40008 暴力破解
 // 40009 文件上传违规  40010 XXE注入  40011 SSRF攻击
 // 40012 HTTP方法错误  40013 Host头错误
-// 401 未登录  403 禁止访问  422 参数验证失败  429 请求过频  503 服务暂不可用(熔断/降级)
+// 401 未登录  403 禁止访问  422 参数验证失败  429 请求过频/操作锁超时  500 系统错误  503 服务暂不可用(熔断/降级)
 ```
+
+所有响应统一携带 `Cache-Control: no-store, no-cache, must-revalidate`（不再使用 public 缓存）。
+
+### 限流规则
+
+按用户+IP+路径的 Redis 滑动窗口限流，共 7 条端点规则 + 默认规则：
+
+| 端点前缀 | 窗口 | 上限 |
+|----------|------|------|
+| `/api/auth/login` | 60s | 10 次 |
+| `/api/auth/password/reset` | 300s | 5 次 |
+| `/api/auth/register` | 300s | 5 次 |
+| `/api/auth/social` | 300s | 5 次 |
+| `/api/payment` | 60s | 5 次 |
+| `/api/orders` | 10s | 3 次 |
+| `/api/search` | 1s | 10 次 |
+| 其他路径（默认） | 60s | 100 次 |
+
+> 密码重置确认接口另按邮箱累计失败次数：连续 5 次验证码错误作废当前验证码；重新申请验证码会清零失败计数。
 
 ### ID说明
 
@@ -159,8 +178,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| page | int | 否 | 页码 (默认1) |
-| per_page | int | 否 | 每页数量 (默认20, 最大100) |
+| page | int | 否 | 页码 (默认1，最小1) |
+| per_page | int | 否 | 每页数量 (1-100，默认20) |
 | category_id | string | 否 | 分类ID (hashid, 含子分类) |
 | keyword | string | 否 | 搜索关键词 |
 | sort | string | 否 | 排序: default/price_asc/price_desc/sales/newest |
@@ -412,6 +431,14 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ### 5.3 创建订单 `POST /api/orders` `[PosterVerify]`
 
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| address_id | string | 是 | 收货地址 ID（必须属于当前用户） |
+| coupon_id | string | 否 | 用户优惠券 ID |
+| currency_code | string | 否 | 收款币种，默认 USD |
+| remark | string | 否 | 订单备注 |
+| weight_grams | int | 否 | 仅当整单商品未维护重量（总重 <= 0）时作为后备重量，默认 500 |
+
 **请求:**
 ```json
 {
@@ -430,14 +457,31 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
     "order_id": "Or1d2E3r",
     "order_no": "ORD20260521A1B2C3D4",
     "total_amount": 59.98,
+    "discount_amount": 5.00,
+    "shipping_fee": 12.00,
+    "tax_amount": 9.60,
+    "pay_amount": 76.58,
     "currency_code": "USD"
   }
 }
 ```
 
+**下单规则：**
+
+- 事务内 `lockForUpdate()` 读取已选购物车行，只删除本次下单的行；并发修改购物车不会误删新加商品。
+- 每个 SKU 必须 `status=1` 且所属商品 `status=2`（已上架），否则 422。
+- 每个 SKU 必须有请求币种的 `shop_product_sku_prices` 报价；缺少时 422「该币种暂无报价」，不回退 CNY `default_price`。
+- 运费由服务端按 `商品重量 × 数量` 求和（克，向上取整），仅当总重 <= 0 时才使用请求中的 `weight_grams`。
+- 优惠券校验 `countries`（目的国 ISO2）与 `scope_type=all/category/product` + `scope_ids`；折扣按适用商品小计计算，`min_amount` 也按适用小计校验。
+- 关税/VAT 免税阈值按整单判断：duty 阈值用整单申报价值判断一次，再按各商品 HS 税率计算；VAT 基数 = 整单价值 + duty，VAT 阈值用该基数判断一次。
+- 优惠券在订单事务内核销；取消/超时/风控驳回会恢复为未使用并回退 `Coupons.used_qty`。
+- 风控默认 `risk.mode=bypass`，只打分写日志；仅 `mode=block` 且结果为 `review` 时订单置 `status=8`（支付前），等待后台审核。
+
 ### 5.4 取消订单 `POST /api/orders/{id}/cancel`
 
-> 仅状态=0(待付款)可取消
+> 仅状态=0(待付款)可取消。取消会恢复库存、写库存流水/订单日志、退还本单优惠券并回退 `Coupons.used_qty`，重复取消不会重复恢复。
+
+**自动取消：** 未付款订单创建 30 分钟后由 `UnpaidOrderCron` 自动取消（每 5 分钟扫描，`config/cron.php` 的 `unpaid_cancel_minutes` 可配）。已有进行中网关支付（`shop_payments.status=0` 且 `transaction_no != ''`）的订单会跳过，避免取消后用户仍完成扣款。
 
 ### 5.5 商业发票 `GET /api/orders/{id}/documents/invoice`
 
@@ -507,6 +551,13 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 }
 ```
 
+**说明：**
+
+- 重试同一订单时复用待支付记录，返回创建时已存入 `payments.gateway_data` 的 `client_secret`，不会重复创建网关支付单。
+- 支付创建使用 120s TTL 的分布式锁（等待 5s）；锁超时返回 429「操作繁忙」，其他系统异常返回 500，且不暴露内部错误信息。
+- 网关调用成功但订单已不可入账（已取消/已退款）时，写入 warning 日志供人工核对。
+- Webhook 与 `PaymentReconcileCron` 统一走 `PaymentSuccessService`：订单 0→1、支付 0→1、生成 `PlatformSettlements`、累加商品/SKU 销量；重复回调幂等，不会重复入账。
+
 ### 6.3 支付状态 `GET /api/payment/status/{id}`
 
 ### 6.4 Webhook回调 `POST /webhook/payment/{gateway}`
@@ -523,6 +574,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 |------|------|------|------|
 | dest_country_id | int | 是 | 目的国ID (snowflake) |
 | weight | int | 否 | 重量(克) (默认500) |
+
+> 此接口用于独立运费试算。下单时运费由服务端按 `product.weight × quantity` 汇总计算，不使用客户端传入的固定重量（仅商品未维护重量时回退 `weight_grams`）。
 
 **响应:**
 ```json
@@ -570,6 +623,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
   }
 }
 ```
+
+> 此接口按单个商品试算。实际下单时免税阈值按整单/整包裹判断：duty 阈值用整单申报价值判断一次，再按各商品 HS 税率计算 duty；VAT 基数 = 整单价值 + duty，VAT 阈值用该基数判断一次；下单与订阅共用 `OrderPricing`。
 
 ---
 
@@ -705,6 +760,53 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 {"product_id":"x","order_id":"x","rating":5,"content":"Good","images":[]}
 ```
 
+### 13.15 订阅周期购 `[JWT]`
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/subscriptions` | 我的订阅列表（最近 50 条） |
+| POST | `/api/subscriptions` | 创建订阅，立即生成首期待付款订单 |
+| POST | `/api/subscriptions/{id}/cancel` | 取消订阅（仅 active 状态） |
+
+**创建订阅请求：**
+```json
+{
+  "sku_id": "Cd4yL8rq",
+  "address_id": "Ad1d2R3s",
+  "interval_days": 30,
+  "quantity": 1
+}
+```
+
+| 参数 | 类型 | 必填 | 说明 |
+|------|------|------|------|
+| sku_id | string | 是 | 订阅 SKU |
+| address_id | string | 是 | 收货地址 ID（必须属于当前用户），用于首期订单地址快照 |
+| interval_days | int | 否 | 周期，仅支持 30/60/90，默认 30 |
+| quantity | int | 否 | 数量，默认 1 |
+
+**响应：**
+```json
+{
+  "code": 0, "msg": "订阅创建成功",
+  "data": {
+    "subscription_id": "Su1b2S3c",
+    "order_id": "Or1d2E3r",
+    "order_no": "SUB20261030A1B2C3D4",
+    "next_billing_at": "2026-11-29",
+    "first_amount": 76.58
+  }
+}
+```
+
+**规则：**
+
+- 首期订单与自动续费统一走 `SubscriptionOrderService`：必须有 USD 分币种报价、`SKU.status=1`、商品 `status=2`；原子扣库存并写库存流水，计算商品重量、运费和税费。
+- 创建时 `address_id` 无效（缺失/不属于当前用户）、无 USD 报价、商品未上架（`product.status != 2`）、库存不足返回 422；SKU 不存在或已下架返回 404。
+- `first_amount` 为含运费、税费的实付金额（订单 `pay_amount`）。
+- 续费复用最近一期订阅订单的地址快照；地址缺失、商品下架或库存不足时暂停订阅并写日志。
+- 取消订阅与续费通过订阅行锁互斥；非 active 订阅取消返回 422。
+
 ### 13.17 GDPR请求 `POST /api/privacy/request` `[JWT]`
 
 ```json
@@ -740,7 +842,7 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 
 | 值 | 说明 |
 |----|------|
-| 0 | 待付款 |
+| 0 | 待付款（30 分钟未付款自动取消） |
 | 1 | 已付款 |
 | 2 | 已发货 |
 | 3 | 已收货 |
@@ -748,7 +850,7 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 | 5 | 已取消 |
 | 6 | 退款中 |
 | 7 | 已退款 |
-| 8 | 待审核 (风控) |
+| 8 | 待审核（仅 `risk.mode=block` 且风控结果为 review，发生在支付前；审核通过→0，驳回→5 并恢复库存/优惠券） |
 
 ### 商品状态
 
@@ -781,9 +883,14 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 ## 附录: 中间件管道
 
 ```
-请求 → Cors → Security(31类) → RateLimit(令牌桶) → Platform(8平台)
-     → GeoIp → Locale → HashidsDecode → VersionRoute
-     → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption → 控制器
+请求阶段（全局前置）
+  Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台)
+  → GeoIp → Locale → HashidsDecode → VersionRoute
+  → 路由级 PosterVerify / JwtAuth（按接口配置）→ Controller
+响应阶段
+  HashidsEncode → Encryption → Response
+
+注册数量: 10 个全局中间件 + 2 个路由级中间件
 ```
 
 标识: `[JWT]` 需认证 | `[PosterVerify]` 需人机验证 | 无标记 = 公开接口
@@ -818,7 +925,7 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 | GET | /api/geoip/detect | GeoIP检测 |
 | GET | /api/compliance/check | 合规检查 |
 
-### A.2 认证接口 (47端点)
+### A.2 认证接口 (49端点)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -847,6 +954,8 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 | GET/POST | /api/b2b/quotes | B2B询价 |
 | GET/POST | /api/privacy/request | GDPR请求 |
 | GET | /api/export/orders | 导出订单 |
+| GET/POST | /api/subscriptions | 订阅列表 / 创建（POST 必填 address_id） |
+| POST | /api/subscriptions/{id}/cancel | 取消订阅 |
 
 ### A.3 Webhook (1端点)
 
@@ -854,12 +963,16 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 |------|------|------|
 | POST | /webhook/payment/{gateway} | 支付异步通知(验签) |
 
-### A.4 Admin 与健康检查 (2端点)
+### A.4 Admin 与健康检查 (4端点)
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| POST | /api/admin/refunds/{id}/execute | 后台退款执行 |
+| POST | /api/admin/refunds/{id}/execute | 后台退款执行（真实调用网关） |
+| POST | /api/admin/refunds/{id}/reject | 后台退款驳回 |
+| POST | /api/admin/orders/{id}/review | 订单风控审核（approve→待付款 / reject→取消并恢复库存、券） |
 | GET | /health | 健康检查 |
+
+> `/api/admin/refunds/{id}/approve` 已删除（旧实现不调用网关）。真实退款统一走 `/execute`；`/reject` 保留。
 
 ---
 
@@ -872,16 +985,24 @@ DELETE 需携带对比记录 id：`DELETE /api/comparisons/{id}`（`{id}` 为对
 ### 中间件管道
 
 ```
-Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台) → GeoIp → Locale
-    → HashidsDecode → VersionRoute → (PosterVerify) → (JwtAuth) → HashidsEncode → Encryption
+请求阶段（全局前置）
+  Cors → Security(31类) → RateLimit(滑动窗口) → Platform(8平台)
+  → GeoIp → Locale → HashidsDecode → VersionRoute
+  → 路由级 PosterVerify / JwtAuth（按接口配置）→ Controller
+响应阶段
+  HashidsEncode → Encryption → Response
+
+注册数量: 10 个全局中间件 + 2 个路由级中间件
 ```
 
 ### 端点统计
 
+> 当前代码路由总数 89 个（`service/config/route.php`）。
+
 - 公开接口: 23个 (认证/商品/分类/内容/搜索/服务)
-- 认证接口: 47个 (用户/购物车/订单/支付/退货/评价/营销)
+- 认证接口: 49个 (用户/购物车/订单/支付/退货/评价/营销/订阅)
 - Webhook: 1个 (支付回调)
-- Admin: 1个 (退款执行)
+- Admin: 3个 (退款执行 / 退款驳回 / 订单风控审核)
 - Health: 1个 (/health 健康检查)
 
 ### 统一响应

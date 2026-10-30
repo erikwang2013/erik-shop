@@ -356,3 +356,20 @@ cd service && php vendor/bin/phpunit tests/
 ---
 
 *报告由自动化审查生成 | 2026-08-04*
+
+---
+
+## 十、2026-10-30 后续修复
+
+本节仅记录 2026-10-30 的后续变更，不改变上文历史结论与日期。版本 v1.5.7。
+
+1. **订单取消统一化**：新增 `OrderCancellation`，用户取消/超时取消/风控驳回共用原子状态门闩、库存恢复、优惠券恢复、`used_qty` 回退及订单/库存日志。
+2. **未付款订单超时取消**：新增 `UnpaidOrderCron`，每 5 分钟取消超过 30 分钟的 `status=0` 订单，跳过已有进行中网关支付的订单（`payments.status=0` 且 `transaction_no != ''`）。
+3. **支付入账统一**：新增 `PaymentSuccessService`，webhook 与 `PaymentReconcileCron` 共用订单 0→1、支付 0→1、平台分账、销量累加；迟到支付仅告警。支付创建锁 TTL 120s，`client_secret` 存 `gateway_data` 支持重试复用。
+4. **结算原子性**：`SettlementCron` 改为 `whereNotExists` + `chunkById(500)`，单笔 `Db::transaction` + 订单行锁 + 已有分账复查。
+5. **统一运费/税费与订阅建单**：`OrderPricing` 按重量与运输分区计算运费，整单判断关税/VAT 免税阈值（VAT 基数含 duty）；`SubscriptionOrderService` 统一首期/续费建单，`address_id` 必填、地址快照、USD 报价、原子扣库存。
+6. **风控与退款**：默认 `bypass` 仅打分，仅 `block` 模式将 `review` 订单置 `status=8`（审核在支付前）；删除 `/api/admin/refunds/{id}/approve`，真实退款走 `/execute`，`/reject` 保留。
+7. **安全加固**：所有 API 响应 `no-store`；密码重置 300s/5 次 + 每邮箱 5 次失败锁定；移除仓库示例加密密钥，安装器为 service/admin 生成同一把随机密钥，历史部署需轮换重加密；异常分类 422/429/500 且不泄露 SQL。
+8. **测试与 CI**：6 个测试文件、49 单元测试/110 断言本地通过；3 组集成测试需 MySQL schema，本地未运行；CI 覆盖 PHP 8.3/8.4。
+
+*2026-10-30 追加*

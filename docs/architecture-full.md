@@ -12,8 +12,8 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 | 组件 | 技术栈 | 规模 |
 |------|--------|------|
-| Service API | PHP 8.3 / webman 2.1 / illuminate database | 40控制器 + 90模型 + 14中间件 |
-| Admin | webman-admin / LayUI / ECharts | 71控制器 + 66模型 + 5中间件 |
+| Service API | PHP 8.3 / webman 2.1 / illuminate database | 40控制器 + 90模型 + 25 common + 15进程 + 14中间件 |
+| Admin | webman-admin / LayUI / ECharts | 73控制器 + 66模型 + 5中间件 |
 | Flutter | Riverpod / GoRouter / Dio | 12页面 |
 | 数据库 | MySQL 8.0 + Redis 7 + ES 8 | 98张表 (89 `shop_` + 9 `wa_`) |
 
@@ -24,7 +24,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | API P99 | <200ms |
 | 并发 | 10000+ (32 worker常驻内存) |
 | 表数 | 98 |
-| 端点 | 90 |
+| 端点 | 89 |
 | 中间件 | 14 (service:10全局+2路由+AdminKey+StaticFile / admin:4全局+1内置) |
 | 语言 | zh_CN, zh_HK, en, ja, ko |
 | 币种 | 19种独立定价 |
@@ -46,10 +46,10 @@ graph TD
     end
     subgraph Apps[应用层]
         S[Service API :8787<br/>40 Controllers 90 Models 14 MW]
-        A[Admin :8788<br/>71 Controllers 66 Models 5 MW]
+        A[Admin :8788<br/>73 Controllers 66 Models 5 MW]
     end
     subgraph Data[数据层]
-        M[(MySQL 8.0 :3306<br/>89 tables shop_)]
+        M[(MySQL 8.0 :3306<br/>98 tables)]
         R[(Redis 7 :6379<br/>cache session limit)]
         E[(ES 8 :9200<br/>multilingual search)]
     end
@@ -94,8 +94,6 @@ graph TB
         HDEC --> VER[VersionRoute]
         VER --> POSTV[PosterVerify 路由级]
         POSTV --> JWT[JwtAuth 路由级]
-        JWT --> HENC[HashidsEncode]
-        HENC --> ENC[Encryption 接口加密]
     end
     subgraph Controllers["5. 控制器 40个"]
         AUTH[Auth] & PROD[Product] & CART[Cart]
@@ -103,33 +101,34 @@ graph TB
         TARI[Tariff] & USER[User] & COUP[Coupon]
         RET[Return] & NOTI[Notify] & EXPORT[Export]
     end
-    subgraph Models["6. 模型层 111 Models"]
+    subgraph Models["6. 模型层 90 Models"]
         BM[BaseModel: Snowflake ID 主键]
         REL[Relations: hasMany/belongsTo]
         SRCH[Searchable: ES同步 多语言分词]
     end
     subgraph Data["7. 数据层"]
-        MySQL[(MySQL 8.0<br/>110 tables<br/>erik_ prefix)]
+        MySQL[(MySQL 8.0<br/>98 tables<br/>89 shop_ + 9 wa_)]
         Redis[(Redis 7<br/>cache/session<br/>limit/poster)]
         ES[(ES 8<br/>multilingual<br/>search)]
     end
     subgraph Response["8. 响应返回"]
+        HENC[HashidsEncode: ID编码]
+        ENC[Encryption: 接口加密]
         JSON[JSON: code msg data]
-        OUTENC[HashidsEncode: ID编码]
         HEADERS[Headers: CORS X-Platform]
+        HENC --> ENC --> JSON --> HEADERS
     end
 
     FL & WB --> CDN --> NG
     NG --> CORS
     PASS --> PLAT
-    HENC --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
+    JWT --> AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT
+    AUTH & PROD & CART & ORD & PAY & SHIP & TARI & USER & COUP & RET & NOTI & EXPORT --> HENC
     AUTH & PROD & ORD --> BM
     ORD --> REL
     PROD --> SRCH
     BM --> MySQL & Redis
     SRCH --> ES
-    MySQL & Redis & ES --> JSON
-    JSON --> OUTENC --> HEADERS
     HEADERS --> FL & WB
 
     style Security fill:#fff0f0
@@ -147,10 +146,10 @@ graph TB
 | 1.客户端层 | Flutter 5平台 + Web Admin, 全部通过 HTTP/JSON 通信 |
 | 2.接入层 | CDN 边缘层(Origin-Pull 回源, 静态资源缓存) → Nginx 按域名分流: api→service, admin→admin |
 | 3.安全层 | SecurityMiddleware 31类攻击检测器, 命中即返回错误码/403 |
-| 4.中间件管道 | 10个全局MW串行处理 + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口) |
+| 4.中间件管道 | 请求阶段10个全局MW + 2个路由级MW(PosterVerify敏感操作, JwtAuth认证接口)；响应阶段 HashidsEncode编码ID → Encryption加密 |
 | 5.控制器层 | 40个API控制器按功能分组, 处理全部业务逻辑 |
 | 6.模型层 | 90个Eloquent模型, BaseModel提供Snowflake ID主键, 45个模型按表启用SoftDelete |
-| 7.数据层 | MySQL(89表shop_前缀/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
+| 7.数据层 | MySQL(98表: 89张shop_前缀 + 9张wa_/snowflake主键) + Redis(缓存/Session/限流/Poster) + ES(多语言搜索) |
 | 8.响应返回 | JSON统一格式 → HashidsEncode编码ID → Encryption加密(X-Encrypt-Response) → 返回客户端 |
 | 9.熔断与降级 | Redis 熔断器(CircuitBreaker): 支付网关/社交登录外部API, 连续5次失败→熔断30s, 半开探测恢复; 业务异常白名单; Redis故障降级放行(503) |
 
@@ -160,8 +159,11 @@ graph TB
 webman Master (:8787)
   ├── HTTP Worker x32 (CPU×4, 常驻内存, DB连接池)
   ├── Monitor Process (文件监控+内存监控)
-  └── SnowflakeWorker (启动时初始化Snowflake单例)
+  ├── SnowflakeWorker (启动时初始化Snowflake单例)
+  └── 12 个 Cron/Task 进程 (汇率/物流/Feed/推荐/合规/退货/降价/支付对账/分账/隐私/订阅/未付款超时取消)
 ```
+
+`app/process/` 共 15 个 PHP 文件，其中 12 个注册为常驻定时进程。
 
 ---
 
@@ -173,24 +175,29 @@ webman Master (:8787)
 graph LR
     A[HTTP Request] --> B[Cors]
     B --> C[Security<br/>攻击检测]
-    C --> D[Platform<br/>来源识别]
-    D --> E[GeoIp<br/>区域识别]
-    E --> F[Locale<br/>语言]
-    F --> G[HashidsDecode<br/>ID解码]
-    G --> H[VersionRoute<br/>版本路由]
-    H --> I{敏感操作?}
-    I -->|Yes| J[PosterVerify<br/>人机验证]
-    I -->|No| K{JWT保护?}
-    J --> K
-    K -->|Yes| L[JwtAuth<br/>Token验证]
-    K -->|No| M[HashidsEncode<br/>ID编码]
-    L --> M
-    M --> N[Controller]
-    N --> O[HTTP Response]
+    C --> D[RateLimit<br/>令牌桶限流]
+    D --> E[Platform<br/>来源识别]
+    E --> F[GeoIp<br/>区域识别]
+    F --> G[Locale<br/>语言]
+    G --> H[HashidsDecode<br/>ID解码]
+    H --> I[VersionRoute<br/>版本路由]
+    I --> J{敏感操作?}
+    J -->|Yes| K[PosterVerify<br/>人机验证]
+    J -->|No| L{JWT保护?}
+    K --> L
+    L -->|Yes| M[JwtAuth<br/>Token验证]
+    L -->|No| N[Controller]
+    M --> N
+    N --> O[HashidsEncode<br/>响应 ID 编码]
+    O --> P[Encryption<br/>响应加密]
+    P --> Q[HTTP Response]
     style C fill:#fcc
-    style J fill:#ffc
-    style L fill:#cfc
+    style D fill:#fcc
+    style K fill:#ffc
+    style M fill:#cfc
 ```
+
+请求阶段：全局 Cors→Security→RateLimit→Platform→GeoIp→Locale→HashidsDecode→VersionRoute，随后进入路由级 PosterVerify/JwtAuth → Controller；响应阶段：HashidsEncode → Encryption → Response。3.2 表格按注册顺序（10 全局 + 2 路由）列出。
 
 ### 3.2 Service 中间件详情
 
@@ -198,16 +205,16 @@ graph LR
 |---|--------|------|------|
 | 1 | Cors | 全局 | Access-Control-* 响应头, OPTIONS预检返回200 |
 | 2 | SecurityMiddleware | 全局 | XSS/SQL注入/CRLF/路径遍历/Content-Type/请求体10MB |
-| 3 | RateLimitMiddleware | 全局 | 令牌桶限流(Redis ZSET滑动窗口, 6端点规则) |
+| 3 | RateLimitMiddleware | 全局 | 令牌桶限流(Redis ZSET滑动窗口, 7端点规则+默认) |
 | 4 | PlatformMiddleware | 全局 | X-Platform header + UA降级识别8个平台 |
 | 5 | GeoIpMiddleware | 全局 | MaxMind GeoIP2 未登录用户区域/币种/语言识别 |
 | 6 | LocaleMiddleware | 全局 | Accept-Language解析, 5语言精确匹配→降级→默认 |
 | 7 | HashidsDecode | 全局 | URL/Body中 `*_id` 字段 hashid→snowflake ID |
 | 8 | VersionRoute | 全局 | API-Version header→控制器命名空间(v1/v2)映射 |
-| 9 | PosterVerify | 路由 | 注册/下单/支付 Redis验证token |
-| 10 | JwtAuth | 路由 | Bearer Token HS256验签+过期+userId注入 |
-| 11 | HashidsEncode | 全局 | 响应JSON递归遍历, snowflake ID→hashid |
-| 12 | EncryptionMiddleware | 路由 | 接口AES加解密(X-Encrypt-Response/X-Encrypted) |
+| 9 | HashidsEncode | 全局 | 响应JSON递归遍历, snowflake ID→hashid |
+| 10 | EncryptionMiddleware | 全局 | 接口AES加解密(X-Encrypt-Response/X-Encrypted) |
+| 11 | PosterVerify | 路由 | 注册/下单/支付 Redis验证token |
+| 12 | JwtAuth | 路由 | Bearer Token HS256验签+过期+userId注入 |
 | 13 | AdminKeyMiddleware | 路由 | 内部管理操作密钥校验 |
 | 14 | StaticFile | 全局 | webman 静态资源服务 |
 
@@ -221,7 +228,7 @@ graph LR
 | # | Admin中间件 | 功能 |
 |---|------------|------|
 | 1 | SecurityMiddleware | XSS/SQL注入/CRLF/路径遍历/Content-Type/20MB |
-| 2 | PlatformMiddleware | X-Platform + UA 7平台识别 |
+| 2 | PlatformMiddleware | X-Platform + UA 8平台识别 |
 | 3 | HashidsDecode | 请求 hashid→snowflake ID |
 | - | AccessControl(内置) | 管理员角色权限验证 |
 | 4 | HashidsEncode | 响应 snowflake ID→hashid |
@@ -309,6 +316,7 @@ graph TD
 | Windows | Flutter `Platform.isWindows` / UA `Windows` | `windows` |
 | Linux | Flutter `Platform.isLinux` / UA `Linux` | `linux` |
 | Android | Flutter `Platform.isAndroid` / UA `Android` | `android` |
+| HarmonyOS | Flutter/ArkTS `ohos` / UA `HarmonyOS` | `harmonyos` |
 | Web | UA无匹配 / 默认值 | `web` |
 
 记录表: `erik_orders.platform`, `erik_payments.platform`, `erik_operation_logs.platform`, `erik_users.last_login_platform`, `erik_search_logs.platform`
@@ -334,7 +342,7 @@ Illuminate\Database\Eloquent\Model
   └── app\model\BaseModel
         ├── $incrementing=false, $keyType='string', $guarded=[]
         ├── boot(): Snowflake::nextId()
-        └── 110业务模型
+        └── 89业务模型
               ├── 45个 use SoftDeletes (对应有 deleted_at 列的表)
               ├── 部分 use Encryptable (敏感字段: email/mobile/name等)
               ├── use Searchable (Product→ES)
@@ -375,6 +383,19 @@ PaymentGatewayInterface
   └── verifyWebhook(payload, sig): bool
 ```
 
+### 6.1 统一入账与支付重试
+
+- Webhook 与 `PaymentReconcileCron` 共用 `PaymentSuccessService`：订单 0→1、支付 0→1、生成 `PlatformSettlements`、累加 `Products/ProductSkus.sales_count`；迟到支付只记 warning，不重复入账。
+- 支付创建锁 TTL 120s（覆盖 Stripe/PayPal 网关耗时）；`client_secret` 存 `gateway_data`，重试可复用，避免锁过期后读到未落库的待支付单。
+- 真实退款走 `/api/admin/refunds/{id}/execute`，`/reject` 保留；已删除 `/approve` 伪入口。
+
+### 6.2 订单取消、定价与订阅建单
+
+- `OrderCancellation`：用户取消、超时取消、风控驳回共用；原子状态门闩 + 库存恢复 + 优惠券恢复/`used_qty` 回退 + 订单/库存日志。
+- `OrderPricing`：运输分区运费按 `product.weight × qty` 计算；关税/VAT 整单判断免税阈值，VAT 基数含 duty；下单与订阅共用。
+- `SubscriptionOrderService`：首期/续费统一建单；`address_id` 必填并写地址快照、USD 报价、商品上架校验、原子扣库存、重量运费税费。
+- 风控默认 `bypass` 仅打分；仅 `block` 模式下 `review` 订单置 `status=8`，审核在支付前；`reject` 经 `OrderCancellation` 恢复库存/券。
+
 ---
 
 ## 7. 高并发架构
@@ -395,7 +416,9 @@ graph LR
 | 端点 | 窗口 | 限制 | 说明 |
 |------|------|------|------|
 | /api/auth/login | 60s | 10次 | 防撞库 |
+| /api/auth/password/reset | 300s | 5次 | 防密码重置滥用（另有每邮箱 5 次失败锁定） |
 | /api/auth/register | 300s | 5次 | 防批量注册 |
+| /api/auth/social | 300s | 5次 | 防社交登录枚举/爆破 |
 | /api/payment | 60s | 5次 | 防盗刷 |
 | /api/orders | 10s | 3次 | 防刷单 |
 | /api/search | 1s | 10次 | 防爬虫 |
@@ -419,8 +442,9 @@ Redis 用于限流令牌桶、人机验证码与 Session 存储（中间件层�
 | 汇率更新 | ExchangeRateCron（每小时，外部 API） |
 | Feed 同步 | ProductFeedCron（每 6 小时生成 TSV 并记录日志） |
 | 推荐计算 | RecommendationCron（每日，购买共现） |
-| 支付对账 | PaymentReconcileCron（每 6 小时，Stripe/PayPal） |
-| 分账结算 | SettlementCron（每日） |
+| 支付对账 | PaymentReconcileCron（每 6 小时，Stripe/PayPal，共用 PaymentSuccessService 入账） |
+| 分账结算 | SettlementCron（每日，whereNotExists + chunkById(500)，单笔事务 + 订单行锁 + 已有分账复查） |
+| 未付款订单超时取消 | UnpaidOrderCron（每 5 分钟，取消超过 30 分钟的 status=0 订单；跳过有进行中网关支付的订单） |
 | 物流轨迹 | ShipmentTrackingCron（每 30 分钟，需配置 API） |
 | 平台订单同步 | PlatformOrderSyncCron（每 5 分钟，需配置 API） |
 | 退货超时 | ReturnExpireCron（每小时） |
@@ -466,13 +490,15 @@ docker-compose.yml:
 cd service && php vendor/bin/phpunit tests/
 ```
 
-| 测试类 | Tests | 覆盖 |
+| 测试文件 | Tests | 覆盖 |
 |--------|-------|------|
-| SecurityTest | 12 | XSS+SQLi+XXE+SSRF+Path |
-| JwtTest | 4 | encode/decode/invalid |
-| ApiResponseTest | 3 | success/fail/paginate |
-| RedisFacadeTest | 3 | ping/set/get/redis() |
-| **Total** | **22** | **45 assertions PASS** |
+| HttpParsingTest / MoneyTest（单元） | 49 | 请求解析、金额运算 |
+| OrderCancellationTest（集成） | — | 取消/库存/券恢复（需 MySQL schema） |
+| OrderPricingTest（集成） | — | 分区运费/关税/VAT（需 MySQL schema） |
+| PaymentSuccessServiceTest（集成） | — | 统一入账/幂等（需 MySQL schema） |
+| **Total** | **49 单元 / 110 断言** | 本地通过；3 组集成本地未运行；CI PHP 8.3/8.4 |
+
+历史口径（2026-08-04）：22 tests / 45 assertions（SecurityTest 12 + JwtTest 4 + ApiResponseTest 3 + RedisFacadeTest 3）。
 
 ---
 
@@ -480,15 +506,28 @@ cd service && php vendor/bin/phpunit tests/
 
 | 维度 | 数量 |
 |------|------|
-| PHP源文件 | service:210 + admin:214 = 424 |
+| PHP源文件 | service:262 + admin:232 = 494 |
 | Dart (Flutter) | 25 |
-| 数据库表 | 110 |
-| API端点 | 90 |
+| 数据库表 | 98 (89 shop_ + 9 wa_) |
+| API端点 | 89 |
 | 中间件 | 14 |
-| 工具类 | 8 |
+| 工具类 | 25 |
 | 定时任务 | 12 |
 | 配置项 | 36+ |
-| 测试 | 22 tests, 45 assertions |
+| 测试 | 6 测试文件, 49 单元 / 110 断言 |
 | Skills | 38 |
-| 文档 | 9 |
-| **总计** | **~700** |
+| 文档 | 15 |
+| **总计** | **~750** |
+
+---
+
+## 13. 2026-10-30 一致性与安全修复（v1.5.7）
+
+- 订单取消统一走 `OrderCancellation`（用户/超时/风控驳回），原子状态门闩 + 库存/优惠券恢复；新增 `UnpaidOrderCron` 每 5 分钟取消超 30 分钟未付款订单，跳过有进行中网关支付的订单。
+- 支付入账统一走 `PaymentSuccessService`（webhook 与 PaymentReconcileCron 共用）；支付创建锁 TTL 120s，`client_secret` 落 `gateway_data` 支持重试复用。
+- `SettlementCron` 改为 `whereNotExists` + `chunkById(500)`，单笔 `Db::transaction` + 订单行锁 + 已有分账复查。
+- `OrderPricing` 统一运费与关税/VAT（整单免税阈值，VAT 基数含 duty）；`SubscriptionOrderService` 统一首期/续费建单（地址快照、USD 报价、原子扣库存）。
+- 异常分类：`BusinessException` 422、`LockTimeoutException` 429，其他 500 不泄露 SQL。
+- 所有 API 响应 `Cache-Control: no-store, no-cache, must-revalidate`；密码重置 300s/5 次 + 每邮箱 5 次失败锁定。
+- 移除仓库示例加密密钥，安装器为 service/admin 生成同一把随机密钥；历史使用示例密钥的部署需轮换并重加密。
+- 删除 `/api/admin/refunds/{id}/approve`，真实退款使用 `/execute`，`/reject` 保留。

@@ -42,7 +42,7 @@ Copyright (c) 2026 erik erik@erik.xyz — https://erik.xyz
 |---------|---------|------|
 | ❄ 雪花冠 | Snowflake 分布式 ID | 98 张表全部使用 `erikwang2013/snowflake-php` 生成的 bigint 主键 |
 | 🌐 地球身体 | 跨境电商 | B2C/B2B + 第三方卖家入驻，面向全球市场 |
-| 经纬线 | 多语言 / 多币种 / 多平台 | 中英文文档、分币种定价、7 平台来源识别 |
+| 经纬线 | 多语言 / 多币种 / 多平台 | 中英文文档、分币种定价、8 平台来源识别 |
 | 📦 怀抱包裹 | 国际物流 | 物流分区运费、海外仓、HS 申报、商业发票/装箱单 |
 | `#2d8cf0` 主色 | 管理端主题色 | 与 Pear Admin 默认主题色一致 |
 
@@ -162,7 +162,9 @@ php start.php start -d
 cd ../service && composer install && php start.php start -d
 ```
 
-> 安装向导自动完成：建库 → 导入 98 张表 → 生成 service/.env 和 admin/.env（含随机密钥） → 创建管理员 → 重载服务
+> 安装向导自动完成：建库 → 导入 98 张表 → 生成 service/.env 和 admin/.env（含随机密钥；service/admin 共用同一把随机 32 字符 `ENCRYPTION_KEY`，admin 同时写入 `ENCRYPTION_KEY` + `ENCRYPTION_CIPHER`） → 创建管理员 → 重载服务
+>
+> 历史部署若曾使用仓库示例 `.env` 密钥，升级后必须轮换 `ENCRYPTION_KEY` 并重加密已有加密字段。
 
 ### 方式二：命令行手动安装
 
@@ -215,8 +217,8 @@ curl http://127.0.0.1:8787/
 ```
 shop-php/
   install.sql       # 一键安装 SQL（98 张表），Web 安装向导自动导入
-  service/          PHP 业务 API (webman)      — 40 控制器 + 90 模型 + 14 中间件 + 14 自定义进程
-  admin/            管理后台 (webman-admin)    — 71 控制器 + 66 模型 + ECharts 仪表盘 + Web 安装向导
+  service/          PHP 业务 API (webman)      — 40 控制器 + 90 模型 + 25 工具类 + 14 个中间件类（管线 10 全局 + 2 路由）+ 15 自定义进程
+  admin/            管理后台 (webman-admin)    — 73 控制器 + 66 模型 + ECharts 仪表盘 + Web 安装向导
   apps/flutter/     Flutter 客户端             — 6 功能模块 + 12 页面 + 5 语言 + PC 自适应
     lib/features/     auth / home / product / cart / order / profile
   docker/           Docker 部署                — Nginx + PHP + MySQL + Redis + ES
@@ -242,26 +244,26 @@ shop-php/
 
 | 维度 | 覆盖内容 |
 |------|---------|
-| **B2C零售** | 多语言商品、分币种定价、SKU、购物车、订单、支付、退款、退货 |
+| **B2C零售** | 多语言商品、分币种定价、SKU、购物车、订单、30 分钟未付款自动取消、支付、退款、退货 |
 | **B2B批发** | 阶梯定价(MOQ)、企业认证(税号/营业执照)、询价 |
 | **多商家入驻** | 卖家审核、商品审核、分成分账 |
 | **跨境合规** | HS Code编码库、关税规则、VAT/IOSS、各国合规标签(FDA/CE/RoHS) |
 | **国际物流** | 物流分区运费、海外仓(发货仓+退货仓)、商业发票/装箱单、HS申报（规划中） |
-| **支付** | Stripe/PayPal（完整）、Klarna/Adyen（占位）、BNPL先买后付（占位）、3DS验证 |
-| **营销** | 优惠券(分区+新老客)、轮播图(区域可见) |
+| **支付** | Stripe/PayPal（完整）、Klarna/Adyen（占位）、BNPL先买后付（占位）、3DS验证、webhook/对账统一幂等入账 |
+| **营销** | 优惠券(分区+新老客+品类/商品范围)、轮播图(区域可见) |
 | **供应链** | 供应商评级、采购→质检→入库、库存流水(不可变账本)、调拨 |
 | **风控合规** | 规则引擎(旁路打分)、KYC实名、GDPR/CCPA数据请求、Cookie Consent |
-| **安全防护** | 31类攻击检测(XSS/SQL注入/XXE/SSRF/CRLF/路径遍历/文件上传/暴力破解/HTTP方法/Host/CORS等) |
-| **高并发** | 令牌桶限流、DB读写分离、连接池优化 |
+| **安全防护** | 31类攻击检测(XSS/SQL注入/XXE/SSRF/CRLF/路径遍历/文件上传/暴力破解/HTTP方法/Host/CORS等)、全接口 no-store 缓存头、密码重置限次 |
+| **高并发** | 令牌桶限流(7 条端点规则)、DB读写分离、连接池优化 |
 | **CDN内容分发** | Origin-Pull回源(零迁移)、4家提供商(Cloudflare/CloudFront/阿里云/腾讯云)、管理端配置+手动刷新/预热+自动刷新(fail-open)、边缘缓存(expires 7d immutable) |
 | **报表分析** | 管理端报表中心：销售摘要、30天趋势、TOP商品、支付方式/订单状态分布 |
-| **平台统计** | service 起始页统计：用户/商品/订单/GMV 总量与今日新增 |
-| **会员增长** | 积分流水、会员等级权益、降价提醒、订阅周期购 |
+| **平台统计** | service 起始页统计：用户/商品/订单/GMV 总量与今日新增（Redis 缓存 60s） |
+| **会员增长** | 积分流水、会员等级权益、降价提醒、订阅周期购（地址快照/运费税费/原子扣库存） |
 | **内容管理** | CMS多语言页面、FAQ、尺码对照表、商品Feed同步 |
 | **客服** | FAQ 客服 |
 | **基础设施** | Snowflake分布式ID、Hashids接口混淆、JWT认证、AES加密、GeoIP区域识别 |
 | **多端覆盖** | Flutter(iOS/Android/macOS/Windows/Linux/iPadOS)+Web Admin |
-| **平台追踪** | 7平台来源识别(iOS/iPadOS/macOS/Windows/Linux/Android/Web)+DB记录 |
+| **平台追踪** | 8平台来源识别(iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web)+DB记录 |
 | **测试** | 见 `.github/workflows/ci.yml` |
 
 ## 核心设计
@@ -272,6 +274,10 @@ shop-php/
 - **JWT认证**：HS256 + access/refresh 双token自动刷新
 - **API版本**：`API-Version` header路由，不在URL中
 - **Poster验证**：敏感操作(注册/下单/支付)随机人机验证
+- **服务端计费**：运费按 `商品重量 × 数量` 求和（克，向上取整）；关税/VAT 免税阈值按整单判断，下单与订阅共用 `OrderPricing`
+- **订单超时取消**：未付款订单 30 分钟后自动取消（每 5 分钟扫描），恢复库存、退还优惠券；已发起网关支付的订单跳过，避免取消后仍扣款
+- **支付统一入账**：Webhook 与对账任务共用 `PaymentSuccessService`，订单/支付/分账/销量幂等更新，重复回调不重复入账
+- **安全响应**：所有 API 响应 `Cache-Control: no-store, no-cache, must-revalidate`；密码重置 300s/5 次，验证码累计失败 5 次作废
 
 ## 文档
 
@@ -289,7 +295,7 @@ shop-php/
 | [架构设计文档](docs/architecture-full.md) | 系统架构图、中间件管道、数据架构、安全架构、支付架构 |
 | [设计文档](docs/design.md) | 数据库表设计、API规范、安全方案、国际化 |
 | [架构文档](docs/architecture.md) | 目录结构、模型继承链、关键包 |
-| [API接口文档](docs/api.md) | 71个API端点 (静态文档) |
+| [API接口文档](docs/api.md) | 89 个路由 (静态文档) |
 | [hg/apidoc接口文档](http://localhost:8787/apidoc/) | hg/apidoc自动生成 (6分组: 认证/商品/交易/物流海关/用户营销/运营) |
 | [部署文档](docs/deployment.md) | Docker/手动部署、环境变量、运维命令 |
 
@@ -304,17 +310,17 @@ shop-php/
 
 ```bash
 make test             # 推荐方式
-cd service && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # service 单元/集成（211 tests / 1000 assertions）
-cd admin  && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # admin（2 tests / 7 assertions）
-cd service/tests/api && php run_all.php                      # API 自动化（4 套件 213 项断言）
-cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js  # UI E2E（admin + service 页面）
+cd service && vendor/bin/phpunit tests/Unit  # 单元测试（49 tests / 110 assertions，无需 DB）
+cd service && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # 全量；3 组集成测试需 MySQL schema（CI 运行）
+cd service/tests/api && php run_all.php                      # API 自动化（历史基线：4 套件 213 项断言）
+cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js  # UI E2E（历史基线）
 
 # 依赖安全审计（已知 1 个低危 CVE：CVE-2025-45769 firebase/php-jwt <7.0.0，
 # 受 jwt-webman ^6.0 约束无法升级，HS256 对称签名用法不受影响）
 composer audit
 ```
 
-最新全量测试结果见 [docs/test-reports/QA-REPORT-2026-08-27.md](docs/test-reports/QA-REPORT-2026-08-27.md)（截图在 `docs/test-reports/screenshots/`，E2E 明细在 `scripts/e2e/results.json`）。
+本次修复轮新增 **49 个单元测试 / 110 断言**，本地通过；`OrderCancellation`、`PaymentSuccessService`、`OrderPricing` 3 组集成测试依赖 MySQL schema，由 CI（PHP 8.3/8.4 矩阵）运行。历史全量测试结果见 [docs/test-reports/QA-REPORT-2026-08-27.md](docs/test-reports/QA-REPORT-2026-08-27.md)（截图在 `docs/test-reports/screenshots/`，E2E 明细在 `scripts/e2e/results.json`）。
 
 **已知缺口已全部修复（2026-08-28）**：19 个 admin 页面视图 + ShopExport 数据导出页已实现，E2E 重跑 47 PASS / 0 FAIL / 1 WARN（100%），详见测试报告 §8。
 
@@ -335,13 +341,13 @@ CI/CD: `.github/workflows/ci.yml` — PHP 8.3/8.4 矩阵测试
 
 | 维度 | 开源版 | 商业版 |
 |------|--------|--------|
-| 功能覆盖 | 111 控制器 / 156 模型 / 98 表 / 93 路由；B2C/B2B、多商家、跨境合规、国际物流、支付、优惠券、供应链、库存账本、风控/KYC、CMS、报表 | 128 控制器 / 189 模型 / 119 表 / 106 路由；在开源版全部能力上增加营销增长、多平台铺货、知识库/邮件模板/WebSocket IM、HarmonyOS 客户端 |
+| 功能覆盖 | 113 控制器 / 156 模型 / 98 表 / 89 路由；B2C/B2B、多商家、跨境合规、国际物流、支付、优惠券、供应链、库存账本、风控/KYC、CMS、报表 | 128 控制器 / 189 模型 / 119 表 / 106 路由；在开源版全部能力上增加营销增长、多平台铺货、知识库/邮件模板/WebSocket IM、HarmonyOS 客户端 |
 | 安全防护 | 20 个中间件：JWT、AdminKey、RBAC、Hashids、字段加密、CORS、GeoIP、限流、Security 攻击检测、平台识别、版本路由；README 标注 31 类攻击检测 | 同一套 20 个中间件与 31 类检测器，未另起安全层；新增后台模块统一走 AdminAuth/AdminPermission/OperationLog/RateLimit 管线 |
-| 性能与规模 | webman 常驻，worker=CPU×4；Redis 缓存/限流/队列；Elasticsearch；13 个常驻进程（含汇率、物流、合规、推荐等定时任务） | 同一底座；15 个常驻进程，额外 `chat_ws`（WebSocket IM）与 `platform_order_sync_cron`（平台订单同步） |
+| 性能与规模 | webman 常驻，worker=CPU×4；Redis 缓存/限流/队列；Elasticsearch；15 个 process 文件（12 个 Cron，含汇率、物流、合规、推荐、超时取消等定时任务） | 同一底座；15 个常驻进程，额外 `chat_ws`（WebSocket IM）与 `platform_order_sync_cron`（平台订单同步） |
 | 数据与检索 | 98 张表；MySQL + Elasticsearch；1 个 Searchable 模型；CDN 回源/边缘缓存 | 119 张表（+21 张商业模块表）；同一 MySQL/ES 检索底座；新增营销、IM、铺货、知识库等表 |
-| 测试与质量 | 25 个 PHPUnit 测试文件 + 1 个 Flutter 测试；2 个 GitHub Actions 工作流 | 商业版快照未包含 PHPUnit 测试目录，保留 1 个 Flutter 测试与 2 个 CI 工作流；质量证据以同源开源版测试为准，新增模块未附带同等测试 |
+| 测试与质量 | 6 个测试文件（49 个单元测试 + 3 组集成测试）+ 1 个 Flutter 测试；2 个 GitHub Actions 工作流 | 商业版快照未包含 PHPUnit 测试目录，保留 1 个 Flutter 测试与 2 个 CI 工作流；质量证据以同源开源版测试为准，新增模块未附带同等测试 |
 | 部署与运维 | Docker Compose 六服务（nginx/service/admin/mysql/redis/ES）+ `/health` 健康检查 + 安装入口 + 运行时监控 | 同一六服务编排、健康检查与安装入口；新增模块随同一镜像/进程部署 |
-| 多端与国际化 | Flutter 客户端 + Flutter Web 管理端；服务端/后台各 5 种语言资源；文档仅中英文 | 增加 HarmonyOS ArkTS 客户端与 8 平台来源识别；同样 5 种运行时语言；保留 12 语种文档 |
+| 多端与国际化 | Flutter 客户端 + Flutter Web 管理端；服务端/后台各 5 种语言资源；8 平台来源识别；文档仅中英文 | 增加 HarmonyOS ArkTS 客户端；同样 8 平台来源识别、5 种运行时语言；保留 12 语种文档 |
 | 扩展性与二次开发 | 6 个支付网关类（Stripe/PayPal/Klarna/Adyen + 接口/工厂）；B2B/多商家、插件式后台、hg/apidoc API 文档 | 同一支付与 B2B/多商家底座；额外 17 个后台控制器、21 张表覆盖营销、IM、铺货、知识库，适合商业运营二次开发 |
 | 授权与商业支持 | 仅限个人学习/研究；商业使用需书面授权；无商业 SLA | 商业授权、交付与支持需联系 **erik@erik.xyz**；LICENSE 与开源版同一份 |
 | 适用场景 | 个人学习、研究、原型验证、小规模自建 | 商业部署、跨境零售/多商家运营，需要营销增长、多平台铺货、IM、HarmonyOS 的团队 |

@@ -19,6 +19,24 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 
 ---
 
+## 2026-10-30 v1.5.7 订单/支付/安全修复轮
+
+- **未付款超时取消**：新增 `UnpaidOrderCron`（每 5 分钟），未付款订单 30 分钟后自动取消（`config/cron.php` → `unpaid_cancel_minutes=30`），恢复库存、退回优惠券、写库存流水/订单日志；已有进行中网关支付的订单跳过，避免取消后仍扣款
+- **取消统一**：用户取消、超时取消、风控驳回共用 `OrderCancellation` 原子状态门闩；用户取消仅允许 `status=0`，风控驳回允许 `status=8`
+- **风控默认旁路**：`risk.mode=bypass` 只打分写日志，不再置 `status=8`；仅 `mode=block` 且结果为 review 时进入待审核，等待 `/api/admin/orders/{id}/review`（approve→0，reject→取消并恢复库存/券）
+- **下单计费**：运费按 `product.weight × quantity` 服务端求和（克，向上取整），仅商品未维护重量时回退 `weight_grams`；下单事务内 `lockForUpdate()` 读取购物车行并只删除本次行；校验 SKU `status=1` + 商品 `status=2`；每个 SKU 必须有请求币种报价（缺失 422）
+- **优惠券**：校验目的国 `countries` 与 `scope_type=all/category/product` + `scope_ids`，折扣与 `min_amount` 均按适用商品小计；取消/超时/驳回恢复 `UserCoupons` 并回退 `Coupons.used_qty`
+- **税费**：关税/VAT 免税阈值改为整单/整包裹判断（duty 用整单价值判断一次，VAT 基数=整单价值+duty），下单与订阅统一 `OrderPricing`
+- **订阅周期购**：`POST /api/subscriptions` 新增必填 `address_id`；首期与续费统一 `SubscriptionOrderService`（USD 报价、上下架校验、原子扣库存+流水、重量/运费/税费、地址快照）；续费复用最近地址快照，缺地址/下架/库存不足暂停并写日志；取消与续费订阅行锁互斥
+- **支付入账**：`PaymentSuccessService` 统一 webhook 与 `PaymentReconcileCron`（订单 0→1、支付 0→1、`PlatformSettlements`、商品/SKU 销量），重复回调幂等；支付创建把 `client_secret`/状态/交易号存入 `gateway_data`，重试复用待支付单；锁 TTL 120s/等待 5s，锁超时 429、系统异常 500
+- **结算**：`SettlementCron` 改为 `whereNotExists` + `chunkById(500)` 扫描全部未结算已付款订单，取消 500 单/天上限；每单事务内锁订单行并复查分账记录
+- **安全**：所有 API 响应 `Cache-Control: no-store, no-cache, must-revalidate`；密码重置 300s/5 次，确认接口累计失败 5 次作废验证码（重新申请清零）；限流共 7 条端点规则；有效平台 8 个、语言 5 个，UA 识别优先 iPad/iPhone/Android/HarmonyOS，`Accept-Language` 支持 `ja-JP`/`en-US`/`zh-CN`/`zh-TW` 映射
+- **管理端退款**：删除不调用网关的 `/api/admin/refunds/{id}/approve`，真实退款统一走 `/execute`，`/reject` 保留
+- **密钥/安装**：示例 `.env` 的 `ENCRYPTION_KEY` 改为无效占位符；安装器为 service/admin 生成同一把随机 32 字符密钥，admin/.env 同时写入 `ENCRYPTION_KEY` + `ENCRYPTION_CIPHER`；修正 service 模板路径。历史部署若使用过仓库示例密钥，必须轮换并重加密已有加密字段
+- **测试/版本**：新增 49 个单元测试 / 110 断言（本地通过），3 组集成测试（OrderCancellation/PaymentSuccessService/OrderPricing）需 MySQL schema 由 CI 运行；StatsController 版本元数据更新为 `1.5.7`
+
+---
+
 ## 2026-09-26 项目宠物「雪球 Snowy」+ 文档全量同步
 
 - **项目宠物**：新增 `docs/pet.svg`（256×256，单文件 SVG，无脚本 / 无外部依赖 / 无位图）。形象释义 —— 雪花冠 = Snowflake 分布式 ID、地球身体 + 经纬线 = 跨境电商与多语言多币种、怀抱包裹 = 国际物流、主色 `#2d8cf0` = 管理端 Pear Admin 主题色；内置 `bob`/`blink`/`spin` 三段 CSS 动画并适配 `prefers-reduced-motion`
@@ -205,7 +223,7 @@ Copyright (c) 2026 erik <erik@erik.xyz> — https://erik.xyz
 | GDPR/CCPA数据请求 | — | — | ✅ |
 | Cookie Consent管理 | — | — | ✅ |
 | 平台来源追踪 | — | ✅ | ✅ |
-| 平台来源追踪 (7平台) | — | ✅ | ✅ |
+| 平台来源追踪 (8平台，含 HarmonyOS) | — | ✅ | ✅ |
 
 ### 高并发
 

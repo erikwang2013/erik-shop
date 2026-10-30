@@ -65,6 +65,8 @@ The project mascot is **Snowy** — a globe sprite wearing a snowflake crown and
 
 **Resilience (circuit breaker):** a Redis-backed `CircuitBreaker` guards all outbound payment (Stripe/PayPal/Klarna/Adyen) and social-login calls — 5 consecutive failures open the circuit for 30s, then half-open probing auto-recovers. Business rejections (declined card, invalid token) are whitelisted and never count, so junk requests cannot knock out dependencies. If Redis itself fails, the breaker degrades to pass-through; while open, APIs return 503.
 
+**Response hardening:** every API response is sent with `Cache-Control: no-store, no-cache, must-revalidate`. Password-reset requests are limited to 5 per 300s per user/IP; 5 failed confirmations invalidate the code, and requesting a new code resets the failure counter.
+
 ### Multi-Currency Settlement Flow
 
 ![Multi-Currency Settlement Flow](08-multi-currency-settlement.svg)
@@ -100,7 +102,9 @@ php start.php start -d
 cd ../service && composer install && php start.php start -d
 ```
 
-> The web installer automatically: creates the database → imports 98 tables → generates `service/.env` and `admin/.env` (with random crypto keys) → creates the admin account → reloads services
+> The web installer automatically: creates the database → imports 98 tables → generates `service/.env` and `admin/.env` (with random crypto keys; service and admin share one random 32-character `ENCRYPTION_KEY`, and admin also receives `ENCRYPTION_KEY` + `ENCRYPTION_CIPHER`) → creates the admin account → reloads services
+>
+> If an existing deployment ever used the example keys from the repository, rotate `ENCRYPTION_KEY` and re-encrypt stored encrypted fields after upgrading.
 
 ### Method 2: Manual Installation
 
@@ -151,8 +155,8 @@ docker-compose up -d
 ```
 shop-php/
   install.sql       # One-click install SQL (98 tables), auto-imported by web installer
-  service/          PHP API (webman)            — 40 controllers + 90 models + 14 middleware + 14 processes
-  admin/            Admin panel (webman-admin)   — 71 controllers + 66 models + ECharts dashboard + web installer
+  service/          PHP API (webman)            — 40 controllers + 90 models + 25 common utilities + 14 middleware classes (10 global + 2 route in pipeline) + 15 processes
+  admin/            Admin panel (webman-admin)   — 73 controllers + 66 models + ECharts dashboard + web installer
   apps/flutter/     Flutter client              — 6 feature modules + 12 pages + 5 languages + PC adaptive layout
   docker/           Docker deployment           — Nginx + PHP + MySQL + Redis + ES
   scripts/          Tooling                     — e2e / smoke_controllers / check_install_tables
@@ -177,24 +181,24 @@ shop-php/
 
 | Dimension | Coverage |
 |-----------|----------|
-| **B2C Retail** | Multi-language products, multi-currency pricing, SKU, cart, orders, payments, refunds, returns |
+| **B2C Retail** | Multi-language products, multi-currency pricing, SKU, cart, orders, 30-minute unpaid-order auto-cancel, payments, refunds, returns |
 | **B2B Wholesale** | Tiered pricing (MOQ), business verification (tax ID/license), RFQ quotes |
 | **Multi-Vendor Marketplace** | Seller onboarding + product review + revenue splitting |
 | **Cross-Border Compliance** | HS Code library, tariff rules, VAT/IOSS, compliance labels (FDA/CE/RoHS) |
 | **International Logistics** | Zone-based shipping rates, overseas warehouses, HS customs declaration, commercial invoices |
-| **Payments** | Stripe/PayPal/Klarna/Adyen, BNPL, 3DS verification |
-| **Marketing** | Coupons (zone-limited), banners (region-visible) |
+| **Payments** | Stripe/PayPal/Klarna/Adyen, BNPL, 3DS verification, unified idempotent capture for webhooks and reconciliation |
+| **Marketing** | Coupons (zone/segment/category/product scoped), banners (region-visible) |
 | **Supply Chain** | Supplier ratings, purchase orders, quality inspection, inventory ledger (immutable), transfers |
 | **Risk & Compliance** | Rule engine (scoring pipeline), KYC verification, GDPR/CCPA data requests, Cookie consent |
-| **Security** | 31 attack detection types (XSS/SQLi/XXE/SSRF/CRLF/path traversal/file upload/brute force) |
-| **Performance** | Token bucket rate limiting, DB read/write split, connection pooling, CDN edge caching + auto-purge (origin-pull) |
+| **Security** | 31 attack detection types (XSS/SQLi/XXE/SSRF/CRLF/path traversal/file upload/brute force), `no-store` on all API responses, password-reset attempt limits |
+| **Performance** | Token bucket rate limiting (7 endpoint rules), DB read/write split, connection pooling, CDN edge caching + auto-purge (origin-pull) |
 | **Reporting** | Admin report center: sales summary, 30-day trend, TOP products, payment method / order status distribution |
-| **Platform Stats** | Service homepage stats: user/product/order/GMV totals and today's new counts |
-| **Membership** | Points ledger, membership tiers + benefits, price alerts, subscription auto-buy |
+| **Platform Stats** | Service homepage stats: user/product/order/GMV totals and today's new counts (Redis cache 60s) |
+| **Membership** | Points ledger, membership tiers + benefits, price alerts, subscription auto-buy (address snapshot, shipping/tax, atomic stock deduction) |
 | **Content** | CMS multi-language pages, FAQ, size charts, product feed sync |
 | **Customer Service** | FAQ support |
 | **Infrastructure** | Snowflake distributed IDs, Hashids obfuscation, JWT auth, AES encryption, GeoIP detection |
-| **Multi-Platform Tracking** | 7 source platform identification (iOS/iPadOS/macOS/Windows/Linux/Android/Web) + DB logging |
+| **Multi-Platform Tracking** | 8 source platform identification (iOS/iPadOS/macOS/Windows/Linux/Android/HarmonyOS/Web) + DB logging |
 | **Testing** | See `.github/workflows/ci.yml` |
 
 ## Core Design
@@ -205,6 +209,10 @@ shop-php/
 - **JWT Auth**: HS256 + access/refresh dual-token auto-refresh
 - **API Versioning**: `API-Version` header routing, not in URL paths
 - **Poster Verification**: Random human-verification (slide/puzzle/click) for sensitive operations
+- **Server-side pricing**: shipping weight is summed from `product.weight × quantity` (grams, rounded up); duty/VAT free thresholds are evaluated per consignment; orders and subscriptions share `OrderPricing`
+- **Unpaid-order timeout**: unpaid orders auto-cancel after 30 minutes (scanned every 5 minutes), restoring stock and coupons; orders with an in-progress gateway payment are skipped
+- **Unified payment capture**: webhooks and the reconciliation cron share `PaymentSuccessService`, idempotently updating order/payment/settlement/sales counters
+- **Hardened responses**: all API responses use `Cache-Control: no-store, no-cache, must-revalidate`; password reset is limited to 5 attempts per 300s and 5 failed confirmations invalidate the code
 
 ## Documentation
 
@@ -218,17 +226,17 @@ shop-php/
 | [Project Pet — Snowy](pet.svg) | Mascot SVG source (design rationale, integration points, reuse & regeneration in the [Chinese README](../README.md#项目宠物--雪球-snowy)) |
 | [Architecture](architecture-full.md) | System architecture diagrams, middleware pipeline, data/security/payment architecture, CDN edge layer |
 | [Design](design.md) | Database schema, API specification, security, i18n |
-| [API Reference](api.md) | 71 API endpoints (static documentation) |
+| [API Reference](api.md) | 89 routes (static documentation) |
 | [API Docs (live)](http://localhost:8787/apidoc/) | Auto-generated by hg/apidoc (6 groups: auth/products/trade/shipping-customs/users-marketing/ops) |
 | [Deployment](deployment.md) | Docker/manual deployment, environment variables (incl. CDN_*), operations, CDN edge caching |
 
 ## Running Tests
 
 ```bash
-cd service && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # unit/integration (211 tests / 1000 assertions)
-cd admin  && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # admin (2 tests / 7 assertions)
-cd service/tests/api && php run_all.php                      # API automation (4 suites, 213 assertions)
-cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js  # UI E2E (admin + service pages)
+cd service && vendor/bin/phpunit tests/Unit  # unit tests (49 tests / 110 assertions, no DB required)
+cd service && DB_USER=qa DB_PASS=qa_pass vendor/bin/phpunit  # full suite; 3 integration groups need MySQL schema (CI)
+cd service/tests/api && php run_all.php                      # API automation (historical baseline: 4 suites, 213 assertions)
+cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js  # UI E2E (historical baseline)
 
 # Dependency security audit (1 known low-severity CVE: CVE-2025-45769
 # firebase/php-jwt <7.0.0, constrained by jwt-webman ^6.0; HS256
@@ -236,7 +244,7 @@ cd scripts/e2e && SERVICE_BASE=http://127.0.0.1:8787 node ui-e2e.js  # UI E2E (a
 composer audit
 ```
 
-Latest full QA report: [test-reports/QA-REPORT-2026-08-27.md](test-reports/QA-REPORT-2026-08-27.md)
+This fix round adds **49 unit tests / 110 assertions**, passing locally. The 3 integration groups (`OrderCancellation`, `PaymentSuccessService`, `OrderPricing`) require a MySQL schema and run in CI (PHP 8.3/8.4 matrix). Historical QA report: [test-reports/QA-REPORT-2026-08-27.md](test-reports/QA-REPORT-2026-08-27.md)
 (screenshots in `test-reports/screenshots/`, E2E detail in `scripts/e2e/results.json`).
 
 **Known gaps fixed (2026-08-28)**: 19 admin page views + ShopExport export page implemented;
@@ -252,9 +260,9 @@ E2E rerun 47 PASS / 0 FAIL / 1 WARN (100%). See report §8.
 | Security | 20 middleware: JWT, AdminKey, RBAC, Hashids, field encryption, CORS, GeoIP, rate limit, security attack detection, platform detection, version routing; README states 31 attack detectors | Same 20 middleware and 31 detectors, no separate security layer; new admin modules use the same AdminAuth/AdminPermission/OperationLog/RateLimit pipeline |
 | Performance & scale | webman workers = CPU×4; Redis cache/rate limit/queue; Elasticsearch; 13 resident processes (exchange rate, logistics, compliance, recommendations, etc.) | Same foundation; 15 resident processes, adding `chat_ws` (WebSocket IM) and `platform_order_sync_cron` (marketplace order sync) |
 | Data & search | 98 tables; MySQL + Elasticsearch; 1 Searchable model; CDN origin-pull/edge cache | 119 tables (+21 commercial-only tables); same MySQL/ES foundation; adds marketing, IM, marketplace and knowledge-base tables |
-| Testing & quality | 25 PHPUnit files + 1 Flutter test; 2 GitHub Actions workflows | The commercial snapshot does not include the PHPUnit test directory; it keeps 1 Flutter test and 2 CI workflows. Quality evidence is the same-source open edition; new modules do not ship equivalent tests |
+| Testing & quality | 6 test files (49 unit tests + 3 integration groups) + 1 Flutter test; 2 GitHub Actions workflows | The commercial snapshot does not include the PHPUnit test directory; it keeps 1 Flutter test and 2 CI workflows. Quality evidence is the same-source open edition; new modules do not ship equivalent tests |
 | Deployment & ops | Docker Compose with six services (nginx/service/admin/mysql/redis/ES) + `/health` + installer entry + runtime monitoring | Same six-service layout, health checks and installer entry; new modules deploy in the same image/processes |
-| Clients & i18n | Flutter client + Flutter Web admin; 5 runtime languages each for service/admin; docs in Chinese/English only | Adds HarmonyOS ArkTS client and 8-platform source detection; same 5 runtime languages; retains 12-language documentation |
+| Clients & i18n | Flutter client + Flutter Web admin; 5 runtime languages each for service/admin; 8-platform source detection; docs in Chinese/English only | Adds HarmonyOS ArkTS client; same 8-platform source detection and 5 runtime languages; retains 12-language documentation |
 | Extensibility | 6 payment gateway classes (Stripe/PayPal/Klarna/Adyen + interface/factory); B2B/multi-vendor, plugin admin, hg/apidoc API docs | Same payment and B2B/multi-vendor foundation; 17 extra admin controllers and 21 tables for marketing, IM, marketplace and knowledge base — suitable for commercial secondary development |
 | Licensing & support | Personal study/research only; commercial use requires written authorization; no commercial SLA | Commercial licensing, delivery and support: **erik@erik.xyz**; same LICENSE text as the open edition |
 | Use cases | Personal learning, research, prototypes, small self-hosted deployments | Commercial deployment, cross-border retail/multi-vendor operations needing marketing growth, multi-platform marketplace, IM and HarmonyOS |

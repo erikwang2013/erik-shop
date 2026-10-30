@@ -167,8 +167,6 @@ Route::post('/webhook/payment/{gateway:\w+}', [app\controller\v1\PaymentControll
 // ===== 管理后台内部接口（需 X-Admin-Key 共享密钥） =====
 Route::post('/api/admin/refunds/{id:\w+}/execute', [app\controller\v1\AdminOpsController::class, 'executeRefund'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
-Route::post('/api/admin/refunds/{id:\w+}/approve', [app\controller\v1\AdminOpsController::class, 'approve'])
-    ->middleware([app\middleware\AdminKeyMiddleware::class]);
 Route::post('/api/admin/refunds/{id:\w+}/reject', [app\controller\v1\AdminOpsController::class, 'reject'])
     ->middleware([app\middleware\AdminKeyMiddleware::class]);
 Route::post('/api/admin/orders/{id:\w+}/review', [app\controller\v1\AdminOpsController::class, 'reviewOrder'])

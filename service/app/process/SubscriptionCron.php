@@ -5,12 +5,11 @@
 
 namespace app\process;
 
-use app\model\OrderItems;
+use app\common\BusinessException;
+use app\common\SubscriptionOrderService;
 use app\model\Orders;
-use app\model\ProductSkuPrices;
 use app\model\ProductSkus;
 use app\model\SubscriptionLogs;
-use app\common\Money;
 use app\model\SubscriptionOrders;
 use app\model\Subscriptions;
 use support\Db;
@@ -53,6 +52,9 @@ class SubscriptionCron
         foreach ($subscriptions as $subscription) {
             try {
                 self::renew($subscription) ? $renewed++ : null;
+            } catch (BusinessException $e) {
+                // 业务失败（下架/库存不足/缺地址）：暂停订阅，避免每日空转重试
+                self::fail($subscription, $e->getMessage());
             } catch (\Throwable $e) {
                 self::fail($subscription, '续费异常: ' . $e->getMessage());
                 Log::error("SubscriptionCron 续费失败 subscription_id={$subscription->id}: " . $e->getMessage());
@@ -63,68 +65,59 @@ class SubscriptionCron
 
     private static function renew(Subscriptions $subscription): bool
     {
-        $sku = ProductSkus::where('id', $subscription->sku_id)->where('status', 1)->first();
-        if (!$sku) {
-            self::fail($subscription, 'SKU 已下架，自动续费失败');
-            return false;
-        }
-        if ((int) $sku->stock < (int) $subscription->quantity) {
-            self::fail($subscription, "库存不足（剩 {$sku->stock}），自动续费失败");
-            return false;
-        }
+        return Db::transaction(function () use ($subscription) {
+            // 行锁重查：与用户取消订阅互斥，已被取消/暂停则跳过
+            $locked = Subscriptions::where('id', $subscription->id)->lockForUpdate()->first();
+            if (!$locked || $locked->status !== 'active') {
+                return false;
+            }
 
-        // decimal 列返回字符串；金额×数量十进制运算（与 SubscriptionController::store 同口径）
-        $price = (string) (ProductSkuPrices::where('sku_id', $sku->id)->where('currency_code', 'USD')->value('price') ?? $sku->default_price);
-        $quantity = (int) $subscription->quantity;
-        $subtotal = Money::round(Money::mul($price, (string) $quantity));
+            // 收货地址复用最近一期订单的地址快照（首期订单已写入）
+            $lastSubscriptionOrder = SubscriptionOrders::where('subscription_id', $locked->id)
+                ->orderBy('id', 'desc')
+                ->first();
+            $lastOrder = $lastSubscriptionOrder ? Orders::find($lastSubscriptionOrder->order_id) : null;
+            $addressSnapshot = $lastOrder ? ($lastOrder->address_snapshot ?? []) : [];
+            if (empty($addressSnapshot)) {
+                throw new BusinessException('缺少收货地址，自动续费失败');
+            }
 
-        Db::transaction(function () use ($subscription, $sku, $price, $quantity, $subtotal) {
-            $order = Orders::create([
-                'order_no' => 'SUB' . date('Ymd') . strtoupper(substr(md5(uniqid('', true)), 0, 8)),
-                'user_id' => $subscription->user_id,
-                'status' => 0,
-                'currency_code' => 'USD',
-                'total_amount' => $subtotal,
-                'pay_amount' => $subtotal,
-                'address_snapshot' => [],
-            ]);
-            OrderItems::create([
-                'order_id' => $order->id,
-                'product_id' => $sku->product_id,
-                'sku_id' => $sku->id,
-                'title' => '周期购 SKU ' . $sku->sku_code,
-                'price' => $price,
-                'quantity' => $quantity,
-                'subtotal' => $subtotal,
-            ]);
+            $sku = ProductSkus::where('id', $locked->sku_id)->where('status', 1)->first();
+            if (!$sku) {
+                throw new BusinessException('SKU 已下架，自动续费失败');
+            }
+            if ((int) $sku->stock < (int) $locked->quantity) {
+                throw new BusinessException("库存不足（剩 {$sku->stock}），自动续费失败");
+            }
 
-            $cycle = (int) SubscriptionOrders::where('subscription_id', $subscription->id)->count() + 1;
-            SubscriptionOrders::create([
-                'subscription_id' => $subscription->id,
-                'order_id' => $order->id,
-                'billing_cycle' => $cycle,
-                'status' => 'success',
-            ]);
+            $cycle = (int) SubscriptionOrders::where('subscription_id', $locked->id)->count() + 1;
+            $order = SubscriptionOrderService::createOrder($locked, $addressSnapshot, $cycle);
 
-            $subscription->next_billing_at = date('Y-m-d', strtotime("+{$subscription->interval_days} days"));
-            $subscription->save();
+            // 订单生成成功后再推进计费日并记日志（同事务提交）
+            $locked->next_billing_at = date('Y-m-d', strtotime("+{$locked->interval_days} days"));
+            $locked->save();
             SubscriptionLogs::create([
-                'subscription_id' => $subscription->id,
+                'subscription_id' => $locked->id,
                 'action' => 'renew',
                 'remark' => "第 {$cycle} 期自动续费，生成订单 {$order->order_no}",
             ]);
+            return true;
         });
-        return true;
     }
 
     private static function fail(Subscriptions $subscription, string $remark): void
     {
         Db::transaction(function () use ($subscription, $remark) {
-            $subscription->status = 'paused';
-            $subscription->paused_at = date('Y-m-d H:i:s');
-            $subscription->save();
+            // 行锁重查：用户已取消/暂停时不覆盖用户操作
+            $locked = Subscriptions::where('id', $subscription->id)->lockForUpdate()->first();
+            if (!$locked || $locked->status !== 'active') {
+                return;
+            }
+            $locked->status = 'paused';
+            $locked->paused_at = date('Y-m-d H:i:s');
+            $locked->save();
             SubscriptionLogs::create([
-                'subscription_id' => $subscription->id,
+                'subscription_id' => $locked->id,
                 'action' => 'fail',
                 'remark' => mb_substr($remark, 0, 200),
             ]);

@@ -59,7 +59,7 @@ class SecurityMiddleware implements MiddlewareInterface
 
         $response = $next($request);
 
-        return $this->addSecurityHeaders($response, $request);
+        return $this->addSecurityHeaders($response);
     }
 
     private function checkBrute(Request $request): ?Response
@@ -89,8 +89,9 @@ class SecurityMiddleware implements MiddlewareInterface
         return null;
     }
 
-    private function addSecurityHeaders(Response $response, Request $request): Response
+    private function addSecurityHeaders(Response $response): Response
     {
+        // 全部响应禁止缓存：项目未处理 Vary，公共缓存会串用户/语言
         $headers = [
             'X-Content-Type-Options'             => 'nosniff',
             'X-Frame-Options'                    => 'DENY',
@@ -100,13 +101,8 @@ class SecurityMiddleware implements MiddlewareInterface
             'X-Download-Options'                 => 'noopen',
             'Permissions-Policy'                 => 'camera=(), microphone=(), geolocation=()',
             'Server'                             => '',
+            'Cache-Control'                      => 'no-store, no-cache, must-revalidate',
         ];
-
-        if (in_array(strtoupper($request->method()), ['GET', 'HEAD', 'OPTIONS'])) {
-            $headers['Cache-Control'] = 'public, max-age=60, s-maxage=300';
-        } else {
-            $headers['Cache-Control'] = 'no-store, no-cache, must-revalidate';
-        }
 
         return $response->withHeaders($headers);
     }

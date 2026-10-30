@@ -130,7 +130,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
         data: {
           'address_id': addressId,
           'currency_code': ref.read(currencyProvider),
-          'weight_grams': 500,
         },
         headers: {'X-Poster-Token': _posterToken});
     if (mounted) {

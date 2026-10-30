@@ -20,6 +20,7 @@ class RateLimitMiddleware implements MiddlewareInterface
     private const RULES = [
         'default' => [60 => 100],       // 默认: 60秒100次
         '/api/auth/login' => [60 => 10], // 登录: 60秒10次
+        '/api/auth/password/reset' => [300 => 5], // 密码重置申请/确认: 300秒5次
         '/api/auth/register' => [300 => 5], // 注册: 300秒5次
         '/api/auth/social' => [300 => 5], // 社交登录: 300秒5次（防枚举/爆破）
         '/api/payment' => [60 => 5],     // 支付: 60秒5次

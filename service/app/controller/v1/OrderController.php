@@ -6,9 +6,13 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\BusinessException;
+use app\common\LockTimeoutException;
 use app\common\Money;
 use app\common\DistributedLock;
 use app\common\InventoryLogger;
+use app\common\OrderCancellation;
+use app\common\OrderPricing;
 use app\common\RiskEngine;
 use app\model\Orders;
 use app\model\OrderItems;
@@ -19,11 +23,6 @@ use app\model\Coupons;
 use app\model\UserCoupons;
 use app\model\ProductSkus;
 use app\model\ProductSkuPrices;
-use app\model\ProductHsCodes;
-use app\model\TariffRules;
-use app\model\VatSettings;
-use app\model\ShippingZones;
-use app\model\ShippingZoneRates;
 use app\model\UserAddresses;
 use app\model\Users;
 use app\model\UserKyc;
@@ -108,8 +107,6 @@ class OrderController extends \app\controller\BaseApiController
         $currencyCode = $request->input('currency_code', 'USD');
         $remark = $request->input('remark', '');
         $couponId = $request->input('coupon_id');
-        // 包裹重量（克）；SKU 无重量字段，由客户端按购物车估算，缺省 500g
-        $weightGrams = max(1, (int) $request->input('weight_grams', 500));
 
         // 验证地址
         $address = UserAddresses::where('id', $addressId)->where('user_id', $userId)->first();
@@ -131,16 +128,16 @@ class OrderController extends \app\controller\BaseApiController
             }
         }
 
-        // 获取购物车已选中商品
-        $cartItems = Carts::where('user_id', $userId)->where('selected', 1)->get();
-        if ($cartItems->isEmpty()) {
-            return ApiResponse::fail('购物车无可结算商品', 422);
-        }
-
         // 事务内创建订单 + 明细 + 原子扣库存 + 清购物车，任一步失败整体回滚
         // 用户粒度防重锁：同用户串行下单，杜绝连点重复创建订单
         try {
-            $result = DistributedLock::run("lock:order:{$userId}", fn () => Db::transaction(function () use ($userId, $address, $country, $cartItems, $currencyCode, $remark, $couponId, $weightGrams, $request) {
+            $result = DistributedLock::run("lock:order:{$userId}", fn () => Db::transaction(function () use ($userId, $address, $country, $currencyCode, $remark, $couponId, $request) {
+                // 购物车在事务内加行锁读取：防止结算期间购物车被并发修改（改数量/删除）
+                $cartItems = Carts::where('user_id', $userId)->where('selected', 1)->lockForUpdate()->get();
+                if ($cartItems->isEmpty()) {
+                    throw new BusinessException('购物车无可结算商品');
+                }
+
                 // 生成订单号
                 $orderNo = 'ORD' . date('Ymd') . strtoupper(substr(md5(uniqid()), 0, 8));
 
@@ -160,18 +157,35 @@ class OrderController extends \app\controller\BaseApiController
                     ->pluck('price', 'sku_id')
                     ->toArray();
 
-                $totalAmount = '0';
-
-                // 批量预取 SKU（含商品标题），避免循环内 N+1 查询
+                // 批量预取 SKU（含商品），避免循环内 N+1 查询
                 $skus = ProductSkus::with('product')
                     ->whereIn('id', $cartItems->pluck('sku_id'))
                     ->get()
                     ->keyBy('id');
 
+                // 预加载优惠券：用于按适用范围累计“适用小计”
+                $coupon = null;
+                if (!empty($couponId)) {
+                    $coupon = Coupons::find($couponId);
+                    if (!$coupon) {
+                        throw new BusinessException('优惠券不可用');
+                    }
+                }
+                $scopeIds = ($coupon && is_array($coupon->scope_ids)) ? array_map('strval', $coupon->scope_ids) : [];
+
+                $totalAmount = '0';
+                $applicableSubtotal = '0';
+                $productValues = [];
+                $weightTotal = 0.0;
+
                 foreach ($cartItems as $cart) {
                     $sku = $skus[$cart->sku_id] ?? null;
-                    if (!$sku) {
-                        throw new \RuntimeException("SKU {$cart->sku_id} 不存在");
+                    if (!$sku || !$sku->product) {
+                        throw new BusinessException('SKU 不存在或已下架');
+                    }
+                    // 下架 SKU / 未上架商品不可售
+                    if ((int) $sku->status !== 1 || (int) $sku->product->status !== 2) {
+                        throw new BusinessException('SKU 已下架或商品不可售');
                     }
 
                     // 原子扣减库存（条件 stock >= quantity，并发下不会超卖）
@@ -179,7 +193,7 @@ class OrderController extends \app\controller\BaseApiController
                         ->where('stock', '>=', $cart->quantity)
                         ->decrement('stock', $cart->quantity);
                     if (!$affected) {
-                        throw new \RuntimeException("SKU {$cart->sku_id} 库存不足");
+                        throw new BusinessException('库存不足');
                     }
 
                     // 库存流水（不可变账本：下单出库）
@@ -194,8 +208,29 @@ class OrderController extends \app\controller\BaseApiController
                         '下单扣减'
                     );
 
-                    $price = $priceMap[$sku->id] ?? (string) $sku->default_price;
+                    // 必须有该币种报价：不回退 default_price，否则会按 CNY 默认价错收请求币种
+                    if (!isset($priceMap[$sku->id])) {
+                        throw new BusinessException('该币种暂无报价');
+                    }
+                    $price = (string) $priceMap[$sku->id];
                     $subtotal = Money::round(Money::mul($price, (string) $cart->quantity));
+
+                    // 重量 = 商品重量 × 数量（克），商品未维护重量时整单回退请求值
+                    $weightTotal += (float) $sku->product->weight * (int) $cart->quantity;
+
+                    // 优惠券适用范围：只累计命中的商品行（使用已加载关联，避免额外查询）
+                    if ($coupon) {
+                        $inScope = match ($coupon->scope_type) {
+                            'category' => in_array((string) $sku->product->category_id, $scopeIds, true),
+                            'product' => in_array((string) $sku->product_id, $scopeIds, true),
+                            default => true,
+                        };
+                        if ($inScope) {
+                            $applicableSubtotal = Money::add($applicableSubtotal, $subtotal);
+                        }
+                    }
+
+                    $productValues[$sku->product_id] = Money::add($productValues[$sku->product_id] ?? '0', $subtotal);
 
                     OrderItems::create([
                         'order_id' => $order->id,
@@ -212,14 +247,22 @@ class OrderController extends \app\controller\BaseApiController
                     $totalAmount = Money::add($totalAmount, $subtotal);
                 }
 
+                // 克，向上取整；总重 <= 0（商品未维护重量）时才回退请求值，最终至少 1 克
+                $weightGrams = (int) ceil($weightTotal);
+                if ($weightGrams <= 0) {
+                    $weightGrams = (int) $request->input('weight_grams', 500);
+                }
+                $weightGrams = max(1, $weightGrams);
+
                 // ===== 真实计费（对齐 api.md 5.3 / features.md 3.3；先聚合后舍入） =====
                 $totalAmount = Money::round($totalAmount);
+                $applicableSubtotal = Money::round($applicableSubtotal);
                 $discountAmount = '0.00';
-                if (!empty($couponId)) {
-                    $discountAmount = $this->applyCoupon($userId, $couponId, $totalAmount);
+                if ($coupon) {
+                    $discountAmount = $this->applyCoupon($userId, $coupon, $applicableSubtotal, (string) ($country->iso_code_2 ?? ''));
                 }
-                $shippingFee = $country ? $this->calcShipping($country, $weightGrams) : '0.00';
-                $taxAmount = $country ? $this->calcTax($country, $cartItems, $skus, $priceMap) : '0.00';
+                $shippingFee = $country ? OrderPricing::shipping($country, $weightGrams) : '0.00';
+                $taxAmount = $country ? OrderPricing::tax($country, $productValues) : '0.00';
                 $payAmount = Money::round(Money::add(Money::add(Money::sub($totalAmount, $discountAmount), $shippingFee), $taxAmount));
 
                 // 更新订单金额（discount/shipping/tax 字段已存在，此前从未写入）
@@ -230,7 +273,8 @@ class OrderController extends \app\controller\BaseApiController
                 $order->pay_amount = $payAmount;
                 $order->save();
 
-                // ===== 风控旁路打分（config/risk.php，高分订单置 status=8 待审核） =====
+                // ===== 风控打分：仅 block 模式下 review 才进入人工审核 =====
+                // bypass 模式只记录分数/结果，不改变订单状态、不阻断下单
                 $userEmail = Users::where('id', $userId)->value('email') ?? '';
                 $riskContext = [
                     'user_id' => $userId,
@@ -245,7 +289,7 @@ class OrderController extends \app\controller\BaseApiController
                 RiskEngine::log('order_create', $riskContext, $risk);
                 $order->risk_score = $risk['score'];
                 $order->risk_result = $risk['result'];
-                if ($risk['result'] === 'review') {
+                if (config('risk.mode', 'bypass') === 'block' && $risk['result'] === 'review') {
                     $order->status = 8;   // 待审核（人工审核通过前不可支付）
                     OrderLogs::create([
                         'order_id' => $order->id,
@@ -257,16 +301,16 @@ class OrderController extends \app\controller\BaseApiController
                 $order->save();
 
                 // 核销优惠券（事务内，与订单同生共死）
-                if (!empty($couponId) && Money::cmp($discountAmount, '0') > 0) {
+                if ($coupon && Money::cmp($discountAmount, '0') > 0) {
                     UserCoupons::where('user_id', $userId)
-                        ->where('coupon_id', $couponId)
+                        ->where('coupon_id', $coupon->id)
                         ->where('status', 0)
                         ->update([
                             'status' => 1,
                             'used_at' => date('Y-m-d H:i:s'),
                             'used_order_id' => $order->id,
                         ]);
-                    Coupons::where('id', $couponId)->increment('used_qty');
+                    Coupons::where('id', $coupon->id)->increment('used_qty');
                 }
 
                 // 记录日志
@@ -277,8 +321,8 @@ class OrderController extends \app\controller\BaseApiController
                     'remark' => '创建订单',
                 ]);
 
-                // 清空购物车已购买商品
-                Carts::where('user_id', $userId)->where('selected', 1)->delete();
+                // 只删除本次锁到并已下单的购物车行，避免误删并发新加/选中的商品
+                Carts::whereIn('id', $cartItems->pluck('id'))->delete();
 
                 return [
                     'order_id' => $order->id,
@@ -292,13 +336,12 @@ class OrderController extends \app\controller\BaseApiController
                     'currency_code' => $currencyCode,
                 ];
             }));
-        } catch (\RuntimeException $e) {
-            // 锁超时/未获取 → 429；SKU 不存在/库存不足等业务异常维持 422
-            if (str_contains($e->getMessage(), '操作繁忙')) {
-                return ApiResponse::fail('操作太快，请稍后重试', 429);
-            }
+        } catch (BusinessException $e) {
             return ApiResponse::fail($e->getMessage(), 422);
+        } catch (LockTimeoutException $e) {
+            return ApiResponse::fail('操作太快，请稍后重试', 429);
         } catch (\Throwable $e) {
+            // 数据库/系统异常不向客户端泄露细节
             \support\Log::error('订单创建失败: ' . $e->getMessage(), [
                 'user_id' => $userId,
                 'trace' => $e->getTraceAsString(),
@@ -312,108 +355,53 @@ class OrderController extends \app\controller\BaseApiController
     /**
      * 优惠券折扣计算（校验 + 计费），返回金额字符串
      * type: 1=满减(value=金额) / 2=折扣(value=折扣率%，如10=减10%) / 3=固定金额(value=金额)
+     *
+     * @param Coupons $coupon             已加载的优惠券
+     * @param string  $applicableSubtotal 命中的商品行小计（按券的适用范围累计）
+     * @param string  $destCountryIso2    目的国 ISO2
      */
-    private function applyCoupon(int $userId, string $couponId, string $subtotal): string
+    private function applyCoupon(int $userId, Coupons $coupon, string $applicableSubtotal, string $destCountryIso2): string
     {
         $userCoupon = UserCoupons::where('user_id', $userId)
-            ->where('coupon_id', $couponId)
+            ->where('coupon_id', $coupon->id)
             ->where('status', 0)
             ->first();
         if (!$userCoupon) {
-            throw new \RuntimeException('优惠券不存在或已使用');
+            throw new BusinessException('优惠券不存在或已使用');
         }
 
-        $coupon = Coupons::find($couponId);
-        if (!$coupon || $coupon->status !== 1) {
-            throw new \RuntimeException('优惠券不可用');
+        if ((int) $coupon->status !== 1) {
+            throw new BusinessException('优惠券不可用');
         }
         // 有效期
         $now = date('Y-m-d H:i:s');
         if (($coupon->start_at && $now < $coupon->start_at) || ($coupon->end_at && $now > $coupon->end_at)) {
-            throw new \RuntimeException('优惠券不在有效期内');
+            throw new BusinessException('优惠券不在有效期内');
         }
-        // 满减门槛（十进制比较）
-        if (Money::cmp((string) $coupon->min_amount, '0') > 0 && Money::cmp($subtotal, (string) $coupon->min_amount) < 0) {
-            throw new \RuntimeException('未达到优惠券使用门槛');
+        // 无适用商品（券范围与购物车不匹配）
+        if (Money::cmp($applicableSubtotal, '0') <= 0) {
+            throw new BusinessException('优惠券不适用于当前商品');
         }
-        // 区域限定（countries JSON 非空时校验目的国——此处由调用方保证 country，简化按全量）
+        // 满减门槛（对适用小计比较）
+        if (Money::cmp((string) $coupon->min_amount, '0') > 0 && Money::cmp($applicableSubtotal, (string) $coupon->min_amount) < 0) {
+            throw new BusinessException('未达到优惠券使用门槛');
+        }
+        // 区域限定：countries 非空时目的国 ISO2 必须在列
+        $countries = is_array($coupon->countries) ? array_map(fn ($c) => strtoupper((string) $c), $coupon->countries) : [];
+        if ($countries && !in_array(strtoupper($destCountryIso2), $countries, true)) {
+            throw new BusinessException('优惠券不适用于该地区');
+        }
+
         $value = (string) $coupon->value;
-        $cap = Money::cmp($value, $subtotal) < 0 ? $value : $subtotal;      // min(value, subtotal)
+        $cap = Money::cmp($value, $applicableSubtotal) < 0 ? $value : $applicableSubtotal;   // min(value, 适用小计)
         $discount = match ((int) $coupon->type) {
-            1 => $cap,                                                       // 满减
-            2 => Money::round(Money::div(Money::mul($subtotal, $value), '100')), // 折扣率：subtotal×value%
-            3 => $cap,                                                       // 固定金额
+            1 => $cap,                                                                        // 满减
+            2 => Money::round(Money::div(Money::mul($applicableSubtotal, $value), '100')),    // 折扣率：适用小计×value%
+            3 => $cap,                                                                        // 固定金额
             default => '0.00',
         };
-        // 折扣不超过订单小计
-        return Money::cmp($discount, $subtotal) < 0 ? $discount : $subtotal;
-    }
-
-    /**
-     * 运费计算：目的国 → 物流分区 → 费率阶梯（取最低价物流商），返回金额字符串
-     */
-    private function calcShipping(Countries $country, int $weightGrams): string
-    {
-        $zone = ShippingZones::where('status', 1)
-            ->whereJsonContains('countries', $country->iso_code_2)
-            ->first();
-        if (!$zone) {
-            return '0.00'; // 无分区规则时不收运费（订单不阻断，运费后续可补）
-        }
-        $weightKg = $weightGrams / 1000; // SQL 阶梯区间匹配用，保持数值型
-        $rates = ShippingZoneRates::where('zone_id', $zone->id)
-            ->where('weight_from', '<=', $weightKg)
-            ->where(function ($q) use ($weightKg) {
-                $q->where('weight_to', '>=', $weightKg)->orWhereNull('weight_to');
-            })
-            ->get();
-        $minFee = null;
-        foreach ($rates as $rate) {
-            // 费用 = 起步价 + (克/1000) × 每公斤价；克→公斤用 Money::div 精确
-            $fee = Money::add((string) $rate->price, Money::mul(Money::div((string) $weightGrams, '1000'), (string) $rate->per_kg_price));
-            $minFee = ($minFee === null) ? $fee : (Money::cmp($minFee, $fee) <= 0 ? $minFee : $fee);
-        }
-        return $minFee === null ? '0.00' : Money::round($minFee);
-    }
-
-    /**
-     * 关税/VAT 估算：商品 HS Code → 目的国税率（无 HS 关联或税率规则则按 0），返回金额字符串
-     */
-    private function calcTax(Countries $country, $cartItems, $skus, array $priceMap): string
-    {
-        $destCountryId = $country->id;
-        $vat = VatSettings::where('country_id', $destCountryId)->first();
-        $vatRate = (string) ($vat->vat_rate ?? 0);
-        $dutyFreeThreshold = (string) ($vat->duty_free_threshold ?? 0);
-        $vatFreeThreshold = (string) ($vat->vat_free_threshold ?? 0);
-
-        $taxTotal = '0';
-        // 按商品维度聚合申报价值（避免同商品多 SKU 重复查 HS；十进制字符串累加）
-        $productValues = [];
-        foreach ($cartItems as $cart) {
-            $sku = $skus[$cart->sku_id] ?? null;
-            if (!$sku) {
-                continue;
-            }
-            $price = $priceMap[$sku->id] ?? (string) $sku->default_price;
-            $productValues[$sku->product_id] = Money::add($productValues[$sku->product_id] ?? '0', Money::mul($price, (string) $cart->quantity));
-        }
-
-        foreach ($productValues as $productId => $value) {
-            $hsCodeIds = ProductHsCodes::where('product_id', $productId)->pluck('hs_code_id');
-            if ($hsCodeIds->isEmpty()) {
-                continue;
-            }
-            $rule = TariffRules::where('dest_country_id', $destCountryId)
-                ->whereIn('hs_code_id', $hsCodeIds)
-                ->first();
-            $dutyRate = (string) ($rule->duty_rate ?? 0);
-            $duty = Money::cmp($value, $dutyFreeThreshold) >= 0 ? Money::round(Money::div(Money::mul($value, $dutyRate), '100')) : '0.00';
-            $base = Money::add($value, $duty);
-            $vatAmount = Money::cmp($base, $vatFreeThreshold) >= 0 ? Money::round(Money::div(Money::mul($base, $vatRate), '100')) : '0.00';
-            $taxTotal = Money::add($taxTotal, Money::add($duty, $vatAmount));
-        }
-        return Money::round($taxTotal);
+        // 折扣不超过适用小计
+        return Money::cmp($discount, $applicableSubtotal) < 0 ? $discount : $applicableSubtotal;
     }
 
     /**
@@ -435,44 +423,8 @@ class OrderController extends \app\controller\BaseApiController
         }
 
         try {
-            Db::transaction(function () use ($order, $userId) {
-                // 原子门闩：仅待付款订单可被本次取消，防止并发重复取消导致库存重复恢复
-                $updated = Orders::where('id', $order->id)
-                    ->where('status', 0)
-                    ->update([
-                        'status' => 5,
-                        'canceled_at' => date('Y-m-d H:i:s'),
-                    ]);
-                if (!$updated) {
-                    throw new \RuntimeException('订单状态已变化，请刷新后重试');
-                }
-
-                // 恢复库存
-                $items = OrderItems::where('order_id', $order->id)->get();
-                foreach ($items as $item) {
-                    ProductSkus::where('id', $item->sku_id)->increment('stock', $item->quantity);
-                    // 库存流水（不可变账本：取消回库）
-                    InventoryLogger::log(
-                        (int) $item->sku_id,
-                        'inbound',
-                        (int) $item->quantity,
-                        (int) ProductSkus::where('id', $item->sku_id)->value('stock'),
-                        'order',
-                        (int) $order->id,
-                        $userId,
-                        '取消订单恢复库存'
-                    );
-                }
-
-                OrderLogs::create([
-                    'order_id' => $order->id,
-                    'from_status' => 0,
-                    'to_status' => 5,
-                    'operator' => 'user',
-                    'remark' => '用户取消订单',
-                ]);
-            });
-        } catch (\RuntimeException $e) {
+            OrderCancellation::cancel($order, [0], 'user', '用户取消订单');
+        } catch (BusinessException $e) {
             return ApiResponse::fail($e->getMessage(), 422);
         } catch (\Throwable $e) {
             \support\Log::error('订单取消失败: ' . $e->getMessage(), [

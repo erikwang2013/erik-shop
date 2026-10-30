@@ -255,6 +255,8 @@ class AuthController extends \app\controller\BaseApiController
             try {
                 $code = (string)random_int(100000, 999999);
                 Redis::setex("shop:password_reset:{$user->email_hash}", 1800, $code);
+                // 重新下发验证码时清零失败计数，避免旧计数导致新码立即被锁
+                Redis::del("shop:password_reset_attempts:{$user->email_hash}");
                 self::logMail($email, '重置您的密码', "验证码: {$code}（30分钟内有效，一次性使用）");
             } catch (\Throwable $e) {
                 \support\Log::warning('密码重置验证码生成失败: ' . $e->getMessage());
@@ -290,17 +292,27 @@ class AuthController extends \app\controller\BaseApiController
             return ApiResponse::fail('新密码长度须为6-64位', 422);
         }
 
-        $user = Users::where('email_hash', Users::emailHash($email))->first();
-        $key = "shop:password_reset:" . ($user->email_hash ?? '');
+        $emailHash = Users::emailHash($email);
+        $user = Users::where('email_hash', $emailHash)->first();
+        $key = "shop:password_reset:{$emailHash}";
+        $attemptsKey = "shop:password_reset_attempts:{$emailHash}";
         try {
-            $stored = $user ? Redis::get($key) : null;
-            if ($stored && hash_equals($stored, $code)) {
-                Redis::del($key); // 一次性
+            // 同一邮箱累计失败 5 次后作废验证码，防止验证码被爆破
+            if ((int) Redis::get($attemptsKey) >= 5) {
+                Redis::del($key);
+                return ApiResponse::fail('验证码错误次数过多，请重新获取', 401);
             }
+            $stored = $user ? Redis::get($key) : null;
         } catch (\Throwable $e) {
             $stored = null; // Redis 不可用时视为无效，避免误重置
         }
         if (!$user || empty($stored) || !hash_equals($stored, $code)) {
+            try {
+                Redis::incr($attemptsKey);
+                Redis::expire($attemptsKey, 1800);
+            } catch (\Throwable $e) {
+                // Redis 不可用时仍返回失败，保持 fail-closed
+            }
             return ApiResponse::fail('验证码无效或已过期', 401);
         }
         $salt = bin2hex(random_bytes(3));
@@ -308,6 +320,13 @@ class AuthController extends \app\controller\BaseApiController
             'password' => password_hash($newPassword . $salt, PASSWORD_BCRYPT),
             'salt' => $salt,
         ]);
+        try {
+            // 密码更新成功后才作废验证码并清零失败计数
+            Redis::del($key);
+            Redis::del($attemptsKey);
+        } catch (\Throwable $e) {
+            // 删除失败由验证码 30 分钟 TTL 兜底
+        }
 
         return ApiResponse::success(null, '密码已重置，请重新登录');
     }

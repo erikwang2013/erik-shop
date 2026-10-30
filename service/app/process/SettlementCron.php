@@ -15,6 +15,7 @@ use app\model\MerchantProducts;
 use app\model\Merchants;
 use app\model\SupplierSettlements;
 use app\model\Products;
+use support\Db;
 use support\Log;
 use Workerman\Worker;
 
@@ -42,51 +43,76 @@ class SettlementCron
 
     public static function run(): void
     {
-        $paidOrderIds = PlatformSettlements::pluck('order_id')->all();
-        $orders = Orders::where('status', 1)->whereNotIn('id', $paidOrderIds)->orderBy('id', 'desc')->limit(500)->get();
-        if ($orders->isEmpty()) {
-            return;
-        }
-
         $created = 0;
-        foreach ($orders as $order) {
-            $payment = Payments::where('order_id', $order->id)->where('status', 1)->first();
-            // decimal 列经 PDO 返回字符串，保留字符串参与 Money 运算（不转 float）
-            $total = (string) $order->pay_amount;
-
-            // 费率统一：payment.gateway_fee / payment.platform_rate 为唯一费率源（与 webhook 同源），
-            // cron.* 仅作兼容回退，消除此前 webhook 与 cron 双源漂移；费率以字符串进 Money 乘算
-            $gateway = $payment->gateway ?? 'stripe';
-            $gf = config("payment.gateway_fee.{$gateway}", []);
-            $gatewayFeeRate = (string) ($gf['rate'] ?? config('cron.payment_gateway_fee_rate', 2.90));
-            $gatewayFeeFixed = (string) ($gf['fixed'] ?? config('cron.payment_gateway_fee_fixed', 0.30));
-            $platformFeeRate = (string) (config('payment.platform_rate') ?? config('cron.platform_fee_rate', 3.00));
-
-            $platformFee = Money::round(Money::div(Money::mul($total, $platformFeeRate), '100'));
-            $gatewayFee = Money::round(Money::add(Money::div(Money::mul($total, $gatewayFeeRate), '100'), $gatewayFeeFixed));
-            $supplierAmount = Money::round(Money::sub($total, Money::add($platformFee, $gatewayFee)));
-
-            PlatformSettlements::create([
-                'order_id' => $order->id,
-                'payment_id' => $payment->id ?? 0,
-                'total_amount' => $total,
-                'platform_fee' => $platformFee,
-                'platform_fee_rate' => $platformFeeRate,
-                'payment_gateway_fee' => $gatewayFee,
-                'supplier_amount' => Money::cmp($supplierAmount, '0') > 0 ? $supplierAmount : '0.00',
-                'currency_code' => $order->currency_code ?: 'USD',
-                'status' => 0,
-            ]);
-
-            // 卖家分账：订单商品 → 卖家商品关系(approved) → 卖家抽成 → MerchantSettlements
-            self::createMerchantSettlements($order);
-
-            // 供应商周期结算：商品 supplier_id → 当月 SupplierSettlements 汇总
-            self::createSupplierSettlements($order);
-
-            $created++;
-        }
+        // 用 not exists 让数据库过滤已结算订单，按 id 分批读，避免一次性载入全量已结算订单 ID
+        Orders::where('status', 1)
+            ->whereNotExists(function ($q) {
+                $q->select(Db::raw(1))
+                    ->from('shop_platform_settlements')
+                    ->whereColumn('shop_platform_settlements.order_id', 'shop_orders.id');
+            })
+            ->chunkById(500, function ($orders) use (&$created) {
+                foreach ($orders as $order) {
+                    try {
+                        // 单笔事务：平台结算单/卖家分账/供应商汇总要么全成功要么全回滚，下一轮可重试
+                        Db::transaction(function () use ($order) {
+                            self::settleOrder($order);
+                        });
+                        $created++;
+                    } catch (\Throwable $e) {
+                        // 单笔异常不中断整批；不改 orders 表，下一轮重试且分页不漂移
+                        Log::error('SettlementCron 订单 ' . $order->id . ' 结算失败: ' . $e->getMessage());
+                    }
+                }
+            });
         Log::info("SettlementCron 完成，生成 {$created} 笔平台结算单");
+    }
+
+    /**
+     * 单笔订单结算：平台结算单 + 卖家分账 + 供应商汇总
+     */
+    private static function settleOrder(Orders $order): void
+    {
+        // 锁订单行与 PaymentSuccessService 的订单更新互斥；锁内复查避免两边并发重复创建分账
+        $locked = Orders::where('id', $order->id)->lockForUpdate()->first();
+        if (!$locked || PlatformSettlements::where('order_id', $order->id)->exists()) {
+            return; // 订单已删除或已结算
+        }
+        $order = $locked;
+
+        $payment = Payments::where('order_id', $order->id)->where('status', 1)->first();
+        // decimal 列经 PDO 返回字符串，保留字符串参与 Money 运算（不转 float）
+        $total = (string) $order->pay_amount;
+
+        // 费率统一：payment.gateway_fee / payment.platform_rate 为唯一费率源（与 webhook 同源），
+        // cron.* 仅作兼容回退，消除此前 webhook 与 cron 双源漂移；费率以字符串进 Money 乘算
+        $gateway = $payment->gateway ?? 'stripe';
+        $gf = config("payment.gateway_fee.{$gateway}", []);
+        $gatewayFeeRate = (string) ($gf['rate'] ?? config('cron.payment_gateway_fee_rate', 2.90));
+        $gatewayFeeFixed = (string) ($gf['fixed'] ?? config('cron.payment_gateway_fee_fixed', 0.30));
+        $platformFeeRate = (string) (config('payment.platform_rate') ?? config('cron.platform_fee_rate', 3.00));
+
+        $platformFee = Money::round(Money::div(Money::mul($total, $platformFeeRate), '100'));
+        $gatewayFee = Money::round(Money::add(Money::div(Money::mul($total, $gatewayFeeRate), '100'), $gatewayFeeFixed));
+        $supplierAmount = Money::round(Money::sub($total, Money::add($platformFee, $gatewayFee)));
+
+        PlatformSettlements::create([
+            'order_id' => $order->id,
+            'payment_id' => $payment->id ?? 0,
+            'total_amount' => $total,
+            'platform_fee' => $platformFee,
+            'platform_fee_rate' => $platformFeeRate,
+            'payment_gateway_fee' => $gatewayFee,
+            'supplier_amount' => Money::cmp($supplierAmount, '0') > 0 ? $supplierAmount : '0.00',
+            'currency_code' => $order->currency_code ?: 'USD',
+            'status' => 0,
+        ]);
+
+        // 卖家分账：订单商品 → 卖家商品关系(approved) → 卖家抽成 → MerchantSettlements
+        self::createMerchantSettlements($order);
+
+        // 供应商周期结算：商品 supplier_id → 当月 SupplierSettlements 汇总
+        self::createSupplierSettlements($order);
     }
 
     /**

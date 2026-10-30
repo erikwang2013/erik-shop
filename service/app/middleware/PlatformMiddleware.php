@@ -25,15 +25,16 @@ class PlatformMiddleware implements MiddlewareInterface
     ];
 
     // User-Agent 备选识别 (当X-Platform未传递时)
+    // 顺序敏感：iPad/iPhone/Android/HarmonyOS 的 UA 里含 "Mac OS X"/"Linux"，必须先匹配
     private const UA_PATTERNS = [
         'iPad' => 'ipados',
+        'iPhone' => 'ios',
+        'Android' => 'android',
+        'HarmonyOS' => 'harmonyos',
         'Macintosh' => 'macos',
         'Mac OS X' => 'macos',
         'Windows' => 'windows',
         'Linux' => 'linux',
-        'iPhone' => 'ios',
-        'Android' => 'android',
-        'HarmonyOS' => 'harmonyos',
     ];
 
     public function process(Request $request, callable $next): Response

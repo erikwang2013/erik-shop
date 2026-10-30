@@ -35,22 +35,29 @@ class LocaleMiddleware implements MiddlewareInterface
 
     private function parseLocale(Request $request): string
     {
-        // 优先使用用户手动设置的语言
-        $userLocale = $request->header('Accept-Language', 'en');
-        $primaryLang = substr($userLocale, 0, 2);
+        // 只取第一个语言项，忽略 q 权重；统一 '-' 为 '_'
+        $first = explode(',', $request->header('Accept-Language', 'en'))[0];
+        $userLocale = str_replace('-', '_', trim(explode(';', $first)[0]));
 
-        // 精确匹配优先，降级到同语系
-        $locale = $this->matchLocale($userLocale)
-            ?? $this->matchLocale($primaryLang . '_')
+        // 精确匹配（忽略大小写），zh_TW 无资源包，归入 zh_HK
+        foreach (self::$supported as $locale) {
+            if (strcasecmp($locale, $userLocale) === 0) {
+                return $locale;
+            }
+        }
+        if (strcasecmp($userLocale, 'zh_TW') === 0) {
+            return 'zh_HK';
+        }
+
+        // 降级到主语言：ja-JP -> ja，en-US -> en，zh-CN -> zh_CN
+        return $this->matchLocale(explode('_', $userLocale)[0])
             ?? config('country.default.language', 'en');
-
-        return $locale;
     }
 
-    private function matchLocale(string $prefix): ?string
+    private function matchLocale(string $primaryLang): ?string
     {
         foreach (self::$supported as $locale) {
-            if (str_starts_with($locale, $prefix)) {
+            if (strcasecmp(explode('_', $locale)[0], $primaryLang) === 0) {
                 return $locale;
             }
         }

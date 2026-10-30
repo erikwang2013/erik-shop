@@ -136,4 +136,11 @@ return [
         'count' => 1,
         'reloadable' => false,
     ],
+
+    // 未付款订单超时自动取消（每5分钟）
+    'unpaid_order_cron' => [
+        'handler' => app\process\UnpaidOrderCron::class,
+        'count' => 1,
+        'reloadable' => false,
+    ],
 ];

@@ -21,6 +21,9 @@ return [
     // 退货超时自动关闭天数
     'return_expire_days' => 7,
 
+    // 未付款订单超时自动取消（分钟）
+    'unpaid_cancel_minutes' => 30,
+
     // 推荐计算统计窗口（天）
     'recommendation_days' => 90,
 

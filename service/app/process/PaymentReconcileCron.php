@@ -5,6 +5,7 @@
 
 namespace app\process;
 
+use app\common\PaymentSuccessService;
 use app\model\Payments;
 use GuzzleHttp\Client as HttpClient;
 use Stripe\StripeClient;
@@ -82,10 +83,10 @@ class PaymentReconcileCron
                     continue;
                 }
                 if ($status === 'succeeded' || $status === 'COMPLETED') {
-                    $payment->status = 1;
-                    $payment->paid_at = $payment->paid_at ?: date('Y-m-d H:i:s');
-                    $payment->save();
-                    $reconciled++;
+                    // 与 webhook 共用入账逻辑：补单同时更新订单、分账、销量
+                    if (PaymentSuccessService::apply($payment, (string) $payment->transaction_no)) {
+                        $reconciled++;
+                    }
                 } elseif ($status === 'canceled' || $status === 'failed' || $status === 'requires_payment_method') {
                     $payment->status = 3;
                     $payment->save();

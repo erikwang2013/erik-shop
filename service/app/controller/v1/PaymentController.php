@@ -8,15 +8,16 @@ namespace app\controller\v1;
 use app\common\ApiResponse;
 use app\common\CircuitBreakerOpenException;
 use app\common\DistributedLock;
+use app\common\LockTimeoutException;
 use app\common\Money;
 use app\common\PaymentGateway as Gateway;
+use app\common\PaymentSuccessService;
 use app\common\RefundHelper;
 use app\common\RiskEngine;
 use app\model\OrderLogs;
 use app\model\Orders;
 use app\model\PaymentGatewayMethods;
 use app\model\Payments;
-use app\model\PlatformSettlements;
 use app\model\Refunds;
 use support\Db;
 use Webman\Http\Request;
@@ -74,10 +75,13 @@ class PaymentController extends \app\controller\BaseApiController
         }
 
         // 幂等：订单粒度锁内查待支付记录，重复请求复用同一支付单，不再重复创建/调网关
+        // TTL 120s 覆盖 Stripe/PayPal 网关调用耗时，避免锁提前过期后读到未写 gateway_data 的待支付单
         try {
             return DistributedLock::run('lock:payment:' . $order->id, function () use ($order, $userId, $gateway, $method, $request) {
                 $existing = Payments::where('order_id', $order->id)->where('status', 0)->first();
                 if ($existing) {
+                    // 复用待支付单：client_secret 从创建时落库的 gateway_data 还原（如 Stripe 需前端确认）
+                    $gatewayData = json_decode((string) $existing->gateway_data, true) ?: [];
                     return ApiResponse::success([
                         'payment_id' => $existing->id,
                         'order_no' => $order->order_no,
@@ -85,7 +89,7 @@ class PaymentController extends \app\controller\BaseApiController
                         'currency' => $existing->currency_code,
                         'gateway' => $existing->gateway,
                         'method' => $existing->method,
-                        'client_secret' => '',
+                        'client_secret' => (string) ($gatewayData['client_secret'] ?? ''),
                         'txn_id' => (string) $existing->transaction_no,
                     ], '支付创建成功');
                 }
@@ -139,8 +143,13 @@ class PaymentController extends \app\controller\BaseApiController
                     return ApiResponse::fail('支付网关错误，请稍后重试', 500);
                 }
 
-                // 记录网关交易号
+                // 记录网关交易号与创建结果（client_secret 供重试/前端确认复用）
                 $payment->transaction_no = $result['txn_id'];
+                $payment->gateway_data = json_encode([
+                    'client_secret' => $result['client_secret'] ?? '',
+                    'status' => $result['status'] ?? '',
+                    'txn_id' => $result['txn_id'],
+                ], JSON_UNESCAPED_UNICODE);
                 $payment->save();
 
                 return ApiResponse::success([
@@ -153,9 +162,15 @@ class PaymentController extends \app\controller\BaseApiController
                     'client_secret' => $result['client_secret'] ?? '',
                     'txn_id' => $result['txn_id'],
                 ], '支付创建成功');
-            });
-        } catch (\RuntimeException $e) {
+            }, 120, 5);
+        } catch (LockTimeoutException $e) {
             return ApiResponse::fail('操作繁忙，请稍后重试', 429);
+        } catch (\Throwable $e) {
+            // 数据库/系统异常不向客户端泄露细节
+            \support\Log::error('支付创建失败 [order=' . $order->order_no . ']: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return ApiResponse::fail('支付创建失败，请稍后重试', 500);
         }
     }
 
@@ -262,50 +277,12 @@ class PaymentController extends \app\controller\BaseApiController
         }
 
         $payment = Payments::where('transaction_no', $txnId)->first();
-        if (!$payment || (int) $payment->status !== 0) {
-            return; // 未知或已处理，幂等返回
+        if (!$payment) {
+            return; // 未知支付单，忽略
         }
 
-        Db::transaction(function () use ($payment) {
-            // 原子门闩：仅待付款订单可被本次标记已支付，重复 webhook 不会重复入账
-            $updated = Orders::where('id', $payment->order_id)
-                ->where('status', 0)
-                ->update([
-                    'status' => 1,
-                    'pay_at' => date('Y-m-d H:i:s'),
-                    'pay_method' => $payment->gateway,
-                ]);
-            if (!$updated) {
-                return;
-            }
-
-            $payment->status = 1;
-            $payment->paid_at = date('Y-m-d H:i:s');
-            $payment->save();
-
-            $order = Orders::find($payment->order_id);
-            // decimal 列/配置经字符串入 Money：先乘除聚合、末位一次 round(2)（与 SettlementCron 同口径）
-            $total = (string) $order->pay_amount;
-            $platformRate = (string) config('payment.platform_rate', 5.0);
-            $gatewayFeeRate = (string) config("payment.gateway_fee.{$payment->gateway}.rate", 2.9);
-            $gatewayFixedFee = (string) config("payment.gateway_fee.{$payment->gateway}.fixed", 0.30);
-            $platformFee = Money::round(Money::div(Money::mul($total, $platformRate), '100'));
-            $gatewayFee = Money::round(Money::add(Money::div(Money::mul($total, $gatewayFeeRate), '100'), $gatewayFixedFee));
-            $supplierAmount = Money::sub(Money::sub($total, $platformFee), $gatewayFee);
-
-            // 创建分账记录
-            PlatformSettlements::create([
-                'order_id' => $order->id,
-                'payment_id' => $payment->id,
-                'total_amount' => $total,
-                'platform_fee' => $platformFee,
-                'platform_fee_rate' => $platformRate,
-                'payment_gateway_fee' => $gatewayFee,
-                'supplier_amount' => Money::cmp($supplierAmount, '0') > 0 ? $supplierAmount : '0.00',
-                'currency_code' => $order->currency_code,
-                'status' => 0,
-            ]);
-        });
+        // 订单/支付/分账/销量统一由 PaymentSuccessService 入账（与对账补单共用）
+        PaymentSuccessService::apply($payment, $txnId);
     }
 
     /**

@@ -31,7 +31,7 @@ class DistributedLock
      * @param callable $fn          受锁保护的回调
      * @param int      $ttl         锁过期秒数，需大于回调执行耗时
      * @param int      $waitSeconds 拿不到锁时自旋等待的最大秒数
-     * @throws \RuntimeException 等待超时（操作繁忙）
+     * @throws LockTimeoutException 等待超时（操作繁忙），调用方应映射为 429
      */
     public static function run(string $key, callable $fn, int $ttl = 10, int $waitSeconds = 5): mixed
     {
@@ -40,7 +40,7 @@ class DistributedLock
 
         while (!Redis::set($key, $token, 'EX', $ttl, 'NX')) {
             if (microtime(true) >= $deadline) {
-                throw new \RuntimeException('操作繁忙，请稍后重试');
+                throw new LockTimeoutException('操作繁忙，请稍后重试');
             }
             usleep(50_000); // 50ms 自旋间隔
         }

@@ -38,8 +38,8 @@ class ProductController extends \app\controller\BaseApiController
      */
     public function index(Request $request): \support\Response
     {
-        $page = (int) $request->input('page', 1);
-        $perPage = min((int) $request->input('per_page', 20), 100);
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = max(1, min((int) $request->input('per_page', 20), 100));
         $categoryId = $request->input('category_id');
         $keyword = $request->input('keyword', '');
         $sort = $request->input('sort', 'default');

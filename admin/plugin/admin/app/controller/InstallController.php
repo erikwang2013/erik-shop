@@ -311,7 +311,7 @@ EOF;
         $datacenterId = abs(crc32($sid . '_dc')) % 32;
 
         // 生成 service/.env
-        $template = file_get_contents(base_path(false) . '/service/.env.example');
+        $template = file_get_contents(dirname(base_path(false)) . '/service/.env.example');
         $replacements = [
             'DB_HOST=127.0.0.1' => 'DB_HOST=' . $host,
             'DB_PORT=3306' => 'DB_PORT=' . $port,
@@ -327,7 +327,7 @@ EOF;
             'ADMIN_API_KEY=change_me_admin_api_key_64bit' => 'ADMIN_API_KEY=' . $adminApiKey,
         ];
         $envContent = str_replace(array_keys($replacements), array_values($replacements), $template);
-        file_put_contents(base_path(false) . '/service/.env', $envContent);
+        file_put_contents(dirname(base_path(false)) . '/service/.env', $envContent);
 
         // 生成 admin/.env（admin 的 config/database.php 也从 getenv 读取）
         $adminEnv = <<<EOF
@@ -340,6 +340,9 @@ DB_PASS={$password}
 HASHIDS_SALT={$hashidsSalt}
 SNOWFLAKE_WORKER_ID={$workerId}
 SNOWFLAKE_DATACENTER_ID={$datacenterId}
+# 与 service/.env 同 key（共享数据库的加密字段互相可解）
+ENCRYPTION_KEY={$encryptionKey}
+ENCRYPTION_CIPHER=AES-256-CBC
 # service 内部接口（执行真实退款等管理操作，与 service/.env 的 ADMIN_API_KEY 同值）
 ADMIN_SERVICE_URL=http://127.0.0.1:8787
 ADMIN_API_KEY={$adminApiKey}

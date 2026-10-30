@@ -6,9 +6,11 @@
 namespace app\controller\v1;
 
 use app\common\ApiResponse;
+use app\common\BusinessException;
 use app\common\CircuitBreakerOpenException;
 use app\common\HashidsHelper;
 use app\common\Money;
+use app\common\OrderCancellation;
 use app\common\PaymentGateway as Gateway;
 use app\common\RefundHelper;
 use app\model\OrderLogs;
@@ -88,11 +90,11 @@ class AdminOpsController extends \app\controller\BaseApiController
                 $affected = Refunds::where('id', $refund->id)->whereIn('status', [0, 1])
                     ->update(['status' => 3, 'refunded_at' => date('Y-m-d H:i:s')]);
                 if (!$affected) {
-                    throw new \RuntimeException('退款单状态已变化，请刷新重试');
+                    throw new BusinessException('退款单状态已变化，请刷新重试');
                 }
                 RefundHelper::markRefunded($refund, $payment, $amount, 'admin', '退款执行完成，网关交易号 ' . ($result['refund_id'] ?? ''));
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessException $e) {
             return ApiResponse::fail($e->getMessage(), 422);
         } catch (\Throwable $e) {
             \support\Log::error('退款落库失败: ' . $e->getMessage(), [
@@ -109,58 +111,6 @@ class AdminOpsController extends \app\controller\BaseApiController
             'refund_amount' => (float) $amount,
             'gateway_refund_id' => $result['refund_id'] ?? '',
         ], '退款执行成功');
-    }
-
-    /**
-     * 审核通过并执行退款
-     * POST /api/admin/refunds/{id}/approve
-     * 仅待审(0)可流转：原子门闩 + RefundHelper::markRefunded（status→3，联动支付/订单）
-     */
-    public function approve(Request $request, string $id): \support\Response
-    {
-        $id = $this->decodedId($id);
-        $refund = Refunds::where('id', $id)->first();
-        if (!$refund) {
-            return ApiResponse::fail('退款单不存在', 404);
-        }
-
-        $payment = Payments::where('order_id', $refund->order_id)->where('status', 1)->first();
-        if (!$payment) {
-            return ApiResponse::fail('该订单无已支付记录，无法退款', 422);
-        }
-        // 可退余额与退款金额十进制校验（保留 1 分容差，与 executeRefund 同口径）
-        $amount = Money::round((string) $refund->amount);
-        $refundable = Money::round(Money::sub((string) $payment->amount, (string) $payment->refunded_amount));
-        if (Money::cmp($amount, '0') <= 0 || Money::cmp($amount, Money::add($refundable, '0.01')) > 0) {
-            return ApiResponse::fail('退款金额超过可退余额（剩余可退 ' . number_format(max((float) $refundable, 0.0), 2) . '）', 422);
-        }
-
-        try {
-            Db::transaction(function () use ($refund, $payment, $amount) {
-                // 原子门闩：仅待审可流转，防止并发重复审核
-                $affected = Refunds::where('id', $refund->id)->where('status', 0)
-                    ->update(['status' => 3, 'refunded_at' => date('Y-m-d H:i:s')]);
-                if (!$affected) {
-                    throw new \RuntimeException('退款单状态已变化，请刷新重试');
-                }
-                RefundHelper::markRefunded($refund, $payment, $amount, 'admin', '审核通过，执行退款');
-            });
-        } catch (\RuntimeException $e) {
-            return ApiResponse::fail($e->getMessage(), 422);
-        } catch (\Throwable $e) {
-            \support\Log::error('退款审核落库失败: ' . $e->getMessage(), [
-                'refund_id' => $refund->id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-            return ApiResponse::fail('退款审核失败，请稍后重试', 500);
-        }
-
-        return ApiResponse::success([
-            'refund_id' => $refund->id,
-            'refund_no' => $refund->refund_no,
-            // JSON 输出边界 (float) 展示转换
-            'refund_amount' => (float) $amount,
-        ], '退款审核通过，已执行');
     }
 
     /**
@@ -186,10 +136,10 @@ class AdminOpsController extends \app\controller\BaseApiController
                 $affected = Refunds::where('id', $refund->id)->where('status', 0)
                     ->update(['status' => 2, 'reject_reason' => $reason]);
                 if (!$affected) {
-                    throw new \RuntimeException('退款单状态已变化，请刷新重试');
+                    throw new BusinessException('退款单状态已变化，请刷新重试');
                 }
             });
-        } catch (\RuntimeException $e) {
+        } catch (BusinessException $e) {
             return ApiResponse::fail($e->getMessage(), 422);
         } catch (\Throwable $e) {
             \support\Log::error('退款驳回失败: ' . $e->getMessage(), [
@@ -231,22 +181,26 @@ class AdminOpsController extends \app\controller\BaseApiController
         }
 
         try {
-            Db::transaction(function () use ($order, $action, $remark) {
-                $toStatus = $action === 'approve' ? 0 : 5;
-                // 原子流转：仅 status=8 可流转，防并发重复审核
-                $affected = Orders::where('id', $order->id)->where('status', 8)->update(['status' => $toStatus]);
-                if (!$affected) {
-                    throw new \RuntimeException('订单状态已变化，请刷新重试');
-                }
-                OrderLogs::create([
-                    'order_id' => $order->id,
-                    'from_status' => 8,
-                    'to_status' => $toStatus,
-                    'operator' => 'admin',
-                    'remark' => ($action === 'approve' ? '风控审核通过' : '风控审核驳回') . ($remark !== '' ? '：' . $remark : ''),
-                ]);
-            });
-        } catch (\RuntimeException $e) {
+            if ($action === 'approve') {
+                Db::transaction(function () use ($order, $remark) {
+                    // 原子流转：仅 status=8 可流转，防并发重复审核
+                    $affected = Orders::where('id', $order->id)->where('status', 8)->update(['status' => 0]);
+                    if (!$affected) {
+                        throw new BusinessException('订单状态已变化，请刷新重试');
+                    }
+                    OrderLogs::create([
+                        'order_id' => $order->id,
+                        'from_status' => 8,
+                        'to_status' => 0,
+                        'operator' => 'admin',
+                        'remark' => '风控审核通过' . ($remark !== '' ? '：' . $remark : ''),
+                    ]);
+                });
+            } else {
+                // 驳回：取消订单并恢复库存/退还优惠券
+                OrderCancellation::cancel($order, [8], 'admin', '风控审核驳回' . ($remark !== '' ? '：' . $remark : ''));
+            }
+        } catch (BusinessException $e) {
             return ApiResponse::fail($e->getMessage(), 422);
         } catch (\Throwable $e) {
             \support\Log::error('风控审核失败: ' . $e->getMessage(), ['order_id' => $id, 'trace' => $e->getTraceAsString()]);

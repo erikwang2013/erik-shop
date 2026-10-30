@@ -9,6 +9,7 @@ use app\common\ApiResponse;
 use app\model\Orders;
 use app\model\Products;
 use app\model\Users;
+use support\Redis;
 
 /**
  * 起始页平台统计（公开接口）
@@ -21,6 +22,16 @@ class StatsController extends \app\controller\BaseApiController
 
     public function index(): \support\Response
     {
+        // 首页统计整体缓存 60 秒；Redis 异常时静默走数据库
+        try {
+            $cached = json_decode((string) Redis::get('shop:stats:home'), true);
+            if (is_array($cached)) {
+                return ApiResponse::success($cached);
+            }
+        } catch (\Throwable $e) {
+            // 降级直查数据库
+        }
+
         $todayStart = date('Y-m-d 00:00:00');
 
         $totalGmv = (float) Orders::whereIn('status', self::PAID_STATUSES)->sum('total_amount');
@@ -30,9 +41,9 @@ class StatsController extends \app\controller\BaseApiController
         $recentOrders = Orders::orderByDesc('id')->limit(5)
             ->get(['id', 'order_no', 'total_amount', 'status', 'created_at'])->toArray();
 
-        return ApiResponse::success([
+        $data = [
             'app' => 'Shop',
-            'version' => '1.5.0',
+            'version' => '1.5.7',
             'timestamp' => date('c'),
             'total' => [
                 'users' => Users::count(),
@@ -46,6 +57,14 @@ class StatsController extends \app\controller\BaseApiController
                 'gmv' => $todayGmv,
             ],
             'recent_orders' => $recentOrders,
-        ]);
+        ];
+
+        try {
+            Redis::setex('shop:stats:home', 60, json_encode($data));
+        } catch (\Throwable $e) {
+            // 缓存写入失败不影响响应
+        }
+
+        return ApiResponse::success($data);
     }
 }
